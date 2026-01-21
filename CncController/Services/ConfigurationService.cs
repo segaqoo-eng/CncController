@@ -23,7 +23,7 @@ namespace CncController.Services
             _jsonOptions = new JsonSerializerOptions { WriteIndented = true, PropertyNameCaseInsensitive = true };
         }
 
-        // 讀取本地設定
+        // ★★★ 修正：補上 LoadConfigAsync ★★★
         public async Task<MachineConfig> LoadConfigAsync()
         {
             try
@@ -38,32 +38,38 @@ namespace CncController.Services
             }
         }
 
-        // 儲存設定 (本地 + 遠端)
         public async Task SaveConfigAsync(MachineConfig config)
         {
-            // 1. 存本地
+            // 1. 存本地 JSON (保留設定)
             string json = JsonSerializer.Serialize(config, _jsonOptions);
             await File.WriteAllTextAsync(ConfigFileName, json);
 
-            // 2. 生成 LinuxCNC 設定 (INI)
+            // 2. 生成 INI
             var ini = new StringBuilder();
             ini.AppendLine("[EMC]");
             ini.AppendLine("MACHINE = CNC_CONTROLLER_GEN");
+            ini.AppendLine("[DISPLAY]");
+            ini.AppendLine("DISPLAY = probe_basic");
+
             foreach (var axis in config.Axes)
             {
                 ini.AppendLine($"\n[AXIS_{axis.AxisID}]");
-                ini.AppendLine($"SCALE = {axis.PulsePerRev / (axis.Pitch == 0 ? 1 : axis.Pitch)}");
+                double pitch = axis.Pitch == 0 ? 1 : axis.Pitch;
+                ini.AppendLine($"SCALE = {axis.PulsePerRev / pitch}");
+                ini.AppendLine($"MIN_LIMIT = {axis.SoftLimitNeg}");
+                ini.AppendLine($"MAX_LIMIT = {axis.SoftLimitPos}");
+                ini.AppendLine($"HOME_SEARCH_VEL = {axis.HomeSpeed}");
             }
 
             // 3. 上傳
-            var payload = new { IniContent = ini.ToString(), HalContent = "", XmlContent = "" };
+            var payload = new { IniContent = ini.ToString(), HalContent = "loadrt lcec", XmlContent = "" };
             try
             {
                 await _http.PostAsJsonAsync("/api/config/update", payload);
             }
             catch
             {
-                // 上傳失敗不影響本地存檔，這裡選擇忽略或記錄 Log
+                // 忽略上傳錯誤，避免卡住 UI
             }
         }
     }

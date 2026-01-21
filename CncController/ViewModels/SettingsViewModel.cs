@@ -60,6 +60,8 @@ namespace CncController.ViewModels
         /// <summary>
         /// 產生設定檔並部署 (既有邏輯擴充)
         /// </summary>
+        /// 
+        /*
         [RelayCommand]
         private async Task GenerateAndDeploy()
         {
@@ -94,6 +96,40 @@ namespace CncController.ViewModels
             DeployStatus = "Config Saved & Restarting...";
 
             // 模擬延遲讓使用者看到訊息
+            await Task.Delay(1000);
+            DeployStatus = "Ready.";
+        }
+       */
+
+        [RelayCommand]
+        private async Task GenerateAndDeploy()
+        {
+            DeployStatus = "Generating Config...";
+
+            var config = new MachineConfig();
+            config.Axes.AddRange(AxisVM.Axes);
+
+            // [更新重點] 儲存 Mapping 時，同時記錄硬體詳細資訊 (為了嚴格比對)
+            foreach (var mapItem in MappingVM.AxisMaps)
+            {
+                if (mapItem.SelectedSlave != null)
+                {
+                    config.Mappings.Add(new HardwareMapping
+                    {
+                        LogicalName = mapItem.AxisName,
+                        PhysicalAddress = mapItem.SelectedSlave.Name,
+
+                        // ★★★ 新增：嚴格比對所需的欄位 ★★★
+                        PhysicalIndex = mapItem.SelectedSlave.Index,
+                        ExpectedVendorId = mapItem.SelectedSlave.VendorId,
+                        ExpectedProductCode = mapItem.SelectedSlave.ProductCode
+                    });
+                }
+            }
+
+            await ConfigurationService.Instance.SaveConfigAsync(config);
+
+            DeployStatus = "Config Saved & Restarting...";
             await Task.Delay(1000);
             DeployStatus = "Ready.";
         }

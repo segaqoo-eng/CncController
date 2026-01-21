@@ -9,7 +9,8 @@ namespace CncController.ViewModels
 {
     public partial class HardwareDiscoveryViewModel : ObservableObject
     {
-        private readonly HardwareScanService _scanService = new();
+        // ★★★ 修正重點：改用 Singleton Instance，不能用 new() ★★★
+        private readonly HardwareScanService _scanService = HardwareScanService.Instance;
 
         [ObservableProperty]
         private string _statusMessage = "Ready to scan.";
@@ -27,8 +28,13 @@ namespace CncController.ViewModels
             StatusMessage = "Scanning EtherCAT bus...";
             Slaves.Clear();
 
+            // 這裡呼叫 Service 的掃描方法
             var results = await _scanService.ScanAsync();
-            foreach (var item in results) Slaves.Add(item);
+
+            foreach (var item in results)
+            {
+                Slaves.Add(item);
+            }
 
             StatusMessage = $"Scan complete. Found {Slaves.Count} devices.";
             IsScanning = false;

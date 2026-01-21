@@ -10,34 +10,33 @@ namespace CncController.Models
         public string ProductCode { get; set; }
         public string Source { get; set; }
         public string Name { get; set; }
-
-        // 顯示名稱
-        public string DisplayName => $"#{Index}: {Name}";
+        public string DisplayName => $"#{Index}: {Name} ({VendorId})";
     }
-    // 2. 機台設定總表 (存檔用)  12我有變更阿
+
+    // 2. 機台設定總表
     public class MachineConfig
     {
         public int MasterIndex { get; set; } = 0;
-
-        // 既有的軸設定
         public List<AxisSetting> Axes { get; set; } = new();
-
-        // 既有的 IO 設定
         public List<IoSetting> IoMappings { get; set; } = new();
 
-        // ★★★ [補上這段] 缺少的硬體對應設定 ★★★
+        // [更新] 硬體對應清單
         public List<HardwareMapping> Mappings { get; set; } = new List<HardwareMapping>();
     }
 
-    // ★★★ [補上這個類別] 讓 SettingsViewModel 可以使用 HardwareMapping ★★★
+    // 3. [新增] 硬體對應類別 (包含嚴格檢查欄位)
     public class HardwareMapping
     {
         public string LogicalName { get; set; }      // 例如 "X Axis"
-        public string PhysicalAddress { get; set; }  // 例如 "Slave_1_Panasonic"
-        // 您可以視需求增加更多欄位，例如 VendorID 等
+        public string PhysicalAddress { get; set; }  // 顯示名稱
+
+        // [關鍵] 嚴格比對欄位
+        public int PhysicalIndex { get; set; }       // 站號 (Index)
+        public string ExpectedVendorId { get; set; } // 預期的廠商ID (例如 "0x000001dd")
+        public string ExpectedProductCode { get; set; } // 預期的產品碼
     }
 
-    // 3. 軸參數 (保持原樣)
+    // 4. 軸參數 (保持不變)
     public class AxisSetting
     {
         public string AxisID { get; set; } = "X";
@@ -49,7 +48,7 @@ namespace CncController.Models
         public double HomeSpeed { get; set; } = 20.0;
     }
 
-    // 4. IO 設定 (保持原樣)
+    // 5. IO 設定 (保持不變)
     public class IoSetting
     {
         public int StationIndex { get; set; }

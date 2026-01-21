@@ -28,7 +28,7 @@
                     <Setter Property="Background" Value="#333333"/>
                     <Setter Property="Foreground" Value="White"/>
                     <Setter Property="Padding" Value="10,8"/>
-                    <Setter Property="BorderThickness" Value="0,0,1,1"/>
+                    <Setter Property="BorderThickness" Value="0,0,1,1"/>  
                     <Setter Property="BorderBrush" Value="#555"/>
                     <Setter Property="FontWeight" Value="Bold"/>
                 </Style>

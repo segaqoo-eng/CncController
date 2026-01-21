@@ -6,7 +6,6 @@
              xmlns:vm="clr-namespace:CncController.ViewModels"
              
              xmlns:views="clr-namespace:CncController.Views"
-             
              xmlns:comp="clr-namespace:CncController.Views.Components"
              
              mc:Ignorable="d" d:DesignHeight="800" d:DesignWidth="1200">
@@ -52,7 +51,20 @@
                     </StackPanel>
 
                     <DataGrid Grid.Row="1" ItemsSource="{Binding Slaves}" AutoGenerateColumns="False" 
-                              Background="#2D2D2D" RowBackground="#333" Foreground="White" Margin="0,20">
+                              Background="#2D2D2D" RowBackground="#333" Foreground="White" Margin="0,20"
+                              CanUserAddRows="False">
+
+                        <DataGrid.Resources>
+                            <Style TargetType="DataGridColumnHeader">
+                                <Setter Property="Background" Value="#333333"/>
+                                <Setter Property="Foreground" Value="White"/>
+                                <Setter Property="Padding" Value="10,8"/>
+                                <Setter Property="BorderThickness" Value="0,0,1,1"/>
+                                <Setter Property="BorderBrush" Value="#555"/>
+                                <Setter Property="FontWeight" Value="Bold"/>
+                            </Style>
+                        </DataGrid.Resources>
+
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="Index" Binding="{Binding Index}" Width="50"/>
                             <DataGridTextColumn Header="Vendor" Binding="{Binding VendorId}" Width="100"/>

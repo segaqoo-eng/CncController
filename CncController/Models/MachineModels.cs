@@ -8,34 +8,48 @@ namespace CncController.Models
         public int Index { get; set; }
         public string VendorId { get; set; }
         public string ProductCode { get; set; }
-        public string Source { get; set; } // 這是您程式碼裡有的
+        public string Source { get; set; }
         public string Name { get; set; }
 
-        // 新增這個屬性：為了在下拉選單顯示 "Slave 1: Delta Drive" 這種好讀的格式
+        // 顯示名稱
         public string DisplayName => $"#{Index}: {Name}";
     }
-
-    // 2. 機台設定總表 (存檔用)
+    // 2. 機台設定總表 (存檔用)  12我有變更阿
     public class MachineConfig
     {
         public int MasterIndex { get; set; } = 0;
+
+        // 既有的軸設定
         public List<AxisSetting> Axes { get; set; } = new();
+
+        // 既有的 IO 設定
         public List<IoSetting> IoMappings { get; set; } = new();
+
+        // ★★★ [補上這段] 缺少的硬體對應設定 ★★★
+        public List<HardwareMapping> Mappings { get; set; } = new List<HardwareMapping>();
     }
 
-    // 3. 軸參數
+    // ★★★ [補上這個類別] 讓 SettingsViewModel 可以使用 HardwareMapping ★★★
+    public class HardwareMapping
+    {
+        public string LogicalName { get; set; }      // 例如 "X Axis"
+        public string PhysicalAddress { get; set; }  // 例如 "Slave_1_Panasonic"
+        // 您可以視需求增加更多欄位，例如 VendorID 等
+    }
+
+    // 3. 軸參數 (保持原樣)
     public class AxisSetting
     {
-        public string AxisID { get; set; } = "X"; // X, Y, Z
+        public string AxisID { get; set; } = "X";
         public string Name { get; set; } = "X Axis";
-        public double Pitch { get; set; } = 10.0;       // 導程
-        public double PulsePerRev { get; set; } = 10000; // 解析度
+        public double Pitch { get; set; } = 10.0;
+        public double PulsePerRev { get; set; } = 10000;
         public double SoftLimitPos { get; set; } = 100.0;
         public double SoftLimitNeg { get; set; } = -100.0;
         public double HomeSpeed { get; set; } = 20.0;
     }
 
-    // 4. IO 設定
+    // 4. IO 設定 (保持原樣)
     public class IoSetting
     {
         public int StationIndex { get; set; }

@@ -32,7 +32,7 @@ namespace CncController.Services
                 ini.AppendLine($"SCALE = {scale}");
                 ini.AppendLine($"MIN_LIMIT = {axis.SoftLimitNeg}");
                 ini.AppendLine($"MAX_LIMIT = {axis.SoftLimitPos}");
-                ini.AppendLine($"HOME_SEARCH_VEL = {axis.HomeSpeed}");
+                ini.AppendLine($"HOME_SEARCH_VEL = {axis.HomeSpeed}");//
             }
 
             // 2. 生成 HAL (簡化範例)

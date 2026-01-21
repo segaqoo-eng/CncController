@@ -1,0 +1,58 @@
+﻿<UserControl x:Class="CncController.Views.Components.AxisMappingView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" 
+             d:DesignHeight="400" d:DesignWidth="800">
+
+    <Grid Background="#1E1E1E" Margin="0,0,0,0">
+        <DataGrid ItemsSource="{Binding AxisMaps}" 
+                  AutoGenerateColumns="False"
+                  HeadersVisibility="Column"
+                  Background="Transparent"
+                  RowBackground="#252526"
+                  AlternatingRowBackground="#1E1E1E"
+                  Foreground="White"
+                  RowHeight="40"
+                  BorderThickness="0"
+                  GridLinesVisibility="Horizontal"
+                  HorizontalGridLinesBrush="#333">
+
+            <DataGrid.Resources>
+                <Style TargetType="ComboBox">
+                    <Setter Property="HorizontalContentAlignment" Value="Left"/>
+                    <Setter Property="VerticalContentAlignment" Value="Center"/>
+                </Style>
+            </DataGrid.Resources>
+
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Logic Axis" Binding="{Binding AxisName}" Width="100" IsReadOnly="True">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="VerticalAlignment" Value="Center"/>
+                            <Setter Property="Margin" Value="10,0"/>
+                            <Setter Property="FontWeight" Value="Bold"/>
+                            <Setter Property="Foreground" Value="#007ACC"/>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
+
+                <DataGridTemplateColumn Header="Physical Device (EtherCAT Slave)" Width="*">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <ComboBox ItemsSource="{Binding DataContext.AvailableSlaves, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                      DisplayMemberPath="DisplayName"
+                                      SelectedItem="{Binding SelectedSlave, UpdateSourceTrigger=PropertyChanged}"
+                                      Margin="2"
+                                      Background="#333" Foreground="Black" BorderThickness="0"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+                <DataGridTextColumn Header="Vendor ID" Binding="{Binding SelectedSlave.VendorId}" Width="120" IsReadOnly="True"/>
+
+            </DataGrid.Columns>
+        </DataGrid>
+    </Grid>
+</UserControl>

@@ -1,0 +1,66 @@
+﻿<Window x:Class="CncController.MainWindow"
+        xmlns:sys="clr-namespace:System;assembly=mscorlib"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        
+        xmlns:vm="clr-namespace:CncController.ViewModels"
+        xmlns:views="clr-namespace:CncController.Views"
+        xmlns:pages="clr-namespace:CncController.Views.Pages"
+        xmlns:layouts="clr-namespace:CncController.Views.Layouts"
+        
+        Title="CncController" Height="1080" Width="1920"
+        WindowStyle="None" WindowState="Maximized"
+        Background="{DynamicResource Brush.WindowBackground}">
+
+    <Window.DataContext>
+        <vm:MainViewModel/>
+    </Window.DataContext>
+
+    <Window.Resources>
+        <DataTemplate DataType="{x:Type vm:SettingsViewModel}">
+            <pages:SettingsView/>
+        </DataTemplate>
+
+        
+    </Window.Resources>
+
+    <Viewbox Stretch="Uniform">
+        <Grid Width="1920" Height="1080">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="30"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="50"/>
+                <RowDefinition Height="340"/>
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="180"/>
+            </Grid.ColumnDefinitions>
+
+            <layouts:HeaderBar Grid.Row="0" Grid.ColumnSpan="2"/>
+
+            <ContentControl Grid.Row="1" Grid.Column="0" Margin="2,2,0,2"
+                            Content="{Binding CurrentViewModel}"/>
+
+            <layouts:JogPanel Grid.Row="1" Grid.Column="1" Margin="0,2,2,2"/>
+
+            <UniformGrid Grid.Row="2" Grid.ColumnSpan="2" Rows="1" Background="{DynamicResource Brush.PanelBackground}">
+                <RadioButton Content="{DynamicResource Str.Nav.Main}" Style="{StaticResource NavBtnStyle}" 
+                             IsChecked="True"
+                             Command="{Binding NavigateCommand}" CommandParameter="Main"/>
+
+                <RadioButton Content="{DynamicResource Str.Nav.File}" Style="{StaticResource NavBtnStyle}"/>
+                <RadioButton Content="{DynamicResource Str.Nav.ATC}" Style="{StaticResource NavBtnStyle}"/>
+                <RadioButton Content="{DynamicResource Str.Nav.Tool}" Style="{StaticResource NavBtnStyle}"/>
+                <RadioButton Content="{DynamicResource Str.Nav.Offsets}" Style="{StaticResource NavBtnStyle}"/>
+
+                <RadioButton Content="{DynamicResource Str.Nav.Settings}" Style="{StaticResource NavBtnStyle}"
+                             Command="{Binding NavigateCommand}" CommandParameter="Settings"/>
+
+                <RadioButton Content="{DynamicResource Str.Nav.Status}" Style="{StaticResource NavBtnStyle}"/>
+            </UniformGrid>
+
+            <layouts:DashboardPanel Grid.Row="3" Grid.ColumnSpan="2"/>
+        </Grid>
+    </Viewbox>
+</Window>

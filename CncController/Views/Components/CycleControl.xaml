@@ -1,0 +1,16 @@
+﻿<UserControl x:Class="CncController.Views.Components.CycleControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <UniformGrid Columns="2" Rows="5">
+        <Button Content="{DynamicResource Str.Btn.CycleStart}" Margin="2"/>
+        <Button Content="{DynamicResource Str.Btn.Stop}" Margin="2"/>
+        <Button Content="{DynamicResource Str.Btn.Reload}" Margin="2"/>
+        <Button Content="{DynamicResource Str.Btn.FeedHold}" Margin="2"/>
+        <Button Content="{DynamicResource Str.Btn.Clear}" Margin="2"/>
+        <Button Content="{DynamicResource Str.Btn.SingleBlock}" Margin="2"/>
+        <Button Content="{DynamicResource Str.Btn.BlockDelete}" Margin="2" Background="{DynamicResource Brush.Button.Active}"/>
+        <Button Content="{DynamicResource Str.Btn.OptionalStop}" Margin="2" Background="{DynamicResource Brush.Button.Active}"/>
+        <Button Content="MIST" Margin="2"/>
+        <Button Content="FLOOD" Margin="2"/>
+    </UniformGrid>
+</UserControl>

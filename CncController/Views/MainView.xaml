@@ -1,0 +1,50 @@
+﻿<UserControl x:Class="CncController.Views.MainView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:hx="http://helix-toolkit.org/wpf">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="400"/>
+            <ColumnDefinition Width="70"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <Grid Grid.Column="0" Margin="0,0,2,0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="30"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="40"/>
+            </Grid.RowDefinitions>
+            <Border Grid.Row="0" Background="#444" CornerRadius="2,2,0,0">
+                <TextBlock Text="G-CODE" Foreground="White" VerticalAlignment="Center" Margin="5,0"/>
+            </Border>
+            <Border Grid.Row="1" Background="White" BorderBrush="#444" BorderThickness="1">
+                <ScrollViewer>
+                    <TextBlock Text="N100 G20..." Foreground="Black" FontFamily="Consolas" Margin="5"/>
+                </ScrollViewer>
+            </Border>
+            <Grid Grid.Row="2" Margin="0,2,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="60"/>
+                </Grid.ColumnDefinitions>
+                <TextBox Text="MDI..." VerticalContentAlignment="Center" Background="White"/>
+                <Button Grid.Column="1" Content="MDI" Margin="2,0,0,0"/>
+            </Grid>
+        </Grid>
+
+        <StackPanel Grid.Column="1" Margin="2,0">
+            <Button Content="ISO" Height="40" Margin="0,0,0,3"/>
+            <Button Content="TOP" Height="40" Margin="0,0,0,3"/>
+            <Button Content="FRONT" Height="40" Margin="0,0,0,3"/>
+        </StackPanel>
+
+        <Border Grid.Column="2" Background="Black">
+            <hx:HelixViewport3D ZoomExtentsWhenLoaded="True" ShowCoordinateSystem="True">
+                <hx:SunLight/>
+                <hx:GridLinesVisual3D Width="300" Length="300" Thickness="0.5" Fill="#333"/>
+                <hx:TruncatedConeVisual3D Height="20" BaseRadius="0" TopRadius="5" Fill="Gray"/>
+            </hx:HelixViewport3D>
+        </Border>
+    </Grid>
+</UserControl>

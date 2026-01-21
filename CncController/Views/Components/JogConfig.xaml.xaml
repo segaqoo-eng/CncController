@@ -1,0 +1,25 @@
+﻿<UserControl x:Class="CncController.Views.Components.JogConfig"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <StackPanel Margin="5">
+        <UniformGrid Columns="4" Margin="0,0,0,15">
+            <Button Content="{DynamicResource Str.Jog.Continuous}" Background="{DynamicResource Brush.Button.Active}" Height="30" FontSize="11"/>
+            <Button Content="0.100" Height="30"/>
+            <Button Content="0.010" Height="30"/>
+            <Button Content="0.001" Height="30"/>
+        </UniformGrid>
+        <DockPanel Margin="0,5">
+            <TextBlock Text="{DynamicResource Str.Jog.Feedrate}" Foreground="{DynamicResource Brush.Text.Primary}" VerticalAlignment="Center" FontSize="12"/>
+            <TextBox Text="1500.0" Width="100" HorizontalAlignment="Right" Background="White" Padding="3" FontWeight="Bold" BorderThickness="0"/>
+        </DockPanel>
+        <DockPanel Margin="0,5">
+            <TextBlock Text="{DynamicResource Str.Jog.Spindle}" Foreground="{DynamicResource Brush.Text.Primary}" VerticalAlignment="Center" FontSize="12"/>
+            <TextBox Text="300" Width="100" HorizontalAlignment="Right" Background="White" Padding="3" FontWeight="Bold" BorderThickness="0"/>
+        </DockPanel>
+        <UniformGrid Columns="3" Margin="0,20,0,0">
+            <Button Content="{DynamicResource Str.Btn.Rev}" Height="40" FontSize="12"/>
+            <Button Content="{DynamicResource Str.Btn.Stop}" Background="{DynamicResource Brush.Button.Danger}" Height="40" FontSize="12"/>
+            <Button Content="{DynamicResource Str.Btn.Fwd}" Height="40" FontSize="12"/>
+        </UniformGrid>
+    </StackPanel>
+</UserControl>

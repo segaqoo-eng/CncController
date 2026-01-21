@@ -33,7 +33,7 @@ namespace CncController.Models
     public class HardwareMapping
     {
         public string LogicalName { get; set; }      // 例如 "X Axis"
-        public string PhysicalAddress { get; set; }  // 例如 "Slave_1_Panasonic"
+        public string PhysicalAddress { get; set; }  // 例如 "Slave_1_Panasonic" 
         // 您可以視需求增加更多欄位，例如 VendorID 等
     }
 

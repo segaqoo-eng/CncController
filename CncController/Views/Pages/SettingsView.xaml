@@ -4,15 +4,10 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="clr-namespace:CncController.ViewModels"
-             
+             xmlns:sys="clr-namespace:System;assembly=mscorlib"
              xmlns:views="clr-namespace:CncController.Views"
              xmlns:comp="clr-namespace:CncController.Views.Components"
-             
              mc:Ignorable="d" d:DesignHeight="800" d:DesignWidth="1200">
-
-    <UserControl.DataContext>
-        <vm:SettingsViewModel/> 
-    </UserControl.DataContext>
 
     <Grid Background="#1E1E1E">
         <TabControl Background="Transparent" BorderThickness="0">
@@ -38,33 +33,18 @@
                 </Style>
             </TabControl.Resources>
 
-            <TabItem Header="HARDWARE SCAN" DataContext="{Binding HardwareVM}">
-                <Grid Margin="20">
+            <TabItem Header="HARDWARE SCAN">
+                <Grid Margin="20" IsEnabled="{Binding CanEditHardware}">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="60"/>
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
-
                     <StackPanel Orientation="Horizontal">
-                        <Button Command="{Binding StartScanCommand}" Content="SCAN BUS" Width="150" Height="40" Background="#5E70FF" Foreground="White" FontWeight="Bold"/>
-                        <TextBlock Text="{Binding StatusMessage}" Foreground="White" VerticalAlignment="Center" Margin="20,0"/>
+                        <Button Command="{Binding HardwareVM.StartScanCommand}" Content="SCAN BUS" Width="150" Height="40" Background="#5E70FF" Foreground="White" FontWeight="Bold"/>
+                        <TextBlock Text="{Binding HardwareVM.StatusMessage}" Foreground="White" VerticalAlignment="Center" Margin="20,0"/>
                     </StackPanel>
-
-                    <DataGrid Grid.Row="1" ItemsSource="{Binding Slaves}" AutoGenerateColumns="False" 
-                              Background="#2D2D2D" RowBackground="#333" Foreground="White" Margin="0,20"
-                              CanUserAddRows="False">
-
-                        <DataGrid.Resources>
-                            <Style TargetType="DataGridColumnHeader">
-                                <Setter Property="Background" Value="#333333"/>
-                                <Setter Property="Foreground" Value="White"/>
-                                <Setter Property="Padding" Value="10,8"/>
-                                <Setter Property="BorderThickness" Value="0,0,1,1"/>
-                                <Setter Property="BorderBrush" Value="#555"/>
-                                <Setter Property="FontWeight" Value="Bold"/> 
-                            </Style>
-                        </DataGrid.Resources>
-
+                    <DataGrid Grid.Row="1" ItemsSource="{Binding HardwareVM.Slaves}" AutoGenerateColumns="False" 
+                              Background="#2D2D2D" RowBackground="#333" Foreground="White" Margin="0,20" CanUserAddRows="False">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="Index" Binding="{Binding Index}" Width="50"/>
                             <DataGridTextColumn Header="Vendor" Binding="{Binding VendorId}" Width="100"/>
@@ -76,71 +56,111 @@
             </TabItem>
 
             <TabItem Header="AXIS MAPPING">
-                <Grid Margin="20">
+                <Grid Margin="20" IsEnabled="{Binding CanEditHardware}">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="280"/>
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
-
                     <StackPanel Grid.Column="0" Margin="0,0,20,0">
                         <comp:MachineConfigView DataContext="{Binding MachineConfigVM}"/>
-
-                        <Button Content="UPDATE MAPPING TABLE" 
-                                Command="{Binding ApplyMachineConfigCommand}"
-                                Height="45" Margin="0,20,0,0" 
-                                Background="#007ACC" Foreground="White" FontWeight="Bold" 
-                                BorderThickness="0" Cursor="Hand">
-                            <Button.Resources>
-                                <Style TargetType="Border">
-                                    <Setter Property="CornerRadius" Value="4"/>
-                                </Style>
-                            </Button.Resources>
-                        </Button>
+                        <Button Content="UPDATE MAPPING TABLE" Command="{Binding ApplyMachineConfigCommand}" Height="45" Margin="0,20,0,0" Background="#007ACC" Foreground="White" FontWeight="Bold"/>
                     </StackPanel>
-
                     <comp:AxisMappingView Grid.Column="1" DataContext="{Binding MappingVM}"/>
                 </Grid>
             </TabItem>
 
             <TabItem Header="AXIS PARAMETERS" DataContext="{Binding AxisVM}">
                 <Grid Margin="20">
-                    <ItemsControl ItemsSource="{Binding Axes}">
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <Border Background="#333" Margin="0,0,0,10" Padding="15" CornerRadius="4">
-                                    <StackPanel>
-                                        <TextBlock Text="{Binding Name}" Foreground="#5E70FF" FontWeight="Bold" FontSize="18" Margin="0,0,0,10"/>
-                                        <UniformGrid Columns="4" Rows="1">
-                                            <StackPanel Margin="5">
-                                                <TextBlock Text="Pitch (mm)" Foreground="Gray"/>
-                                                <TextBox Text="{Binding Pitch}" Background="#222" Foreground="White" Padding="5"/>
-                                            </StackPanel>
-                                            <StackPanel Margin="5">
-                                                <TextBlock Text="Pulse/Rev" Foreground="Gray"/>
-                                                <TextBox Text="{Binding PulsePerRev}" Background="#222" Foreground="White" Padding="5"/>
-                                            </StackPanel>
-                                            <StackPanel Margin="5">
-                                                <TextBlock Text="Soft Limit +" Foreground="Gray"/>
-                                                <TextBox Text="{Binding SoftLimitPos}" Background="#222" Foreground="White" Padding="5"/>
-                                            </StackPanel>
-                                            <StackPanel Margin="5">
-                                                <TextBlock Text="Home Speed" Foreground="Gray"/>
-                                                <TextBox Text="{Binding HomeSpeed}" Background="#222" Foreground="White" Padding="5"/>
-                                            </StackPanel>
-                                        </UniformGrid>
-                                    </StackPanel>
-                                </Border>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="60"/>
+                    </Grid.RowDefinitions>
+
+                    <DataGrid Grid.Row="0" ItemsSource="{Binding Axes}" AutoGenerateColumns="False"
+                              Background="#2D2D2D" RowBackground="#333" Foreground="White"
+                              BorderThickness="1" BorderBrush="#555"
+                              CanUserAddRows="False" CanUserDeleteRows="False"
+                              RowHeight="40" HeadersVisibility="Column"
+                              SelectionUnit="Cell" 
+                              FrozenColumnCount="1">
+
+                        <DataGrid.Resources>
+                            <Style TargetType="DataGridColumnHeader">
+                                <Setter Property="Background" Value="#444"/>
+                                <Setter Property="Foreground" Value="#AAA"/>
+                                <Setter Property="Padding" Value="10,5"/>
+                                <Setter Property="FontSize" Value="14"/>
+                                <Setter Property="FontWeight" Value="Bold"/>
+                                <Setter Property="BorderThickness" Value="0,0,1,1"/>
+                                <Setter Property="BorderBrush" Value="#555"/>
+                            </Style>
+                            <Style TargetType="TextBox">
+                                <Setter Property="Padding" Value="5,0"/>
+                                <Setter Property="VerticalContentAlignment" Value="Center"/>
+                                <Setter Property="Background" Value="#222"/>
+                                <Setter Property="Foreground" Value="White"/>
+                                <Setter Property="BorderThickness" Value="0"/>
+                            </Style>
+                        </DataGrid.Resources>
+
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Axis" Binding="{Binding Name}" IsReadOnly="True" Width="80">
+                                <DataGridTextColumn.CellStyle>
+                                    <Style TargetType="DataGridCell">
+                                        <Setter Property="IsHitTestVisible" Value="False"/>
+                                        <Setter Property="Focusable" Value="False"/>
+                                        <Setter Property="Background" Value="#252526"/>
+                                        <Setter Property="Foreground" Value="#5E70FF"/>
+                                        <Setter Property="FontWeight" Value="Bold"/>
+                                        <Setter Property="BorderThickness" Value="0,0,1,0"/>
+                                        <Setter Property="BorderBrush" Value="#555"/>
+                                        <Setter Property="TextBlock.TextAlignment" Value="Center"/>
+                                        <Setter Property="VerticalContentAlignment" Value="Center"/>
+                                    </Style>
+                                </DataGridTextColumn.CellStyle>
+                            </DataGridTextColumn>
+
+                            <DataGridTextColumn Header="Pitch (mm)" Binding="{Binding Pitch}" Width="100"/>
+                            <DataGridTextColumn Header="Pulse/Rev" Binding="{Binding PulsePerRev}" Width="100"/>
+
+                            <DataGridTextColumn Header="Limit (+)" Binding="{Binding SoftLimitPos}" Width="100"/>
+                            <DataGridTextColumn Header="Limit (-)" Binding="{Binding SoftLimitNeg}" Width="100"/>
+
+                            <DataGridTextColumn Header="Home Speed" Binding="{Binding HomeSpeed}" Width="120"/>
+
+                            <DataGridTemplateColumn Header="Homing Dir" Width="140">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <ComboBox SelectedValue="{Binding HomeDirection, UpdateSourceTrigger=PropertyChanged}" 
+                                                  SelectedValuePath="Tag"
+                                                  VerticalContentAlignment="Center"
+                                                  BorderThickness="0" Background="Transparent">
+                                            <ComboBox.Resources>
+                                                <sys:Int32 x:Key="Pos">1</sys:Int32>
+                                                <sys:Int32 x:Key="Neg">-1</sys:Int32>
+                                            </ComboBox.Resources>
+                                            <ComboBoxItem Content="Positive (+)" Tag="{StaticResource Pos}" />
+                                            <ComboBoxItem Content="Negative (-)" Tag="{StaticResource Neg}" />
+                                        </ComboBox>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                        </DataGrid.Columns>
+                    </DataGrid>
+
+                    <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" 
+                                DataContext="{Binding DataContext, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                IsEnabled="{Binding CanEditHardware}">
+
+                        <TextBlock Text="{Binding DeployStatus}" Foreground="#AAA" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                        <Button Command="{Binding GenerateAndDeployCommand}" 
+                                Content="GENERATE &amp; RESTART" 
+                                Width="200" Height="40" 
+                                Background="#28a745" Foreground="White" FontWeight="Bold"/>
+                    </StackPanel>
                 </Grid>
             </TabItem>
-
         </TabControl>
-
-        <StackPanel VerticalAlignment="Bottom" HorizontalAlignment="Right" Margin="20" Orientation="Horizontal">
-            <TextBlock Text="{Binding DeployStatus}" Foreground="#AAA" VerticalAlignment="Center" Margin="0,0,10,0"/>
-            <Button Command="{Binding GenerateAndDeployCommand}" Content="GENERATE &amp; RESTART" Width="200" Height="40" Background="#28a745" Foreground="White" FontWeight="Bold"/>
-        </StackPanel>
     </Grid>
 </UserControl>

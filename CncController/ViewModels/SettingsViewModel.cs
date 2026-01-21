@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CncController.Services;
@@ -10,29 +11,68 @@ namespace CncController.ViewModels
     public partial class SettingsViewModel : ObservableObject
     {
         public HardwareDiscoveryViewModel HardwareVM { get; } = new();
-
-        // ★★★ 修正：確認使用正確的類別名稱 AxisParameterViewModel ★★★
         public AxisParameterViewModel AxisVM { get; } = new();
-
         public MachineConfigViewModel MachineConfigVM { get; } = new();
         public AxisMappingViewModel MappingVM { get; } = new();
 
         [ObservableProperty]
         private string _deployStatus = "Ready";
 
+        // ★★★ 權限控制 ★★★
+        [ObservableProperty]
+        private bool _canEditHardware;
+
         public SettingsViewModel()
         {
+            // 監聽硬體掃描結果，連動更新 Mapping 的下拉選單
             HardwareVM.Slaves.CollectionChanged += (s, e) =>
             {
                 MappingVM.UpdateSlaves(HardwareVM.Slaves);
             };
+
+            // 監聽使用者變更
+            AuthService.Instance.CurrentUserChanged += OnUserChanged;
+            OnUserChanged(AuthService.Instance.CurrentUser);
+        }
+
+        private void OnUserChanged(User user)
+        {
+            if (user != null)
+            {
+                // 只有 Admin 或 Developer 可以編輯
+                CanEditHardware = (user.Role == UserRole.Admin || user.Role == UserRole.Developer);
+            }
+        }
+
+        // ★★★ 初始化：由 MainViewModel 呼叫 ★★★
+        public void Initialize(MachineConfig config, List<DiscoveredSlave> slaves)
+        {
+            // 1. 顯示掃描結果
+            HardwareVM.Slaves.Clear();
+            foreach (var s in slaves) HardwareVM.Slaves.Add(s);
+
+            // 2. 還原軸參數 (若設定檔是空的，則產生預設值)
+            AxisVM.Axes.Clear();
+            if (config.Axes != null && config.Axes.Count > 0)
+            {
+                foreach (var axis in config.Axes) AxisVM.Axes.Add(axis);
+            }
+            else
+            {
+                // ★★★ 防止列表空白：預設產生 X, Y, Z ★★★
+                AxisVM.Axes.Add(new AxisSetting { AxisID = "X", Name = "X Axis" });
+                AxisVM.Axes.Add(new AxisSetting { AxisID = "Y", Name = "Y Axis" });
+                AxisVM.Axes.Add(new AxisSetting { AxisID = "Z", Name = "Z Axis" });
+            }
+
+            // 3. 還原對應表
+            MappingVM.LoadMapping(config, slaves);
         }
 
         [RelayCommand]
         private void ApplyMachineConfig()
         {
             MappingVM.UpdateSlaves(HardwareVM.Slaves);
-            // 請確認 MappingVM 裡面的方法名稱是 GenerateAxisTable 還是 UpdateAxisRows
             MappingVM.GenerateAxisTable(MachineConfigVM);
         }
 
@@ -52,8 +92,6 @@ namespace CncController.ViewModels
                     {
                         LogicalName = mapItem.AxisName,
                         PhysicalAddress = mapItem.SelectedSlave.Name,
-
-                        // ★★★ 修正：補上嚴格比對所需的欄位 ★★★
                         PhysicalIndex = mapItem.SelectedSlave.Index,
                         ExpectedVendorId = mapItem.SelectedSlave.VendorId,
                         ExpectedProductCode = mapItem.SelectedSlave.ProductCode

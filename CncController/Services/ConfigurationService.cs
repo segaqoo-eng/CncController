@@ -23,7 +23,6 @@ namespace CncController.Services
             _jsonOptions = new JsonSerializerOptions { WriteIndented = true, PropertyNameCaseInsensitive = true };
         }
 
-        // ★★★ 修正：補上 LoadConfigAsync ★★★
         public async Task<MachineConfig> LoadConfigAsync()
         {
             try
@@ -40,7 +39,7 @@ namespace CncController.Services
 
         public async Task SaveConfigAsync(MachineConfig config)
         {
-            // 1. 存本地 JSON (保留設定)
+            // 1. 存本地 (保留方向設定)
             string json = JsonSerializer.Serialize(config, _jsonOptions);
             await File.WriteAllTextAsync(ConfigFileName, json);
 
@@ -58,7 +57,18 @@ namespace CncController.Services
                 ini.AppendLine($"SCALE = {axis.PulsePerRev / pitch}");
                 ini.AppendLine($"MIN_LIMIT = {axis.SoftLimitNeg}");
                 ini.AppendLine($"MAX_LIMIT = {axis.SoftLimitPos}");
-                ini.AppendLine($"HOME_SEARCH_VEL = {axis.HomeSpeed}");
+
+                // ★★★ [處理] 回原點方向 ★★★
+                // LinuxCNC 規則: 正值往正極限找, 負值往負極限找
+                double finalHomeVel = Math.Abs(axis.HomeSpeed) * axis.HomeDirection;
+
+                ini.AppendLine($"HOME_SEARCH_VEL = {finalHomeVel}");
+                ini.AppendLine($"HOME_LATCH_VEL = {finalHomeVel * 0.2}"); // 慢速定位設為 20%
+
+                ini.AppendLine("HOME_OFFSET = 0.0");
+                ini.AppendLine("HOME = 0.0");
+                ini.AppendLine("HOME_USE_INDEX = NO");
+                ini.AppendLine("HOME_IGNORE_LIMITS = YES");
             }
 
             // 3. 上傳
@@ -69,7 +79,7 @@ namespace CncController.Services
             }
             catch
             {
-                // 忽略上傳錯誤，避免卡住 UI
+                // 忽略上傳錯誤
             }
         }
     }

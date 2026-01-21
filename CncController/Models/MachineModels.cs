@@ -19,36 +19,39 @@ namespace CncController.Models
         public int MasterIndex { get; set; } = 0;
         public List<AxisSetting> Axes { get; set; } = new();
         public List<IoSetting> IoMappings { get; set; } = new();
-
-        // [更新] 硬體對應清單
         public List<HardwareMapping> Mappings { get; set; } = new List<HardwareMapping>();
     }
 
-    // 3. [新增] 硬體對應類別 (包含嚴格檢查欄位)
+    // 3. 硬體對應類別
     public class HardwareMapping
     {
         public string LogicalName { get; set; }      // 例如 "X Axis"
         public string PhysicalAddress { get; set; }  // 顯示名稱
-
-        // [關鍵] 嚴格比對欄位
         public int PhysicalIndex { get; set; }       // 站號 (Index)
-        public string ExpectedVendorId { get; set; } // 預期的廠商ID (例如 "0x000001dd")
+        public string ExpectedVendorId { get; set; } // 預期的廠商ID
         public string ExpectedProductCode { get; set; } // 預期的產品碼
     }
 
-    // 4. 軸參數 (保持不變)
+    // 4. [修改] 軸參數設定
     public class AxisSetting
     {
         public string AxisID { get; set; } = "X";
         public string Name { get; set; } = "X Axis";
+
+        // 機械參數
         public double Pitch { get; set; } = 10.0;
         public double PulsePerRev { get; set; } = 10000;
         public double SoftLimitPos { get; set; } = 100.0;
         public double SoftLimitNeg { get; set; } = -100.0;
+
+        // 回原點參數
         public double HomeSpeed { get; set; } = 20.0;
+
+        // ★★★ [新增] 回原點方向: 1 = 正向, -1 = 負向 (預設 1) ★★★
+        public int HomeDirection { get; set; } = 1;
     }
 
-    // 5. IO 設定 (保持不變)
+    // 5. IO 設定
     public class IoSetting
     {
         public int StationIndex { get; set; }

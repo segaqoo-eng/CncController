@@ -1,13 +1,9 @@
 ﻿<Window x:Class="CncController.MainWindow"
-        xmlns:sys="clr-namespace:System;assembly=mscorlib"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        
         xmlns:vm="clr-namespace:CncController.ViewModels"
-        xmlns:views="clr-namespace:CncController.Views"
         xmlns:pages="clr-namespace:CncController.Views.Pages"
         xmlns:layouts="clr-namespace:CncController.Views.Layouts"
-        
         Title="CncController" Height="1080" Width="1920"
         WindowStyle="None" WindowState="Maximized"
         Background="{DynamicResource Brush.WindowBackground}">
@@ -17,16 +13,20 @@
     </Window.DataContext>
 
     <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+
+        <DataTemplate DataType="{x:Type vm:MonitorViewModel}">
+            <pages:MonitorView/>
+        </DataTemplate>
         <DataTemplate DataType="{x:Type vm:SettingsViewModel}">
             <pages:SettingsView/>
         </DataTemplate>
-
-        
     </Window.Resources>
 
     <Viewbox Stretch="Uniform">
         <Grid Width="1920" Height="1080">
             <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
                 <RowDefinition Height="30"/>
                 <RowDefinition Height="*"/>
                 <RowDefinition Height="50"/>
@@ -37,30 +37,55 @@
                 <ColumnDefinition Width="180"/>
             </Grid.ColumnDefinitions>
 
-            <layouts:HeaderBar Grid.Row="0" Grid.ColumnSpan="2"/>
+            <Border Grid.Row="0" Grid.ColumnSpan="2" Background="#D80000" Padding="5">
+                <Border.Style>
+                    <Style TargetType="Border">
+                        <Setter Property="Visibility" Value="Collapsed"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsSystemReady}" Value="False">
+                                <Setter Property="Visibility" Value="Visible"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Border.Style>
+                <TextBlock Text="{Binding SystemStatus}" Foreground="White" FontWeight="Bold" HorizontalAlignment="Center" FontSize="18">
+                    <TextBlock.Triggers>
+                        <EventTrigger RoutedEvent="Loaded">
+                            <BeginStoryboard>
+                                <Storyboard RepeatBehavior="Forever" AutoReverse="True">
+                                    <DoubleAnimation Storyboard.TargetProperty="Opacity" From="1" To="0.3" Duration="0:0:0.8"/>
+                                </Storyboard>
+                            </BeginStoryboard>
+                        </EventTrigger>
+                    </TextBlock.Triggers>
+                </TextBlock>
+            </Border>
 
-            <ContentControl Grid.Row="1" Grid.Column="0" Margin="2,2,0,2"
-                            Content="{Binding CurrentViewModel}"/>
+            <layouts:HeaderBar Grid.Row="1" Grid.ColumnSpan="2"/>
 
-            <layouts:JogPanel Grid.Row="1" Grid.Column="1" Margin="0,2,2,2"/>
+            <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,0,10,0">
+                <TextBlock Text="{Binding CurrentUser.Role}" Foreground="#007ACC" VerticalAlignment="Center" FontWeight="Bold" Margin="0,0,10,0"/>
+                <Button Content="{Binding CurrentUser.Username}" Click="BtnLogin_Click" 
+                        Width="100" Height="24" FontSize="12" Background="#333" Foreground="White" BorderThickness="1" BorderBrush="#555" Cursor="Hand"/>
+            </StackPanel>
 
-            <UniformGrid Grid.Row="2" Grid.ColumnSpan="2" Rows="1" Background="{DynamicResource Brush.PanelBackground}">
-                <RadioButton Content="{DynamicResource Str.Nav.Main}" Style="{StaticResource NavBtnStyle}" 
-                             IsChecked="True"
+            <ContentControl Grid.Row="2" Grid.Column="0" Margin="2,2,0,2" Content="{Binding CurrentViewModel}"/>
+
+            <layouts:JogPanel Grid.Row="2" Grid.Column="1" Margin="0,2,2,2"/>
+
+            <UniformGrid Grid.Row="3" Grid.ColumnSpan="2" Rows="1" Background="{DynamicResource Brush.PanelBackground}">
+                <RadioButton Content="{DynamicResource Str.Nav.Main}" Style="{StaticResource NavBtnStyle}" IsChecked="True"
                              Command="{Binding NavigateCommand}" CommandParameter="Main"/>
 
                 <RadioButton Content="{DynamicResource Str.Nav.File}" Style="{StaticResource NavBtnStyle}"/>
                 <RadioButton Content="{DynamicResource Str.Nav.ATC}" Style="{StaticResource NavBtnStyle}"/>
-                <RadioButton Content="{DynamicResource Str.Nav.Tool}" Style="{StaticResource NavBtnStyle}"/>
-                <RadioButton Content="{DynamicResource Str.Nav.Offsets}" Style="{StaticResource NavBtnStyle}"/>
 
                 <RadioButton Content="{DynamicResource Str.Nav.Settings}" Style="{StaticResource NavBtnStyle}"
-                             Command="{Binding NavigateCommand}" CommandParameter="Settings"/>
-
-                <RadioButton Content="{DynamicResource Str.Nav.Status}" Style="{StaticResource NavBtnStyle}"/>
+                             Command="{Binding NavigateCommand}" CommandParameter="Settings"
+                             Visibility="{Binding CurrentUser.CanAccessSettings, Converter={StaticResource BoolToVis}}"/>
             </UniformGrid>
 
-            <layouts:DashboardPanel Grid.Row="3" Grid.ColumnSpan="2"/>
+            <layouts:DashboardPanel Grid.Row="4" Grid.ColumnSpan="2"/>
         </Grid>
     </Viewbox>
 </Window>

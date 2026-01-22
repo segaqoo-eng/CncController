@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Net.Sockets;
-using System.Text;
+using System.Net.Http;
+using System.Net.Http.Json;
 using System.Threading.Tasks;
 using CncController.Models;
 
@@ -9,67 +9,76 @@ namespace CncController.Services
 {
     public class HardwareScanService
     {
-        // ★★★ 修正：補上 Singleton Instance ★★★
         public static HardwareScanService Instance { get; } = new HardwareScanService();
 
-        private const string HOST = "192.168.0.137";
-        private const int PORT = 55005;
+        private readonly HttpClient _http;
 
-        // 私有建構子
-        private HardwareScanService() { }
+        // ★★★ 修正模擬資料：完全對應 CSV 欄位 ★★★
+        private readonly List<DiscoveredSlave> _simulatedSlaves = new()
+        {
+            new DiscoveredSlave {
+                Index = 0,
+                VendorId = "0x00100000",
+                ProductCode = "0x000c010d",
+                Name = "SV660_1Axis_00916",
+                VendorGroup = "InoServo",
+                ProductModel = "InoSV660N",
+                Category = "Servo",
+                Source = "XML (SV660.xml)",
+                Pdos = "6040:00, 607a:00..."
+            },
+            new DiscoveredSlave {
+                Index = 1,
+                VendorId = "0x000001dd",
+                ProductCode = "0x00005500",
+                Name = "R1-EC5500",
+                VendorGroup = "SystemBk",
+                ProductModel = "R1-EC5500",
+                Category = "Coupler",
+                Source = "Fallback",
+                Pdos = "None"
+            },
+            new DiscoveredSlave {
+                Index = 2,
+                VendorId = "0x000001dd",
+                ProductCode = "0x00005621",
+                Name = "R1-EC5621",
+                VendorGroup = "Axis",
+                ProductModel = "R1-EC5621",
+                Category = "Servo",
+                Source = "XML (Delta.xml)",
+                Pdos = "6040:00, 607a:00..."
+            }
+        };
+
+        private HardwareScanService()
+        {
+            _http = new HttpClient { BaseAddress = new Uri("http://192.168.0.137:5000") };
+            _http.Timeout = TimeSpan.FromSeconds(15);
+        }
 
         public async Task<List<DiscoveredSlave>> ScanAsync()
         {
-            var list = new List<DiscoveredSlave>();
             try
             {
-                using var client = new TcpClient();
-                // 設定 Timeout 2秒
-                var connectTask = client.ConnectAsync(HOST, PORT);
-                if (await Task.WhenAny(connectTask, Task.Delay(2000)) != connectTask)
+                var response = await _http.PostAsync("/api/ethercat/scan", null);
+
+                if (response.IsSuccessStatusCode)
                 {
-                    throw new TimeoutException("Connection timed out");
+                    var slaves = await response.Content.ReadFromJsonAsync<List<DiscoveredSlave>>();
+                    return slaves ?? new List<DiscoveredSlave>();
                 }
-
-                using var stream = client.GetStream();
-                byte[] cmd = Encoding.UTF8.GetBytes("CMD_SCAN");
-                await stream.WriteAsync(cmd, 0, cmd.Length);
-
-                byte[] buffer = new byte[65536];
-                client.ReceiveTimeout = 3000;
-
-                int bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length);
-                string csvData = Encoding.UTF8.GetString(buffer, 0, bytesRead);
-
-                if (csvData.StartsWith("ERROR")) throw new Exception(csvData);
-
-                // 解析 CSV
-                var lines = csvData.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
-                foreach (var line in lines)
+                else
                 {
-                    if (line.StartsWith("Slave,")) continue;
-                    var parts = line.Split(',');
-                    if (parts.Length >= 5)
-                    {
-                        list.Add(new DiscoveredSlave
-                        {
-                            Index = int.Parse(parts[0]),
-                            VendorId = parts[1],
-                            ProductCode = parts[2],
-                            Source = parts[3],
-                            Name = parts[4].Trim('"')
-                        });
-                    }
+                    Console.WriteLine($"Scan failed: {response.StatusCode}");
+                    return _simulatedSlaves;
                 }
             }
             catch (Exception ex)
             {
-                // 模擬資料 (測試用)
-                System.Diagnostics.Debug.WriteLine($"Scan Error: {ex.Message}");
-                list.Add(new DiscoveredSlave { Index = 0, Name = "Delta Drive (Sim)", VendorId = "0x1", ProductCode = "0x1" });
-                list.Add(new DiscoveredSlave { Index = 1, Name = "IO Module (Sim)", VendorId = "0x2", ProductCode = "0x2" });
+                Console.WriteLine($"Scan exception: {ex.Message}");
+                return _simulatedSlaves;
             }
-            return list;
         }
     }
 }

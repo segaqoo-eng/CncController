@@ -1,19 +1,52 @@
 ﻿using System.Collections.Generic;
+using System.Text.Json.Serialization;
 
 namespace CncController.Models
 {
-    // 1. 掃描到的 EtherCAT 裝置
+    // 1. 掃描到的 EtherCAT 裝置 (完全對應 26.01.23.scan_report.csv)
     public class DiscoveredSlave
     {
+        // CSV: Slave
+        [JsonPropertyName("Slave")]
         public int Index { get; set; }
+
+        // CSV: VendorId (新增)
+        [JsonPropertyName("VendorId")]
         public string VendorId { get; set; }
+
+        // CSV: ProductCode (新增)
+        [JsonPropertyName("ProductCode")]
         public string ProductCode { get; set; }
-        public string Source { get; set; }
+
+        // CSV: Name
+        [JsonPropertyName("Name")]
         public string Name { get; set; }
+
+        // CSV: Group
+        [JsonPropertyName("Group")]
+        public string VendorGroup { get; set; }
+
+        // CSV: Model
+        [JsonPropertyName("Model")]
+        public string ProductModel { get; set; }
+
+        // CSV: Category
+        [JsonPropertyName("Category")]
+        public string Category { get; set; }
+
+        // CSV: Source
+        [JsonPropertyName("Source")]
+        public string Source { get; set; }
+
+        // CSV: Mapped PDOs
+        [JsonPropertyName("Mapped PDOs")]
+        public string Pdos { get; set; }
+
+        // 顯示名稱 (輔助用)
+        [JsonIgnore]
         public string DisplayName => $"#{Index}: {Name} ({VendorId})";
     }
 
-    // 2. 機台設定總表
     public class MachineConfig
     {
         public int MasterIndex { get; set; } = 0;
@@ -22,36 +55,28 @@ namespace CncController.Models
         public List<HardwareMapping> Mappings { get; set; } = new List<HardwareMapping>();
     }
 
-    // 3. 硬體對應類別
     public class HardwareMapping
     {
-        public string LogicalName { get; set; }      // 例如 "X Axis"
-        public string PhysicalAddress { get; set; }  // 顯示名稱
-        public int PhysicalIndex { get; set; }       // 站號 (Index)
-        public string ExpectedVendorId { get; set; } // 預期的廠商ID
-        public string ExpectedProductCode { get; set; } // 預期的產品碼
+        public string LogicalName { get; set; }
+        public string PhysicalAddress { get; set; }
+        public int PhysicalIndex { get; set; }
+        public string ExpectedVendorId { get; set; }
+        public string ExpectedProductCode { get; set; }
     }
 
-    // 4. [修改] 軸參數設定
     public class AxisSetting
     {
+        public int Index { get; set; }
         public string AxisID { get; set; } = "X";
         public string Name { get; set; } = "X Axis";
-
-        // 機械參數
         public double Pitch { get; set; } = 10.0;
         public double PulsePerRev { get; set; } = 10000;
         public double SoftLimitPos { get; set; } = 100.0;
         public double SoftLimitNeg { get; set; } = -100.0;
-
-        // 回原點參數
         public double HomeSpeed { get; set; } = 20.0;
-
-        // ★★★ [新增] 回原點方向: 1 = 正向, -1 = 負向 (預設 1) ★★★
         public int HomeDirection { get; set; } = 1;
     }
 
-    // 5. IO 設定
     public class IoSetting
     {
         public int StationIndex { get; set; }

@@ -43,13 +43,29 @@
                         <Button Command="{Binding HardwareVM.StartScanCommand}" Content="SCAN BUS" Width="150" Height="40" Background="#5E70FF" Foreground="White" FontWeight="Bold"/>
                         <TextBlock Text="{Binding HardwareVM.StatusMessage}" Foreground="White" VerticalAlignment="Center" Margin="20,0"/>
                     </StackPanel>
+
                     <DataGrid Grid.Row="1" ItemsSource="{Binding HardwareVM.Slaves}" AutoGenerateColumns="False" 
                               Background="#2D2D2D" RowBackground="#333" Foreground="White" Margin="0,20" CanUserAddRows="False">
+
+                        <DataGrid.Resources>
+                            <Style TargetType="DataGridColumnHeader">
+                                <Setter Property="Background" Value="#333"/>
+                                <Setter Property="Foreground" Value="White"/>
+                                <Setter Property="Padding" Value="10,8"/>
+                                <Setter Property="FontWeight" Value="Bold"/>
+                            </Style>
+                        </DataGrid.Resources>
+
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="Index" Binding="{Binding Index}" Width="50"/>
-                            <DataGridTextColumn Header="Vendor" Binding="{Binding VendorId}" Width="100"/>
-                            <DataGridTextColumn Header="Product" Binding="{Binding ProductCode}" Width="100"/>
-                            <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="*"/>
+                            <DataGridTextColumn Header="Slave" Binding="{Binding Index}" Width="50"/>
+                            <DataGridTextColumn Header="VendorId" Binding="{Binding VendorId}" Width="90"/>
+                            <DataGridTextColumn Header="ProductCode" Binding="{Binding ProductCode}" Width="90"/>
+                            <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="200"/>
+                            <DataGridTextColumn Header="Group" Binding="{Binding VendorGroup}" Width="100"/>
+                            <DataGridTextColumn Header="Model" Binding="{Binding ProductModel}" Width="150"/>
+                            <DataGridTextColumn Header="Category" Binding="{Binding Category}" Width="80"/>
+                            <DataGridTextColumn Header="Source" Binding="{Binding Source}" Width="100"/>
+                            <DataGridTextColumn Header="Mapped PDOs" Binding="{Binding Pdos}" Width="*"/>
                         </DataGrid.Columns>
                     </DataGrid>
                 </Grid>
@@ -82,7 +98,7 @@
                               CanUserAddRows="False" CanUserDeleteRows="False"
                               RowHeight="40" HeadersVisibility="Column"
                               SelectionUnit="Cell" 
-                              FrozenColumnCount="1">
+                              FrozenColumnCount="2">
 
                         <DataGrid.Resources>
                             <Style TargetType="DataGridColumnHeader">
@@ -104,12 +120,28 @@
                         </DataGrid.Resources>
 
                         <DataGrid.Columns>
+                            <DataGridTextColumn Header="#" Binding="{Binding Index}" IsReadOnly="True" Width="40">
+                                <DataGridTextColumn.CellStyle>
+                                    <Style TargetType="DataGridCell">
+                                        <Setter Property="IsHitTestVisible" Value="False"/>
+                                        <Setter Property="Focusable" Value="False"/>
+                                        <Setter Property="Background" Value="#333"/>
+                                        <Setter Property="Foreground" Value="Gray"/>
+                                        <Setter Property="FontWeight" Value="Bold"/>
+                                        <Setter Property="BorderThickness" Value="0,0,1,0"/>
+                                        <Setter Property="BorderBrush" Value="#555"/>
+                                        <Setter Property="TextBlock.TextAlignment" Value="Center"/>
+                                        <Setter Property="VerticalContentAlignment" Value="Center"/>
+                                    </Style>
+                                </DataGridTextColumn.CellStyle>
+                            </DataGridTextColumn>
+
                             <DataGridTextColumn Header="Axis" Binding="{Binding Name}" IsReadOnly="True" Width="80">
                                 <DataGridTextColumn.CellStyle>
                                     <Style TargetType="DataGridCell">
                                         <Setter Property="IsHitTestVisible" Value="False"/>
                                         <Setter Property="Focusable" Value="False"/>
-                                        <Setter Property="Background" Value="#252526"/>
+                                        <Setter Property="Background" Value="#333"/>
                                         <Setter Property="Foreground" Value="#5E70FF"/>
                                         <Setter Property="FontWeight" Value="Bold"/>
                                         <Setter Property="BorderThickness" Value="0,0,1,0"/>
@@ -122,10 +154,8 @@
 
                             <DataGridTextColumn Header="Pitch (mm)" Binding="{Binding Pitch}" Width="100"/>
                             <DataGridTextColumn Header="Pulse/Rev" Binding="{Binding PulsePerRev}" Width="100"/>
-
                             <DataGridTextColumn Header="Limit (+)" Binding="{Binding SoftLimitPos}" Width="100"/>
                             <DataGridTextColumn Header="Limit (-)" Binding="{Binding SoftLimitNeg}" Width="100"/>
-
                             <DataGridTextColumn Header="Home Speed" Binding="{Binding HomeSpeed}" Width="120"/>
 
                             <DataGridTemplateColumn Header="Homing Dir" Width="140">
@@ -145,14 +175,12 @@
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
-
                         </DataGrid.Columns>
                     </DataGrid>
 
                     <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" 
                                 DataContext="{Binding DataContext, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                 IsEnabled="{Binding CanEditHardware}">
-
                         <TextBlock Text="{Binding DeployStatus}" Foreground="#AAA" VerticalAlignment="Center" Margin="0,0,10,0"/>
                         <Button Command="{Binding GenerateAndDeployCommand}" 
                                 Content="GENERATE &amp; RESTART" 

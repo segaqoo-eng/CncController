@@ -47,7 +47,7 @@ namespace CncController.Services
 
             var payload = new { IniContent = iniContent, HalContent = halContent, XmlContent = xmlContent };
             try
-            {
+
                 // 1. 上傳設定檔
                 await _http.PostAsJsonAsync("/api/config/update", payload);
 
@@ -195,14 +195,14 @@ namespace CncController.Services
             sb.AppendLine("FF0_P = 0");
             sb.AppendLine("FF1_P = 1");
             sb.AppendLine();
-
+                ini.AppendLine($"MIN_LIMIT = {axis.SoftLimitNeg}");
             for (int i = 0; i < axesCount; i++)
             {
                 var axis = config.Axes[i];
                 double scale = axis.PulsePerRev / (axis.Pitch == 0 ? 1 : axis.Pitch);
                 double homeVel = Math.Abs(axis.HomeSpeed) * axis.HomeDirection;
                 int homeSeq = (axis.AxisID == "Z") ? 1 : 2;
-
+                // LinuxCNC 規則: 正值往正極限找, 負值往負極限找
                 sb.AppendLine($"# --- Axis {axis.AxisID} ---");
                 sb.AppendLine($"[AXIS_{axis.AxisID}]");
                 sb.AppendLine("MAX_VELOCITY = 100.0");
@@ -210,7 +210,7 @@ namespace CncController.Services
                 sb.AppendLine($"MIN_LIMIT = {axis.SoftLimitNeg}");
                 sb.AppendLine($"MAX_LIMIT = {axis.SoftLimitPos}");
                 sb.AppendLine();
-
+                ini.AppendLine($"HOME_SEARCH_VEL = {finalHomeVel}");
                 sb.AppendLine($"[JOINT_{i}]");
                 sb.AppendLine("TYPE = LINEAR");
                 sb.AppendLine("HOME = 0.0");
@@ -231,7 +231,7 @@ namespace CncController.Services
             }
             return sb.ToString();
         }
-
+                ini.AppendLine("HOME_IGNORE_LIMITS = YES");
         private string GenerateXml(MachineConfig config)
         {
             var sb = new StringBuilder();
@@ -240,7 +240,7 @@ namespace CncController.Services
             sb.AppendLine($"  <master idx=\"{config.MasterIndex}\" appTimePeriod=\"1000000\" refClockSyncCycles=\"1000\">");
 
             foreach (var map in config.Mappings)
-            {
+            var payload = new { IniContent = ini.ToString(), HalContent = "loadrt lcec", XmlContent = "" };
                 sb.AppendLine($"    <slave idx=\"{map.PhysicalIndex}\" type=\"generic\" vid=\"{map.ExpectedVendorId}\" pid=\"{map.ExpectedProductCode}\" configPdos=\"true\">");
                 sb.AppendLine("      <dcConf assignActivate=\"300\" sync0Cycle=\"*1\" sync0Shift=\"0\"/>");
                 sb.AppendLine("      <syncManager idx=\"2\" dir=\"out\">");

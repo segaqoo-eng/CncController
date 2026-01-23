@@ -22,5 +22,10 @@ namespace CncController.Views.Layouts
         {
             InitializeComponent();
         }
+
+        private void DroDisplay_Loaded(object sender, RoutedEventArgs e)
+        {
+
+        }
     }
 }

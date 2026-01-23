@@ -8,7 +8,7 @@ namespace CncController.ViewModels
 {
     public partial class AxisMapItem : ObservableObject
     {
-        public string AxisName { get; set; }
+        public string AxisName { get; set; } = string.Empty;
         [ObservableProperty]
         private DiscoveredSlave _selectedSlave;
     }

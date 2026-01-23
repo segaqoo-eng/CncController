@@ -15,7 +15,7 @@
             </Grid.ColumnDefinitions>
             <comp:CycleControl Grid.Column="0" Margin="2"/>
             <comp:ToolInfo     Grid.Column="1" Margin="2"/>
-            <comp:DroDisplay   Grid.Column="2" Margin="2"/>
+            <comp:DroDisplay   Grid.Column="2" Margin="2" Loaded="DroDisplay_Loaded"/>
             <comp:SliderControl Grid.Column="3" Margin="2"/>
             <comp:JogConfig    Grid.Column="4" Margin="2"/>
         </Grid>

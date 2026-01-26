@@ -22,7 +22,6 @@ namespace CncController.Services
     {
         public bool Connected { get; set; }
         public string Task_State { get; set; }
-        public string Interp_State { get; set; }
         public Dictionary<string, double> Position { get; set; }
         public double Feedrate { get; set; }
         public double Spindle_Speed { get; set; }
@@ -30,7 +29,7 @@ namespace CncController.Services
     }
 
     public class ErrorData { public string Kind { get; set; } public string Text { get; set; } }
-    public class LogResponse { public string Log { get; set; } public string Error { get; set; } }
+    public class LogResponse { public string Log { get; set; } }
 
     // ==============================================================================
     // 核心服務實作
@@ -41,7 +40,7 @@ namespace CncController.Services
         public static MachineControlService Instance => _instance ??= new MachineControlService();
 
         private readonly HttpClient _httpClient;
-        private string _serverUrl = "http://192.168.0.137:5000"; // 請確認 IP
+        private string _serverUrl = "http://192.168.0.137:5000"; // 請確認您的 IP
         private readonly JsonSerializerOptions _jsonOptions;
 
         public MachineControlService()
@@ -50,10 +49,16 @@ namespace CncController.Services
             _jsonOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
         }
 
-        // --- 狀態與錯誤輪詢 ---
+        // --- 狀態檢查 ---
+        public async Task<bool> CheckConnectionAsync()
+        {
+            var status = await GetStatusAsync();
+            return status != null && status.Connected;
+        }
+
         public async Task<MachineStatusData> GetStatusAsync()
         {
-            await PollErrorsAsync(); // 每次獲取狀態前先獲取 LinuxCNC 錯誤
+            await PollErrorsAsync();
             try
             {
                 var response = await _httpClient.GetAsync($"{_serverUrl}/v2/status");
@@ -67,13 +72,6 @@ namespace CncController.Services
             return null;
         }
 
-        // ★★★ 補回缺失的方法 ★★★
-        public async Task<bool> CheckConnectionAsync()
-        {
-            var status = await GetStatusAsync();
-            return status != null && status.Connected;
-        }
-
         private async Task PollErrorsAsync()
         {
             try
@@ -85,14 +83,14 @@ namespace CncController.Services
                     if (result?.Status == "Success" && result.Data != null)
                     {
                         foreach (var err in result.Data)
-                            AlarmService.Instance.AddLog("ERROR", $"[CNC] {err.Text}");
+                            AlarmService.Instance.AddLog("ERROR", $"[{err.Kind}] {err.Text}");
                     }
                 }
             }
             catch { }
         }
 
-        // --- 通用 V2 指令發送 (含自動日誌寫入) ---
+        // --- 通用 V2 指令發送 ---
         private async Task<T> SendV2CommandAsync<T>(string endpoint, object payload = null)
         {
             AlarmService.Instance.AddLog("API", $"REQ: {endpoint}");
@@ -104,19 +102,19 @@ namespace CncController.Services
                     var result = await response.Content.ReadFromJsonAsync<ApiResponse<T>>(_jsonOptions);
                     if (result?.Status == "Success")
                     {
-                        AlarmService.Instance.AddLog("API", $"RES: {endpoint} [Success]");
+                        AlarmService.Instance.AddLog("API", $"RES: {endpoint} [OK]");
                         return result.Data;
                     }
-                    AlarmService.Instance.AddLog("API", $"RES: {endpoint} [Error: {result?.Message}]");
+                    AlarmService.Instance.AddLog("API", $"RES: {endpoint} [Err: {result?.Message}]");
                 }
                 else
                 {
-                    AlarmService.Instance.AddLog("API", $"HTTP ERROR: {response.StatusCode}");
+                    AlarmService.Instance.AddLog("API", $"HTTP: {response.StatusCode}");
                 }
             }
             catch (Exception ex)
             {
-                AlarmService.Instance.AddLog("API", $"EXCEPTION: {ex.Message}");
+                AlarmService.Instance.AddLog("API", $"EX: {ex.Message}");
             }
             return default;
         }
@@ -125,23 +123,37 @@ namespace CncController.Services
             => await SendV2CommandAsync<object>(endpoint, payload);
 
         // --- 公開控制方法 ---
+
         public async Task ResetMachineAsync() => await SendV2CommandAsync("machine/reset");
         public async Task ShutdownMachineAsync() => await SendV2CommandAsync("machine/shutdown");
         public async Task TriggerEstopAsync() => await SendV2CommandAsync("machine/estop");
-        public async Task JogAsync(int axis, double speed) => await SendV2CommandAsync("motion/jog", new { axis, speed });
-        public async Task JogStopAsync(int axis) => await SendV2CommandAsync("motion/jog", new { axis, speed = 0 });
-        public async Task CycleStartAsync(string file = null) => await SendV2CommandAsync("program/run", new { file_name = file });
+
+        // ★★★ 關鍵修正：這裡增加了 distance 參數，預設為 0 ★★★
+        public async Task JogAsync(int axis, double speed, double distance = 0)
+        {
+            // 將 dist 參數打包進 JSON 送給 Python 後端
+            await SendV2CommandAsync("motion/jog", new { axis, speed, dist = distance });
+        }
+
+        public async Task JogStopAsync(int axis)
+            => await SendV2CommandAsync("motion/jog", new { axis, speed = 0 });
+
+        public async Task CycleStartAsync(string file = null)
+            => await SendV2CommandAsync("program/run", new { file_name = file });
+
         public async Task StopAsync() => await SendV2CommandAsync("program/stop");
-        public async Task FeedHoldAsync() => await SendV2CommandAsync("program/pause"); // 補上 FeedHold
+
+        public async Task FeedHoldAsync() => await SendV2CommandAsync("program/pause");
+
         public async Task<string> GetStartupLogAsync()
         {
             try
             {
                 var response = await _httpClient.GetAsync($"{_serverUrl}/api/machine/log");
                 var result = await response.Content.ReadFromJsonAsync<LogResponse>(_jsonOptions);
-                return result?.Log ?? "No Log.";
+                return result?.Log ?? "No Log";
             }
-            catch { return "Log unavailable"; }
+            catch { return "Log Unavailable"; }
         }
     }
 }

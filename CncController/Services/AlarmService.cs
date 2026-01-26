@@ -1,71 +1,62 @@
 ﻿using System;
 using System.Collections.ObjectModel;
-using System.IO;
-using System.Threading.Tasks;
+using System.Linq;
+using System.Windows;
+using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace CncController.Services
 {
-    public class AlarmItem
+    /// <summary>
+    /// 單一日誌項目模型
+    /// </summary>
+    public class AlarmLog
     {
         public DateTime Time { get; set; }
-        public string Type { get; set; } // "ALARM", "WARNING", "INFO"
+        public string Type { get; set; }    // ALARM, ERROR, LOGIN, API
         public string Message { get; set; }
     }
 
-    public class AlarmService
+    /// <summary>
+    /// 集中式履歷管理服務。
+    /// 負責處理：警示、異常、登入、以及 API 請求紀錄。
+    /// </summary>
+    public class AlarmService : ObservableObject
     {
-        public static AlarmService Instance { get; } = new AlarmService();
+        private static AlarmService _instance;
+        public static AlarmService Instance => _instance ??= new AlarmService();
 
-        // 用於 UI 綁定的「即時警報清單」
-        public ObservableCollection<AlarmItem> ActiveAlarms { get; } = new();
+        // 綁定至 HistoryView 的 DataGrid
+        public ObservableCollection<AlarmLog> AllLogs { get; private set; } = new();
 
-        private readonly string _logFilePath = "MachineHistory.log";
+        // API 紀錄保留上限
+        private const int MAX_API_LOGS = 20;
 
-        private AlarmService() { }
-
-        // 新增一筆警報/履歷
-        public void AddLog(string type, string message, bool isActiveAlarm = false)
+        /// <summary>
+        /// 新增一筆履歷，並確保執行緒安全與筆數限制邏輯。
+        /// </summary>
+        public void AddLog(string type, string message)
         {
-            var item = new AlarmItem
+            Application.Current.Dispatcher.Invoke(() =>
             {
-                Time = DateTime.Now,
-                Type = type,
-                Message = message
-            };
+                // 針對 API 類型執行筆數限制 (需求 1.4)
+                if (type == "API")
+                {
+                    var apiLogs = AllLogs.Where(x => x.Type == "API").ToList();
+                    if (apiLogs.Count >= MAX_API_LOGS)
+                    {
+                        var oldestApi = apiLogs.LastOrDefault();
+                        if (oldestApi != null) AllLogs.Remove(oldestApi);
+                    }
+                }
 
-            // 1. 如果是即時警報，加入 UI 清單
-            if (isActiveAlarm)
-            {
-                // 避免重複加入相同的警報
-                // (實務上可能需要更複雜的判斷，這裡先簡單處理)
-                ActiveAlarms.Insert(0, item);
-            }
-
-            // 2. 寫入硬碟檔案 (Append)
-            WriteToFile(item);
-        }
-
-        // 清除所有即時警報 (例如按下 ESC)
-        public void AcknowledgeAll()
-        {
-            if (ActiveAlarms.Count > 0)
-            {
-                AddLog("OP", "User acknowledged all alarms.");
-                ActiveAlarms.Clear();
-            }
-        }
-
-        private async void WriteToFile(AlarmItem item)
-        {
-            try
-            {
-                string line = $"{item.Time:yyyy-MM-dd HH:mm:ss} | [{item.Type}] | {item.Message}";
-                await File.AppendAllTextAsync(_logFilePath, line + Environment.NewLine);
-            }
-            catch
-            {
-                // 寫檔失敗暫不處理，避免影響主程式
-            }
+                // 插入至最上方 (索引 0)，確保最新資料在最前面
+                AllLogs.Insert(0, new AlarmLog
+                {
+                    Time = DateTime.Now,
+                    Type = type.ToUpper(),
+                    Message = message
+                });
+            });
         }
     }
 }

@@ -42,6 +42,9 @@
                                 <DataTrigger Binding="{Binding Type}" Value="ERROR">
                                     <Setter Property="Foreground" Value="#FFAA00"/>
                                 </DataTrigger>
+                                <DataTrigger Binding="{Binding Type}" Value="API">
+                                    <Setter Property="Foreground" Value="#888888"/>
+                                </DataTrigger>
                             </Style.Triggers>
                         </Style>
                     </DataGridTextColumn.ElementStyle>

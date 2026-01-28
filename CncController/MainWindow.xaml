@@ -67,8 +67,8 @@
                 <RadioButton Content="HISTORY" Style="{StaticResource NavBtnStyle}"
                              Command="{Binding NavigateCommand}" CommandParameter="History"/>
                 <RadioButton Content="SETTINGS" Style="{StaticResource NavBtnStyle}"
-                             Command="{Binding NavigateCommand}" CommandParameter="Settings"
-                             Visibility="{Binding CurrentUser.CanAccessSettings, Converter={StaticResource BoolToVis}}"/>
+                        Command="{Binding NavigateCommand}" CommandParameter="Settings"
+                        Visibility="Visible"/>
             </UniformGrid>
 
             <layouts:DashboardPanel Grid.Row="4" Grid.ColumnSpan="2"/>

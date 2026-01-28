@@ -178,29 +178,33 @@ namespace CncController.ViewModels
         [RelayCommand]
         private async Task JogStart(string args)
         {
+            // [DEBUG] 加入這行，如果 Log 沒出現，表示按鈕綁定有問題
+            // AlarmService.Instance.AddLog("DEBUG", $"Jog Trig: {args}"); 
+
             if (string.IsNullOrEmpty(args)) return;
             var parts = args.Split(',');
 
             if (parts.Length == 2 && int.TryParse(parts[0], out int axis) && double.TryParse(parts[1], out double dirSign))
             {
-                double finalSpeed;
-                if (Math.Abs(dirSign) > 1.0)
-                    finalSpeed = dirSign;
-                else
-                    finalSpeed = JogFeedrate * dirSign;
+                double finalSpeed = Math.Abs(JogFeedrate) * (dirSign > 0 ? 1 : -1);
+                double distance = JogStepDistance > 0 ? JogStepDistance : 0;
 
-                if (JogStepDistance > 0)
-                    await MachineControlService.Instance.JogAsync(axis, finalSpeed, JogStepDistance);
-                else
-                    await MachineControlService.Instance.JogAsync(axis, finalSpeed, 0);
+                // [DEBUG] 確認最終發送的數值
+                AlarmService.Instance.AddLog("JOG", $"Axis:{axis} Spd:{finalSpeed} Dist:{distance}");
+
+                await MachineControlService.Instance.JogAsync(axis, finalSpeed, distance);
             }
         }
 
+        // [修改] JOG Stop 邏輯：只在連續模式下生效
         [RelayCommand]
         private async Task JogStop(string axisStr)
         {
             if (int.TryParse(axisStr, out int axis))
             {
+                // [關鍵] 只有在連續模式 (JogStepDistance == 0) 才發送 Stop
+                // 如果是單步模式，機器移動完固定距離會自動停，
+                // 此時若滑鼠放開觸發 Stop，會導致單步移動未完成即停止 (截斷)。
                 if (JogStepDistance == 0)
                 {
                     await MachineControlService.Instance.JogStopAsync(axis);

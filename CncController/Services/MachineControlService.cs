@@ -9,12 +9,13 @@ using CncController.Models;
 namespace CncController.Services
 {
     // ==============================================================================
-    // API 資料協定定義
+    // API 資料協定定義 (修改：加入 Version)
     // ==============================================================================
     public class ApiResponse<T>
     {
         public string Status { get; set; }
         public string Message { get; set; }
+        public string Version { get; set; } // [新增] 支援後端版本回傳
         public T Data { get; set; }
     }
 
@@ -43,33 +44,77 @@ namespace CncController.Services
         private string _serverUrl = "http://192.168.0.137:5000"; // 請確認您的 IP
         private readonly JsonSerializerOptions _jsonOptions;
 
+        // [新增] 伺服器版本屬性
+        public string ServerVersion { get; private set; } = "Unknown";
+
+        // [新增] 連線狀態列舉
+        public enum ConnectionState
+        {
+            Disconnected,   // 完全斷線 (HTTP 失敗)
+            ServerOnly,     // Server 在，但 LinuxCNC 沒開 (HTTP 500)
+            Connected       // 正常運作 (HTTP 200)
+        }
+
         public MachineControlService()
         {
             _httpClient = new HttpClient { Timeout = TimeSpan.FromSeconds(3) };
             _jsonOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
         }
 
-        // --- 狀態檢查 ---
+        // --- 狀態檢查 (大幅修改：回傳 Tuple) ---
+
+        // 為了相容性保留舊方法 (如果有的話)，但建議 ViewModel 都改用 GetStatusAsync
         public async Task<bool> CheckConnectionAsync()
         {
-            var status = await GetStatusAsync();
-            return status != null && status.Connected;
+            var (state, _) = await GetStatusAsync();
+            return state == ConnectionState.Connected;
         }
 
-        public async Task<MachineStatusData> GetStatusAsync()
+        // [核心修改] 回傳 (狀態, 資料) 的 Tuple
+        public async Task<(ConnectionState State, MachineStatusData Data)> GetStatusAsync()
         {
             await PollErrorsAsync();
             try
             {
                 var response = await _httpClient.GetAsync($"{_serverUrl}/v2/status");
+
+                // 1. 嘗試讀取內容與版本號
+                ApiResponse<MachineStatusData> result = null;
+                try
+                {
+                    var jsonString = await response.Content.ReadAsStringAsync();
+                    if (!string.IsNullOrEmpty(jsonString))
+                    {
+                        result = JsonSerializer.Deserialize<ApiResponse<MachineStatusData>>(jsonString, _jsonOptions);
+                        if (result != null && !string.IsNullOrEmpty(result.Version))
+                        {
+                            ServerVersion = result.Version;
+                        }
+                    }
+                }
+                catch { /* JSON 解析失敗忽略 */ }
+
+                // 2. 判斷狀態
                 if (response.IsSuccessStatusCode)
                 {
-                    var result = await response.Content.ReadFromJsonAsync<ApiResponse<MachineStatusData>>(_jsonOptions);
-                    if (result?.Status == "Success") return result.Data;
+                    // HTTP 200: 連線成功且 LinuxCNC 正常
+                    if (result?.Status == "Success")
+                        return (ConnectionState.Connected, result.Data);
+                }
+                else
+                {
+                    // HTTP 500: Server 活著 (有回傳 JSON)，但 LinuxCNC 報錯
+                    // 這裡我們視為 ServerOnly 模式
+                    return (ConnectionState.ServerOnly, null);
                 }
             }
-            catch { }
-            return null;
+            catch
+            {
+                // 網路錯誤 (Timeout, Connection Refused)
+                return (ConnectionState.Disconnected, null);
+            }
+
+            return (ConnectionState.Disconnected, null);
         }
 
         private async Task PollErrorsAsync()
@@ -128,10 +173,8 @@ namespace CncController.Services
         public async Task ShutdownMachineAsync() => await SendV2CommandAsync("machine/shutdown");
         public async Task TriggerEstopAsync() => await SendV2CommandAsync("machine/estop");
 
-        // ★★★ 關鍵修正：這裡增加了 distance 參數，預設為 0 ★★★
         public async Task JogAsync(int axis, double speed, double distance = 0)
         {
-            // 將 dist 參數打包進 JSON 送給 Python 後端
             await SendV2CommandAsync("motion/jog", new { axis, speed, dist = distance });
         }
 

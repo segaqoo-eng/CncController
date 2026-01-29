@@ -3,38 +3,23 @@ using System.Collections.Generic;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 using CncController.Models;
 
 namespace CncController.Services
 {
-    // ==============================================================================
-    // API 資料協定定義 (修改：加入 Version)
-    // ==============================================================================
     public class ApiResponse<T>
     {
         public string Status { get; set; }
         public string Message { get; set; }
-        public string Version { get; set; } // [新增] 支援後端版本回傳
+        public string Version { get; set; }
         public T Data { get; set; }
-    }
-
-    public class MachineStatusData
-    {
-        public bool Connected { get; set; }
-        public string Task_State { get; set; }
-        public Dictionary<string, double> Position { get; set; }
-        public double Feedrate { get; set; }
-        public double Spindle_Speed { get; set; }
-        public string File { get; set; }
     }
 
     public class ErrorData { public string Kind { get; set; } public string Text { get; set; } }
     public class LogResponse { public string Log { get; set; } }
 
-    // ==============================================================================
-    // 核心服務實作
-    // ==============================================================================
     public class MachineControlService
     {
         private static MachineControlService _instance;
@@ -44,15 +29,16 @@ namespace CncController.Services
         private string _serverUrl = "http://192.168.0.137:5000"; // 請確認您的 IP
         private readonly JsonSerializerOptions _jsonOptions;
 
-        // [新增] 伺服器版本屬性
+        private CancellationTokenSource _jogCts;
+        private MachineStatusData _lastCachedStatus;
+       // private MachineStatusData _lastCachedStatus; // 需透過 GetStatusAsync 更新此變數
         public string ServerVersion { get; private set; } = "Unknown";
 
-        // [新增] 連線狀態列舉
         public enum ConnectionState
         {
-            Disconnected,   // 完全斷線 (HTTP 失敗)
-            ServerOnly,     // Server 在，但 LinuxCNC 沒開 (HTTP 500)
-            Connected       // 正常運作 (HTTP 200)
+            Disconnected,
+            ServerOnly,
+            Connected
         }
 
         public MachineControlService()
@@ -61,16 +47,7 @@ namespace CncController.Services
             _jsonOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
         }
 
-        // --- 狀態檢查 (大幅修改：回傳 Tuple) ---
-
-        // 為了相容性保留舊方法 (如果有的話)，但建議 ViewModel 都改用 GetStatusAsync
-        public async Task<bool> CheckConnectionAsync()
-        {
-            var (state, _) = await GetStatusAsync();
-            return state == ConnectionState.Connected;
-        }
-
-        // [核心修改] 回傳 (狀態, 資料) 的 Tuple
+        // --- 狀態檢查 ---
         public async Task<(ConnectionState State, MachineStatusData Data)> GetStatusAsync()
         {
             await PollErrorsAsync();
@@ -78,7 +55,6 @@ namespace CncController.Services
             {
                 var response = await _httpClient.GetAsync($"{_serverUrl}/v2/status");
 
-                // 1. 嘗試讀取內容與版本號
                 ApiResponse<MachineStatusData> result = null;
                 try
                 {
@@ -92,29 +68,42 @@ namespace CncController.Services
                         }
                     }
                 }
-                catch { /* JSON 解析失敗忽略 */ }
+                catch { }
 
-                // 2. 判斷狀態
-                if (response.IsSuccessStatusCode)
+                if (response.IsSuccessStatusCode) // HTTP 200 OK
                 {
-                    // HTTP 200: 連線成功且 LinuxCNC 正常
+                    // 情況 A: 完美連線
                     if (result?.Status == "Success")
+                    {
                         return (ConnectionState.Connected, result.Data);
+                    }
+                    // 情況 B: Server 活著 (HTTP 200)，但內容回傳 Error (例如 NML 斷線)
+                    else
+                    {
+                        // [關鍵修正] 這裡原本漏掉了，導致狀態沒變
+                        // 我們將其視為 "ServerOnly" (橘燈)
+                        return (ConnectionState.ServerOnly, null);
+                    }
                 }
-                else
+                else // HTTP 404, 500, 503...
                 {
-                    // HTTP 500: Server 活著 (有回傳 JSON)，但 LinuxCNC 報錯
-                    // 這裡我們視為 ServerOnly 模式
+                    // 情況 C: Server 活著但報錯 (例如我們在 Python 改回傳 503)
                     return (ConnectionState.ServerOnly, null);
                 }
             }
             catch
             {
-                // 網路錯誤 (Timeout, Connection Refused)
                 return (ConnectionState.Disconnected, null);
             }
 
             return (ConnectionState.Disconnected, null);
+        }
+
+        // ★★★ [新增] 相容性修正：讓 WaitForLinuxCNC 可以呼叫 ★★★
+        public async Task<bool> CheckConnectionAsync()
+        {
+            var result = await GetStatusAsync();
+            return result.State == ConnectionState.Connected;
         }
 
         private async Task PollErrorsAsync()
@@ -135,16 +124,17 @@ namespace CncController.Services
             catch { }
         }
 
-        // --- 通用 V2 指令發送 ---
-        private async Task<T> SendV2CommandAsync<T>(string endpoint, object payload = null)
+        // --- 指令發送 ---
+        private async Task<T> SendV2CommandAsync<T>(string endpoint, object payload, CancellationToken token = default)
         {
             AlarmService.Instance.AddLog("API", $"REQ: {endpoint}");
             try
             {
-                var response = await _httpClient.PostAsJsonAsync($"{_serverUrl}/v2/{endpoint}", payload ?? new { });
+                var response = await _httpClient.PostAsJsonAsync($"{_serverUrl}/v2/{endpoint}", payload ?? new { }, token);
+
                 if (response.IsSuccessStatusCode)
                 {
-                    var result = await response.Content.ReadFromJsonAsync<ApiResponse<T>>(_jsonOptions);
+                    var result = await response.Content.ReadFromJsonAsync<ApiResponse<T>>(_jsonOptions, token);
                     if (result?.Status == "Success")
                     {
                         AlarmService.Instance.AddLog("API", $"RES: {endpoint} [OK]");
@@ -157,6 +147,10 @@ namespace CncController.Services
                     AlarmService.Instance.AddLog("API", $"HTTP: {response.StatusCode}");
                 }
             }
+            catch (TaskCanceledException)
+            {
+                AlarmService.Instance.AddLog("API", $"RES: {endpoint} [CANCELED]");
+            }
             catch (Exception ex)
             {
                 AlarmService.Instance.AddLog("API", $"EX: {ex.Message}");
@@ -164,28 +158,54 @@ namespace CncController.Services
             return default;
         }
 
-        private async Task SendV2CommandAsync(string endpoint, object payload = null)
-            => await SendV2CommandAsync<object>(endpoint, payload);
+        private async Task SendV2CommandAsync(string endpoint, object payload = null, CancellationToken token = default)
+            => await SendV2CommandAsync<object>(endpoint, payload, token);
 
-        // --- 公開控制方法 ---
-
+        // --- 控制方法 ---
         public async Task ResetMachineAsync() => await SendV2CommandAsync("machine/reset");
-        public async Task ShutdownMachineAsync() => await SendV2CommandAsync("machine/shutdown");
         public async Task TriggerEstopAsync() => await SendV2CommandAsync("machine/estop");
 
+        //private readonly HashSet<int> _activeJogAxes = new();
         public async Task JogAsync(int axis, double speed, double distance = 0)
         {
-            await SendV2CommandAsync("motion/jog", new { axis, speed, dist = distance });
+            if (speed != 0 && _lastCachedStatus != null && _lastCachedStatus.Is_Moving)
+            {
+                AlarmService.Instance.AddLog("WARN", "JOG blocked: Machine is moving.");
+                return;
+            }
+
+            if (_jogCts != null)
+            {
+                _jogCts.Cancel();
+                _jogCts.Dispose();
+            }
+            _jogCts = new CancellationTokenSource();
+
+            await SendV2CommandAsync("motion/jog", new { axis, speed, dist = distance }, _jogCts.Token);
         }
 
         public async Task JogStopAsync(int axis)
-            => await SendV2CommandAsync("motion/jog", new { axis, speed = 0 });
+        {
+            if (_jogCts != null)
+            {
+                _jogCts.Cancel();
+                _jogCts.Dispose();
+                _jogCts = null;
+            }
+            await SendV2CommandAsync("motion/jog", new { axis, speed = 0, dist = 0 });
+        }
 
         public async Task CycleStartAsync(string file = null)
-            => await SendV2CommandAsync("program/run", new { file_name = file });
+        {
+            if (_lastCachedStatus != null && _lastCachedStatus.Is_Moving)
+            {
+                AlarmService.Instance.AddLog("WARN", "Run blocked: Machine is moving.");
+                return;
+            }
+            await SendV2CommandAsync("program/run", new { file_name = file });
+        }
 
         public async Task StopAsync() => await SendV2CommandAsync("program/stop");
-
         public async Task FeedHoldAsync() => await SendV2CommandAsync("program/pause");
 
         public async Task<string> GetStartupLogAsync()

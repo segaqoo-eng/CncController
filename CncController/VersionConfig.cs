@@ -3,7 +3,7 @@
     public static class VersionConfig
     {
         // 每次修改程式時，更新這個字串 
-        public const string CurrentVersion = "2026.01.29_SYNC_CHECK_01";
-        public const string RadomStr = "rty";
+        public const string CurrentVersion = "2026.01.29_SYNC_CHECK_05";
+        public const string RadomStr = "iod";
     }
 }

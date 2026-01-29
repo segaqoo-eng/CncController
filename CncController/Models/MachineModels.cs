@@ -3,56 +3,54 @@ using System.Text.Json.Serialization;
 
 namespace CncController.Models
 {
-    // 1. 掃描到的 EtherCAT 裝置 (完全對應 26.01.23.scan_report.csv)
-    public class DiscoveredSlave
+    // ==========================================
+    // 狀態資料結構 (對應 server.py /v2/status)
+    // ==========================================
+    public class MachineStatusData
     {
-        // CSV: Slave
-        [JsonPropertyName("Slave")]
-        public int Index { get; set; }
+        public bool Connected { get; set; }
+        public string Task_State { get; set; }      // ESTOP, ON, OFF
+        public string Interp_State { get; set; }    // IDLE, RUNNING, PAUSED
 
-        // CSV: VendorId (新增)
-        [JsonPropertyName("VendorId")]
-        public string VendorId { get; set; }
+        // [新增] 關鍵安全欄位
+        public bool Is_Moving { get; set; }         // 機台是否正在移動中
+        public bool Has_Error { get; set; }         // 是否有錯誤
 
-        // CSV: ProductCode (新增)
-        [JsonPropertyName("ProductCode")]
-        public string ProductCode { get; set; }
+        public Dictionary<string, double> Position { get; set; }
+        public double Feedrate { get; set; }
+        public double Spindle_Speed { get; set; }
+        public string File { get; set; }
 
-        // CSV: Name
-        [JsonPropertyName("Name")]
-        public string Name { get; set; }
-
-        // CSV: Group
-        [JsonPropertyName("Group")]
-        public string VendorGroup { get; set; }
-
-        // CSV: Model
-        [JsonPropertyName("Model")]
-        public string ProductModel { get; set; }
-
-        // CSV: Category
-        [JsonPropertyName("Category")]
-        public string Category { get; set; }
-
-        // CSV: Source
-        [JsonPropertyName("Source")]
-        public string Source { get; set; }
-
-        // CSV: Mapped PDOs
-        [JsonPropertyName("Mapped PDOs")]
-        public string Pdos { get; set; }
-
-        // 顯示名稱 (輔助用)
-        [JsonIgnore]
-        public string DisplayName => $"#{Index}: {Name} ({VendorId})";
+        // [新增] 警報列表
+        public List<string> Alerts { get; set; }
     }
 
+    // ==========================================
+    // EtherCAT 掃描結果 (保持原樣)
+    // ==========================================
+    public class DiscoveredSlave
+    {
+        [JsonPropertyName("Slave")] public int Index { get; set; }
+        [JsonPropertyName("VendorId")] public string VendorId { get; set; }
+        [JsonPropertyName("ProductCode")] public string ProductCode { get; set; }
+        [JsonPropertyName("Name")] public string Name { get; set; }
+        [JsonPropertyName("Group")] public string VendorGroup { get; set; }
+        [JsonPropertyName("Model")] public string ProductModel { get; set; }
+        [JsonPropertyName("Category")] public string Category { get; set; }
+        [JsonPropertyName("Source")] public string Source { get; set; }
+        [JsonPropertyName("Mapped PDOs")] public string Pdos { get; set; }
+        [JsonIgnore] public string DisplayName => $"#{Index}: {Name} ({VendorId})";
+    }
+
+    // ==========================================
+    // 設定檔結構 (保持原樣)
+    // ==========================================
     public class MachineConfig
     {
         public int MasterIndex { get; set; } = 0;
         public List<AxisSetting> Axes { get; set; } = new();
         public List<IoSetting> IoMappings { get; set; } = new();
-        public List<HardwareMapping> Mappings { get; set; } = new List<HardwareMapping>();
+        public List<HardwareMapping> Mappings { get; set; } = new();
     }
 
     public class HardwareMapping

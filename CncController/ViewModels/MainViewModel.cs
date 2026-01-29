@@ -45,6 +45,7 @@ namespace CncController.ViewModels
         // === JOG 設定 ===
         [ObservableProperty] private double _jogFeedrate = 1500.0;
         [ObservableProperty] private double _jogStepDistance = 0;
+        private readonly HashSet<int> _activeJogAxes = new();
 
         private readonly DispatcherTimer _timer;
 
@@ -59,15 +60,30 @@ namespace CncController.ViewModels
             // 系統啟動 Log
             AlarmService.Instance.AddLog("LOGIN", "System Started");
 
-            _timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(500) };
-            _timer.Tick += async (s, e) => await PollMachineStatus();
+            //_timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(50) };
+            _timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(100) };
+            _timer.Tick += StatusTimer_Tick; // 改用具名方法
+           // _timer.Tick += async (s, e) => await PollMachineStatus();
             _timer.Start();
         }
 
         // ==============================================================================
         // 3. 狀態輪詢 (邏輯修正版)
         // ==============================================================================
-
+        // [修改] Timer 處理邏輯 (解決拔線沒反應的問題)
+        private async void StatusTimer_Tick(object? sender, EventArgs e)
+        {
+            _timer.Stop(); // ★ 暫停：防止網路卡住時，Timer 一直觸發導致堆積
+            try
+            {
+                await PollMachineStatus();
+            }
+            catch { /* 忽略錯誤，避免 Timer 死掉 */ }
+            finally
+            {
+                _timer.Start(); // ★ 重啟：確保做完才數下一次
+            }
+        }
         private async Task PollMachineStatus()
         {
             // 呼叫 Service (確保 Service 層已修改為回傳 tuple)
@@ -178,7 +194,7 @@ namespace CncController.ViewModels
         [RelayCommand]
         private async Task JogStart(string args)
         {
-            // [DEBUG] 加入這行，如果 Log 沒出現，表示按鈕綁定有問題
+            // Debug 檢查 (選擇性)
             // AlarmService.Instance.AddLog("DEBUG", $"Jog Trig: {args}"); 
 
             if (string.IsNullOrEmpty(args)) return;
@@ -186,32 +202,42 @@ namespace CncController.ViewModels
 
             if (parts.Length == 2 && int.TryParse(parts[0], out int axis) && double.TryParse(parts[1], out double dirSign))
             {
-                double finalSpeed = Math.Abs(JogFeedrate) * (dirSign > 0 ? 1 : -1);
-                double distance = JogStepDistance > 0 ? JogStepDistance : 0;
+                // [關鍵新增 1] 標記這個軸正在動作 (MouseDown 確實發生)
+                _activeJogAxes.Add(axis);
 
-                // [DEBUG] 確認最終發送的數值
-                AlarmService.Instance.AddLog("JOG", $"Axis:{axis} Spd:{finalSpeed} Dist:{distance}");
+                double finalSpeed = Math.Abs(JogFeedrate) * (dirSign > 0 ? 1 : -1);
+                double distance = JogStepDistance > 0 ? JogStepDistance : 0; // 0 代表連續模式
+
+                // AlarmService.Instance.AddLog("JOG", $"Axis:{axis} Spd:{finalSpeed} Dist:{distance}");
 
                 await MachineControlService.Instance.JogAsync(axis, finalSpeed, distance);
             }
         }
 
-        // [修改] JOG Stop 邏輯：只在連續模式下生效
         [RelayCommand]
         private async Task JogStop(string axisStr)
         {
             if (int.TryParse(axisStr, out int axis))
             {
-                // [關鍵] 只有在連續模式 (JogStepDistance == 0) 才發送 Stop
-                // 如果是單步模式，機器移動完固定距離會自動停，
-                // 此時若滑鼠放開觸發 Stop，會導致單步移動未完成即停止 (截斷)。
+                // [關鍵新增 2] 防呆檢查
+                // 檢查這個軸是否真的處於 JOG 狀態？
+                // 如果集合裡沒有這個軸，代表使用者只是滑鼠滑過去 (觸發 MouseLeave 但沒按 MouseDown)，直接忽略！
+                if (!_activeJogAxes.Contains(axis))
+                {
+                    return; // 直接離開，不發送網路指令
+                }
+
+                // [關鍵新增 3] 確實有按住，現在要放開了 -> 移除標記
+                _activeJogAxes.Remove(axis);
+
+                // [原有邏輯] 只有在連續模式 (JogStepDistance == 0) 才發送 Stop
+                // 單步模式下，讓機器自己跑完距離停下來，不要發送 Stop 打斷它
                 if (JogStepDistance == 0)
                 {
                     await MachineControlService.Instance.JogStopAsync(axis);
                 }
             }
         }
-
         [RelayCommand]
         private void SetJogMode(string value)
         {

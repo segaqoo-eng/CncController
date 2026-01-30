@@ -10,7 +10,7 @@ namespace CncController.Views.Windows
             InitializeComponent();
             TxtPassword.Focus();
         }
-
+        
         private void BtnLogin_Click(object sender, RoutedEventArgs e)
         {
             // 使用 AuthService 驗證密碼

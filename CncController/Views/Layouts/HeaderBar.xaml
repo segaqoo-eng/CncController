@@ -17,6 +17,33 @@
 
             <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
 
+                <Button Click="BtnUser_Click"
+                        Background="Transparent" 
+                        BorderThickness="0"
+                        Margin="0,0,15,0"
+                        Cursor="Hand"
+                        ToolTip="Click to Login / Logout">
+                    <Button.Template>
+                        <ControlTemplate TargetType="Button">
+                            <ContentPresenter VerticalAlignment="Center"/>
+                        </ControlTemplate>
+                    </Button.Template>
+
+                    <StackPanel Orientation="Horizontal">
+                        <Border Width="20" Height="20" CornerRadius="10" Background="#5E70FF" Margin="0,0,8,0">
+                            <TextBlock Text="{Binding CurrentUser.Username[0]}" 
+                                       Foreground="White" FontWeight="Bold" 
+                                       HorizontalAlignment="Center" VerticalAlignment="Center" 
+                                       FontSize="10"/>
+                        </Border>
+
+                        <TextBlock Text="{Binding CurrentUser.Username}" 
+                                   Foreground="{DynamicResource Brush.Text.Primary}" 
+                                   VerticalAlignment="Center" 
+                                   FontWeight="SemiBold"/>
+                    </StackPanel>
+                </Button>
+
                 <TextBlock Text="{Binding ServerVersionDisplay, StringFormat='Ver: {0}'}" 
                            Foreground="{DynamicResource Brush.Text.Muted}" 
                            FontSize="11" 

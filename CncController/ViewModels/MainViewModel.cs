@@ -57,6 +57,16 @@ namespace CncController.ViewModels
         {
             CurrentViewModel = new MonitorViewModel();
 
+
+            // [新增] 1. 初始化時，先從 AuthService 抓目前的狀態
+            CurrentUser = AuthService.Instance.CurrentUser;
+
+            // [新增] 2. 訂閱事件：當 AuthService 登入/登出時，自動更新這裡的變數
+            AuthService.Instance.CurrentUserChanged += (user) =>
+            {
+                CurrentUser = user;
+            };
+
             // 系統啟動 Log
             AlarmService.Instance.AddLog("LOGIN", "System Started");
 

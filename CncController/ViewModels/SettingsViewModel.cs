@@ -1,12 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using System.Windows; // 如果是用 WPF，用於 MessageBox
+using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CncController.Services;
 using CncController.Models;
 using System.Linq;
+// [新增] 引用 Brush 資源
+using System.Windows.Media;
 
 namespace CncController.ViewModels
 {
@@ -23,9 +25,16 @@ namespace CncController.ViewModels
         [ObservableProperty]
         private bool _canEditHardware;
 
-        // 用於顯示錯誤日誌 (若需要彈窗顯示)
+        // 用於顯示錯誤日誌
         [ObservableProperty]
         private string _lastErrorLog;
+
+        // [新增] 掃描驗證狀態
+        [ObservableProperty]
+        private string _scanResultText = "Not Verified";
+
+        [ObservableProperty]
+        private Brush _scanResultColor = Brushes.Gray;
 
         public SettingsViewModel()
         {
@@ -68,6 +77,32 @@ namespace CncController.ViewModels
             }
 
             MappingVM.LoadMapping(config, slaves);
+
+            // [新增] 初始化時自動執行一次驗證 (如果已經有 Config)
+            if (config.Mappings.Count > 0)
+            {
+                VerifyHardware(config, slaves);
+            }
+        }
+
+       
+
+        // [新增] 驗證邏輯封裝
+        private void VerifyHardware(MachineConfig config, List<DiscoveredSlave> slaves)
+        {
+            var result = HardwareScanService.Instance.ValidateTopology(slaves, config);
+
+            ScanResultText = result.Message;
+            if (result.IsValid)
+            {
+                ScanResultColor = Brushes.LimeGreen;
+                // AlarmService.Instance.AddLog("SYS", "Hardware Verified OK");
+            }
+            else
+            {
+                ScanResultColor = Brushes.Red;
+                AlarmService.Instance.AddLog("WARN", result.Message);
+            }
         }
 
         [RelayCommand]
@@ -96,6 +131,7 @@ namespace CncController.ViewModels
                             LogicalName = mapItem.AxisName,
                             PhysicalAddress = mapItem.SelectedSlave.Name,
                             PhysicalIndex = mapItem.SelectedSlave.Index,
+                            // [關鍵] 儲存時，將目前的 VID/PID 寫入 Config，作為未來的驗證標準
                             ExpectedVendorId = mapItem.SelectedSlave.VendorId,
                             ExpectedProductCode = mapItem.SelectedSlave.ProductCode
                         });
@@ -108,22 +144,19 @@ namespace CncController.ViewModels
                 DeployStatus = "Restarting LinuxCNC...";
 
                 // 2. 開始輪詢確認啟動狀態
-                bool isStarted = await WaitForLinuxCNC(20); // 等待 20 秒
+                bool isStarted = await WaitForLinuxCNC(20);
 
                 if (isStarted)
                 {
                     DeployStatus = "Online (Ready)";
-                    // 可選：成功後自動跳轉或彈出通知
+                    // [新增] 部署成功後，重新驗證一次狀態
+                    VerifyHardware(config, HardwareVM.Slaves.ToList());
                 }
                 else
                 {
                     DeployStatus = "Startup FAILED";
-                    // 3. 失敗時抓取 Log
                     string log = await MachineControlService.Instance.GetStartupLogAsync();
                     LastErrorLog = log;
-
-                    // 這裡可以用 MessageBox 或 Dialog 顯示 log
-                    // MessageBox.Show($"LinuxCNC Failed to Start:\n\n{log}", "Error");
                     Console.WriteLine("STARTUP ERROR LOG:\n" + log);
                 }
             }
@@ -133,15 +166,11 @@ namespace CncController.ViewModels
             }
         }
 
-        // ★★★ 核心邏輯：輪詢等待 LinuxCNC 啟動 ★★★
         private async Task<bool> WaitForLinuxCNC(int timeoutSeconds)
         {
             for (int i = 0; i < timeoutSeconds; i++)
             {
-                // 每秒檢查一次
                 await Task.Delay(1000);
-
-                // 更新 UI 倒數 (可選)
                 DeployStatus = $"Starting... ({i}/{timeoutSeconds}s)";
 
                 bool connected = await MachineControlService.Instance.CheckConnectionAsync();

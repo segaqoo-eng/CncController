@@ -38,13 +38,39 @@ namespace CncController.ViewModels
 
         public SettingsViewModel()
         {
+            // 1. 內部連動：當 HardwareVM 的 Slaves 變動時，通知 MappingVM 更新選項
             HardwareVM.Slaves.CollectionChanged += (s, e) =>
             {
                 MappingVM.UpdateSlaves(HardwareVM.Slaves);
             };
 
+            // 2. 權限管理
             AuthService.Instance.CurrentUserChanged += OnUserChanged;
             OnUserChanged(AuthService.Instance.CurrentUser);
+
+            // 3. 與 MainViewModel 連動
+            try
+            {
+                var app = System.Windows.Application.Current;
+                if (app?.MainWindow?.DataContext is MainViewModel mainVM)
+                {
+                    // [A] 訂閱事件 (處理未來的掃描)
+                    mainVM.HardwareValidationCompleted += OnHardwareValidationCompleted;
+
+                    // [B] ★★★ 讀取現有的掃描結果 ★★★
+                    // 如果 MainViewModel 已經有上次掃描的緩存，直接呼叫您的處理函式
+                    if (mainVM.LastValidatedSlaves != null && mainVM.LastValidatedSlaves.Count > 0)
+                    {
+                        // 直接重用您寫好的方法！
+                        // 注意：需要傳入 Slaves 和 Config，這兩個 MainVM 都有存
+                        OnHardwareValidationCompleted(mainVM.LastValidatedSlaves, mainVM.LastValidatedConfig);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                AlarmService.Instance.AddLog("ERR", $"Failed to subscribe hardware validation event: {ex.Message}");
+            }
         }
 
         private void OnUserChanged(User user)
@@ -55,6 +81,61 @@ namespace CncController.ViewModels
             }
         }
 
+        // [新增] 硬體驗證完成事件處理方法
+        // 當 MainViewModel 掃描並驗證完成後，此方法會被呼叫
+        // 用途：自動填充 HARDW
+        // ARE SCAN 表格與 AXIS MAPPING 清單
+        // [SettingsViewModel.cs]
+        private void OnHardwareValidationCompleted(List<DiscoveredSlave> slaves, MachineConfig config)
+        {
+            try
+            {
+                // 1. 確保 UI 執行緒 (如果是從非 UI 執行緒呼叫)
+                System.Windows.Application.Current.Dispatcher.Invoke(() =>
+                {
+                    // Step A: 填充 HARDWARE SCAN 表格 (顯示抓到的 Slave)
+                    HardwareVM.Slaves.Clear();
+                    foreach (var slave in slaves)
+                    {
+                        HardwareVM.Slaves.Add(slave);
+                    }
+
+                    // Step B: 載入 AXIS MAPPING (載入軟體設定)
+                    // 這邊會把 Config 裡的設定填入 MappingVM
+                    MappingVM.LoadMapping(config, slaves);
+
+                    // Step C: 初始化軸參數頁面
+                    AxisVM.Axes.Clear();
+                    if (config.Axes != null)
+                    {
+                        foreach (var axis in config.Axes) AxisVM.Axes.Add(axis);
+                    }
+
+                    // ★★★ [關鍵修改] 立即執行一次比對，更新 Settings 頁面的狀態文字 ★★★
+                    // 這樣管理者一進來，就會看到紅字顯示具體哪裡錯了
+                    VerifyHardware(config, slaves);
+                });
+            }
+            catch (Exception ex)
+            {
+                AlarmService.Instance.AddLog("ERR", $"Error updating settings from validation: {ex.Message}");
+            }
+        }
+        // [新增] 事件處理方法
+        /*private void OnHardwareValidationCompleted(List<DiscoveredSlave> slaves, MachineConfig config)
+        {
+            // 確保在 UI 執行緒更新
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                HardwareVM.Slaves.Clear();
+                foreach (var slave in slaves)
+                {
+                    HardwareVM.Slaves.Add(slave);
+                }
+                HardwareVM.ScanStatus = "Scan Completed.";
+            });
+        }
+        */
         public void Initialize(MachineConfig config, List<DiscoveredSlave> slaves)
         {
             HardwareVM.Slaves.Clear();
@@ -122,6 +203,8 @@ namespace CncController.ViewModels
                 var config = new MachineConfig();
                 config.Axes.AddRange(AxisVM.Axes);
 
+                // [修正] 清單重建：先清除再新增（避免重複）
+                config.Mappings.Clear();
                 foreach (var mapItem in MappingVM.AxisMaps)
                 {
                     if (mapItem.SelectedSlave != null)

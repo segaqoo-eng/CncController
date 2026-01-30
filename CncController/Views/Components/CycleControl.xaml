@@ -38,6 +38,10 @@
                             <Trigger Property="IsPressed" Value="True">
                                 <Setter TargetName="border" Property="Background" Value="#111"/>
                             </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="border" Property="Opacity" Value="0.4"/>
+                                <Setter TargetName="border" Property="Background" Value="#222"/>
+                            </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
                 </Setter.Value>
@@ -47,7 +51,6 @@
         <Style x:Key="FunctionBtnStyle" TargetType="Button" BasedOn="{StaticResource CycleBtnStyle}">
             <Setter Property="Background" Value="#4455AA"/>
         </Style>
-
     </UserControl.Resources>
 
     <Border Background="#252526" BorderBrush="#444" BorderThickness="1" CornerRadius="0" Padding="5">
@@ -61,16 +64,12 @@
             <UniformGrid Grid.Row="0" Columns="2" Rows="5">
                 <Button Content="CYCLE START" Command="{Binding CycleStartCommand}" Style="{StaticResource CycleBtnStyle}"/>
                 <Button Content="STOP" Command="{Binding StopCommand}" Style="{StaticResource CycleBtnStyle}"/>
-
                 <Button Content="RELOAD PGM" Command="{Binding ReloadCommand}" Style="{StaticResource CycleBtnStyle}"/>
                 <Button Content="FEED HOLD" Command="{Binding FeedHoldCommand}" Style="{StaticResource CycleBtnStyle}"/>
-
                 <Button Content="CLEAR PGM" Style="{StaticResource CycleBtnStyle}"/>
                 <Button Content="SINGLE BLOCK" Style="{StaticResource CycleBtnStyle}"/>
-
                 <Button Content="FLOOD" Style="{StaticResource CycleBtnStyle}"/>
                 <Button Content="BLOCK DELETE" Style="{StaticResource FunctionBtnStyle}"/>
-
                 <Button Content="MIST" Style="{StaticResource CycleBtnStyle}"/>
                 <Button Content="M01 BREAK" Style="{StaticResource FunctionBtnStyle}"/>
             </UniformGrid>
@@ -84,58 +83,40 @@
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
 
-                <Button Grid.Column="0" Command="{Binding TogglePowerCommand}" Margin="2">
+                <Button Grid.Column="0" Command="{Binding TogglePowerCommand}" Margin="2" Content="POWER">
                     <Button.Style>
-                        <Style TargetType="Button">
-                            <Setter Property="Template">
-                                <Setter.Value>
-                                    <ControlTemplate TargetType="Button">
-                                        <Border x:Name="bd" CornerRadius="3" Background="#333" BorderBrush="#222" BorderThickness="1">
-                                            <TextBlock Text="POWER" Foreground="White" FontWeight="Bold" 
-                                                       VerticalAlignment="Center" HorizontalAlignment="Center"/>
-                                        </Border>
-                                        <ControlTemplate.Triggers>
-                                            <DataTrigger Binding="{Binding IsPower}" Value="True">
-                                                <Setter TargetName="bd" Property="Background" Value="#32CD32"/>
-                                                <Setter TargetName="bd" Property="BorderBrush" Value="#006400"/>
-                                            </DataTrigger>
-                                        </ControlTemplate.Triggers>
-                                    </ControlTemplate>
-                                </Setter.Value>
-                            </Setter>
+                        <Style TargetType="Button" BasedOn="{StaticResource CycleBtnStyle}">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsEstop}" Value="True">
+                                    <Setter Property="IsEnabled" Value="False"/>
+                                </DataTrigger>
+
+                                <DataTrigger Binding="{Binding IsPower}" Value="True">
+                                    <Setter Property="Background" Value="#32CD32"/>
+                                    <Setter Property="BorderBrush" Value="#006400"/>
+                                    <Setter Property="Foreground" Value="Black"/>
+                                </DataTrigger>
+                            </Style.Triggers>
                         </Style>
                     </Button.Style>
                 </Button>
 
-                <Border Grid.Column="1" Background="White" CornerRadius="3" Margin="2" Height="30" VerticalAlignment="Center">
+                <Border Grid.Column="1" Background="#DDDDDD" CornerRadius="3" Margin="2" Height="38" VerticalAlignment="Center">
                     <TextBlock Text="{Binding CycleTimeDisplay}" Foreground="Black" FontWeight="Bold" FontFamily="Consolas" FontSize="16"
                                VerticalAlignment="Center" HorizontalAlignment="Center"/>
                 </Border>
 
-                <Button Grid.Column="2" Command="{Binding ToggleEstopCommand}" Margin="2">
+                <Button Grid.Column="2" Command="{Binding ToggleEstopCommand}" Margin="2" Content="E-STOP">
                     <Button.Style>
-                        <Style TargetType="Button">
-                            <Setter Property="Template">
-                                <Setter.Value>
-                                    <ControlTemplate TargetType="Button">
-                                        <Border x:Name="bd" CornerRadius="3" Background="#333" BorderBrush="#222" BorderThickness="1">
-                                            <TextBlock Text="E-STOP" Foreground="White" FontWeight="Bold" 
-                                                       VerticalAlignment="Center" HorizontalAlignment="Center"/>
-                                        </Border>
-                                        <ControlTemplate.Triggers>
-                                            <DataTrigger Binding="{Binding IsEstop}" Value="True">
-                                                <Setter TargetName="bd" Property="Background" Value="#FF0000"/>
-                                                <Setter TargetName="bd" Property="BorderBrush" Value="#8B0000"/>
-                                                <Setter TargetName="bd" Property="Effect">
-                                                    <Setter.Value>
-                                                        <DropShadowEffect Color="Red" BlurRadius="10" ShadowDepth="0"/>
-                                                    </Setter.Value>
-                                                </Setter>
-                                            </DataTrigger>
-                                        </ControlTemplate.Triggers>
-                                    </ControlTemplate>
-                                </Setter.Value>
-                            </Setter>
+                        <Style TargetType="Button" BasedOn="{StaticResource CycleBtnStyle}">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsEstop}" Value="False">
+                                    <Setter Property="Background" Value="#FF0000"/>
+                                    <Setter Property="BorderBrush" Value="#8B0000"/>
+                                    <Setter Property="Foreground" Value="White"/>
+                                    <Setter Property="FontWeight" Value="ExtraBold"/>
+                                </DataTrigger>
+                            </Style.Triggers>
                         </Style>
                     </Button.Style>
                 </Button>

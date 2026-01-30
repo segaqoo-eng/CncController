@@ -27,10 +27,15 @@ namespace CncController.ViewModels
             IsScanning = true;
             StatusMessage = "Scanning EtherCAT bus...";
             Slaves.Clear();
-
+            System.Diagnostics.Debug.WriteLine("Scan StartScan_1");
             var results = await _scanService.ScanAsync();
-            foreach (var item in results) Slaves.Add(item);
-
+            System.Diagnostics.Debug.WriteLine("Scan StartScan_2");
+            foreach (var item in results)
+            {
+                // 1. 印出詳細資料到輸出視窗
+                System.Diagnostics.Debug.WriteLine($"[Add] Index: {item.Index}, Name: {item.Name}, VID: {item.VendorId}");
+                Slaves.Add(item);
+            }
             StatusMessage = $"Scan complete. Found {Slaves.Count} devices.";
             IsScanning = false;
         }

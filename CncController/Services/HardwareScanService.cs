@@ -63,23 +63,43 @@ namespace CncController.Services
         {
             try
             {
+                // 發送掃描指令到後端 API
                 var response = await _http.PostAsync("/api/ethercat/scan", null);
 
                 if (response.IsSuccessStatusCode)
                 {
                     var slaves = await response.Content.ReadFromJsonAsync<List<DiscoveredSlave>>();
+
+                    // Log: 顯示抓到的數量
+                    System.Diagnostics.Debug.WriteLine($"ScanAsync Success: Found {slaves?.Count ?? 0} slaves.");
+
+                    // Log: 列出細節
+                    if (slaves != null)
+                    {
+                        foreach (var slave in slaves)
+                        {
+                            System.Diagnostics.Debug.WriteLine($" -> [Slave] Index: {slave.Index}, Name: {slave.Name}, VID: {slave.VendorId}, PID: {slave.ProductCode}");
+                        }
+                    }
+                    // 成功：回傳抓到的資料，若為 null 則回傳空清單
                     return slaves ?? new List<DiscoveredSlave>();
                 }
                 else
                 {
+                    // 失敗 (HTTP 錯誤)：印出 Log 並回傳空清單 (不回傳模擬資料)
                     Console.WriteLine($"Scan failed: {response.StatusCode}");
-                    return _simulatedSlaves;
+                    System.Diagnostics.Debug.WriteLine("Scan failed - Returning empty list.");
+
+                    return new List<DiscoveredSlave>();
                 }
             }
             catch (Exception ex)
             {
+                // 異常 (連線逾時或網路錯誤)：印出 Log 並回傳空清單 (不回傳模擬資料)
                 Console.WriteLine($"Scan exception: {ex.Message}");
-                return _simulatedSlaves;
+                System.Diagnostics.Debug.WriteLine("Scan exception - Returning empty list.");
+
+                return new List<DiscoveredSlave>();
             }
         }
 

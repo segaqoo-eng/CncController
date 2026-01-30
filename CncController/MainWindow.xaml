@@ -12,9 +12,14 @@
         <vm:MainViewModel/>
     </Window.DataContext>
 
+    <Window.InputBindings>
+        <KeyBinding Key="Esc" Command="{Binding ClearAlarmsCommand}"/>
+
+        <KeyBinding Key="F1" Command="{Binding TogglePowerCommand}"/>
+        <KeyBinding Key="F2" Command="{Binding ToggleEstopCommand}"/>
+    </Window.InputBindings>
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
-
         <DataTemplate DataType="{x:Type vm:MonitorViewModel}">
             <pages:MonitorView/>
         </DataTemplate>
@@ -67,8 +72,8 @@
                 <RadioButton Content="HISTORY" Style="{StaticResource NavBtnStyle}"
                              Command="{Binding NavigateCommand}" CommandParameter="History"/>
                 <RadioButton Content="SETTINGS" Style="{StaticResource NavBtnStyle}"
-                        Command="{Binding NavigateCommand}" CommandParameter="Settings"
-                        Visibility="Visible"/>
+                         Command="{Binding NavigateCommand}" CommandParameter="Settings"
+                         Visibility="Visible"/>
             </UniformGrid>
 
             <layouts:DashboardPanel Grid.Row="4" Grid.ColumnSpan="2"/>

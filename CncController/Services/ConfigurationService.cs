@@ -281,18 +281,39 @@ namespace CncController.Services
             sb.AppendLine("loadusr -W lcec_conf ethercat-conf.xml");
             sb.AppendLine("loadrt lcec");
 
+            // ★★★ [新增 1] 載入安全邏輯元件 ★★★
+            sb.AppendLine("loadrt and2 count=1");
+            sb.AppendLine("loadrt not count=1");
+            sb.AppendLine("loadrt message names=msg_ec_error messages=\"CRITICAL ERROR: EtherCAT Communication Lost!\"");
+
             sb.AppendLine();
             sb.AppendLine("addf lcec.read-all          servo-thread");
             foreach (var axis in config.Axes) sb.AppendLine($"addf slice_{axis.AxisID}             servo-thread");
-            for (int i = 0; i < count; i++) sb.AppendLine($"addf cia402.{i}.read-all      servo-thread");
+            for (int i = 0; i < count; i++) sb.AppendLine($"addf cia402.{i}.read-all       servo-thread");
             sb.AppendLine("addf motion-command-handler servo-thread");
             sb.AppendLine("addf motion-controller      servo-thread");
-            for (int i = 0; i < count; i++) sb.AppendLine($"addf cia402.{i}.write-all     servo-thread");
+
+            // ★★★ [新增 2] 加入邏輯運算到執行緒 (必須在 motion-controller 之後) ★★★
+            sb.AppendLine("addf and2.0       servo-thread");
+            sb.AppendLine("addf not.0        servo-thread");
+            sb.AppendLine("addf msg_ec_error servo-thread");
+
+            for (int i = 0; i < count; i++) sb.AppendLine($"addf cia402.{i}.write-all      servo-thread");
             sb.AppendLine("addf lcec.write-all         servo-thread");
             sb.AppendLine();
 
-            sb.AppendLine("# --- E-Stop Loopback ---");
-            sb.AppendLine("net estop-loop iocontrol.0.user-enable-out => iocontrol.0.emc-enable-in");
+            // ★★★ [新增 3] 安全迴路與錯誤發報接線 (替換掉原本的 Loopback) ★★★
+            sb.AppendLine("# --- E-Stop Safety Loop & Error Msg ---");
+
+            // 1. 安全開關 (AND閘): 只有當 (使用者按F2) 且 (EtherCAT連線正常) 時，才允許開機
+            sb.AppendLine("net user-request    iocontrol.0.user-enable-out => and2.0.in0");
+            // 注意：這裡使用 lcec.state-op 分接給 AND (in1) 和 NOT (in)
+            sb.AppendLine("net ec-status       lcec.state-op               => and2.0.in1 not.0.in");
+            sb.AppendLine("net system-ok       and2.0.out                  => iocontrol.0.emc-enable-in");
+
+            // 2. 錯誤發報 (NOT閘): 當 EtherCAT 斷線(False) -> 反相為True -> 觸發紅色警報
+            sb.AppendLine("net ec-error-trigger not.0.out                  => msg_ec_error.trigger");
+
             sb.AppendLine();
             sb.AppendLine("# --- Tool Change Loopback ---");
             sb.AppendLine("net tool-prep-loop iocontrol.0.tool-prepare => iocontrol.0.tool-prepared");
@@ -316,7 +337,7 @@ namespace CncController.Services
                     sb.AppendLine($"setp cia402.{jIdx}.csp-mode 1");
                     sb.AppendLine($"setp lcec.0.{sIdx}.modes_of_operation_J{sIdx} 8");
                     sb.AppendLine($"setp cia402.{jIdx}.pos-scale [JOINT_{jIdx}]STEP_SCALE");
-                    sb.AppendLine($"net {axis.AxisID}-pos-cmd     joint.{jIdx}.motor-pos-cmd         => cia402.{jIdx}.pos-cmd");
+                    sb.AppendLine($"net {axis.AxisID}-pos-cmd     joint.{jIdx}.motor-pos-cmd          => cia402.{jIdx}.pos-cmd");
                     sb.AppendLine($"net {axis.AxisID}-drv-target  cia402.{jIdx}.drv-target-position  => lcec.0.{sIdx}.target_position_J{sIdx}");
                     sb.AppendLine($"net {axis.AxisID}-pos-fb      lcec.0.{sIdx}.position_actual_value_J{sIdx} => cia402.{jIdx}.drv-actual-position");
                     sb.AppendLine($"net {axis.AxisID}-pos-fb-final cia402.{jIdx}.pos-fb              => joint.{jIdx}.motor-pos-fb");

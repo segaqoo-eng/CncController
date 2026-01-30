@@ -82,4 +82,12 @@ namespace CncController.Models
         public string Function { get; set; } = string.Empty;
         public bool Invert { get; set; }
     }
+
+    public enum LogType
+    {
+        Info,       // 一般訊息 (白色)
+        Warning,    // 警告 (橘色) - 觸發跑馬燈
+        Error,      // 錯誤 (紅色) - 觸發跑馬燈
+        Debug       // 除錯/API (灰色) - 僅在 Debug 分頁顯示
+    }
 }

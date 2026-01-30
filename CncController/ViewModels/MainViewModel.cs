@@ -1,6 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Windows.Threading;
 using System.Windows.Media; // [重要] 必須引用，為了使用 Color 和 Brush
@@ -11,6 +12,20 @@ namespace CncController.ViewModels
 {
     public partial class MainViewModel : ObservableObject
     {
+        // ========================================================================
+        // [新增] 硬體驗證完成事件委派
+        // 用於通知 SettingsViewModel 硬體掃描和驗證已完成，並傳遞掃描結果
+        // ========================================================================
+        public delegate void HardwareValidationCompletedEventHandler(
+            List<DiscoveredSlave> slaves,
+            MachineConfig config);
+
+        public event HardwareValidationCompletedEventHandler HardwareValidationCompleted;
+
+        // [新增] 保存最后一次验证的结果，供 SettingsViewModel 初始化时读取
+        public List<DiscoveredSlave> LastValidatedSlaves { get; private set; }
+        public MachineConfig LastValidatedConfig { get; private set; }
+
         // ==============================================================================
         // 1. 屬性定義
         // ==============================================================================
@@ -57,7 +72,6 @@ namespace CncController.ViewModels
         {
             CurrentViewModel = new MonitorViewModel();
 
-
             // [新增] 1. 初始化時，先從 AuthService 抓目前的狀態
             CurrentUser = AuthService.Instance.CurrentUser;
 
@@ -70,15 +84,76 @@ namespace CncController.ViewModels
             // 系統啟動 Log
             AlarmService.Instance.AddLog("LOGIN", "System Started");
 
-            //_timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(50) };
             _timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(100) };
             _timer.Tick += StatusTimer_Tick; // 改用具名方法
-           // _timer.Tick += async (s, e) => await PollMachineStatus();
             _timer.Start();
+
+            // [新增] 啟動後非同步執行硬體自動驗證（不阻塞 UI）
+            _ = AutoValidateHardware();
         }
 
         // ==============================================================================
-        // 3. 狀態輪詢 (邏輯修正版)
+        // 3. 開機自動硬體驗證 (新增方法)
+        // ==============================================================================
+        private async Task AutoValidateHardware()
+        {
+            try
+            {
+                // Step 1: 讀取本地設定
+                var config = await ConfigurationService.Instance.LoadConfigAsync();
+
+                // 判斷：無設定檔或無 mapping
+                if (config == null || config.Mappings == null || config.Mappings.Count == 0)
+                {
+                    // ✗ 無設定檔
+                    System.Diagnostics.Debug.WriteLine("✗ 無設定檔");
+                    SystemStatus = "未設定硬體配置 - 請進入 [設定] 頁面進行掃描與綁定";
+                    SystemStatusColor = Colors.Orange; // 黃燈
+                    IsSystemReady = false;
+                    AlarmService.Instance.AddLog("WARN", "No hardware config found. Please configure in Settings.");
+                    return; // 不繼續驗證
+                }
+
+                // Step 2: 掃描硬體
+                System.Diagnostics.Debug.WriteLine("Step 2: 掃描硬體");
+                var slaves = await HardwareScanService.Instance.ScanAsync();
+
+                // Step 3: 驗證拓樸
+                System.Diagnostics.Debug.WriteLine("Step 3: 驗證拓樸");
+                var result = HardwareScanService.Instance.ValidateTopology(slaves, config);
+
+                // Step 4: 根據結果更新 UI
+                if (!result.IsValid)
+                {
+                    // ✗ 驗證失敗：硬體不匹配
+                    SystemStatus = $"硬體驗證失敗: {result.Message}";
+                    SystemStatusColor = Colors.Red; // 紅燈
+                    IsSystemReady = false;
+                    AlarmService.Instance.AddLog("WARN", $"Hardware verification failed: {result.Message}");
+                }
+                else
+                {
+                    // ✓ 驗證成功
+                    SystemStatus = "硬體驗證通過 - 系統就緒";
+                    SystemStatusColor = Colors.LimeGreen; // 綠燈
+                    IsSystemReady = true;
+                    AlarmService.Instance.AddLog("SYS", "Hardware verification passed successfully");
+
+                    // [新增] 觸發硬體驗證完成事件，通知 SettingsViewModel 載入掃描結果
+                    HardwareValidationCompleted?.Invoke(slaves, config);
+                }
+            }
+            catch (Exception ex)
+            {
+                SystemStatus = $"硬體驗證異常: {ex.Message}";
+                SystemStatusColor = Colors.Red;
+                IsSystemReady = false;
+                AlarmService.Instance.AddLog("ERR", $"AutoValidateHardware exception: {ex.Message}");
+            }
+        }
+
+        // ==============================================================================
+        // 4. 狀態輪詢 (邏輯修正版)
         // ==============================================================================
         // [修改] Timer 處理邏輯 (解決拔線沒反應的問題)
         private async void StatusTimer_Tick(object? sender, EventArgs e)
@@ -184,7 +259,7 @@ namespace CncController.ViewModels
         }
 
         // ==============================================================================
-        // 4. 指令
+        // 5. 指令
         // ==============================================================================
 
         [RelayCommand]

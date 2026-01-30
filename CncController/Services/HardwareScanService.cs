@@ -64,21 +64,35 @@ namespace CncController.Services
             try
             {
                 var response = await _http.PostAsync("/api/ethercat/scan", null);
-
+                
                 if (response.IsSuccessStatusCode)
                 {
                     var slaves = await response.Content.ReadFromJsonAsync<List<DiscoveredSlave>>();
+                    // Log: 顯示抓到的數量
+                    System.Diagnostics.Debug.WriteLine($"ScanAsync Success: Found {slaves?.Count ?? 0} slaves.");
+
+                    // Log: 列出細節
+                    if (slaves != null)
+                    {
+                        foreach (var slave in slaves)
+                        {
+                            System.Diagnostics.Debug.WriteLine($" -> [Slave] Index: {slave.Index}, Name: {slave.Name}, VID: {slave.VendorId}, PID: {slave.ProductCode}");
+                        }
+                    }
                     return slaves ?? new List<DiscoveredSlave>();
                 }
                 else
                 {
                     Console.WriteLine($"Scan failed: {response.StatusCode}");
+                    System.Diagnostics.Debug.WriteLine("Scan failed");
+
                     return _simulatedSlaves;
                 }
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Scan exception: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine("Scan exception");
                 return _simulatedSlaves;
             }
         }

@@ -45,6 +45,21 @@ namespace CncController.ViewModels
 
             AuthService.Instance.CurrentUserChanged += OnUserChanged;
             OnUserChanged(AuthService.Instance.CurrentUser);
+
+            // [新增] 訂閱 MainViewModel 的硬體驗證完成事件
+            // 當硬體驗證成功完成時，會自動填充 HARDWARE SCAN 與 AXIS MAPPING
+            try
+            {
+                var app = System.Windows.Application.Current;
+                if (app?.MainWindow?.DataContext is MainViewModel mainVM)
+                {
+                    mainVM.HardwareValidationCompleted += OnHardwareValidationCompleted;
+                }
+            }
+            catch (Exception ex)
+            {
+                AlarmService.Instance.AddLog("ERR", $"Failed to subscribe hardware validation event: {ex.Message}");
+            }
         }
 
         private void OnUserChanged(User user)
@@ -52,6 +67,47 @@ namespace CncController.ViewModels
             if (user != null)
             {
                 CanEditHardware = (user.Role == UserRole.Admin || user.Role == UserRole.Developer);
+            }
+        }
+
+        // [新增] 硬體驗證完成事件處理方法
+        // 當 MainViewModel 掃描並驗證完成後，此方法會被呼叫
+        // 用途：自動填充 HARDWARE SCAN 表格與 AXIS MAPPING 清單
+        private void OnHardwareValidationCompleted(List<DiscoveredSlave> slaves, MachineConfig config)
+        {
+            try
+            {
+                // Step 1: 填充 HARDWARE SCAN 表格（Slaves 清單）
+                HardwareVM.Slaves.Clear();
+                foreach (var slave in slaves)
+                {
+                    HardwareVM.Slaves.Add(slave);
+                }
+
+                // Step 2: 載入 AXIS MAPPING（根據已保存的設定顯示軸與硬體的對應）
+                MappingVM.LoadMapping(config, slaves);
+
+                // Step 3: 根據軸參數初始化軸清單
+                AxisVM.Axes.Clear();
+                if (config.Axes != null && config.Axes.Count > 0)
+                {
+                    for (int i = 0; i < config.Axes.Count; i++)
+                    {
+                        config.Axes[i].Index = i;
+                        AxisVM.Axes.Add(config.Axes[i]);
+                    }
+                }
+
+                // Step 4: 記錄日誌
+                AlarmService.Instance.AddLog("SYS", "Hardware configuration loaded from file. HARDWARE SCAN and AXIS MAPPING updated.");
+                ScanResultText = "Configuration loaded successfully";
+                ScanResultColor = Brushes.LimeGreen;
+            }
+            catch (Exception ex)
+            {
+                AlarmService.Instance.AddLog("ERR", $"Error loading hardware validation data: {ex.Message}");
+                ScanResultText = "Error loading configuration";
+                ScanResultColor = Brushes.Red;
             }
         }
 
@@ -122,6 +178,8 @@ namespace CncController.ViewModels
                 var config = new MachineConfig();
                 config.Axes.AddRange(AxisVM.Axes);
 
+                // [修正] 清單重建：先清除再新增（避免重複）
+                config.Mappings.Clear();
                 foreach (var mapItem in MappingVM.AxisMaps)
                 {
                     if (mapItem.SelectedSlave != null)

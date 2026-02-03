@@ -83,9 +83,8 @@ namespace CncController.ViewModels
 
         // [新增] 硬體驗證完成事件處理方法
         // 當 MainViewModel 掃描並驗證完成後，此方法會被呼叫
-        // 用途：自動填充 HARDW
-        // ARE SCAN 表格與 AXIS MAPPING 清單
-        // [SettingsViewModel.cs]
+        // 用途：自動填充 HARDWARE SCAN 表格與 AXIS MAPPING 清單
+        
         private void OnHardwareValidationCompleted(List<DiscoveredSlave> slaves, MachineConfig config)
         {
             try

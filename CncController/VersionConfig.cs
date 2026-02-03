@@ -2,11 +2,11 @@
 {
     public static class VersionConfig
     {
-        // 每次修改程式時，更新這個字串 
-        // 格式: [Date]_SYNC_[Feature]
-        public const string CurrentVersion = "2026.02.03_HARDWARE_VERIFY_03";
+        // [SAVE POINT] 2026.02.04 工作目標_1
+        // 內容: 完成 AxisSetting 模型擴充與 SettingsView 介面綁定 (隱藏 InvertMotor)
+        public const string CurrentVersion = "2026.02.04_WORK_GOAL_1";
 
-        // 隨機雜湊值 (標記本次建置)
-        public const string RadomStr = "scan-v3-verify";
+        // 標記: ui-param-update
+        public const string RadomStr = "ui-param-update";
     }
 }

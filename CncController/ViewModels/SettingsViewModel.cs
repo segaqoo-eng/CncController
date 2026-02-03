@@ -19,6 +19,10 @@ namespace CncController.ViewModels
         public MachineConfigViewModel MachineConfigVM { get; } = new();
         public AxisMappingViewModel MappingVM { get; } = new();
 
+        // ★★★ [新增] IO 監控 ViewModel ★★★
+        public IoMonitorViewModel IoMonitorVM { get; } = new();
+
+
         [ObservableProperty]
         private string _deployStatus = "Ready";
 
@@ -83,9 +87,8 @@ namespace CncController.ViewModels
 
         // [新增] 硬體驗證完成事件處理方法
         // 當 MainViewModel 掃描並驗證完成後，此方法會被呼叫
-        // 用途：自動填充 HARDW
-        // ARE SCAN 表格與 AXIS MAPPING 清單
-        // [SettingsViewModel.cs]
+        // 用途：自動填充 HARDWARE SCAN 表格與 AXIS MAPPING 清單
+        
         private void OnHardwareValidationCompleted(List<DiscoveredSlave> slaves, MachineConfig config)
         {
             try
@@ -121,21 +124,7 @@ namespace CncController.ViewModels
                 AlarmService.Instance.AddLog("ERR", $"Error updating settings from validation: {ex.Message}");
             }
         }
-        // [新增] 事件處理方法
-        /*private void OnHardwareValidationCompleted(List<DiscoveredSlave> slaves, MachineConfig config)
-        {
-            // 確保在 UI 執行緒更新
-            Application.Current.Dispatcher.Invoke(() =>
-            {
-                HardwareVM.Slaves.Clear();
-                foreach (var slave in slaves)
-                {
-                    HardwareVM.Slaves.Add(slave);
-                }
-                HardwareVM.ScanStatus = "Scan Completed.";
-            });
-        }
-        */
+        
         public void Initialize(MachineConfig config, List<DiscoveredSlave> slaves)
         {
             HardwareVM.Slaves.Clear();
@@ -263,6 +252,14 @@ namespace CncController.ViewModels
                 }
             }
             return false;
+        }
+
+        public void UpdateMachineStatus(MachineStatusData data)
+        {
+            if (data != null)
+            {
+                IoMonitorVM.UpdateData(data);
+            }
         }
     }
 }

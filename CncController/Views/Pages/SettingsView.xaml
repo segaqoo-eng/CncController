@@ -4,14 +4,34 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="clr-namespace:CncController.ViewModels"
+             xmlns:models="clr-namespace:CncController.Models"
              xmlns:sys="clr-namespace:System;assembly=mscorlib"
              xmlns:views="clr-namespace:CncController.Views"
              xmlns:comp="clr-namespace:CncController.Views.Components"
-             mc:Ignorable="d" d:DesignHeight="800" d:DesignWidth="1200">
+             mc:Ignorable="d" d:DesignHeight="900" d:DesignWidth="1400">
 
     <Grid Background="#1E1E1E">
         <TabControl Background="Transparent" BorderThickness="0">
             <TabControl.Resources>
+                <x:Array x:Key="DiList" Type="sys:Int32">
+                    <sys:Int32>0</sys:Int32>
+                    <sys:Int32>1</sys:Int32>
+                    <sys:Int32>2</sys:Int32>
+                    <sys:Int32>3</sys:Int32>
+                    <sys:Int32>4</sys:Int32>
+                    <sys:Int32>5</sys:Int32>
+                    <sys:Int32>6</sys:Int32>
+                    <sys:Int32>7</sys:Int32>
+                    <sys:Int32>8</sys:Int32>
+                    <sys:Int32>9</sys:Int32>
+                    <sys:Int32>10</sys:Int32>
+                    <sys:Int32>11</sys:Int32>
+                    <sys:Int32>12</sys:Int32>
+                    <sys:Int32>13</sys:Int32>
+                    <sys:Int32>14</sys:Int32>
+                    <sys:Int32>15</sys:Int32>
+                </x:Array>
+
                 <Style TargetType="TabItem">
                     <Setter Property="FontSize" Value="16"/>
                     <Setter Property="Foreground" Value="Gray"/>
@@ -31,6 +51,45 @@
                         </Setter.Value>
                     </Setter>
                 </Style>
+
+                <Style x:Key="CenterHeaderStyle" TargetType="DataGridColumnHeader">
+                    <Setter Property="Background" Value="#444"/>
+                    <Setter Property="Foreground" Value="#AAA"/>
+                    <Setter Property="Padding" Value="5,8"/>
+                    <Setter Property="FontSize" Value="13"/>
+                    <Setter Property="FontWeight" Value="Bold"/>
+                    <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                    <Setter Property="BorderThickness" Value="0,0,1,1"/>
+                    <Setter Property="BorderBrush" Value="#555"/>
+                </Style>
+
+                <Style x:Key="CenterCellStyle" TargetType="DataGridCell">
+                    <Setter Property="TextBlock.TextAlignment" Value="Center"/>
+                    <Setter Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate TargetType="DataGridCell">
+                                <Border Padding="2,0" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}">
+                                    <ContentPresenter VerticalAlignment="Center"/>
+                                </Border>
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+                    <Style.Triggers>
+                        <Trigger Property="IsSelected" Value="True">
+                            <Setter Property="Background" Value="#007ACC"/>
+                            <Setter Property="Foreground" Value="White"/>
+                        </Trigger>
+                    </Style.Triggers>
+                </Style>
+
+                <Style TargetType="TextBox">
+                    <Setter Property="Padding" Value="0"/>
+                    <Setter Property="VerticalContentAlignment" Value="Center"/>
+                    <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                    <Setter Property="Background" Value="#222"/>
+                    <Setter Property="Foreground" Value="White"/>
+                    <Setter Property="BorderThickness" Value="0"/>
+                </Style>
             </TabControl.Resources>
 
             <TabItem Header="HARDWARE SCAN">
@@ -46,16 +105,9 @@
 
                     <DataGrid Grid.Row="1" ItemsSource="{Binding HardwareVM.Slaves}" AutoGenerateColumns="False" 
                               Background="#2D2D2D" RowBackground="#333" Foreground="White" Margin="0,20" CanUserAddRows="False">
-
                         <DataGrid.Resources>
-                            <Style TargetType="DataGridColumnHeader">
-                                <Setter Property="Background" Value="#333"/>
-                                <Setter Property="Foreground" Value="White"/>
-                                <Setter Property="Padding" Value="10,8"/>
-                                <Setter Property="FontWeight" Value="Bold"/>
-                            </Style>
+                            <Style TargetType="DataGridColumnHeader" BasedOn="{StaticResource CenterHeaderStyle}"/>
                         </DataGrid.Resources>
-
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="Slave" Binding="{Binding Index}" Width="50"/>
                             <DataGridTextColumn Header="VendorId" Binding="{Binding VendorId}" Width="90"/>
@@ -63,8 +115,6 @@
                             <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="200"/>
                             <DataGridTextColumn Header="Group" Binding="{Binding VendorGroup}" Width="100"/>
                             <DataGridTextColumn Header="Model" Binding="{Binding ProductModel}" Width="150"/>
-                            <DataGridTextColumn Header="Category" Binding="{Binding Category}" Width="80"/>
-                            <DataGridTextColumn Header="Source" Binding="{Binding Source}" Width="100"/>
                             <DataGridTextColumn Header="Mapped PDOs" Binding="{Binding Pdos}" Width="*"/>
                         </DataGrid.Columns>
                     </DataGrid>
@@ -88,107 +138,210 @@
             <TabItem Header="AXIS PARAMETERS" DataContext="{Binding AxisVM}">
                 <Grid Margin="20">
                     <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="20"/>
+                        <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
                         <RowDefinition Height="60"/>
                     </Grid.RowDefinitions>
 
-                    <DataGrid Grid.Row="0" ItemsSource="{Binding Axes}" AutoGenerateColumns="False"
+                    <TextBlock Grid.Row="0" Text="1. Mechanical &amp; Motion Settings" Foreground="#5E70FF" FontWeight="Bold" FontSize="16" Margin="0,0,0,5"/>
+                    <DataGrid Grid.Row="1" ItemsSource="{Binding Axes}" AutoGenerateColumns="False"
                               Background="#2D2D2D" RowBackground="#333" Foreground="White"
-                              BorderThickness="1" BorderBrush="#555"
-                              CanUserAddRows="False" CanUserDeleteRows="False"
-                              RowHeight="40" HeadersVisibility="Column"
-                              SelectionUnit="Cell" 
-                              FrozenColumnCount="2">
-
-                        <DataGrid.Resources>
-                            <Style TargetType="DataGridColumnHeader">
-                                <Setter Property="Background" Value="#444"/>
-                                <Setter Property="Foreground" Value="#AAA"/>
-                                <Setter Property="Padding" Value="10,5"/>
-                                <Setter Property="FontSize" Value="14"/>
-                                <Setter Property="FontWeight" Value="Bold"/>
-                                <Setter Property="BorderThickness" Value="0,0,1,1"/>
-                                <Setter Property="BorderBrush" Value="#555"/>
-                            </Style>
-                            <Style TargetType="TextBox">
-                                <Setter Property="Padding" Value="5,0"/>
-                                <Setter Property="VerticalContentAlignment" Value="Center"/>
-                                <Setter Property="Background" Value="#222"/>
-                                <Setter Property="Foreground" Value="White"/>
-                                <Setter Property="BorderThickness" Value="0"/>
-                            </Style>
-                        </DataGrid.Resources>
-
+                              BorderThickness="1" BorderBrush="#555" CanUserAddRows="False" RowHeight="35" 
+                              CellStyle="{StaticResource CenterCellStyle}" ColumnHeaderStyle="{StaticResource CenterHeaderStyle}">
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="#" Binding="{Binding Index}" IsReadOnly="True" Width="40">
-                                <DataGridTextColumn.CellStyle>
-                                    <Style TargetType="DataGridCell">
-                                        <Setter Property="IsHitTestVisible" Value="False"/>
-                                        <Setter Property="Focusable" Value="False"/>
-                                        <Setter Property="Background" Value="#333"/>
-                                        <Setter Property="Foreground" Value="Gray"/>
-                                        <Setter Property="FontWeight" Value="Bold"/>
-                                        <Setter Property="BorderThickness" Value="0,0,1,0"/>
-                                        <Setter Property="BorderBrush" Value="#555"/>
-                                        <Setter Property="TextBlock.TextAlignment" Value="Center"/>
-                                        <Setter Property="VerticalContentAlignment" Value="Center"/>
-                                    </Style>
-                                </DataGridTextColumn.CellStyle>
-                            </DataGridTextColumn>
+                            <DataGridTextColumn Header="Axis" Binding="{Binding Name}" IsReadOnly="True" Width="60" FontWeight="Bold"/>
+                            <DataGridTextColumn Header="Pitch (mm)" Binding="{Binding Pitch}" Width="*"/>
+                            <DataGridTextColumn Header="Pulse/Rev" Binding="{Binding PulsePerRev}" Width="*"/>
+                            <DataGridTextColumn Header="Max Vel (mm/s)" Binding="{Binding MaxVelocity}" Width="*"/>
+                            <DataGridTextColumn Header="Max Acc (mm/s²)" Binding="{Binding MaxAcceleration}" Width="*"/>
+                            <DataGridTextColumn Header="Soft Limit +" Binding="{Binding SoftLimitPos}" Width="*"/>
+                            <DataGridTextColumn Header="Soft Limit -" Binding="{Binding SoftLimitNeg}" Width="*"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
 
-                            <DataGridTextColumn Header="Axis" Binding="{Binding Name}" IsReadOnly="True" Width="80">
-                                <DataGridTextColumn.CellStyle>
-                                    <Style TargetType="DataGridCell">
-                                        <Setter Property="IsHitTestVisible" Value="False"/>
-                                        <Setter Property="Focusable" Value="False"/>
-                                        <Setter Property="Background" Value="#333"/>
-                                        <Setter Property="Foreground" Value="#5E70FF"/>
-                                        <Setter Property="FontWeight" Value="Bold"/>
-                                        <Setter Property="BorderThickness" Value="0,0,1,0"/>
-                                        <Setter Property="BorderBrush" Value="#555"/>
-                                        <Setter Property="TextBlock.TextAlignment" Value="Center"/>
-                                        <Setter Property="VerticalContentAlignment" Value="Center"/>
-                                    </Style>
-                                </DataGridTextColumn.CellStyle>
-                            </DataGridTextColumn>
-
-                            <DataGridTextColumn Header="Pitch (mm)" Binding="{Binding Pitch}" Width="100"/>
-                            <DataGridTextColumn Header="Pulse/Rev" Binding="{Binding PulsePerRev}" Width="100"/>
-                            <DataGridTextColumn Header="Limit (+)" Binding="{Binding SoftLimitPos}" Width="100"/>
-                            <DataGridTextColumn Header="Limit (-)" Binding="{Binding SoftLimitNeg}" Width="100"/>
-                            <DataGridTextColumn Header="Home Speed" Binding="{Binding HomeSpeed}" Width="120"/>
-
-                            <DataGridTemplateColumn Header="Homing Dir" Width="140">
+                    <TextBlock Grid.Row="3" Text="2. IO Configuration &amp; Homing Strategy" Foreground="#5E70FF" FontWeight="Bold" FontSize="16" Margin="0,0,0,5"/>
+                    <DataGrid Grid.Row="4" ItemsSource="{Binding Axes}" AutoGenerateColumns="False"
+                              Background="#2D2D2D" RowBackground="#333" Foreground="White"
+                              BorderThickness="1" BorderBrush="#555" CanUserAddRows="False" RowHeight="35"
+                              CellStyle="{StaticResource CenterCellStyle}" ColumnHeaderStyle="{StaticResource CenterHeaderStyle}">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Axis" Binding="{Binding Name}" IsReadOnly="True" Width="60" FontWeight="Bold"/>
+                            <DataGridTemplateColumn Header="Home DI" Width="*" MinWidth="70">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
-                                        <ComboBox SelectedValue="{Binding HomeDirection, UpdateSourceTrigger=PropertyChanged}" 
-                                                  SelectedValuePath="Tag"
-                                                  VerticalContentAlignment="Center"
-                                                  BorderThickness="0" Background="Transparent">
-                                            <ComboBox.Resources>
-                                                <sys:Int32 x:Key="Pos">1</sys:Int32>
-                                                <sys:Int32 x:Key="Neg">-1</sys:Int32>
-                                            </ComboBox.Resources>
-                                            <ComboBoxItem Content="Positive (+)" Tag="{StaticResource Pos}" />
-                                            <ComboBoxItem Content="Negative (-)" Tag="{StaticResource Neg}" />
+                                        <ComboBox ItemsSource="{StaticResource DiList}" SelectedValue="{Binding HomeDiIndex, UpdateSourceTrigger=PropertyChanged}" />
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Header="Pos DI" Width="*" MinWidth="70">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <ComboBox ItemsSource="{StaticResource DiList}" SelectedValue="{Binding PosLimitDiIndex, UpdateSourceTrigger=PropertyChanged}" />
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Header="Neg DI" Width="*" MinWidth="70">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <ComboBox ItemsSource="{StaticResource DiList}" SelectedValue="{Binding NegLimitDiIndex, UpdateSourceTrigger=PropertyChanged}" />
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Header="Home Logic" Width="Auto" MinWidth="90">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <ComboBox SelectedValue="{Binding HomeSwitchLogic, UpdateSourceTrigger=PropertyChanged}" SelectedValuePath="Tag">
+                                            <ComboBoxItem Content="Unused" Tag="{x:Static models:LimitLogic.NotUsed}" Foreground="Gray"/>
+                                            <ComboBoxItem Content="NO" Tag="{x:Static models:LimitLogic.NO}"/>
+                                            <ComboBoxItem Content="NC" Tag="{x:Static models:LimitLogic.NC}"/>
                                         </ComboBox>
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Header="Lim Logic" Width="Auto" MinWidth="90">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <ComboBox SelectedValue="{Binding LimitSwitchLogic, UpdateSourceTrigger=PropertyChanged}" SelectedValuePath="Tag">
+                                            <ComboBoxItem Content="Unused" Tag="{x:Static models:LimitLogic.NotUsed}" Foreground="Gray"/>
+                                            <ComboBoxItem Content="NO" Tag="{x:Static models:LimitLogic.NO}"/>
+                                            <ComboBoxItem Content="NC" Tag="{x:Static models:LimitLogic.NC}"/>
+                                        </ComboBox>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Header="Homing Mode" Width="Auto" MinWidth="130">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <ComboBox SelectedValue="{Binding HomingMode, UpdateSourceTrigger=PropertyChanged}" SelectedValuePath="Tag">
+                                            <ComboBoxItem Content="Immediate" Tag="{x:Static models:HomingMode.Immediate}" ToolTip="原地歸零"/>
+                                            <ComboBoxItem Content="Home Switch" Tag="{x:Static models:HomingMode.HomeSwitch}" ToolTip="使用獨立原點開關"/>
+                                            <ComboBoxItem Content="Limit Switch" Tag="{x:Static models:HomingMode.LimitSwitch}" ToolTip="使用極限開關當原點"/>
+                                        </ComboBox>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Header="Dir" Width="65">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <ComboBox SelectedValue="{Binding HomeDirection, UpdateSourceTrigger=PropertyChanged}" SelectedValuePath="Tag">
+                                            <ComboBox.Resources>
+                                                <sys:Int32 x:Key="Pos">1</sys:Int32>
+                                                <sys:Int32 x:Key="Neg">-1</sys:Int32>
+                                            </ComboBox.Resources>
+                                            <ComboBoxItem Content="+" Tag="{StaticResource Pos}" />
+                                            <ComboBoxItem Content="-" Tag="{StaticResource Neg}" />
+                                        </ComboBox>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridCheckBoxColumn Header="Use Z" Binding="{Binding HomeUseIndex}" Width="60">
+                                <DataGridCheckBoxColumn.ElementStyle>
+                                    <Style TargetType="CheckBox">
+                                        <Setter Property="HorizontalAlignment" Value="Center"/>
+                                        <Setter Property="VerticalAlignment" Value="Center"/>
+                                    </Style>
+                                </DataGridCheckBoxColumn.ElementStyle>
+                            </DataGridCheckBoxColumn>
+                            <DataGridTextColumn Header="Search" Binding="{Binding HomeSpeed}" Width="*" MinWidth="60"/>
+                            <DataGridTextColumn Header="Latch" Binding="{Binding HomeLatchSpeed}" Width="*" MinWidth="60"/>
+                            <DataGridTextColumn Header="Offset" Binding="{Binding HomeOffset}" Width="*" MinWidth="60"/>
+                            <DataGridTextColumn Header="Seq" Binding="{Binding HomeSequence}" Width="50"/>
                         </DataGrid.Columns>
                     </DataGrid>
 
-                    <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" 
+                    <StackPanel Grid.Row="5" Orientation="Horizontal" HorizontalAlignment="Right" 
                                 DataContext="{Binding DataContext, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                 IsEnabled="{Binding CanEditHardware}">
                         <TextBlock Text="{Binding DeployStatus}" Foreground="#AAA" VerticalAlignment="Center" Margin="0,0,10,0"/>
-                        <Button Command="{Binding GenerateAndDeployCommand}" 
-                                Content="GENERATE &amp; RESTART" 
-                                Width="200" Height="40" 
-                                Background="#28a745" Foreground="White" FontWeight="Bold"/>
+                        <Button Command="{Binding GenerateAndDeployCommand}" Content="GENERATE &amp; RESTART" Width="200" Height="40" Background="#28a745" Foreground="White" FontWeight="Bold"/>
                     </StackPanel>
                 </Grid>
             </TabItem>
+
+            <TabItem Header="IO MONITOR" DataContext="{Binding IoMonitorVM}">
+                <Grid Margin="20">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <ItemsControl ItemsSource="{Binding Cards}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <WrapPanel />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Background="#2D2D2D" BorderBrush="#444" BorderThickness="1" CornerRadius="4" Margin="0,0,15,15" Width="380" Padding="15">
+                                        <StackPanel>
+                                            <Grid Margin="0,0,0,10">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <TextBlock Text="Slave #" Foreground="#5E70FF" FontWeight="Bold" FontSize="18"/>
+                                                    <TextBlock Text="{Binding SlaveIndex}" Foreground="#5E70FF" FontWeight="Bold" FontSize="18"/>
+                                                </StackPanel>
+                                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                                    <TextBlock Text="{Binding StatusHex}" Foreground="#AAA" FontFamily="Consolas" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                                                    <Border Background="#333" CornerRadius="3" Padding="8,2">
+                                                        <TextBlock Text="{Binding StatusDesc}" Foreground="White" FontWeight="Bold"/>
+                                                        <Border.Style>
+                                                            <Style TargetType="Border">
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding StatusDesc}" Value="FAULT">
+                                                                        <Setter Property="Background" Value="#C0392B"/>
+                                                                    </DataTrigger>
+                                                                    <DataTrigger Binding="{Binding StatusDesc}" Value="Running">
+                                                                        <Setter Property="Background" Value="#27AE60"/>
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </Border.Style>
+                                                    </Border>
+                                                </StackPanel>
+                                            </Grid>
+
+                                            <Separator Background="#444" Margin="0,0,0,10"/>
+
+                                            <TextBlock Text="Digital Inputs (0x60FD)" Foreground="#888" Margin="0,0,0,5" FontSize="12"/>
+                                            <ItemsControl ItemsSource="{Binding Inputs}">
+                                                <ItemsControl.ItemsPanel>
+                                                    <ItemsPanelTemplate>
+                                                        <UniformGrid Columns="8" Rows="2"/>
+                                                    </ItemsPanelTemplate>
+                                                </ItemsControl.ItemsPanel>
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <StackPanel Margin="2,5" HorizontalAlignment="Center">
+                                                            <Ellipse Width="16" Height="16" Stroke="#555" StrokeThickness="1">
+                                                                <Ellipse.Style>
+                                                                    <Style TargetType="Ellipse">
+                                                                        <Setter Property="Fill" Value="#333"/>
+                                                                        <Style.Triggers>
+                                                                            <DataTrigger Binding="{Binding IsActive}" Value="True">
+                                                                                <Setter Property="Fill" Value="#2ECC71"/>
+                                                                                <Setter Property="Effect">
+                                                                                    <Setter.Value>
+                                                                                        <DropShadowEffect Color="#2ECC71" BlurRadius="8" ShadowDepth="0"/>
+                                                                                    </Setter.Value>
+                                                                                </Setter>
+                                                                            </DataTrigger>
+                                                                        </Style.Triggers>
+                                                                    </Style>
+                                                                </Ellipse.Style>
+                                                            </Ellipse>
+                                                            <TextBlock Text="{Binding Index}" Foreground="#666" FontSize="10" HorizontalAlignment="Center" Margin="0,3,0,0"/>
+                                                        </StackPanel>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+                                        </StackPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </Grid>
+            </TabItem>
+
         </TabControl>
     </Grid>
 </UserControl>

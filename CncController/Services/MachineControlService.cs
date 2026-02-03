@@ -228,5 +228,47 @@ namespace CncController.Services
             }
             catch { return "Log Unavailable"; }
         }
+
+        // 在 MachineControlService 類別中新增此方法
+
+        public async Task SaveConfigAndRestartAsync(List<AxisSetting> axes)
+        {
+            // 1. 準備 Payload
+            var payload = new
+            {
+                axes = axes
+            };
+
+            // 2. 序列化
+            string json = System.Text.Json.JsonSerializer.Serialize(payload);
+            var content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+
+            // 3. 發送請求
+            // 注意：這裡假設您的 Service 內部已經維護了 _httpClient 或 BaseUrl
+            // 如果沒有，請使用與您現有方法相同的 URL 組合方式
+            string url = $"{_serverUrl}/api/machine/save_config";
+
+            try
+            {
+                // 設定較長的 Timeout，因為重啟需要時間
+                _httpClient.Timeout = TimeSpan.FromSeconds(10);
+
+                var response = await _httpClient.PostAsync(url, content);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    string error = await response.Content.ReadAsStringAsync();
+                    throw new Exception($"Server Error: {error}");
+                }
+
+                // 成功後，通常不需要回傳內容，因為接下來就是要等待重啟
+            }
+            catch (Exception)
+            {
+                // 恢復 Timeout (如果是全域 Client)
+                _httpClient.Timeout = TimeSpan.FromSeconds(5);
+                throw; // 將錯誤拋回給 ViewModel 顯示
+            }
+        }
     }
 }

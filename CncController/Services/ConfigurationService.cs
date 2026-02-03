@@ -7,6 +7,7 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using CncController.Models;
+using System.Diagnostics;
 
 namespace CncController.Services
 {
@@ -20,7 +21,6 @@ namespace CncController.Services
 
         private ConfigurationService()
         {
-            // IP 設定
             _http = new HttpClient { BaseAddress = new Uri("http://192.168.0.137:5000") };
             _jsonOptions = new JsonSerializerOptions { WriteIndented = true, PropertyNameCaseInsensitive = true };
         }
@@ -44,22 +44,27 @@ namespace CncController.Services
             string iniContent = GenerateIni(config);
             string xmlContent = GenerateXml(config);
             string halContent = GenerateHal(config);
+            string postGuiContent = GeneratePostGuiHal(config);
 
-            var payload = new { IniContent = iniContent, HalContent = halContent, XmlContent = xmlContent };
+            var payload = new
+            {
+                IniContent = iniContent,
+                HalContent = halContent,
+                XmlContent = xmlContent,
+                PostGuiContent = postGuiContent
+            };
+
             try
             {
-                // 1. 上傳設定檔
                 await _http.PostAsJsonAsync("/api/config/update", payload);
-
-                // ★★★ 2. 新增：發送重啟指令 ★★★
                 await _http.PostAsync("/api/machine/restart", null);
             }
             catch { }
         }
 
-        // ==========================================
-        // 1. 生成 INI (路徑已修正)
-        // ==========================================
+        // ========================================================================================
+        // 1. 生成 INI
+        // ========================================================================================
         private string GenerateIni(MachineConfig config)
         {
             var sb = new StringBuilder();
@@ -75,44 +80,31 @@ namespace CncController.Services
 
             sb.AppendLine("[DISPLAY]");
             sb.AppendLine("DISPLAY = probe_basic");
-            sb.AppendLine("OPEN_FILE = ./blank.ngc");
+            sb.AppendLine("OPEN_FILE = ~/linuxcnc/nc_files/probe_basic/examples/blank.ngc");
             sb.AppendLine("CONFIG_FILE = custom_config.yml");
             sb.AppendLine("CYCLE_TIME = 0.200");
             sb.AppendLine("POSITION_OFFSET = RELATIVE");
             sb.AppendLine("POSITION_FEEDBACK = ACTUAL");
-            sb.AppendLine("MAX_FEED_OVERRIDE = 2.000000");
-            sb.AppendLine("MAX_SPINDLE_OVERRIDE = 2.000000");
-            sb.AppendLine("MIN_SPINDLE_OVERRIDE = 0.500000");
+            sb.AppendLine("MAX_FEED_OVERRIDE = 2.0");
+            sb.AppendLine("MAX_SPINDLE_OVERRIDE = 2.0");
+            sb.AppendLine("MIN_SPINDLE_OVERRIDE = 0.5");
             sb.AppendLine("DEFAULT_SPINDLE_SPEED = 300");
             sb.AppendLine("PROGRAM_PREFIX = ~/linuxcnc/nc_files");
             sb.AppendLine("INTRO_GRAPHIC = pbsplash.png");
             sb.AppendLine("INTRO_TIME = 3");
             sb.AppendLine("EDITOR = gedit");
-            sb.AppendLine("INCREMENTS = JOG 0.100 0.010 0.001");
-            sb.AppendLine("DEFAULT_LINEAR_VELOCITY = 50.0000");
-            sb.AppendLine("MAX_LINEAR_VELOCITY = 125.0000");
-            sb.AppendLine("MIN_LINEAR_VELOCITY = 0.5000");
-            sb.AppendLine("DEFAULT_ANGULAR_VELOCITY = 12.0000");
-            sb.AppendLine("MAX_ANGULAR_VELOCITY = 180.0000");
-            sb.AppendLine("MIN_ANGULAR_VELOCITY = 1.6667");
+            sb.AppendLine("INCREMENTS = JOG 0.1 0.01 0.001");
             sb.AppendLine($"GEOMETRY = {geometry}");
             sb.AppendLine($"DRO_DISPLAY = {geometry}");
-            sb.AppendLine("OFFSET_COLUMNS = XYZR");
-            sb.AppendLine("TOOL_TABLE_COLUMNS = TZDR");
-            sb.AppendLine("KEYBOARD_JOG = true");
-            sb.AppendLine("KEYBOARD_JOG_SAFETY_OFF = true");
             sb.AppendLine("ATC_TAB_DISPLAY = 2");
             sb.AppendLine("USER_BUTTONS_PATH = user_buttons/");
-            sb.AppendLine("USER_DROS_PATH = user_dro_display/");
             sb.AppendLine("USER_ATC_BUTTONS_PATH = user_atc_buttons/");
+            sb.AppendLine("USER_DROS_PATH = user_dro_display/");
             sb.AppendLine();
 
             sb.AppendLine("[FILTER]");
             sb.AppendLine("PROGRAM_EXTENSION = .nc,.txt,.tap Other NC files");
-            sb.AppendLine("PROGRAM_EXTENSION = .png,.gif,.jpg Greyscale Depth Image");
             sb.AppendLine("png = image-to-gcode");
-            sb.AppendLine("gif = image-to-gcode");
-            sb.AppendLine("jpg = image-to-gcode");
             sb.AppendLine();
 
             sb.AppendLine("[PYTHON]");
@@ -125,11 +117,9 @@ namespace CncController.Services
             sb.AppendLine();
 
             sb.AppendLine("[RS274NGC]");
-            sb.AppendLine("SUBROUTINE_PATH = macros_metric_sim");
-            sb.AppendLine("PARAMETER_FILE = vmc_metric.var");
             sb.AppendLine("RS274NGC_STARTUP_CODE = F10 S300 G21 G17 G40 G49 G54 G64 P0.001 G80 G90 G91.1 G92.1 G94 G97 G98");
-            sb.AppendLine("OWORD_NARGS = 1");
-            sb.AppendLine("NO_DOWNCASE_OWORD = 1");
+            sb.AppendLine("PARAMETER_FILE = vmc_metric.var");
+            sb.AppendLine("SUBROUTINE_PATH = macros_metric_sim");
             sb.AppendLine("REMAP=M6  modalgroup=6 prolog=change_prolog ngc=toolchange epilog=change_epilog");
             sb.AppendLine("REMAP=M10 modalgroup=6 argspec=P ngc=m10");
             sb.AppendLine("REMAP=M11 modalgroup=6 argspec=p ngc=m11");
@@ -163,7 +153,7 @@ namespace CncController.Services
 
             sb.AppendLine("[TRAJ]");
             sb.AppendLine($"AXES = {axesCount}");
-            sb.AppendLine($"SPINDLES = 1");
+            sb.AppendLine("SPINDLES = 1");
             sb.AppendLine($"COORDINATES = {coordinates}");
             sb.AppendLine("LINEAR_UNITS = mm");
             sb.AppendLine("ANGULAR_UNITS = degree");
@@ -199,16 +189,16 @@ namespace CncController.Services
             for (int i = 0; i < axesCount; i++)
             {
                 var axis = config.Axes[i];
-                double scale = axis.PulsePerRev / (axis.Pitch == 0 ? 1 : axis.Pitch);
-                double homeVel = Math.Abs(axis.HomeSpeed) * axis.HomeDirection;
-                int homeSeq = (axis.AxisID == "Z") ? 1 : 2;
+                string axisName = axis.AxisID.ToUpper();
+                double pitch = axis.Pitch == 0 ? 5.0 : axis.Pitch;
+                double scale = axis.PulsePerRev / pitch;
 
-                sb.AppendLine($"# --- Axis {axis.AxisID} ---");
-                sb.AppendLine($"[AXIS_{axis.AxisID}]");
-                sb.AppendLine("MAX_VELOCITY = 100.0");
-                sb.AppendLine("MAX_ACCELERATION = 1000.0");
+                sb.AppendLine($"# --- Axis {axisName} ---");
+                sb.AppendLine($"[AXIS_{axisName}]");
                 sb.AppendLine($"MIN_LIMIT = {axis.SoftLimitNeg}");
                 sb.AppendLine($"MAX_LIMIT = {axis.SoftLimitPos}");
+                sb.AppendLine($"MAX_VELOCITY = {axis.MaxVelocity}");
+                sb.AppendLine($"MAX_ACCELERATION = {axis.MaxAcceleration}");
                 sb.AppendLine();
 
                 sb.AppendLine($"[JOINT_{i}]");
@@ -216,138 +206,363 @@ namespace CncController.Services
                 sb.AppendLine("HOME = 0.0");
                 sb.AppendLine($"MIN_LIMIT = {axis.SoftLimitNeg}");
                 sb.AppendLine($"MAX_LIMIT = {axis.SoftLimitPos}");
-                sb.AppendLine("MAX_VELOCITY = 100.0");
-                sb.AppendLine("MAX_ACCELERATION = 1000.0");
-                sb.AppendLine($"STEP_SCALE = {scale}");
-                sb.AppendLine("FERROR = 10.0");
-                sb.AppendLine("MIN_FERROR = 1.0");
-                sb.AppendLine($"HOME_OFFSET = {axis.HomeSpeed * 0.1}");
-                sb.AppendLine($"HOME_SEARCH_VEL = {homeVel}");
-                sb.AppendLine($"HOME_LATCH_VEL = {homeVel * -0.1}");
-                sb.AppendLine("HOME_USE_INDEX = 0");
-                sb.AppendLine("HOME_IGNORE_LIMITS = YES");
-                sb.AppendLine($"HOME_SEQUENCE = {homeSeq}");
+                sb.AppendLine($"MAX_VELOCITY = {axis.MaxVelocity}");
+                sb.AppendLine($"MAX_ACCELERATION = {axis.MaxAcceleration}");
+                sb.AppendLine($"STEP_SCALE = {scale:0.0}");
+                sb.AppendLine("FERROR = 50.0");
+                sb.AppendLine("MIN_FERROR = 5.0");
+
+                sb.AppendLine("P_GAIN = 1000");
+                sb.AppendLine("I_GAIN = 0");
+                sb.AppendLine("D_GAIN = 0");
+                sb.AppendLine("FF0 = 0");
+                sb.AppendLine("FF1 = 1.0");
+
+                double searchVel = 0;
+                double latchVel = 0;
+                string useIndex = "NO";
+                string ignoreLimits = "NO";
+
+                switch (axis.HomingMode)
+                {
+                    case HomingMode.Immediate:
+                        searchVel = 0; latchVel = 0; useIndex = "NO";
+                        break;
+                    case HomingMode.HomeSwitch:
+                        searchVel = Math.Abs(axis.HomeSpeed) * axis.HomeDirection;
+                        latchVel = Math.Abs(axis.HomeLatchSpeed) * axis.HomeDirection;
+                        useIndex = axis.HomeUseIndex ? "YES" : "NO";
+                        ignoreLimits = "YES";
+                        break;
+                    case HomingMode.LimitSwitch:
+                        searchVel = Math.Abs(axis.HomeSpeed) * axis.HomeDirection;
+                        latchVel = Math.Abs(axis.HomeLatchSpeed) * axis.HomeDirection;
+                        useIndex = axis.HomeUseIndex ? "YES" : "NO";
+                        ignoreLimits = "YES";
+                        break;
+                }
+
+                sb.AppendLine($"HOME_OFFSET = {axis.HomeOffset}");
+                sb.AppendLine($"HOME_SEARCH_VEL = {searchVel}");
+                sb.AppendLine($"HOME_LATCH_VEL = {latchVel}");
+                sb.AppendLine($"HOME_USE_INDEX = {useIndex}");
+                sb.AppendLine($"HOME_IGNORE_LIMITS = {ignoreLimits}");
+                sb.AppendLine($"HOME_SEQUENCE = {axis.HomeSequence}");
                 sb.AppendLine();
             }
             return sb.ToString();
         }
 
+        // ========================================================================================
+        // 2. 生成 HAL (★ 修正：使用 Fake Feedback 防止跟隨誤差)
+        // ========================================================================================
+        // ========================================================================================
+        // 2. 生成 HAL (★ 修正：智慧判斷回授模式)
+        //    - 伺服 (Servo): 使用真實 Encoder 回授 (需搭配 PID 調校)
+        //    - 步進/開迴路: 使用偽造回授 (Fake Feedback)
+        // ========================================================================================
+        private string GenerateHal(MachineConfig config)
+        {
+            var sb = new StringBuilder();
+            int axesCount = config.Axes.Count;
+
+            sb.AppendLine("# Generated by CncController (Smart Feedback Mode)");
+            sb.AppendLine("loadrt [KINS]KINEMATICS");
+            sb.AppendLine("loadrt [EMCMOT]EMCMOT servo_period_nsec=[EMCMOT]SERVO_PERIOD num_joints=[KINS]JOINTS");
+            sb.AppendLine($"loadrt cia402 count={axesCount}");
+
+            var sliceNames = string.Join(",", config.Axes.Select(a => $"slice_{a.AxisID}"));
+            var personalities = string.Join(",", Enumerable.Repeat("32", axesCount));
+            sb.AppendLine($"loadrt bitslice names={sliceNames} personality={personalities}");
+
+            int notCount = axesCount * 3;
+            if (notCount > 0) sb.AppendLine($"loadrt not count={notCount}");
+
+            sb.AppendLine("loadusr -W lcec_conf ethercat-conf.xml");
+            sb.AppendLine("loadrt lcec");
+            sb.AppendLine();
+
+            sb.AppendLine("addf lcec.read-all servo-thread");
+            foreach (var axis in config.Axes) sb.AppendLine($"addf slice_{axis.AxisID} servo-thread");
+            for (int i = 0; i < axesCount; i++) sb.AppendLine($"addf cia402.{i}.read-all servo-thread");
+
+            if (notCount > 0)
+            {
+                sb.AppendLine("addf not.0 servo-thread");
+                for (int k = 1; k < notCount; k++) sb.AppendLine($"addf not.{k} servo-thread");
+            }
+
+            sb.AppendLine("addf motion-command-handler servo-thread");
+            sb.AppendLine("addf motion-controller servo-thread");
+            for (int i = 0; i < axesCount; i++) sb.AppendLine($"addf cia402.{i}.write-all servo-thread");
+            sb.AppendLine("addf lcec.write-all servo-thread");
+            sb.AppendLine();
+
+            int currentNotIndex = 0;
+
+            for (int i = 0; i < axesCount; i++)
+            {
+                var axis = config.Axes[i];
+                string axisHalName = $"joint.{i}";
+
+                // 1. 找出對應的 Slave Index
+                int sIdx = -1;
+                string axName = axis.AxisID.ToUpper();
+                if (axName == "X") sIdx = 0; else if (axName == "Y") sIdx = 2; else if (axName == "Z") sIdx = 3;
+                if (sIdx == -1) continue;
+
+                string sliceName = $"slice_{axis.AxisID}";
+
+                // 2. 判斷該 Slave 是否為伺服 (查 Mapping 表)
+                bool isServo = false;
+                var map = config.Mappings.FirstOrDefault(m => m.PhysicalIndex == sIdx);
+                if (map != null)
+                {
+                    isServo = IsServoDrive(map.ExpectedVendorId, map.ExpectedProductCode);
+                }
+
+                sb.AppendLine($"# --- Axis {axis.AxisID} (Slave {sIdx}) [Type: {(isServo ? "Servo" : "Stepper/OpenLoop")}] ---");
+
+                sb.AppendLine($"net {axis.AxisID}-enable  {axisHalName}.amp-enable-out => cia402.{i}.enable");
+                sb.AppendLine($"net {axis.AxisID}-control cia402.{i}.controlword => lcec.0.{sIdx}.control_word_J{sIdx}");
+                sb.AppendLine($"net {axis.AxisID}-status  lcec.0.{sIdx}.status_word_J{sIdx} => cia402.{i}.statusword");
+
+                if (isServo)
+                {
+                    // 伺服需要 CSP 模式設定
+                    sb.AppendLine($"setp cia402.{i}.csp-mode 1");
+                    sb.AppendLine($"setp lcec.0.{sIdx}.modes_of_operation_J{sIdx} 8");
+                }
+                else
+                {
+                    // 步進模組可能不需要 CSP Mode (視模組而定，但設了通常無害)
+                    sb.AppendLine($"setp cia402.{i}.csp-mode 1");
+                }
+
+                sb.AppendLine($"setp cia402.{i}.pos-scale [JOINT_{i}]STEP_SCALE");
+
+                // 3. 命令輸出
+                sb.AppendLine($"net {axis.AxisID}-pos-cmd {axisHalName}.motor-pos-cmd => cia402.{i}.pos-cmd");
+                sb.AppendLine($"net {axis.AxisID}-drv-target cia402.{i}.drv-target-position => lcec.0.{sIdx}.target_position_J{sIdx}");
+
+                // 4. 回授處理 (Feedback Logic)
+                // 讀取硬體位置 (給 cia402 內部狀態機用)
+                sb.AppendLine($"net {axis.AxisID}-pos-fb lcec.0.{sIdx}.position_actual_value_J{sIdx} => cia402.{i}.drv-actual-position");
+
+                if (isServo)
+                {
+                    // ★★★ Case A: 伺服 (使用真實回授) ★★★
+                    // 接上真實的 Encoder 回授
+                    sb.AppendLine("# [Feedback] Real Encoder Feedback (Closed Loop)");
+                    sb.AppendLine($"net {axis.AxisID}-pos-fb-final cia402.{i}.pos-fb => {axisHalName}.motor-pos-fb");
+                }
+                else
+                {
+                    // ★★★ Case B: 步進/開迴路 (使用偽造回授) ★★★
+                    // 將命令直接接回回授，消除跟隨誤差
+                    sb.AppendLine("# [Feedback] Fake Feedback (Open Loop)");
+                    sb.AppendLine($"net {axis.AxisID}-pos-cmd => {axisHalName}.motor-pos-fb");
+                }
+
+                sb.AppendLine($"net {axis.AxisID}-di-raw lcec.0.{sIdx}.digital_inputs_J{sIdx} => {sliceName}.in");
+
+                // --- Homing & Limits Logic (保持不變) ---
+                if (axis.HomingMode == HomingMode.Immediate)
+                {
+                    sb.AppendLine("# Homing: Immediate (No switch)");
+                }
+                else if (axis.HomingMode == HomingMode.HomeSwitch)
+                {
+                    if (axis.HomeSwitchLogic != LimitLogic.NotUsed)
+                    {
+                        string rawHomeSig = $"{sliceName}.out-{axis.HomeDiIndex:00}";
+                        if (axis.HomeSwitchLogic == LimitLogic.NC)
+                        {
+                            sb.AppendLine($"# Logic: NC (Inverted)");
+                            sb.AppendLine($"net {axis.AxisID}-home-raw {rawHomeSig} => not.{currentNotIndex}.in");
+                            sb.AppendLine($"net {axis.AxisID}-home {axisHalName}.home-sw-in <= not.{currentNotIndex}.out");
+                            currentNotIndex++;
+                        }
+                        else
+                        {
+                            sb.AppendLine($"# Logic: NO (Direct)");
+                            sb.AppendLine($"net {axis.AxisID}-home {axisHalName}.home-sw-in <= {rawHomeSig}");
+                        }
+                    }
+                }
+                else if (axis.HomingMode == HomingMode.LimitSwitch)
+                {
+                    int targetDiIndex = (axis.HomeDirection > 0) ? axis.PosLimitDiIndex : axis.NegLimitDiIndex;
+                    if (axis.LimitSwitchLogic != LimitLogic.NotUsed)
+                    {
+                        string rawSharedSig = $"{sliceName}.out-{targetDiIndex:00}";
+                        if (axis.LimitSwitchLogic == LimitLogic.NC)
+                        {
+                            sb.AppendLine($"# Logic: NC (Shared Limit)");
+                            sb.AppendLine($"net {axis.AxisID}-home-shared-raw {rawSharedSig} => not.{currentNotIndex}.in");
+                            sb.AppendLine($"net {axis.AxisID}-home {axisHalName}.home-sw-in <= not.{currentNotIndex}.out");
+                            currentNotIndex++;
+                        }
+                        else
+                        {
+                            sb.AppendLine($"# Logic: NO (Shared Limit)");
+                            sb.AppendLine($"net {axis.AxisID}-home {axisHalName}.home-sw-in <= {rawSharedSig}");
+                        }
+                    }
+                }
+
+                if (axis.LimitSwitchLogic != LimitLogic.NotUsed)
+                {
+                    string rawNeg = $"{sliceName}.out-{axis.NegLimitDiIndex:00}";
+                    if (axis.LimitSwitchLogic == LimitLogic.NC)
+                    {
+                        sb.AppendLine($"# Neg Limit: NC");
+                        sb.AppendLine($"net {axis.AxisID}-neg-raw {rawNeg} => not.{currentNotIndex}.in");
+                        sb.AppendLine($"net {axis.AxisID}-neg-lim {axisHalName}.neg-lim-sw-in <= not.{currentNotIndex}.out");
+                        currentNotIndex++;
+                    }
+                    else
+                    {
+                        sb.AppendLine($"# Neg Limit: NO");
+                        sb.AppendLine($"net {axis.AxisID}-neg-lim {axisHalName}.neg-lim-sw-in <= {rawNeg}");
+                    }
+
+                    string rawPos = $"{sliceName}.out-{axis.PosLimitDiIndex:00}";
+                    if (axis.LimitSwitchLogic == LimitLogic.NC)
+                    {
+                        sb.AppendLine($"# Pos Limit: NC");
+                        sb.AppendLine($"net {axis.AxisID}-pos-raw {rawPos} => not.{currentNotIndex}.in");
+                        sb.AppendLine($"net {axis.AxisID}-pos-lim {axisHalName}.pos-lim-sw-in <= not.{currentNotIndex}.out");
+                        currentNotIndex++;
+                    }
+                    else
+                    {
+                        sb.AppendLine($"# Pos Limit: NO");
+                        sb.AppendLine($"net {axis.AxisID}-pos-lim {axisHalName}.pos-lim-sw-in <= {rawPos}");
+                    }
+                }
+                sb.AppendLine();
+            }
+            sb.AppendLine();
+            sb.AppendLine("# --- SAFETY BYPASS (FORCE CONNECTION) ---");
+            sb.AppendLine("unlinkp iocontrol.0.emc-enable-in");
+            sb.AppendLine("net logic-enable iocontrol.0.user-enable-out => iocontrol.0.emc-enable-in");
+
+            return sb.ToString();
+        }
+
+        // ========================================================================================
+        // 3. 生成 XML (EtherCAT Topology)
+        // ========================================================================================
         private string GenerateXml(MachineConfig config)
         {
             var sb = new StringBuilder();
             sb.AppendLine("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
             sb.AppendLine("<masters>");
-            sb.AppendLine($"  <master idx=\"{config.MasterIndex}\" appTimePeriod=\"1000000\" refClockSyncCycles=\"1000\">");
+            sb.AppendLine($"  <master idx=\"0\" appTimePeriod=\"1000000\" refClockSyncCycles=\"1000\">");
 
-            foreach (var map in config.Mappings)
+            int maxSlaveIndex = 0;
+            if (config.Mappings.Any())
+                maxSlaveIndex = config.Mappings.Max(m => m.PhysicalIndex);
+            if (maxSlaveIndex < 1) maxSlaveIndex = 1;
+
+            for (int i = 0; i <= maxSlaveIndex; i++)
             {
-                sb.AppendLine($"    <slave idx=\"{map.PhysicalIndex}\" type=\"generic\" vid=\"{map.ExpectedVendorId}\" pid=\"{map.ExpectedProductCode}\" configPdos=\"true\">");
-                sb.AppendLine("      <dcConf assignActivate=\"300\" sync0Cycle=\"*1\" sync0Shift=\"0\"/>");
-                sb.AppendLine("      <syncManager idx=\"2\" dir=\"out\">");
-                sb.AppendLine("        <pdo idx=\"1600\">");
-                sb.AppendLine($"          <pdoEntry idx=\"6040\" subIdx=\"00\" bitLen=\"16\" halPin=\"control_word_J{map.PhysicalIndex}\" halType=\"u32\"/>");
-                sb.AppendLine($"          <pdoEntry idx=\"607a\" subIdx=\"00\" bitLen=\"32\" halPin=\"target_position_J{map.PhysicalIndex}\" halType=\"s32\"/>");
-                sb.AppendLine($"          <pdoEntry idx=\"6060\" subIdx=\"00\" bitLen=\"8\" halPin=\"modes_of_operation_J{map.PhysicalIndex}\" halType=\"s32\"/>");
-                sb.AppendLine($"          <pdoEntry idx=\"60fd\" subIdx=\"00\" bitLen=\"32\" halPin=\"digital_inputs_J{map.PhysicalIndex}\" halType=\"u32\"/>");
-                sb.AppendLine("        </pdo>");
-                sb.AppendLine("      </syncManager>");
-                sb.AppendLine("      <syncManager idx=\"3\" dir=\"in\">");
-                sb.AppendLine("        <pdo idx=\"1a00\">");
-                sb.AppendLine($"          <pdoEntry idx=\"6041\" subIdx=\"00\" bitLen=\"16\" halPin=\"status_word_J{map.PhysicalIndex}\" halType=\"u32\"/>");
-                sb.AppendLine($"          <pdoEntry idx=\"6064\" subIdx=\"00\" bitLen=\"32\" halPin=\"position_actual_value_J{map.PhysicalIndex}\" halType=\"s32\"/>");
-                sb.AppendLine("        </pdo>");
-                sb.AppendLine("      </syncManager>");
-                sb.AppendLine("    </slave>");
+                var map = config.Mappings.FirstOrDefault(m => m.PhysicalIndex == i);
+
+                if (map != null)
+                {
+                    bool isServo = IsServoDrive(map.ExpectedVendorId, map.ExpectedProductCode);
+
+                    sb.AppendLine($"    ");
+                    sb.AppendLine($"    <slave idx=\"{i}\" type=\"generic\" vid=\"{map.ExpectedVendorId}\" pid=\"{map.ExpectedProductCode}\" configPdos=\"true\">");
+                    sb.AppendLine("      <dcConf assignActivate=\"0x300\" sync0Cycle=\"*1\" sync0Shift=\"0\"/>");
+
+                    if (isServo)
+                    {
+                        sb.AppendLine("      <syncManager idx=\"2\" dir=\"out\">");
+                        sb.AppendLine("        <pdo idx=\"1600\">");
+                        sb.AppendLine($"          <pdoEntry idx=\"6040\" subIdx=\"00\" bitLen=\"16\" halPin=\"control_word_J{i}\" halType=\"u32\"/>");
+                        sb.AppendLine($"          <pdoEntry idx=\"607a\" subIdx=\"00\" bitLen=\"32\" halPin=\"target_position_J{i}\" halType=\"s32\"/>");
+                        sb.AppendLine($"          <pdoEntry idx=\"6060\" subIdx=\"00\" bitLen=\"8\" halPin=\"modes_of_operation_J{i}\" halType=\"s32\"/>");
+                        sb.AppendLine("        </pdo>");
+                        sb.AppendLine("      </syncManager>");
+
+                        sb.AppendLine("      <syncManager idx=\"3\" dir=\"in\">");
+                        sb.AppendLine("        <pdo idx=\"1a00\">");
+                        sb.AppendLine($"          <pdoEntry idx=\"6041\" subIdx=\"00\" bitLen=\"16\" halPin=\"status_word_J{i}\" halType=\"u32\"/>");
+                        sb.AppendLine($"          <pdoEntry idx=\"6064\" subIdx=\"00\" bitLen=\"32\" halPin=\"position_actual_value_J{i}\" halType=\"s32\"/>");
+                        sb.AppendLine($"          <pdoEntry idx=\"6061\" subIdx=\"00\" bitLen=\"8\" halPin=\"modes_of_operation_display_J{i}\" halType=\"s32\"/>");
+                        sb.AppendLine($"          <pdoEntry idx=\"60fd\" subIdx=\"00\" bitLen=\"32\" halPin=\"digital_inputs_J{i}\" halType=\"u32\"/>");
+                        sb.AppendLine("        </pdo>");
+                        sb.AppendLine("      </syncManager>");
+                    }
+                    else
+                    {
+                        sb.AppendLine("      <syncManager idx=\"2\" dir=\"out\">");
+                        sb.AppendLine("        <pdo idx=\"1600\">");
+                        sb.AppendLine($"          <pdoEntry idx=\"6040\" subIdx=\"00\" bitLen=\"16\" halPin=\"control_word_J{i}\" halType=\"u32\"/>");
+                        sb.AppendLine($"          <pdoEntry idx=\"607a\" subIdx=\"00\" bitLen=\"32\" halPin=\"target_position_J{i}\" halType=\"s32\"/>");
+                        sb.AppendLine("        </pdo>");
+                        sb.AppendLine("      </syncManager>");
+
+                        sb.AppendLine("      <syncManager idx=\"3\" dir=\"in\">");
+                        sb.AppendLine("        <pdo idx=\"1a00\">");
+                        sb.AppendLine($"          <pdoEntry idx=\"6041\" subIdx=\"00\" bitLen=\"16\" halPin=\"status_word_J{i}\" halType=\"u32\"/>");
+                        sb.AppendLine($"          <pdoEntry idx=\"6064\" subIdx=\"00\" bitLen=\"32\" halPin=\"position_actual_value_J{i}\" halType=\"s32\"/>");
+                        sb.AppendLine($"          <pdoEntry idx=\"60fd\" subIdx=\"00\" bitLen=\"32\" halPin=\"digital_inputs_J{i}\" halType=\"u32\"/>");
+                        sb.AppendLine("        </pdo>");
+                        sb.AppendLine("      </syncManager>");
+                    }
+                    sb.AppendLine("    </slave>");
+                }
+                else
+                {
+                    sb.AppendLine($"    ");
+                    sb.AppendLine($"    <slave idx=\"{i}\" type=\"generic\" vid=\"000001dd\" pid=\"00005500\" configPdos=\"false\"/>");
+                }
             }
+
             sb.AppendLine("  </master>");
             sb.AppendLine("</masters>");
             return sb.ToString();
         }
 
-        private string GenerateHal(MachineConfig config)
+        private string GeneratePostGuiHal(MachineConfig config)
         {
             var sb = new StringBuilder();
-            int count = config.Axes.Count;
-
-            sb.AppendLine("# Generated by CncController");
-            sb.AppendLine("loadrt [KINS]KINEMATICS");
-            sb.AppendLine("loadrt [EMCMOT]EMCMOT servo_period_nsec=[EMCMOT]SERVO_PERIOD num_joints=[KINS]JOINTS");
-            sb.AppendLine($"loadrt cia402 count={count}");
-
-            var sliceNames = string.Join(",", config.Axes.Select(a => $"slice_{a.AxisID}"));
-            var personalities = string.Join(",", Enumerable.Repeat("32", count));
-            sb.AppendLine($"loadrt bitslice names={sliceNames} personality={personalities}");
-
-            sb.AppendLine("loadusr -W lcec_conf ethercat-conf.xml");
-            sb.AppendLine("loadrt lcec");
-
-            // ★★★ [新增 1] 載入安全邏輯元件 ★★★
-            sb.AppendLine("loadrt and2 count=1");
-            sb.AppendLine("loadrt not count=1");
-            sb.AppendLine("loadrt message names=msg_ec_error messages=\"CRITICAL ERROR: EtherCAT Communication Lost!\"");
-
+            sb.AppendLine("# Generated by CncController - PostGUI");
+            sb.AppendLine("# 這裡只負責將 HAL 訊號連接到 Probe Basic 介面");
+            sb.AppendLine("# ★★★ 絕對不要在這裡 loadrt not/bitslice，因為主 HAL 已經載入了 ★★★");
             sb.AppendLine();
-            sb.AppendLine("addf lcec.read-all          servo-thread");
-            foreach (var axis in config.Axes) sb.AppendLine($"addf slice_{axis.AxisID}             servo-thread");
-            for (int i = 0; i < count; i++) sb.AppendLine($"addf cia402.{i}.read-all       servo-thread");
-            sb.AppendLine("addf motion-command-handler servo-thread");
-            sb.AppendLine("addf motion-controller      servo-thread");
-
-            // ★★★ [新增 2] 加入邏輯運算到執行緒 (必須在 motion-controller 之後) ★★★
-            sb.AppendLine("addf and2.0       servo-thread");
-            sb.AppendLine("addf not.0        servo-thread");
-            sb.AppendLine("addf msg_ec_error servo-thread");
-
-            for (int i = 0; i < count; i++) sb.AppendLine($"addf cia402.{i}.write-all      servo-thread");
-            sb.AppendLine("addf lcec.write-all         servo-thread");
-            sb.AppendLine();
-
-            // ★★★ [新增 3] 安全迴路與錯誤發報接線 (替換掉原本的 Loopback) ★★★
-            sb.AppendLine("# --- E-Stop Safety Loop & Error Msg ---");
-
-            // 1. 安全開關 (AND閘): 只有當 (使用者按F2) 且 (EtherCAT連線正常) 時，才允許開機
-            sb.AppendLine("net user-request    iocontrol.0.user-enable-out => and2.0.in0");
-            // 注意：這裡使用 lcec.state-op 分接給 AND (in1) 和 NOT (in)
-            sb.AppendLine("net ec-status       lcec.state-op               => and2.0.in1 not.0.in");
-            sb.AppendLine("net system-ok       and2.0.out                  => iocontrol.0.emc-enable-in");
-
-            // 2. 錯誤發報 (NOT閘): 當 EtherCAT 斷線(False) -> 反相為True -> 觸發紅色警報
-            sb.AppendLine("net ec-error-trigger not.0.out                  => msg_ec_error.trigger");
-
-            sb.AppendLine();
-            sb.AppendLine("# --- Tool Change Loopback ---");
-            sb.AppendLine("net tool-prep-loop iocontrol.0.tool-prepare => iocontrol.0.tool-prepared");
-            sb.AppendLine();
-
-            for (int i = 0; i < count; i++)
-            {
-                var axis = config.Axes[i];
-                var mapping = config.Mappings.FirstOrDefault(m => m.LogicalName == axis.Name);
-
-                if (mapping != null)
-                {
-                    int jIdx = i;
-                    int sIdx = mapping.PhysicalIndex;
-                    string sliceName = $"slice_{axis.AxisID}";
-
-                    sb.AppendLine($"# Axis {axis.AxisID} -> Slave {sIdx}");
-                    sb.AppendLine($"net {axis.AxisID}-enable      joint.{jIdx}.amp-enable-out  => cia402.{jIdx}.enable");
-                    sb.AppendLine($"net {axis.AxisID}-control     cia402.{jIdx}.controlword    => lcec.0.{sIdx}.control_word_J{sIdx}");
-                    sb.AppendLine($"net {axis.AxisID}-status      lcec.0.{sIdx}.status_word_J{sIdx} => cia402.{jIdx}.statusword");
-                    sb.AppendLine($"setp cia402.{jIdx}.csp-mode 1");
-                    sb.AppendLine($"setp lcec.0.{sIdx}.modes_of_operation_J{sIdx} 8");
-                    sb.AppendLine($"setp cia402.{jIdx}.pos-scale [JOINT_{jIdx}]STEP_SCALE");
-                    sb.AppendLine($"net {axis.AxisID}-pos-cmd     joint.{jIdx}.motor-pos-cmd          => cia402.{jIdx}.pos-cmd");
-                    sb.AppendLine($"net {axis.AxisID}-drv-target  cia402.{jIdx}.drv-target-position  => lcec.0.{sIdx}.target_position_J{sIdx}");
-                    sb.AppendLine($"net {axis.AxisID}-pos-fb      lcec.0.{sIdx}.position_actual_value_J{sIdx} => cia402.{jIdx}.drv-actual-position");
-                    sb.AppendLine($"net {axis.AxisID}-pos-fb-final cia402.{jIdx}.pos-fb              => joint.{jIdx}.motor-pos-fb");
-
-                    sb.AppendLine($"net {axis.AxisID}-di-raw      lcec.0.{sIdx}.digital_inputs_J{sIdx} => {sliceName}.in");
-                    sb.AppendLine($"net {axis.AxisID}-home-sw     {sliceName}.out-02 => joint.{jIdx}.home-sw-in");
-                    sb.AppendLine();
-                }
-            }
             return sb.ToString();
+        }
+
+        private bool IsServoDrive(string vidStr, string pidStr)
+        {
+            Debug.WriteLine($"[SERVO_CHECK] Inspecting -> VID: '{vidStr}', PID: '{pidStr}'");
+
+            if (string.IsNullOrEmpty(pidStr)) return false;
+
+            string p = pidStr.ToLower().Trim().Replace("0x", "");
+            string v = vidStr?.ToLower().Trim().Replace("0x", "") ?? "";
+
+            Debug.WriteLine($"[SERVO_CHECK] Processed -> v: '{v}', p: '{p}'");
+
+            if (p.Contains("c010d") || p.Contains("916"))
+            {
+                Debug.WriteLine("[SERVO_CHECK] Result: TRUE (Matched Inovance)");
+                return true;
+            }
+
+            if (v.Contains("1dd") && p.Contains("6080"))
+            {
+                Debug.WriteLine("[SERVO_CHECK] Result: TRUE (Matched Delta ASDA-B3)");
+                return true;
+            }
+
+            Debug.WriteLine("[SERVO_CHECK] Result: FALSE (No Rule Matched)");
+            return false;
         }
     }
 }

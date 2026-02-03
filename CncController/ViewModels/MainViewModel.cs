@@ -26,6 +26,7 @@ namespace CncController.ViewModels
         public List<DiscoveredSlave> LastValidatedSlaves { get; private set; }
         public MachineConfig LastValidatedConfig { get; private set; }
 
+        public SettingsViewModel SettingsVM { get; } = new SettingsViewModel();
         // ==============================================================================
         // 1. 屬性定義
         // ==============================================================================
@@ -92,6 +93,19 @@ namespace CncController.ViewModels
             _timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(100) };
             _timer.Tick += StatusTimer_Tick; // 改用具名方法
             _timer.Start();
+
+            // ★★★ [補充] 訂閱自己的事件，以連動 SettingsVM ★★★
+            // 這是為了保留您原本 "事件驅動" 的邏輯，讓 SettingsVM 在收到通知時初始化
+            // 雖然我們也可以直接呼叫，但這樣寫耦合度較低
+            this.HardwareValidationCompleted += (slaves, config) =>
+            {
+                // 當硬體驗證完成時，通知 SettingsVM 更新列表
+                // 注意：這裡使用 Dispatcher 確保 UI 安全
+                System.Windows.Application.Current.Dispatcher.Invoke(() =>
+                {
+                    SettingsVM.Initialize(config, slaves);
+                });
+            };
 
             // [新增] 啟動後非同步執行硬體自動驗證（不阻塞 UI）
             _ = AutoValidateHardware();
@@ -160,25 +174,31 @@ namespace CncController.ViewModels
         // ==============================================================================
         private async void StatusTimer_Tick(object? sender, EventArgs e)
         {
-            _timer.Stop(); // ★ 暫停：防止網路卡住時，Timer 一直觸發導致堆積
+            _timer.Stop();
             try
             {
-                // 1. 抓取數據 (保留原有邏輯)
-                await PollMachineStatus();
-                // 2. ★★★ 關鍵：必須在這裡主動抓錯誤 ★★★
-                // 因為 Service 不再自動抓了，如果您這裡沒寫，就永遠抓不到錯誤
+                // 1. 呼叫剛剛改好的 PollMachineStatus，並用變數 data 接住回傳值
+                var data = await PollMachineStatus();
+
+                // 2. ★★★ 關鍵：把資料傳給 SettingsVM 的 IO 監控 ★★★
+                if (data != null)
+                {
+                    SettingsVM.UpdateMachineStatus(data);
+                }
+
+                // 3. 抓錯誤 (原有邏輯)
                 if (IsConnected)
                 {
                     await PollErrors();
                 }
 
-                // 2. 更新跑馬燈與頂部狀態 (新邏輯)
+                // 4. 更新頂部狀態
                 UpdateHeaderStatus();
             }
-            catch { /* 忽略錯誤，避免 Timer 死掉 */ }
+            catch { }
             finally
             {
-                _timer.Start(); // ★ 重啟：確保做完才數下一次
+                _timer.Start();
             }
         }
         private async Task PollErrors()
@@ -243,7 +263,8 @@ namespace CncController.ViewModels
                 }
             }
         }
-        private async Task PollMachineStatus()
+        // 1. 修改回傳型別：加上 <MachineStatusData?>
+        private async Task<MachineStatusData?> PollMachineStatus()
         {
             // 呼叫 Service
             var (state, data) = await MachineControlService.Instance.GetStatusAsync();
@@ -287,6 +308,9 @@ namespace CncController.ViewModels
                     IsSystemReady = false;
                     break;
             }
+
+            // 2. ★★★ 新增這行：把資料回傳出去 ★★★
+            return data;
         }
 
         private void UpdateMachineData(MachineStatusData data)
@@ -383,7 +407,9 @@ namespace CncController.ViewModels
             switch (viewName)
             {
                 case "Main": CurrentViewModel = new MonitorViewModel(); break;
-                case "Settings": CurrentViewModel = new SettingsViewModel(); break;
+                //case "Settings": CurrentViewModel = new SettingsViewModel(); break;
+                // ★★★ [修正] 使用共用的 SettingsVM 實例，不要 new 新的 ★★★
+                case "Settings": CurrentViewModel = SettingsVM; break;
                 case "History": CurrentViewModel = new HistoryViewModel(); break;
             }
         }

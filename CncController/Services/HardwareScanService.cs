@@ -65,7 +65,7 @@ namespace CncController.Services
             {
                 // 發送掃描指令到後端 API
                 var response = await _http.PostAsync("/api/ethercat/scan", null);
-
+                
                 if (response.IsSuccessStatusCode)
                 {
                     var slaves = await response.Content.ReadFromJsonAsync<List<DiscoveredSlave>>();

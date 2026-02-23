@@ -210,12 +210,23 @@ python3 server.py     # 直接啟動（除錯用）
 | MDI（Manual Data Input，手動資料輸入）輸入框 UI | `MonitorView`（TextBox + SEND 按鈕已存在） |
 | 加工計時器（Cycle Timer） | `MainViewModel`；RUNNING 時計時，IDLE 時停止 |
 | 開機硬體自動驗證 | `MainViewModel.AutoValidateHardware`；讀設定 → 掃描 → 驗證拓樸 → 通知 SettingsVM |
+| **[工控安全] 異常處理強化** | 消除所有空 `catch{}`；`AlarmService` 加入 `lock` + `try/catch`；Fire-and-Forget 均包裹 `try/catch` |
+| **[工控安全] 急停優先通道** | `_estopClient`（獨立 2s HttpClient）；觸發後立即樂觀更新 `IsEstop=true`；取消進行中 JOG |
+| **[工控安全] 運動指令前置守衛** | `CanExecuteMotion()`（ViewModel 層）+ `ValidateAction()`（Service 層）雙重防線；套用至 `JogStart`/`CycleStart` |
+| **[工控安全] 原子狀態更新** | `PollMachineStatus` 先計算 `newIsPower/newIsEstop/newIsReady` 快照再統一套用，杜絕 UI 讀到中間態 |
+| **[工控安全] HttpClient 分離** | `_pollingClient`（3s）/ `_estopClient`（2s）/ 局部 client（設定10s / 上傳20s）各自獨立 |
+| **[工控安全] 連續失敗計數** | `_consecutiveFailCount`：連續 ≥3 次失敗才判定 Disconnected，避免短暫波動誤報 |
+| **[工控安全] 狀態轉換驗證表** | `MachineAction` enum + `ValidateAction()`；`JogAsync`/`CycleStartAsync` 呼叫作為 Service 層防線 |
+| **[工控安全] 密碼外部化** | SHA-256（Salt:Password）雜湊，儲存於外部 `passwords.json`；原始碼無明文密碼 |
+| **[工控安全] IP 外部化** | `AppSettings.cs` 讀取 `appsettings.json`（`ServerUrl`）；三個 Service 統一使用，首次執行自動建立 |
+| **[工控安全] 日誌持久化** | Error/Warning/Info 透過 ThreadPool 非同步寫入 `logs/cnc-yyyy-MM-dd.log`（每日滾動） |
+| **[工控安全] 部署集合快照** | `GenerateAndDeploy` 迭代前對 `AxisMaps`/`InMaps`/`OutMaps` 呼叫 `.ToList()` 取快照 |
 
 ### ❌ 尚未實作
 
 | 功能 | 說明 |
 |------|------|
-| MDI 送出 | SEND 按鈕無 `Command` 綁定；`MachineControlService` 也缺 `SendMdiCommandAsync` |
+| MDI 送出 | SEND 按鈕無 `Command` 綁定（`MachineControlService.SendMdiCommandAsync` 已存在，僅缺 View 側綁定）；無指令歷史紀錄 |
 | 冷卻液後端連通 | `ToggleFlood` 只切換 `IsFloodOn` 旗標，M8/M9 的 HTTP 呼叫已被 Comment Out |
 | Offsets（工件補償）管理 | 無 G54–G59 工件座標系切換與設定介面 |
 | Probing（探測循環） | Outside Corners、Inside Corners、Boss/Pocket、Ridge/Valley、Edge Angle、Rotary Axis、Calibrate 全部未實作 |

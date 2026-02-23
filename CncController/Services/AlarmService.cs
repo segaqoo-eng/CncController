@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Linq;
 using System.Windows;
 using System.Windows.Media; // [重要] 需引用 PresentationCore 才能使用 Brushes
@@ -57,6 +58,10 @@ namespace CncController.Services
 
         // [安全] 保護集合操作，防止 Dispatcher 以外呼叫造成競賽
         private readonly object _logLock = new();
+
+        // [Item 12] 日誌持久化設定
+        private const string LogsDirectory = "logs";
+        private static readonly string[] _persistedTypes = { "Error", "Warning", "Info" };
 
         /// <summary>
         /// [保留] 相容舊程式碼的字串介面
@@ -130,6 +135,14 @@ namespace CncController.Services
 
                         AllLogs.Insert(0, newLog);
 
+                        // [Item 12] 持久化關鍵日誌至每日滾動日誌檔
+                        // 不在 lock 內執行 IO，避免阻塞 UI；用 ThreadPool 非同步寫入
+                        if (type == LogType.Error || type == LogType.Warning || type == LogType.Info)
+                        {
+                            var capturedLog = newLog;
+                            System.Threading.ThreadPool.QueueUserWorkItem(_ => PersistLog(capturedLog));
+                        }
+
                         // 4. [新增] 處理活躍警報 (Warning & Error)
                         if (type == LogType.Warning || type == LogType.Error)
                         {
@@ -146,6 +159,25 @@ namespace CncController.Services
                     }
                 }
             });
+        }
+
+        /// <summary>
+        /// [Item 12] 將日誌持久化至每日滾動日誌檔。
+        /// 在 ThreadPool 執行，不阻塞 UI。失敗時只寫 Debug，不影響主程式。
+        /// </summary>
+        private static void PersistLog(AlarmLog log)
+        {
+            try
+            {
+                Directory.CreateDirectory(LogsDirectory);
+                string filePath = Path.Combine(LogsDirectory, $"cnc-{DateTime.Today:yyyy-MM-dd}.log");
+                string line = $"[{log.Time:HH:mm:ss.fff}] [{log.Type,-7}] {log.MessageKey}";
+                File.AppendAllText(filePath, line + Environment.NewLine);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[AlarmService] PersistLog failed: {ex.Message}");
+            }
         }
 
         /// <summary>

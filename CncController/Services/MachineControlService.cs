@@ -33,7 +33,8 @@ namespace CncController.Services
         // [安全] 各用途使用獨立 HttpClient，Timeout 互不影響
         private readonly HttpClient _pollingClient;  // 輪詢 + 一般指令（3s）
         private readonly HttpClient _estopClient;    // 急停專用（2s），最高優先
-        private string _serverUrl = "http://192.168.0.137:5000"; // 請確認您的 IP
+        // [Item 11] 伺服器 URL 從 AppSettings 讀取，不再硬寫；可於 appsettings.json 修改
+        private string _serverUrl = AppSettings.Instance.ServerUrl;
         private readonly JsonSerializerOptions _jsonOptions;
 
         private CancellationTokenSource _jogCts;
@@ -52,6 +53,77 @@ namespace CncController.Services
             Disconnected,
             ServerOnly,
             Connected
+        }
+
+        // [Item 15] 機台動作類型（供狀態轉換驗證表使用）
+        public enum MachineAction
+        {
+            EStop,
+            Power,
+            Jog,
+            CycleStart,
+            FeedHold,
+            Stop,
+            Mdi
+        }
+
+        /// <summary>
+        /// [Item 15] 狀態轉換驗證表：依最後快取狀態判斷指定動作是否允許執行。
+        /// 作為 Service 層的第二道防線（第一道在 ViewModel 的 CanExecuteMotion）。
+        /// </summary>
+        public (bool Allowed, string Reason) ValidateAction(MachineAction action)
+        {
+            // 未取得任何狀態時，僅允許急停（最保守策略）
+            if (_lastCachedStatus == null)
+                return action == MachineAction.EStop
+                    ? (true, "")
+                    : (false, "Machine status unknown; only E-Stop is allowed.");
+
+            string taskState   = _lastCachedStatus.Task_State?.ToUpper() ?? "";
+            string interpState = _lastCachedStatus.Interp_State?.ToUpper() ?? "";
+
+            bool isEstop     = taskState.Contains("ESTOP");
+            bool isPoweredOn = taskState == "ON";
+            bool isRunning   = interpState == "RUNNING";
+            bool isPaused    = interpState is "PAUSED" or "INTERP_PAUSED";
+
+            return action switch
+            {
+                // 急停：永遠允許，不受任何狀態限制
+                MachineAction.EStop => (true, ""),
+
+                // 電源切換：急停未解除時禁止（需先 Reset）
+                MachineAction.Power => isEstop
+                    ? (false, "Cannot toggle Power while E-Stop is active. Reset first.")
+                    : (true, ""),
+
+                // JOG：需電源開啟、無急停、且目前非移動中
+                MachineAction.Jog => (!isEstop && isPoweredOn && !isRunning && !isPaused)
+                    ? (true, "")
+                    : (false, $"JOG not allowed in state [{taskState}/{interpState}]"),
+
+                // CycleStart：需電源開啟、無急停（暫停時允許 Resume）
+                MachineAction.CycleStart => (!isEstop && isPoweredOn)
+                    ? (true, "")
+                    : (false, $"CycleStart not allowed in state [{taskState}/{interpState}]"),
+
+                // FeedHold：僅在執行中有效
+                MachineAction.FeedHold => isRunning
+                    ? (true, "")
+                    : (false, "FeedHold only valid when program is running."),
+
+                // Stop：執行中或暫停時有效
+                MachineAction.Stop => (isRunning || isPaused)
+                    ? (true, "")
+                    : (false, "Stop only valid when program is running or paused."),
+
+                // MDI：需電源開啟、無急停、且非執行中
+                MachineAction.Mdi => (!isEstop && isPoweredOn && !isRunning)
+                    ? (true, "")
+                    : (false, $"MDI not allowed in state [{taskState}/{interpState}]"),
+
+                _ => (false, $"Unknown action: {action}")
+            };
         }
 
         public MachineControlService()
@@ -236,11 +308,16 @@ namespace CncController.Services
 
         public async Task JogAsync(int axis, double speed, double distance = 0)
         {
-            // [防呆] 若機台非 IDLE 且非停止指令，禁止 JOG
-            if (speed != 0 && _lastCachedStatus != null && _lastCachedStatus.Is_Moving)
+            // [Item 15] 狀態轉換驗證表（Service 層第二防線）
+            // 停止指令（speed==0）不受限制，確保 JOG 停止永遠可送出
+            if (speed != 0)
             {
-                AlarmService.Instance.AddLog("WARN", "JOG Ignored: Machine is moving.");
-                return;
+                var (allowed, reason) = ValidateAction(MachineAction.Jog);
+                if (!allowed)
+                {
+                    AlarmService.Instance.AddLog("WARN", $"JOG Blocked: {reason}");
+                    return;
+                }
             }
 
             if (_jogCts != null)
@@ -271,16 +348,12 @@ namespace CncController.Services
         /// </summary>
         public async Task CycleStartAsync(string file = null)
         {
-            // 1. 本地狀態防呆
-            if (_lastCachedStatus != null && _lastCachedStatus.Is_Moving)
+            // [Item 15] 狀態轉換驗證表（Service 層第二防線）
+            var (cycleAllowed, cycleReason) = ValidateAction(MachineAction.CycleStart);
+            if (!cycleAllowed)
             {
-                // 如果正在移動中 (RUNNING 且非 PAUSED)，則不允許再次 Start
-                // (注意：如果 Interp_State 是 RUNNING 但 Task_State 沒有 PAUSED 關鍵字，視為執行中)
-                if (_lastCachedStatus.Interp_State == "RUNNING" && !_lastCachedStatus.Task_State.ToUpper().Contains("PAUSED"))
-                {
-                    AlarmService.Instance.AddLog("WARN", "Machine is already running.");
-                    return;
-                }
+                AlarmService.Instance.AddLog("WARN", $"CycleStart Blocked: {cycleReason}");
+                return;
             }
 
             string endpoint = "program/run";

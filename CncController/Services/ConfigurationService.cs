@@ -21,8 +21,8 @@ namespace CncController.Services
 
         private ConfigurationService()
         {
-            // 請根據實際後端 IP 修改
-            _http = new HttpClient { BaseAddress = new Uri("http://192.168.0.137:5000") };
+            // [Item 11] 伺服器 URL 從 AppSettings 讀取，不再硬寫
+            _http = new HttpClient { BaseAddress = new Uri(AppSettings.Instance.ServerUrl) };
             _jsonOptions = new JsonSerializerOptions { WriteIndented = true, PropertyNameCaseInsensitive = true };
         }
 

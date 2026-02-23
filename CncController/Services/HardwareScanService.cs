@@ -54,8 +54,8 @@ namespace CncController.Services
 
         private HardwareScanService()
         {
-            // 請確認這個 IP 是您的後端位址
-            _http = new HttpClient { BaseAddress = new Uri("http://192.168.0.137:5000") };
+            // [Item 11] 伺服器 URL 從 AppSettings 讀取，不再硬寫
+            _http = new HttpClient { BaseAddress = new Uri(AppSettings.Instance.ServerUrl) };
             _http.Timeout = TimeSpan.FromSeconds(15);
         }
 

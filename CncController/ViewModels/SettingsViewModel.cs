@@ -2,12 +2,12 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Collections.ObjectModel; // [新增]
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CncController.Services;
 using CncController.Models;
 using System.Linq;
-// [新增] 引用 Brush 資源
 using System.Windows.Media;
 
 namespace CncController.ViewModels
@@ -22,6 +22,15 @@ namespace CncController.ViewModels
         // ★★★ [新增] IO 監控 ViewModel ★★★
         public IoMonitorViewModel IoMonitorVM { get; } = new();
 
+        // =========================================================
+        // ★★★ [新增] IO 映射集合 (綁定到 DataGrid) ★★★
+        // =========================================================
+        public ObservableCollection<IoMapItem> InMaps { get; } = new();
+        public ObservableCollection<IoMapItem> OutMaps { get; } = new();
+
+        // ★★★ [新增] 過濾後的下拉選單選項 ★★★
+        public ObservableCollection<DiscoveredSlave> AvailableInputSlaves { get; } = new();
+        public ObservableCollection<DiscoveredSlave> AvailableOutputSlaves { get; } = new();
 
         [ObservableProperty]
         private string _deployStatus = "Ready";
@@ -40,19 +49,28 @@ namespace CncController.ViewModels
         [ObservableProperty]
         private Brush _scanResultColor = Brushes.Gray;
 
+        // ★★★ [新增] 提供給 UI 綁定的訊號清單 ★★★
+        public List<string> CommonOutputSignals => StandardSignals.OutputSignals;
+
+        // (選用) 輸入訊號清單
+        public List<string> CommonInputSignals => StandardSignals.InputSignals;
+
         public SettingsViewModel()
         {
-            // 1. 內部連動：當 HardwareVM 的 Slaves 變動時，通知 MappingVM 更新選項
+            // 1. 初始化 IO 映射預設值
+            InitializeIoMaps();
+
+            // 2. 內部連動：當 HardwareVM 的 Slaves 變動時，通知 MappingVM 更新選項
             HardwareVM.Slaves.CollectionChanged += (s, e) =>
             {
                 MappingVM.UpdateSlaves(HardwareVM.Slaves);
             };
 
-            // 2. 權限管理
+            // 3. 權限管理
             AuthService.Instance.CurrentUserChanged += OnUserChanged;
             OnUserChanged(AuthService.Instance.CurrentUser);
 
-            // 3. 與 MainViewModel 連動
+            // 4. 與 MainViewModel 連動
             try
             {
                 var app = System.Windows.Application.Current;
@@ -62,11 +80,8 @@ namespace CncController.ViewModels
                     mainVM.HardwareValidationCompleted += OnHardwareValidationCompleted;
 
                     // [B] ★★★ 讀取現有的掃描結果 ★★★
-                    // 如果 MainViewModel 已經有上次掃描的緩存，直接呼叫您的處理函式
                     if (mainVM.LastValidatedSlaves != null && mainVM.LastValidatedSlaves.Count > 0)
                     {
-                        // 直接重用您寫好的方法！
-                        // 注意：需要傳入 Slaves 和 Config，這兩個 MainVM 都有存
                         OnHardwareValidationCompleted(mainVM.LastValidatedSlaves, mainVM.LastValidatedConfig);
                     }
                 }
@@ -74,6 +89,35 @@ namespace CncController.ViewModels
             catch (Exception ex)
             {
                 AlarmService.Instance.AddLog("ERR", $"Failed to subscribe hardware validation event: {ex.Message}");
+            }
+        }
+
+        // [新增] 初始化 IO 映射表格 (預設各 4 組)
+        private void InitializeIoMaps()
+        {
+            InMaps.Clear();
+            OutMaps.Clear();
+
+            // 這裡未來可以改為讀取設定檔的變數
+            int defaultInCount = 4;
+            int defaultOutCount = 4;
+
+            for (int i = 0; i < defaultInCount; i++)
+            {
+                InMaps.Add(new IoMapItem
+                {
+                    Index = i,
+                    LogicalName = $"Input_Group_{i}"
+                });
+            }
+
+            for (int i = 0; i < defaultOutCount; i++)
+            {
+                OutMaps.Add(new IoMapItem
+                {
+                    Index = i,
+                    LogicalName = $"Output_Group_{i}"
+                });
             }
         }
 
@@ -86,9 +130,6 @@ namespace CncController.ViewModels
         }
 
         // [新增] 硬體驗證完成事件處理方法
-        // 當 MainViewModel 掃描並驗證完成後，此方法會被呼叫
-        // 用途：自動填充 HARDWARE SCAN 表格與 AXIS MAPPING 清單
-        
         private void OnHardwareValidationCompleted(List<DiscoveredSlave> slaves, MachineConfig config)
         {
             try
@@ -96,26 +137,10 @@ namespace CncController.ViewModels
                 // 1. 確保 UI 執行緒 (如果是從非 UI 執行緒呼叫)
                 System.Windows.Application.Current.Dispatcher.Invoke(() =>
                 {
-                    // Step A: 填充 HARDWARE SCAN 表格 (顯示抓到的 Slave)
-                    HardwareVM.Slaves.Clear();
-                    foreach (var slave in slaves)
-                    {
-                        HardwareVM.Slaves.Add(slave);
-                    }
-
-                    // Step B: 載入 AXIS MAPPING (載入軟體設定)
-                    // 這邊會把 Config 裡的設定填入 MappingVM
-                    MappingVM.LoadMapping(config, slaves);
-
-                    // Step C: 初始化軸參數頁面
-                    AxisVM.Axes.Clear();
-                    if (config.Axes != null)
-                    {
-                        foreach (var axis in config.Axes) AxisVM.Axes.Add(axis);
-                    }
+                    // 呼叫統一的初始化入口
+                    Initialize(config, slaves);
 
                     // ★★★ [關鍵修改] 立即執行一次比對，更新 Settings 頁面的狀態文字 ★★★
-                    // 這樣管理者一進來，就會看到紅字顯示具體哪裡錯了
                     VerifyHardware(config, slaves);
                 });
             }
@@ -124,12 +149,14 @@ namespace CncController.ViewModels
                 AlarmService.Instance.AddLog("ERR", $"Error updating settings from validation: {ex.Message}");
             }
         }
-        
+
         public void Initialize(MachineConfig config, List<DiscoveredSlave> slaves)
         {
+            // Step 1: 填充 HARDWARE SCAN 表格
             HardwareVM.Slaves.Clear();
             foreach (var s in slaves) HardwareVM.Slaves.Add(s);
 
+            // Step 2: 初始化軸參數頁面
             AxisVM.Axes.Clear();
             if (config.Axes != null && config.Axes.Count > 0)
             {
@@ -141,21 +168,98 @@ namespace CncController.ViewModels
             }
             else
             {
+                // 預設軸
                 AxisVM.Axes.Add(new AxisSetting { Index = 0, AxisID = "X", Name = "X Axis" });
                 AxisVM.Axes.Add(new AxisSetting { Index = 1, AxisID = "Y", Name = "Y Axis" });
                 AxisVM.Axes.Add(new AxisSetting { Index = 2, AxisID = "Z", Name = "Z Axis" });
             }
 
+            // Step 3: 載入 AXIS MAPPING
             MappingVM.LoadMapping(config, slaves);
 
-            // [新增] 初始化時自動執行一次驗證 (如果已經有 Config)
+            // ★★★ Step 4: 過濾設備到 IO 下拉選單 ★★★
+            AvailableInputSlaves.Clear();
+            AvailableOutputSlaves.Clear();
+
+            // 加入 "無" 的選項
+            var noneSlave = new DiscoveredSlave
+            {
+                Name = "--- None ---",
+                VendorId = "",
+                ProductCode = "", // 加上這一行
+                Category = ""
+            };
+
+            AvailableInputSlaves.Add(noneSlave);
+            AvailableOutputSlaves.Add(noneSlave);
+
+            foreach (var slave in slaves)
+            {
+                // 判斷是否為輸入裝置 
+                // 條件：純輸入 (DigIn)、混合型 (DiDo)、耦合器 (Coupler)
+                // ★★★ [新增] Debug 輸出：顯示目前掃描到的設備分類 ★★★
+                System.Diagnostics.Debug.WriteLine($"[Scan] Slave #{slave.Index} ({slave.Name}): Category='{slave.Category}', ProductCode='{slave.ProductCode}'");
+
+                if (slave.Category == DeviceCategory.DigIn ||
+                    slave.Category == DeviceCategory.DiDo ||
+                    
+                    slave.ProductCode.Contains("902") // 特殊處理台達 902
+                    )
+                {
+                    AvailableInputSlaves.Add(slave);
+                }
+
+                // 判斷是否為輸出裝置 
+                // 條件：純輸出 (DigOut)、混合型 (DiDo)、耦合器 (Coupler)
+                if (slave.Category == DeviceCategory.DigOut ||
+                    slave.Category == DeviceCategory.DiDo ||
+                   
+                    slave.ProductCode.Contains("902") // 特殊處理台達 902
+                    )
+                {
+                    AvailableOutputSlaves.Add(slave);
+                }
+            }
+
+            // Step 5: 初始化驗證 (如果已經有 Config)
             if (config.Mappings.Count > 0)
             {
                 VerifyHardware(config, slaves);
             }
-        }
+            // Step 6: 載入已儲存的 IO 映射 (從 Config 還原到 UI)
+            foreach (var mapping in config.Mappings)
+            {
+                IoMapItem targetRow = null;
+                if (mapping.Type == MapType.Input)
+                    targetRow = InMaps.FirstOrDefault(x => x.Index == mapping.ChannelIndex);
+                else if (mapping.Type == MapType.Output)
+                    targetRow = OutMaps.FirstOrDefault(x => x.Index == mapping.ChannelIndex);
 
-       
+                if (targetRow != null)
+                {
+                    // 1. 先設定 Slave，這會觸發 OnSelectedSlaveChanged 並執行 InitializePins
+                    targetRow.SelectedSlave = slaves.FirstOrDefault(s =>
+                        s.VendorId == mapping.ExpectedVendorId &&
+                        s.ProductCode == mapping.ExpectedProductCode &&
+                        s.Index == mapping.PhysicalIndex);
+
+                    // 2. ★ 關鍵：現在 PinSettings 已經產生了，把存檔裡的詳細設定填回去 ★
+                    if (mapping.Pins != null && mapping.Pins.Count > 0)
+                    {
+                        // 這裡不直接 Clear，而是更新現有的 Pin 物件屬性
+                        foreach (var savedPin in mapping.Pins)
+                        {
+                            var existingPin = targetRow.PinSettings.FirstOrDefault(p => p.PinIndex == savedPin.Index);
+                            if (existingPin != null)
+                            {
+                                existingPin.FunctionName = savedPin.Function;
+                                existingPin.IsInverted = savedPin.IsInverted;
+                            }
+                        }
+                    }
+                }
+            }
+        }
 
         // [新增] 驗證邏輯封裝
         private void VerifyHardware(MachineConfig config, List<DiscoveredSlave> slaves)
@@ -166,7 +270,6 @@ namespace CncController.ViewModels
             if (result.IsValid)
             {
                 ScanResultColor = Brushes.LimeGreen;
-                // AlarmService.Instance.AddLog("SYS", "Hardware Verified OK");
             }
             else
             {
@@ -194,7 +297,14 @@ namespace CncController.ViewModels
 
                 // [修正] 清單重建：先清除再新增（避免重複）
                 config.Mappings.Clear();
-                foreach (var mapItem in MappingVM.AxisMaps)
+
+                // [Item 14] 部署前對 UI 集合取快照，防止迭代期間使用者同時修改 UI 導致 InvalidOperationException
+                var axisMapsSnapshot = MappingVM.AxisMaps.ToList();
+                var inMapsSnapshot   = InMaps.ToList();
+                var outMapsSnapshot  = OutMaps.ToList();
+
+                // 1. 儲存軸映射
+                foreach (var mapItem in axisMapsSnapshot)
                 {
                     if (mapItem.SelectedSlave != null)
                     {
@@ -205,8 +315,83 @@ namespace CncController.ViewModels
                             PhysicalIndex = mapItem.SelectedSlave.Index,
                             // [關鍵] 儲存時，將目前的 VID/PID 寫入 Config，作為未來的驗證標準
                             ExpectedVendorId = mapItem.SelectedSlave.VendorId,
-                            ExpectedProductCode = mapItem.SelectedSlave.ProductCode
+                            ExpectedProductCode = mapItem.SelectedSlave.ProductCode,
+                            Type = MapType.Axis
                         });
+                    }
+                }
+
+                // ★★★ [新增] 儲存 IO 映射 ★★★
+                // 這裡我們需要定義 HardwareMapping 結構是否支援 IO，或者使用新的清單
+                // 假設 HardwareMapping 通用，我們可以用 MappingType 區分
+
+                // 儲存 IN MAP
+                foreach (var inItem in inMapsSnapshot)
+                {
+                    // 檢查是否有選擇設備
+                    if (inItem.SelectedSlave != null && inItem.SelectedSlave.Name != "--- None ---")
+                    {
+                        // 步驟 1: 先建立物件並指派給變數 'mapping'
+                        var mapping = new HardwareMapping
+                        {
+                            LogicalName = inItem.LogicalName,
+                            PhysicalAddress = inItem.SelectedSlave.Name,
+                            PhysicalIndex = inItem.SelectedSlave.Index,
+                            ExpectedVendorId = inItem.SelectedSlave.VendorId,
+                            ExpectedProductCode = inItem.SelectedSlave.ProductCode,
+                            Type = MapType.Input,
+                            ChannelIndex = inItem.Index
+                        };
+
+                        // 步驟 2: 現在 'mapping' 變數存在了，可以把 Pin 設定加進去
+                        foreach (var pin in inItem.PinSettings)
+                        {
+                            mapping.Pins.Add(new PinConfig
+                            {
+                                Index = pin.PinIndex,
+                                // 防止 FunctionName 為 null (視需求可加)
+                                Function = pin.FunctionName ?? $"Pin {pin.PinIndex}",
+                                IsInverted = pin.IsInverted
+                            });
+                        }
+
+                        // 步驟 3: 設定完成後，將 mapping 物件加入 Config 清單
+                        config.Mappings.Add(mapping);
+                    }
+                }
+
+                // 儲存 OUT MAP
+                foreach (var outItem in outMapsSnapshot)
+                {
+                    // 檢查是否選擇了有效設備
+                    if (outItem.SelectedSlave != null && outItem.SelectedSlave.Name != "--- None ---")
+                    {
+                        // 1. 先建立物件並指派給變數 'mapping'
+                        var mapping = new HardwareMapping
+                        {
+                            LogicalName = outItem.LogicalName,
+                            PhysicalAddress = outItem.SelectedSlave.Name,
+                            PhysicalIndex = outItem.SelectedSlave.Index,
+                            ExpectedVendorId = outItem.SelectedSlave.VendorId,
+                            ExpectedProductCode = outItem.SelectedSlave.ProductCode,
+                            Type = MapType.Output, // 設定為輸出類型
+                            ChannelIndex = outItem.Index
+                        };
+
+                        // 2. 複製 Pin 設定 (輸出點也可以設定反轉，例如 Active Low)
+                        foreach (var pin in outItem.PinSettings)
+                        {
+                            mapping.Pins.Add(new PinConfig
+                            {
+                                Index = pin.PinIndex,
+                                // 防止 null
+                                Function = pin.FunctionName ?? $"Out {pin.PinIndex}",
+                                IsInverted = pin.IsInverted // 對於 Output，這代表是否反向 (Active Low)
+                            });
+                        }
+
+                        // 3. 最後將設定加入 Config
+                        config.Mappings.Add(mapping);
                     }
                 }
 

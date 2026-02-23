@@ -39,6 +39,9 @@ namespace CncController.ViewModels
         // 3. ★★★ [補回] 歷史頁面 (HistoryVM) - 必須長駐以保留篩選器狀態 ★★★
         public HistoryViewModel HistoryVM { get; } = new HistoryViewModel();
 
+        // 4. Offsets 頁面（長駐）
+        public OffsetsViewModel OffsetsVM { get; } = new OffsetsViewModel();
+
         // ==============================================================================
         // 1. 屬性定義
         // ==============================================================================
@@ -97,6 +100,9 @@ namespace CncController.ViewModels
         [ObservableProperty]
         private bool _isFloodOn; // 用於 UI 顯示按鈕是否被按下 (變色)
 
+        [ObservableProperty]
+        private bool _isMistOn; // MIST 噴霧冷卻狀態
+
         [RelayCommand]
         private async Task ToggleFlood()
         {
@@ -104,6 +110,40 @@ namespace CncController.ViewModels
             bool success = await MachineControlService.Instance.SendMdiCommandAsync(cmd);
             if (success)
                 IsFloodOn = !IsFloodOn;
+        }
+
+        [RelayCommand]
+        private async Task ToggleMist()
+        {
+            string cmd = IsMistOn ? "M9" : "M7";
+            bool success = await MachineControlService.Instance.SendMdiCommandAsync(cmd);
+            if (success)
+            {
+                IsMistOn = !IsMistOn;
+                // M9 = ALL coolant off，同步清除 Flood 狀態
+                if (!IsMistOn) IsFloodOn = false;
+            }
+        }
+
+        [RelayCommand]
+        private async Task HomeAll()
+        {
+            var (allowed, reason) = MachineControlService.Instance.ValidateAction(
+                MachineControlService.MachineAction.Jog);
+            if (!allowed)
+            {
+                AlarmService.Instance.AddLog("WARN", $"Home Blocked: {reason}");
+                return;
+            }
+            await MachineControlService.Instance.SendMdiCommandAsync("G28");
+            AlarmService.Instance.AddLog("INFO", "Homing All Axes...");
+        }
+
+        [RelayCommand]
+        private void ExitApp()
+        {
+            AlarmService.Instance.AddLog("INFO", "User requested application exit.");
+            System.Windows.Application.Current.Shutdown();
         }
 
         // ==============================================================================
@@ -418,6 +458,13 @@ namespace CncController.ViewModels
 
             // 更新 InterpState 供計時器判斷
             Status.InterpState = data.Interp_State;
+
+            // [新增] 同步 Active WCS（工件座標系）
+            if (!string.IsNullOrEmpty(data.Active_WCS))
+            {
+                Status.ActiveCoordSystem = data.Active_WCS;
+                OffsetsVM.ActiveOffset = data.Active_WCS;
+            }
         }
 
         // [修改] 跑馬燈與狀態顯示邏輯 (修正連線判斷與時間控制)
@@ -504,6 +551,8 @@ namespace CncController.ViewModels
 
                 // ★★★ [關鍵修改] 使用長駐實體，避免切換頁面後篩選狀態遺失 ★★★
                 case "History": CurrentViewModel = HistoryVM; break;
+
+                case "Offsets": CurrentViewModel = OffsetsVM; break;
             }
         }
         // [安全] 統一運動指令前置檢查：IsEstop 與 IsPower 雙重驗證

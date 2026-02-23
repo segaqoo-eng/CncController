@@ -29,6 +29,9 @@
         <DataTemplate DataType="{x:Type vm:HistoryViewModel}">
             <pages:HistoryView/>
         </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:OffsetsViewModel}">
+            <pages:OffsetsView/>
+        </DataTemplate>
     </Window.Resources>
 
     <Viewbox Stretch="Uniform">
@@ -69,6 +72,8 @@
                              Command="{Binding NavigateCommand}" CommandParameter="Main"/>
                 <RadioButton Content="FILE" Style="{StaticResource NavBtnStyle}"/>
                 <RadioButton Content="ATC" Style="{StaticResource NavBtnStyle}"/>
+                <RadioButton Content="OFFSETS" Style="{StaticResource NavBtnStyle}"
+                             Command="{Binding NavigateCommand}" CommandParameter="Offsets"/>
                 <RadioButton Content="HISTORY" Style="{StaticResource NavBtnStyle}"
                              Command="{Binding NavigateCommand}" CommandParameter="History"/>
                 <RadioButton Content="SETTINGS" Style="{StaticResource NavBtnStyle}"

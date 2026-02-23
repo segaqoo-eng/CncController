@@ -439,5 +439,34 @@ namespace CncController.Services
                 throw new Exception($"Server Error: {error}");
             }
         }
+
+        /// <summary>
+        /// 取得 G54–G59 工件座標系偏移值（從後端 /v2/offsets）
+        /// </summary>
+        public async Task<Dictionary<string, Dictionary<string, double>>> GetOffsetsAsync()
+        {
+            try
+            {
+                var response = await _pollingClient.GetAsync($"{_serverUrl}/v2/offsets");
+                if (response.IsSuccessStatusCode)
+                {
+                    var result = await response.Content
+                        .ReadFromJsonAsync<ApiResponse<OffsetsData>>(_jsonOptions);
+                    return result?.Data?.Offsets;
+                }
+            }
+            catch (Exception ex)
+            {
+                AlarmService.Instance.AddLog("API", $"GetOffsets failed: {ex.Message}");
+            }
+            return null;
+        }
+
+        // 輕量 DTO（僅供 GetOffsetsAsync 使用）
+        private class OffsetsData
+        {
+            public string Active { get; set; }
+            public Dictionary<string, Dictionary<string, double>> Offsets { get; set; }
+        }
     }
 }

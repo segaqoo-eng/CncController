@@ -16,7 +16,7 @@ namespace CncController.Models
         // [新增] 是否有錯誤
         [ObservableProperty] private bool _hasError;
 
-        // 座標屬性
+        // 座標屬性（工件座標）
         [ObservableProperty] private double _x;
         [ObservableProperty] private double _y;
         [ObservableProperty] private double _z;
@@ -24,11 +24,19 @@ namespace CncController.Models
         [ObservableProperty] private double _b;
         [ObservableProperty] private double _c;
 
+        // DTG（Distance To Go，剩餘距離）
+        [ObservableProperty] private double _dtgX;
+        [ObservableProperty] private double _dtgY;
+        [ObservableProperty] private double _dtgZ;
+
         [ObservableProperty] private double _feedrate;
         [ObservableProperty] private double _spindleSpeed;
         [ObservableProperty] private string _file = "No File Loaded";
 
         // [新增] 警報訊息集合 (供 UI 顯示跑馬燈或列表)
         [ObservableProperty] private ObservableCollection<string> _alerts = new();
+
+        // [新增] 目前 Active 的工件座標系（G54–G59）
+        [ObservableProperty] private string _activeCoordSystem = "G54";
     }
 }

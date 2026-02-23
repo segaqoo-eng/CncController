@@ -8,19 +8,61 @@
              d:DataContext="{d:DesignInstance Type=vm:MainViewModel}">
 
     <Border Background="{DynamicResource Brush.PanelBackground}" Padding="5,0">
-        <DockPanel LastChildFill="False">
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
 
-            <Menu DockPanel.Dock="Left" Background="Transparent" Foreground="{DynamicResource Brush.Text.Muted}" VerticalAlignment="Center">
-                <MenuItem Header="{DynamicResource Str.Nav.File}" Foreground="{DynamicResource Brush.Text.Muted}"/>
+            <Menu Grid.Column="0" Background="Transparent" Foreground="{DynamicResource Brush.Text.Muted}" VerticalAlignment="Center">
+                <MenuItem Header="{DynamicResource Str.Nav.File}" Foreground="{DynamicResource Brush.Text.Muted}">
+                    <MenuItem Header="EXIT（關閉程式）"
+                              Command="{Binding DataContext.ExitAppCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                              Foreground="#333"/>
+                </MenuItem>
                 <MenuItem Header="{DynamicResource Str.Nav.Settings}" Foreground="{DynamicResource Brush.Text.Muted}"/>
             </Menu>
 
-            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+            <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                <Border Width="18" Height="18" CornerRadius="9" 
+                        Background="{Binding SystemStatusBrush}"
+                        BorderBrush="#444" BorderThickness="1"
+                        Margin="0,0,10,0">
+                    <Border.Effect>
+                        <DropShadowEffect Color="{Binding SystemStatusColor}" 
+                                          BlurRadius="10" ShadowDepth="0" Opacity="1.0"/>
+                    </Border.Effect>
+                </Border>
+
+                <TextBlock Text="{Binding SystemStatus}" 
+                           Foreground="{DynamicResource Brush.Text.Primary}" 
+                           FontWeight="Bold" 
+                           FontSize="16"
+                           VerticalAlignment="Center">
+                    <TextBlock.Effect>
+                        <DropShadowEffect Color="{Binding SystemStatusColor}" BlurRadius="5" ShadowDepth="0" Opacity="0.5"/>
+                    </TextBlock.Effect>
+                </TextBlock>
+            </StackPanel>
+
+            <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+
+                <TextBlock Text="{DynamicResource Str.Title}" 
+                           Foreground="{DynamicResource Brush.Text.Primary}" 
+                           Opacity="0.5"
+                           VerticalAlignment="Center" 
+                           Margin="0,0,20,0"/>
+
+                <TextBlock Text="{Binding ServerVersionDisplay, StringFormat='Ver: {0}'}" 
+                           Foreground="{DynamicResource Brush.Text.Muted}" 
+                           FontSize="12" 
+                           VerticalAlignment="Center" 
+                           Margin="0,0,20,0"/>
 
                 <Button Click="BtnUser_Click"
                         Background="Transparent" 
                         BorderThickness="0"
-                        Margin="0,0,15,0"
                         Cursor="Hand"
                         ToolTip="Click to Login / Logout">
                     <Button.Template>
@@ -30,51 +72,21 @@
                     </Button.Template>
 
                     <StackPanel Orientation="Horizontal">
-                        <Border Width="20" Height="20" CornerRadius="10" Background="#5E70FF" Margin="0,0,8,0">
+                        <Border Width="32" Height="32" CornerRadius="16" Background="#5E70FF" Margin="0,0,10,0">
                             <TextBlock Text="{Binding CurrentUser.Username[0]}" 
                                        Foreground="White" FontWeight="Bold" 
                                        HorizontalAlignment="Center" VerticalAlignment="Center" 
-                                       FontSize="10"/>
+                                       FontSize="16"/>
                         </Border>
 
                         <TextBlock Text="{Binding CurrentUser.Username}" 
                                    Foreground="{DynamicResource Brush.Text.Primary}" 
                                    VerticalAlignment="Center" 
+                                   FontSize="14"
                                    FontWeight="SemiBold"/>
                     </StackPanel>
                 </Button>
-
-                <TextBlock Text="{Binding ServerVersionDisplay, StringFormat='Ver: {0}'}" 
-                           Foreground="{DynamicResource Brush.Text.Muted}" 
-                           FontSize="11" 
-                           VerticalAlignment="Center" 
-                           Margin="0,0,15,0"/>
-
-                <TextBlock Text="{Binding SystemStatus}" 
-                           Foreground="{DynamicResource Brush.Text.Primary}" 
-                           FontWeight="Bold" 
-                           VerticalAlignment="Center" 
-                           Margin="0,0,10,0"/>
-
-                <Border Width="16" Height="16" CornerRadius="8" 
-                        Background="{Binding SystemStatusBrush}"
-                        BorderBrush="#444" BorderThickness="1"
-                        Margin="0,0,5,0">
-                    <Border.Effect>
-                        <DropShadowEffect Color="{Binding SystemStatusColor}" 
-                                          BlurRadius="8" ShadowDepth="0" Opacity="0.9"/>
-                    </Border.Effect>
-                </Border>
-
             </StackPanel>
-
-            <TextBlock Text="{DynamicResource Str.Title}" 
-                       Foreground="{DynamicResource Brush.Text.Primary}" 
-                       Opacity="0.5"
-                       VerticalAlignment="Center" 
-                       DockPanel.Dock="Right" 
-                       Margin="0,0,20,0"/>
-
-        </DockPanel>
+        </Grid>
     </Border>
 </UserControl>

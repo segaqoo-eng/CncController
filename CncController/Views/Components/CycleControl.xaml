@@ -66,11 +66,34 @@
                 <Button Content="STOP" Command="{Binding StopCommand}" Style="{StaticResource CycleBtnStyle}"/>
                 <Button Content="RELOAD PGM" Command="{Binding ReloadCommand}" Style="{StaticResource CycleBtnStyle}"/>
                 <Button Content="FEED HOLD" Command="{Binding FeedHoldCommand}" Style="{StaticResource CycleBtnStyle}"/>
-                <Button Content="CLEAR PGM" Style="{StaticResource CycleBtnStyle}"/>
+                <Button Content="GO TO HOME" Command="{Binding HomeAllCommand}" Style="{StaticResource CycleBtnStyle}"/>
                 <Button Content="SINGLE BLOCK" Style="{StaticResource CycleBtnStyle}"/>
-                <Button Content="FLOOD" Style="{StaticResource CycleBtnStyle}"/>
+                <Button Content="FLOOD" Command="{Binding ToggleFloodCommand}">
+                    <Button.Style>
+                        <Style TargetType="Button" BasedOn="{StaticResource CycleBtnStyle}">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsFloodOn}" Value="True">
+                                    <Setter Property="Background" Value="#007ACC"/>
+                                    <Setter Property="BorderBrush" Value="#005A9E"/>
+                                    <Setter Property="Foreground" Value="White"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                </Button>
                 <Button Content="BLOCK DELETE" Style="{StaticResource FunctionBtnStyle}"/>
-                <Button Content="MIST" Style="{StaticResource CycleBtnStyle}"/>
+                <Button Content="MIST" Command="{Binding ToggleMistCommand}">
+                    <Button.Style>
+                        <Style TargetType="Button" BasedOn="{StaticResource CycleBtnStyle}">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsMistOn}" Value="True">
+                                    <Setter Property="Background" Value="#007ACC"/>
+                                    <Setter Property="BorderBrush" Value="#005A9E"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                </Button>
                 <Button Content="M01 BREAK" Style="{StaticResource FunctionBtnStyle}"/>
             </UniformGrid>
 

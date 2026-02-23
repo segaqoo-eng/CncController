@@ -1,9 +1,12 @@
-﻿using System.Collections.Generic;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Text.Json.Serialization;
-
+using System.Diagnostics;
 namespace CncController.Models
 {
-   
+
     // ==========================================
     // 2. 狀態資料結構 (保持原樣)
     // ==========================================
@@ -15,6 +18,7 @@ namespace CncController.Models
         public bool Is_Moving { get; set; }
         public bool Has_Error { get; set; }
         public Dictionary<string, double> Position { get; set; }
+        public Dictionary<string, double> DTG { get; set; }
         public double Feedrate { get; set; }
         public double Spindle_Speed { get; set; }
         public string File { get; set; }
@@ -23,11 +27,39 @@ namespace CncController.Models
         // ★★★ [新增] 伺服底層 IO 資料 ★★★
         // 對應 JSON: "Servo_IO": { "0": {"DI": "...", "Status": "..."}, "1": ... }
         public Dictionary<string, ServoIoRawData> Servo_IO { get; set; }
+
+        // [新增] 目前 Active 的工件座標系（G54–G59）
+        public string Active_WCS { get; set; } = "G54";
     }
 
     // ==========================================
     // 3. EtherCAT 掃描結果 (保持原樣)
     // ==========================================
+
+    // 對應後端 Python 的 DeviceCategory
+    // 這不是 Enum，這只是裝字串的容器
+    public static class DeviceCategory
+    {
+        public const string Servo = "Servo";
+        public const string DiDo = "DI+DO";   // 對應 Python
+        public const string DigIn = "DigIn";
+        public const string DigOut = "DigOut";
+        public const string Mpg = "MPG";
+        public const string DA = "DA";
+        public const string AD = "AD";
+        public const string Coupler = "Coupler";
+        public const string Unknown = "Unknown";
+    }
+
+    // [新增] 定義映射用途
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    public enum MapType
+    {
+        Axis,   // 用於軸映射
+        Input,  // 用於輸入映射
+        Output  // 用於輸出映射
+    }
+
     public class DiscoveredSlave
     {
         [JsonPropertyName("Slave")] public int Index { get; set; }
@@ -60,6 +92,13 @@ namespace CncController.Models
         public int PhysicalIndex { get; set; }
         public string ExpectedVendorId { get; set; }
         public string ExpectedProductCode { get; set; }
+        // 類型標記： "Axis" (軸), "Input" (輸入), "Output" (輸出)
+        
+        public MapType Type { get; set; } = MapType.Axis;
+        // 通道索引：紀錄這是第幾組 (例如 Input 0, Input 1)
+        public int ChannelIndex { get; set; }
+        // ★★★ [新增] 儲存 32 個 Pin 的設定 ★★★
+        public List<PinConfig> Pins { get; set; } = new();
     }
 
     // ==========================================
@@ -105,7 +144,7 @@ namespace CncController.Models
         // --- 極限開關邏輯 ---
         // ★★★ 修正：使用 Enum 取代 bool IsLimitSensorsNC ★★★
         public LimitLogic LimitSwitchLogic { get; set; } = LimitLogic.NC; // 預設常閉
-         // [2026-02-05 新增] 原點開關的邏輯 (獨立控制)
+                                                                          // [2026-02-05 新增] 原點開關的邏輯 (獨立控制)
         public LimitLogic HomeSwitchLogic { get; set; } = LimitLogic.NO;
     }
 
@@ -116,12 +155,124 @@ namespace CncController.Models
         public string Function { get; set; } = string.Empty;
         public bool Invert { get; set; }
     }
-    
+
 
     // ★★★ [新增] 用來接收 Raw Data 的小類別 ★★★
     public class ServoIoRawData
     {
         public string DI { get; set; }     // e.g., "0x00000000"
         public string Status { get; set; } // e.g., "0x00604137"
+    }
+    // [新增] IO 映射項目類別
+    public partial class IoMapItem : ObservableObject
+    {
+        public int Index { get; set; }
+
+        [ObservableProperty]
+        private string _logicalName = string.Empty;
+
+        // [ObservableProperty] 會自動產生 SelectedSlave 屬性
+        // 並自動呼叫 partial void OnSelectedSlaveChanged(DiscoveredSlave value)
+        [ObservableProperty]
+        private DiscoveredSlave _selectedSlave;
+
+        // ★★★ [關鍵修正] 當下拉選單改變時的處理邏輯 ★★★
+        partial void OnSelectedSlaveChanged(DiscoveredSlave value)
+        {
+            if (value == null || value.Name == "--- None ---")
+            {
+                PinSettings.Clear();
+                return;
+            }
+
+            string pCode = value.ProductCode ?? "";
+            int targetCount = (pCode.Contains("902") || value.Name.Contains("32")) ? 32 : 8;
+
+            // 呼叫初始化邏輯
+            InitializePins(targetCount);
+        }
+
+        public ObservableCollection<IoPinSetting> PinSettings { get; } = new();
+
+        public void InitializePins(int count)
+        {
+            // 如果數量已經符合，我們不需要 Clear 再 Add (會洗掉載入的設定)
+            // 但我們必須確保通知 UI 重新綁定
+            if (PinSettings.Count == count)
+            {
+                OnPropertyChanged(nameof(PinSettings));
+                return;
+            }
+
+            PinSettings.Clear();
+            for (int i = 0; i < count; i++)
+            {
+                PinSettings.Add(new IoPinSetting
+                {
+                    PinIndex = i,
+                    FunctionName = $"Pin {i}",
+                    IsInverted = false
+                });
+            }
+            OnPropertyChanged(nameof(PinSettings));
+        }
+    }
+
+    // [新增] 單一 IO 接點的設定
+    public partial class IoPinSetting : ObservableObject
+    {
+        // 接點編號 (0~31)
+        public int PinIndex { get; set; }
+
+        // 功能描述 (例如: Home X, Start Button)
+        [ObservableProperty]
+        private string _functionName = string.Empty;
+
+        // 是否反轉 (False = NO 常開, True = NC 常閉)
+        [ObservableProperty]
+        private bool _isInverted;
+
+        // 對應到的 HAL 訊號名稱 (自動生成用，例如: input-00)
+        public string HalSignalName => $"din-{PinIndex:00}";
+    }
+    // [新增] 用於儲存單一 Pin 設定的輕量級類別 (存檔用)
+    public class PinConfig
+    {
+        public int Index { get; set; }
+        public string Function { get; set; }
+        public bool IsInverted { get; set; } // True = NC, False = NO
+    }
+
+    public static class StandardSignals
+    {
+        // 定義常用的 Output 訊號名稱 (必須與 GenerateHal 中的名稱一致)
+        public static List<string> OutputSignals { get; } = new List<string>
+        {
+            "--- Custom / None ---", // 空白選項
+            "coolant-flood",         // M8 開水
+            "coolant-mist",          // M7 噴霧/吸塵
+            "spindle-on",            // 主軸運轉 (M3/M4)
+            "spindle-cw",            // 主軸正轉 (M3)
+            "spindle-ccw",           // 主軸反轉 (M4)
+            "spindle-brake",         // 主軸煞車 (M5)
+            "machine-is-enabled",    // 系統啟用狀態
+            "estop-out",             // 觸發外部急停
+            "digital-out-00",        // 通用輸出 (M64 P0)
+            "digital-out-01",        // 通用輸出 (M64 P1)
+            "digital-out-02",
+            "digital-out-03"
+        };
+
+        // (選用) 如果輸入也要做下拉，可以定義這裡
+        public static List<string> InputSignals { get; } = new List<string>
+        {
+            "--- Custom / None ---",
+            "estop-ext",             // 外部急停按鈕
+            "home-all",              // 全軸回原點觸發
+            "probe-in",              // 探針訊號
+            "cycle-start",           // 循環啟動按鈕
+            "feed-hold",             // 進給暫停按鈕
+            "spindle-inhibit"        // 禁止主軸啟動
+        };
     }
 }

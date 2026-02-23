@@ -2,6 +2,9 @@
 
 本檔案提供 Claude Code (claude.ai/code) 在此專案中的開發指引。
 
+## 角色定義
+你是 LinuxCNC + EtherCAT 工控專家，熟悉 CiA 402 伺服驅動器協議、EtherCAT 拓樸設定、HAL 組件配置、G-code 程式設計。
+
 ## 專案終極目標（Ultimate Goal）
 
 ### 第一部分：機台操作介面（對齊 Probe Basic Mill）
@@ -36,6 +39,10 @@
 ## 語言規則
 
 回答一律使用繁體中文。
+
+##開發工作流程規則
+
+每完成一個功能修改後（包含前端和後端），自動執行 /compact 壓縮對話，更新 CLAUDE.md 的功能實作狀態表標記為已完成，然後 commit and push
 
 ## Build（建置）& Run（執行）
 
@@ -221,28 +228,33 @@ python3 server.py     # 直接啟動（除錯用）
 | **[工控安全] IP 外部化** | `AppSettings.cs` 讀取 `appsettings.json`（`ServerUrl`）；三個 Service 統一使用，首次執行自動建立 |
 | **[工控安全] 日誌持久化** | Error/Warning/Info 透過 ThreadPool 非同步寫入 `logs/cnc-yyyy-MM-dd.log`（每日滾動） |
 | **[工控安全] 部署集合快照** | `GenerateAndDeploy` 迭代前對 `AxisMaps`/`InMaps`/`OutMaps` 呼叫 `.ToList()` 取快照 |
+| **Offsets Tab（G54–G59 工件座標系）** | `OffsetsView.xaml` + `OffsetsViewModel`；兩欄版面（表格 + 詳細面板）；`SelectOffsetCommand` 送 MDI；`ReloadTableCommand` 從 `/v2/offsets` 讀取；後端 `Active_WCS` 同步；`MachineStatus.ActiveCoordSystem` 跟蹤 |
+| **DRO G54–G59 快選列** | `DroDisplay.xaml` Row 4；六個按鈕綁定 `OffsetsVM.SelectOffsetCommand`；DataTrigger 高亮 Active 者 |
+| **MIST 霧化冷卻** | `CycleControl.xaml` MIST 按鈕連接 `ToggleMistCommand`（M7/M9）；`IsMistOn` 狀態 DataTrigger 變藍 |
+| **GO TO HOME（原點復歸）** | `CycleControl.xaml` 原 CLEAR PGM 改為 GO TO HOME；`HomeAllCommand` 送 MDI G28 |
+| **HeaderBar EXIT 選單** | File 選單加子項「EXIT（關閉程式）」；`ExitAppCommand` → `Application.Current.Shutdown()` |
+| **後端 /v2/offsets 端點** | `server.py` 新增 `read_work_offsets()`（讀 .var 參數檔）+ `GET /v2/offsets`；`/v2/status` 加 `Active_WCS` 欄位 |
 
 ### ❌ 尚未實作
 
 | 功能 | 說明 |
 |------|------|
 | 冷卻液後端連通 | `ToggleFlood` 只切換 `IsFloodOn` 旗標，M8/M9 的 HTTP 呼叫已被 Comment Out |
-| Offsets（工件補償）管理 | 無 G54–G59 工件座標系切換與設定介面 |
 | Probing（探測循環） | Outside Corners、Inside Corners、Boss/Pocket、Ridge/Valley、Edge Angle、Rotary Axis、Calibrate 全部未實作 |
 | ATC（Auto Tool Changer，自動刀庫） | 無換刀介面、刀庫狀態顯示 |
 | Tool Table（刀具表） | `ToolInfo` 僅靜態顯示，無完整刀具資料庫管理 |
 | Conversational（對話式加工） | 無 Facing、Holes、Pattern 等簡易程式產生器 |
 | Single Block / Block Delete / M01 | `CycleControl` 有按鈕但未實作 |
-| Mist（霧化冷卻） | 按鈕存在但無命令 |
-| Clear Program（清除程式） | 按鈕存在但無命令 |
 | Spindle Override（主軸轉速覆蓋控制） | 無 RPM 控制介面 |
 | Feed Override 後端連動 | `SliderControl` 存在，未確認是否與後端正確連通 |
+| Offsets SET TO ZERO / CLEAR / SAVE | `OffsetsView` 底部按鈕為 TODO stub，尚未實作 G10 L20 指令送出 |
 
 ### ⚠️ 已實作但需加強
 
 | 功能 | 現況 | 待改善 |
 |------|------|--------|
-| DRO 顯示 | X/Y/Z 輪詢正常；A/B/C 已解析 | DTG（Distance To Go）欄位硬寫 "0.000" 未綁定後端；無工件座標系切換（G54–G59） |
+| DRO 顯示 | X/Y/Z 輪詢正常；A/B/C 已解析；G54–G59 快選列已加 | DTG（Distance To Go）欄位硬寫 "0.000" 未綁定後端 |
+| Offsets 右欄座標值 | MC Current / WC / G53/G52 欄全部 hardcode "0.000" | 等後端回傳實際 WCS 位置值後再連通 |
 | 刀具資訊（Tool Info） | 靜態顯示刀號，尺寸可編輯 | 未與 LinuxCNC 刀具表同步，儲存邏輯缺失 |
 | 3D 視圖 | HelixToolkit 框架已載入（座標系 + 網格 + 刀具圓錐） | 無刀具路徑模擬，無即時刀具位置顯示 |
 | JOG | X/Y/Z 三軸，防呆完整 | 缺 A/B/C 旋轉軸；連續/步進切換 UI 不完整 |
@@ -254,7 +266,7 @@ python3 server.py     # 直接啟動（除錯用）
 
 1. **冷卻液後端連通** — 解除 `ToggleFlood` 的 M8/M9 Comment Out
 2. **DTG 綁定後端** — 讓 DRO 資訊完整（需後端 `/v2/status` 新增 DTG 欄位）
-3. **Offsets / G54–G59 工件座標系** — CNC 基本操作必備
+3. **Offsets SET TO ZERO / G10 指令** — 完成座標系歸零功能
 4. **Probing 探測循環** — 差異化功能，工程師常用
 5. **Tool Table（刀具表）管理** — ATC 前置需求
 

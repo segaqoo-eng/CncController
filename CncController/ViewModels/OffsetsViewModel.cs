@@ -1,3 +1,7 @@
+// [2026-02-23] 新增 OffsetsViewModel：G54–G59 工件座標系管理頁面的 ViewModel
+//              WorkOffsetRow：每列 WCS 的 X/Y/Z 可觀察資料物件
+//              SelectOffsetCommand：送 MDI 指令切換 Active WCS
+//              ReloadTableCommand：從後端 /v2/offsets 讀取最新 offset 值
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using System.Collections.Generic;
@@ -31,7 +35,7 @@ namespace CncController.ViewModels
 
         public OffsetsViewModel()
         {
-            // 開啟頁面時自動從後端載入 offset 值
+            // [2026-02-23] 開啟頁面時自動從後端載入 offset 值（離線時靜默失敗）
             _ = AutoLoad();
         }
 

@@ -16,6 +16,7 @@
             </Grid.ColumnDefinitions>
 
             <Menu Grid.Column="0" Background="Transparent" Foreground="{DynamicResource Brush.Text.Muted}" VerticalAlignment="Center">
+                <!-- [2026-02-23] File 選單加 EXIT 子項，呼叫 ExitAppCommand 關閉應用程式 -->
                 <MenuItem Header="{DynamicResource Str.Nav.File}" Foreground="{DynamicResource Brush.Text.Muted}">
                     <MenuItem Header="EXIT（關閉程式）"
                               Command="{Binding DataContext.ExitAppCommand, RelativeSource={RelativeSource AncestorType=Window}}"

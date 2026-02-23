@@ -29,6 +29,7 @@
         <DataTemplate DataType="{x:Type vm:HistoryViewModel}">
             <pages:HistoryView/>
         </DataTemplate>
+        <!-- [2026-02-23] 新增 OffsetsViewModel DataTemplate，導航至 OffsetsView -->
         <DataTemplate DataType="{x:Type vm:OffsetsViewModel}">
             <pages:OffsetsView/>
         </DataTemplate>
@@ -72,6 +73,7 @@
                              Command="{Binding NavigateCommand}" CommandParameter="Main"/>
                 <RadioButton Content="FILE" Style="{StaticResource NavBtnStyle}"/>
                 <RadioButton Content="ATC" Style="{StaticResource NavBtnStyle}"/>
+                <!-- [2026-02-23] 新增 OFFSETS Tab 導航按鈕 -->
                 <RadioButton Content="OFFSETS" Style="{StaticResource NavBtnStyle}"
                              Command="{Binding NavigateCommand}" CommandParameter="Offsets"/>
                 <RadioButton Content="HISTORY" Style="{StaticResource NavBtnStyle}"

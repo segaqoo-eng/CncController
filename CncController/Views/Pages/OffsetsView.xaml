@@ -1,3 +1,4 @@
+<!-- [2026-02-23] 新增 OffsetsView：G54–G59 工件座標系管理頁面；左欄 DataGrid 總表，右欄詳細面板 -->
 <UserControl x:Class="CncController.Views.Pages.OffsetsView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"

@@ -28,7 +28,7 @@ namespace CncController.Models
         // 對應 JSON: "Servo_IO": { "0": {"DI": "...", "Status": "..."}, "1": ... }
         public Dictionary<string, ServoIoRawData> Servo_IO { get; set; }
 
-        // [新增] 目前 Active 的工件座標系（G54–G59）
+        // [2026-02-23] 新增 Active_WCS：對應後端 /v2/status 回傳的目前工件座標系（G54–G59）
         public string Active_WCS { get; set; } = "G54";
     }
 

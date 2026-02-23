@@ -543,7 +543,7 @@ def v2_status():
 
         servo_io_data = read_servo_raw_data()
 
-        # 讀取目前 Active WCS (1=G54, 2=G55, ... 6=G59)
+        # [2026-02-23] 新增 Active_WCS：讀取目前 Active WCS (1=G54, 2=G55, ... 6=G59) 回傳給前端
         active_wcs = "G54"
         try:
             idx = cnc_stat.g5x_index
@@ -579,6 +579,7 @@ def v2_errors():
     return success_response(messages if messages else None)
 
 
+# [2026-02-23] 新增 read_work_offsets：從 LinuxCNC .var 參數檔讀取 G54–G59 六組 offset 值
 def read_work_offsets():
     """從 LinuxCNC Parameter File (.var) 讀取 G54–G59 六組 WCS 座標值"""
     param_bases = {
@@ -622,6 +623,7 @@ def read_work_offsets():
     return offsets
 
 
+# [2026-02-23] 新增 /v2/offsets 端點：回傳 G54–G59 所有工件座標系偏移值 + 目前 Active WCS
 @app.route('/v2/offsets', methods=['GET'])
 def v2_offsets():
     """回傳 G54–G59 所有工件座標系偏移值 + 目前 Active WCS"""
@@ -775,6 +777,8 @@ def v2_machine_estop():
         return success_response()
     except Exception as e: return error_response(f"Estop Fail: {e}")
 
+# [2026-02-23] 新增 /v2/machine/home 端點：使用 cnc_cmd.home() 執行回原點（-1=全軸）
+#              G28 MDI 為移至預設參考點，不等於 LinuxCNC 的 home 指令
 @app.route('/v2/machine/home', methods=['POST'])
 def v2_machine_home():
     """回原點：-1 = 全軸，0~5 = 單軸"""

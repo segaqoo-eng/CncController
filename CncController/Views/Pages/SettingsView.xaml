@@ -342,6 +342,213 @@
                 </Grid>
             </TabItem>
 
+            <TabItem Header="IN MAP">
+                <Grid Margin="10">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="4*"/>
+                        <ColumnDefinition Width="5"/>
+                        <ColumnDefinition Width="6*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <Grid Grid.Column="0">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        <TextBlock Text="1. Select Input Module" Foreground="#5E70FF" FontWeight="Bold" Margin="0,0,0,5"/>
+                        <DataGrid x:Name="InMapGrid" 
+                                  ItemsSource="{Binding InMaps}" 
+                                  AutoGenerateColumns="False"
+                                  Background="#2D2D2D" RowBackground="#333" Foreground="White"
+                                  BorderBrush="#555" BorderThickness="1"
+                                  CanUserAddRows="False" RowHeight="40"
+                                  SelectionMode="Single"
+                                  CellStyle="{StaticResource CenterCellStyle}" 
+                                  ColumnHeaderStyle="{StaticResource CenterHeaderStyle}">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="#" Binding="{Binding Index}" IsReadOnly="True" Width="40"/>
+                                <DataGridTemplateColumn Header="Physical Device" Width="*">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <ComboBox ItemsSource="{Binding DataContext.AvailableInputSlaves, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                      DisplayMemberPath="DisplayName"
+                                                      SelectedValue="{Binding SelectedSlave, UpdateSourceTrigger=PropertyChanged}"
+                                                      Margin="2" Foreground="Black" BorderThickness="0"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </Grid>
+
+                    <GridSplitter Grid.Column="1" Width="5" HorizontalAlignment="Stretch" Background="#444"/>
+
+                    <Grid Grid.Column="2" Margin="10,0,0,0">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+
+                        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,5">
+                            <TextBlock Text="2. Pin Configuration for: " Foreground="#5E70FF" FontWeight="Bold"/>
+                            <TextBlock Text="{Binding ElementName=InMapGrid, Path=SelectedItem.SelectedSlave.Name}" Foreground="White" FontWeight="Bold" Margin="5,0,0,0"/>
+                        </StackPanel>
+
+                        <DataGrid Grid.Row="1" 
+                                  DataContext="{Binding ElementName=InMapGrid, Path=SelectedItem, NotifyOnTargetUpdated=True}"
+                                  ItemsSource="{Binding PinSettings}"
+                                  AutoGenerateColumns="False"
+                                  Background="#1E1E1E" RowBackground="#252526" Foreground="White"
+                                  BorderBrush="#555" BorderThickness="1"
+                                  CanUserAddRows="False" RowHeight="32"
+                                  CellStyle="{StaticResource CenterCellStyle}" 
+                                  ColumnHeaderStyle="{StaticResource CenterHeaderStyle}">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Pin" Binding="{Binding PinIndex}" IsReadOnly="True" Width="50"/>
+                                <DataGridTemplateColumn Header="Function Name" Width="*">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <ComboBox ItemsSource="{Binding DataContext.CommonInputSignals, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                      Text="{Binding FunctionName, UpdateSourceTrigger=PropertyChanged}"
+                                                      IsEditable="True"
+                                                      StaysOpenOnEdit="True"
+                                                      Foreground="Black"
+                                                      Margin="2"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTextColumn Header="HAL Signal" Binding="{Binding HalSignalName}" IsReadOnly="True" Width="100" Foreground="#AAA"/>
+                                <DataGridTemplateColumn Header="Type (NC?)" Width="80">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <CheckBox IsChecked="{Binding IsInverted, UpdateSourceTrigger=PropertyChanged}" 
+                                                      HorizontalAlignment="Center" VerticalAlignment="Center" Content="NC" Foreground="White"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
+
+                        <TextBlock Grid.Row="1" Text="Select a module on the left to configure pins." 
+                                   Foreground="#888" VerticalAlignment="Center" HorizontalAlignment="Center" IsHitTestVisible="False">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding ElementName=InMapGrid, Path=SelectedItem}" Value="{x:Null}">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                    </Grid>
+                </Grid>
+            </TabItem>
+
+            <TabItem Header="OUT MAP">
+                <Grid Margin="10">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="4*"/>
+                        <ColumnDefinition Width="5"/>
+                        <ColumnDefinition Width="6*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <Grid Grid.Column="0">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        <TextBlock Text="1. Select Output Module" Foreground="#5E70FF" FontWeight="Bold" Margin="0,0,0,5"/>
+                        <DataGrid x:Name="OutMapGrid" 
+                                  ItemsSource="{Binding OutMaps}" 
+                                  AutoGenerateColumns="False"
+                                  Background="#2D2D2D" RowBackground="#333" Foreground="White"
+                                  BorderBrush="#555" BorderThickness="1"
+                                  CanUserAddRows="False" RowHeight="40"
+                                  SelectionMode="Single"
+                                  CellStyle="{StaticResource CenterCellStyle}" 
+                                  ColumnHeaderStyle="{StaticResource CenterHeaderStyle}">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="#" Binding="{Binding Index}" IsReadOnly="True" Width="40"/>
+                                <DataGridTemplateColumn Header="Physical Device" Width="*">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <ComboBox ItemsSource="{Binding DataContext.AvailableOutputSlaves, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                      DisplayMemberPath="DisplayName"
+                                                      SelectedValue="{Binding SelectedSlave, UpdateSourceTrigger=PropertyChanged}"
+                                                      Margin="2" Foreground="Black" BorderThickness="0"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </Grid>
+
+                    <GridSplitter Grid.Column="1" Width="5" HorizontalAlignment="Stretch" Background="#444"/>
+
+                    <Grid Grid.Column="2" Margin="10,0,0,0">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+
+                        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,5">
+                            <TextBlock Text="2. Pin Configuration for: " Foreground="#5E70FF" FontWeight="Bold"/>
+                            <TextBlock Text="{Binding ElementName=OutMapGrid, Path=SelectedItem.SelectedSlave.Name}" Foreground="White" FontWeight="Bold" Margin="5,0,0,0"/>
+                        </StackPanel>
+
+                        <DataGrid Grid.Row="1" 
+                                  DataContext="{Binding ElementName=OutMapGrid, Path=SelectedItem, NotifyOnTargetUpdated=True}"
+                                  ItemsSource="{Binding PinSettings}"
+                                  AutoGenerateColumns="False"
+                                  Background="#1E1E1E" RowBackground="#252526" Foreground="White"
+                                  BorderBrush="#555" BorderThickness="1"
+                                  CanUserAddRows="False" RowHeight="32"
+                                  CellStyle="{StaticResource CenterCellStyle}" 
+                                  ColumnHeaderStyle="{StaticResource CenterHeaderStyle}">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Pin" Binding="{Binding PinIndex}" IsReadOnly="True" Width="50"/>
+                                <DataGridTemplateColumn Header="Function Name" Width="*">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <ComboBox ItemsSource="{Binding DataContext.CommonOutputSignals, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                      Text="{Binding FunctionName, UpdateSourceTrigger=PropertyChanged}"
+                                                      IsEditable="True"
+                                                      StaysOpenOnEdit="True"
+                                                      Foreground="Black"
+                                                      Margin="2"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTextColumn Header="HAL Signal" Binding="{Binding HalSignalName}" IsReadOnly="True" Width="100" Foreground="#AAA"/>
+                                <DataGridTemplateColumn Header="Active Low" Width="80">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <CheckBox IsChecked="{Binding IsInverted, UpdateSourceTrigger=PropertyChanged}" 
+                                                      HorizontalAlignment="Center" VerticalAlignment="Center" Content="Inv" Foreground="White"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
+
+                        <TextBlock Grid.Row="1" Text="Select a module on the left to configure output pins." 
+                                   Foreground="#888" VerticalAlignment="Center" HorizontalAlignment="Center" IsHitTestVisible="False">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding ElementName=OutMapGrid, Path=SelectedItem}" Value="{x:Null}">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                    </Grid>
+                </Grid>
+            </TabItem>
         </TabControl>
     </Grid>
 </UserControl>

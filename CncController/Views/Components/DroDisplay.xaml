@@ -75,6 +75,7 @@
                            Foreground="{DynamicResource Brush.DRO.Foreground}" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="5" FontSize="{DynamicResource FontSize.DRO}" FontWeight="Bold" FontFamily="Consolas"/>
             </Border>
 
+            <!-- [2026-02-23] 新增 Row 4：G54–G59 快選列；點擊送 MDI 切換座標系；DataTrigger 高亮 Active 者 -->
             <!-- Row 4: G54–G59 快選列 -->
             <UniformGrid Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="4" Rows="1" Margin="2,1">
                 <Button Content="G54" FontSize="10" Margin="1"
@@ -193,6 +194,7 @@
                 </Button>
             </UniformGrid>
 
+            <!-- [2026-02-23] Zero All 從 Row 4 移至 Row 5 -->
             <!-- Row 5: Zero All（原 Row 4） -->
             <Button Grid.Row="5" Grid.Column="1" Grid.ColumnSpan="3" Content="{DynamicResource Str.Btn.ZeroAll}" Margin="20,5"/>
         </Grid>

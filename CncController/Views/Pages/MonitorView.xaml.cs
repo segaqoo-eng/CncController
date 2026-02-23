@@ -8,5 +8,6 @@ namespace CncController.Views.Pages
         {
             InitializeComponent();
         }
+
     }
 }

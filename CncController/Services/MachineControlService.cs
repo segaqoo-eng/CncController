@@ -378,6 +378,7 @@ namespace CncController.Services
         public async Task StopAsync() => await SendV2CommandAsync("program/stop");
         public async Task FeedHoldAsync() => await SendV2CommandAsync("program/pause");
 
+        // [2026-02-23] 新增 HomeAsync：呼叫後端 /v2/machine/home 執行回原點（G28 MDI 不適用於 LinuxCNC）
         /// <summary>
         /// 全軸回原點（axis=-1）或單軸回原點（axis=0~5）
         /// 呼叫後端 /v2/machine/home，使用 cnc_cmd.home() 而非 G28 MDI
@@ -466,6 +467,7 @@ namespace CncController.Services
             }
         }
 
+        // [2026-02-23] 新增 GetOffsetsAsync：從後端 /v2/offsets 讀取 G54–G59 offset 值
         /// <summary>
         /// 取得 G54–G59 工件座標系偏移值（從後端 /v2/offsets）
         /// </summary>

@@ -5,6 +5,10 @@
 ## 角色定義
 你是 LinuxCNC + EtherCAT 工控專家，熟悉 CiA 402 伺服驅動器協議、EtherCAT 拓樸設定、HAL 組件配置、G-code 程式設計。
 
+## 程式碼修改規範
+）每次修改程式碼時（包含前端和後端，必須在修改處加上註解，格式為：
+// [YYYY-MM-DD] 說明修改內容
+
 ## 專案終極目標（Ultimate Goal）
 
 ### 第一部分：機台操作介面（對齊 Probe Basic Mill）

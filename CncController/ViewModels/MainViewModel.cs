@@ -39,7 +39,7 @@ namespace CncController.ViewModels
         // 3. ★★★ [補回] 歷史頁面 (HistoryVM) - 必須長駐以保留篩選器狀態 ★★★
         public HistoryViewModel HistoryVM { get; } = new HistoryViewModel();
 
-        // 4. Offsets 頁面（長駐）
+        // [2026-02-23] 新增 OffsetsVM：Offsets 頁面長駐 ViewModel（保留狀態）
         public OffsetsViewModel OffsetsVM { get; } = new OffsetsViewModel();
 
         // ==============================================================================
@@ -100,8 +100,9 @@ namespace CncController.ViewModels
         [ObservableProperty]
         private bool _isFloodOn; // 用於 UI 顯示按鈕是否被按下 (變色)
 
+        // [2026-02-23] 新增 IsMistOn：MIST 噴霧冷卻狀態（M7=開 / M9=關）
         [ObservableProperty]
-        private bool _isMistOn; // MIST 噴霧冷卻狀態
+        private bool _isMistOn;
 
         [RelayCommand]
         private async Task ToggleFlood()
@@ -112,6 +113,7 @@ namespace CncController.ViewModels
                 IsFloodOn = !IsFloodOn;
         }
 
+        // [2026-02-23] 新增 ToggleMistCommand：M7=噴霧開，M9=全部冷卻關；關閉時同步清除 IsFloodOn
         [RelayCommand]
         private async Task ToggleMist()
         {
@@ -125,6 +127,7 @@ namespace CncController.ViewModels
             }
         }
 
+        // [2026-02-23] 新增 HomeAllCommand：呼叫 HomeAsync(-1) 全軸回原點；條件：IsPower=true + IsEstop=false
         [RelayCommand]
         private async Task HomeAll()
         {
@@ -145,6 +148,7 @@ namespace CncController.ViewModels
                 AlarmService.Instance.AddLog("WARN", "Home command failed");
         }
 
+        // [2026-02-23] 新增 ExitAppCommand：HeaderBar File 選單 EXIT 項目，記錄 Log 後呼叫 Shutdown
         [RelayCommand]
         private void ExitApp()
         {
@@ -465,7 +469,7 @@ namespace CncController.ViewModels
             // 更新 InterpState 供計時器判斷
             Status.InterpState = data.Interp_State;
 
-            // [新增] 同步 Active WCS（工件座標系）
+            // [2026-02-23] 新增：將後端回傳的 Active_WCS 同步至 MachineStatus 與 OffsetsVM，保持 DRO 快選列高亮一致
             if (!string.IsNullOrEmpty(data.Active_WCS))
             {
                 Status.ActiveCoordSystem = data.Active_WCS;
@@ -558,7 +562,7 @@ namespace CncController.ViewModels
                 // ★★★ [關鍵修改] 使用長駐實體，避免切換頁面後篩選狀態遺失 ★★★
                 case "History": CurrentViewModel = HistoryVM; break;
 
-                case "Offsets": CurrentViewModel = OffsetsVM; break;
+                case "Offsets": CurrentViewModel = OffsetsVM; break; // [2026-02-23] 新增 Offsets Tab 導航
             }
         }
         // [安全] 統一運動指令前置檢查：IsEstop 與 IsPower 雙重驗證

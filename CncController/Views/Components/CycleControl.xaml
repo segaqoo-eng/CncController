@@ -66,6 +66,7 @@
                 <Button Content="STOP" Command="{Binding StopCommand}" Style="{StaticResource CycleBtnStyle}"/>
                 <Button Content="RELOAD PGM" Command="{Binding ReloadCommand}" Style="{StaticResource CycleBtnStyle}"/>
                 <Button Content="FEED HOLD" Command="{Binding FeedHoldCommand}" Style="{StaticResource CycleBtnStyle}"/>
+                <!-- [2026-02-23] CLEAR PGM 改為 GO TO HOME，連結 HomeAllCommand（全軸回原點） -->
                 <Button Content="GO TO HOME" Command="{Binding HomeAllCommand}" Style="{StaticResource CycleBtnStyle}"/>
                 <Button Content="SINGLE BLOCK" Style="{StaticResource CycleBtnStyle}"/>
                 <Button Content="FLOOD" Command="{Binding ToggleFloodCommand}">
@@ -82,6 +83,7 @@
                     </Button.Style>
                 </Button>
                 <Button Content="BLOCK DELETE" Style="{StaticResource FunctionBtnStyle}"/>
+                <!-- [2026-02-23] 新增 MIST 按鈕連結 ToggleMistCommand，IsMistOn=true 時背景變藍 -->
                 <Button Content="MIST" Command="{Binding ToggleMistCommand}">
                     <Button.Style>
                         <Style TargetType="Button" BasedOn="{StaticResource CycleBtnStyle}">

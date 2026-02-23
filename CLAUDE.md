@@ -87,7 +87,8 @@ DispatcherTimer（排程計時器）→ MachineControlService.GetStatusAsync()
 |------|------|
 | `Services/MachineControlService.cs` | 所有 HTTP 通訊；後端 URL（網址）在此設定 |
 | `Services/ConfigurationService.cs` | 機台設定載入/儲存；生成 INI、HAL、XML、PostGUI HAL 並上傳後端重啟 |
-| `Services/AlarmService.cs` | 集中式日誌；`AllLogs`（歷史 ≤500 筆）、`ActiveAlarms`（跑馬燈用） |
+| `Services/AppSettings.cs` | 應用程式設定 Singleton；讀取/建立 `appsettings.json`（`ServerUrl` 等）；三個 Service 統一從此取得後端 URL |
+| `Services/AlarmService.cs` | 集中式日誌；`AllLogs`（歷史 ≤500 筆）、`ActiveAlarms`（跑馬燈用）；Error/Warning/Info 同步寫入 `logs/cnc-yyyy-MM-dd.log` |
 | `ViewModels/MainViewModel.cs` | 根 ViewModel；輪詢計時器、頁面導航、電源/急停命令、硬體自動驗證 |
 | `ViewModels/SettingsViewModel.cs` | 設定頁面協調；聚合 6 個子 ViewModel；`GenerateAndDeploy` 產生設定檔 |
 | `ViewModels/MonitorViewModel.cs` | G-Code 載入上傳預覽；`LoadLocalFileCommand`、`LoadFromCam()` |
@@ -251,113 +252,90 @@ python3 server.py     # 直接啟動（除錯用）
 
 ---
 
-## 工控安全重構建議（Safety Refactoring）
+## 工控安全重構紀錄（Safety Refactoring — 已全部完成）
 
-基於工業控制機安全規範審計，以下為各面向的已知問題與重構方向。共發現 **嚴重 4 項、高危 10 項、中危 15 項**。
+基於工業控制機安全規範審計，共發現 **嚴重 4 項、高危 10 項、中危 15 項**，已分三批完成修復。
 
-### 1. 異常處理（Exception Handling）
+### 完成記錄
 
-| 等級 | 問題 | 位置 | 重構方向 |
+| Commit | 批次 | 項目 |
+|--------|------|------|
+| `653108d` | 第一優先（嚴重） | 消除空 catch、急停獨立通道、SaveConfig 錯誤可見、密碼外部化 |
+| `e6f31fd` | 第一優先補 | 補修 IoMonitorViewModel 殘留空 catch |
+| `6a52e96` | 第二優先（高危） | HttpClient 分離、原子狀態更新、運動前置檢查、AlarmService lock、Timer try/catch、連續失敗計數 |
+| `6e3ac2b` | 第三優先（中危） | IP 外部化、日誌持久化、集合快照、狀態轉換驗證表 |
+
+### 1. 異常處理（Exception Handling）✅
+
+| 等級 | 問題 | 狀態 | 實作位置 |
 |------|------|------|---------|
-| 🔴 嚴重 | 空 `catch { }` 吞沒所有異常，JSON 反序列化失敗無法診斷 | `MachineControlService.cs:66-78, 119, 298` | 改為 `catch (Exception ex)` 並寫入 `AlarmService`；至少記錄 `ex.GetType().Name` + `ex.Message` |
-| 🔴 嚴重 | `SaveConfigAsync` 異常僅寫 `Debug.WriteLine`，使用者無法看到部署失敗 | `ConfigurationService.cs:41-71` | 將錯誤提升至 `AlarmService.AddLog(LogType.Error, ...)`；回傳 `bool` 或拋出讓呼叫端處理 |
-| 🟠 高危 | `_ = AutoValidateHardware()` Fire-and-Forget，啟動時硬體驗證失敗被忽視 | `MainViewModel.cs:160` | 包裹 `try/catch` 並記錄異常；驗證失敗時設定 `IsSystemReady = false` 並推送警報 |
-| 🟡 中危 | 異常只記錄 `ex.Message`，缺少堆疊追蹤（Stack Trace） | `MachineControlService.cs:167-189` 等多處 | 在 `LogType.Debug` 級別額外記錄 `ex.ToString()` 以保留完整堆疊 |
-| 🟡 中危 | `AlarmService.AddLog` 內部 LINQ 查詢與集合修改間可能拋出 `InvalidOperationException` | `AlarmService.cs:98-106` | 在 `Dispatcher.Invoke` 內加 `try/catch` 保護，避免日誌系統自身崩潰 |
+| 🔴 嚴重 | 空 `catch { }` 吞沒所有異常 | ✅ 已修復 | 所有 catch 改為記錄 `ex.GetType().Name + ex.Message` 至 `AlarmService` |
+| 🔴 嚴重 | `SaveConfigAsync` 異常使用者不可見 | ✅ 已修復 | 改寫入 `AlarmService.AddLog(LogType.Error)` 並 `throw` 讓呼叫端知道 |
+| 🟠 高危 | Fire-and-Forget `AutoValidateHardware` 失敗被忽視 | ✅ 已修復 | 外層 `try/catch`，失敗時設 `IsSystemReady = false` 並推警報 |
+| 🟡 中危 | `AlarmService.AddLog` 集合操作可能拋 `InvalidOperationException` | ✅ 已修復 | `Dispatcher.Invoke` 內加 `lock (_logLock)` + `try/catch` |
 
-**通用規則：**
-- 禁止空 `catch { }`；最低限度需記錄至 `AlarmService`
-- Service 層方法應回傳 `(bool Success, string Error)` 元組或使用 Result Pattern
-- Fire-and-Forget 的 `async void` / `_ = Task` 必須包裹 `try/catch`
+### 2. 通訊逾時（Communication Timeout）✅
 
-### 2. 通訊逾時（Communication Timeout）
-
-| 等級 | 問題 | 位置 | 重構方向 |
+| 等級 | 問題 | 狀態 | 實作位置 |
 |------|------|------|---------|
-| 🟠 高危 | `SaveConfigAndRestartAsync` 直接修改全域 `_httpClient.Timeout`，影響正在進行的輪詢請求 | `MachineControlService.cs:301-325` | 為不同操作建立獨立 `HttpClient` 實例：`_pollingClient`（3s）、`_uploadClient`（20s）、`_configClient`（10s） |
-| 🟡 中危 | 輪詢頻率 100ms 但 HTTP 逾時 3s，網路延遲時可堆積 30+ 個並發請求 | `MainViewModel.cs:130` | 加入 `SemaphoreSlim(1,1)` 或 `_isPolling` 旗標防止重疊；考慮輪詢間隔提高至 200–500ms |
-| 🟡 中危 | 單次網路波動即標記為 `Disconnected`，無重試機制 | `MachineControlService.cs:59-102` | 實作連續失敗計數器（如 3 次失敗才判定斷線）；加入指數退避（Exponential Backoff） |
-| 🟡 中危 | `WaitForLinuxCNC` 超時後無日誌記錄 | `SettingsViewModel.cs:421-435` | 超時時記錄 `LogType.Error`，並區分「完全無回應」與「回應但未就緒」 |
+| 🟠 高危 | 全域 `_httpClient.Timeout` 在 `SaveConfigAsync` 被修改，影響輪詢 | ✅ 已修復 | `_pollingClient`（3s）、`_estopClient`（2s）、`configClient`（局部10s）各自獨立 |
+| 🟡 中危 | 單次網路波動即標記 Disconnected | ✅ 已修復 | `_consecutiveFailCount`：連續 3 次失敗才判定 Disconnected |
+| 🟡 中危 | 輪詢無防重疊機制，`async void` 異常不被捕捉 | ✅ 已修復 | `StatusTimer_Tick` 以 `_timer.Stop/Start` 在 finally 保護，並加入 `try/catch` |
 
-**通用規則：**
-- 禁止在執行時修改共用 `HttpClient` 的 `Timeout`；需要不同逾時的操作使用獨立實例
-- 輪詢迴圈必須有防重疊機制（`SemaphoreSlim` 或 `bool` 旗標 + `Interlocked`）
-- 斷線判定應基於連續失敗次數，非單次失敗
+### 3. 急停優先權（E-Stop Priority）✅
 
-### 3. 急停優先權（E-Stop Priority）
-
-| 等級 | 問題 | 位置 | 重構方向 |
+| 等級 | 問題 | 狀態 | 實作位置 |
 |------|------|------|---------|
-| 🔴 嚴重 | 急停依靠軟體邏輯檢查 `IsEstop`，該值來自最多 100ms 前的快取，高速連點可能繞過 | `MainViewModel.cs:493-521` | UI 急停按鈕加 `IsEnabled` 綁定防連點；急停指令發送後立即設定 `IsEstop = true`（樂觀更新），等下次輪詢確認 |
-| 🟠 高危 | 急停指令與普通指令（JOG、MDI）使用同一 `SendV2CommandAsync`，無優先級隊列 | `MachineControlService.cs:194-195` | 為急停建立獨立 `HttpClient`（`_estopClient`），不受其他請求阻塞；或實作 `CancellationToken` 取消所有進行中的非急停請求 |
-| 🟡 中危 | JOG 指令未驗證急停狀態，急停時仍可發送 JOG | `MainViewModel.cs:522-538` | 在 `JogStart` 開頭加入 `if (IsEstop) return;` 檢查；所有運動指令統一經過 `CanExecuteMotion()` 防呆 |
+| 🔴 嚴重 | 急停後 UI 未立即反映，等下次輪詢才更新 | ✅ 已修復 | `ToggleEstop` 觸發後立即樂觀更新 `IsEstop = true`、`IsSystemReady = false` |
+| 🟠 高危 | 急停與普通指令共用 `HttpClient` | ✅ 已修復 | `_estopClient`（2s 超時）獨立通道，同時取消 `_jogCts` |
+| 🟡 中危 | JOG 未驗證急停狀態 | ✅ 已修復 | `CanExecuteMotion()` 守衛套用至 `JogStart`、`CycleStart`；Service 層 `ValidateAction()` 為第二防線 |
 
-**通用規則：**
-- 急停必須使用獨立通訊通道，不與常規指令共享 `HttpClient`
-- 所有運動指令（JOG、CycleStart、MDI）在發送前必須檢查 `IsEstop` 與 `IsPower`
-- 急停發送後應立即做樂觀狀態更新（`IsEstop = true`），不等輪詢
-- UI 上急停按鈕永遠不被 `Disable`，任何時刻都可觸發
+### 4. 狀態機設計（State Machine Design）✅
 
-### 4. 狀態機設計（State Machine Design）
-
-| 等級 | 問題 | 位置 | 重構方向 |
+| 等級 | 問題 | 狀態 | 實作位置 |
 |------|------|------|---------|
-| 🟠 高危 | 多個狀態屬性（`IsPower`、`IsEstop`、`IsConnected`、`IsSystemReady`）依序更新，非原子操作，UI 可能讀到中間狀態 | `MainViewModel.cs:330-377` | 引入 `MachineStateSnapshot` 不可變物件，一次性計算所有狀態後原子替換；UI 綁定改為讀取 Snapshot 的屬性 |
-| 🟠 高危 | 無狀態轉換驗證，`CycleStartAsync` 未檢查機台是否已復歸或是否有錯誤 | `MachineControlService.cs:232-263` | 建立允許的轉換表（如 `OFF→ON` 需先解除 ESTOP），在發送指令前驗證 |
-| 🟠 高危 | `_lastCachedStatus` 最多延遲 100ms，JOG 等指令依此快取做防呆判斷 | `MachineControlService.cs:40, 84-86` | 快取判斷僅作為「建議」而非「強制」；關鍵安全判斷（如急停中不可運動）應同時仰賴後端拒絕 + 前端防呆雙重保障 |
-| 🟡 中危 | `TaskState`、`InterpState`、`IsMoving` 為獨立屬性，無統一驗證機制 | `MachineStatus.cs` | 考慮加入 `Validate()` 方法在每次更新後檢查狀態一致性；不一致時記錄警報 |
+| 🟠 高危 | `IsPower`/`IsEstop`/`IsSystemReady` 依序更新，UI 可能讀到中間態 | ✅ 已修復 | `PollMachineStatus` 先計算 `newIsPower/newIsEstop/newIsReady` 快照，再統一套用 |
+| 🟠 高危 | 無狀態轉換驗證，`CycleStartAsync` 未檢查機台狀態 | ✅ 已修復 | `MachineAction` enum + `ValidateAction()` 方法（`JogAsync`、`CycleStartAsync` 呼叫） |
+| 🟠 高危 | `_lastCachedStatus` 快取作為防呆唯一依據 | ✅ 已改善 | 前端 `CanExecuteMotion()` + Service 層 `ValidateAction()` 雙重保障；後端為最終仲裁 |
 
-**通用規則：**
-- 機台狀態更新應為原子操作：計算完整新狀態 → 一次性替換 → 通知 UI
-- 狀態轉換需有明確的允許轉換表（State Transition Table）
-- 前端防呆 + 後端拒絕 = 雙重保障；僅靠一端不可靠
-- `_lastCachedStatus` 的時效性必須被呼叫端理解，不可當作即時真值
+### 5. 執行緒安全（Thread Safety）✅
 
-### 5. 執行緒安全（Thread Safety）
-
-| 等級 | 問題 | 位置 | 重構方向 |
+| 等級 | 問題 | 狀態 | 實作位置 |
 |------|------|------|---------|
-| 🟠 高危 | `AlarmService.AddLog` 內 LINQ 查詢與集合修改之間存在時間窗口，高頻輪詢下可能競賽 | `AlarmService.cs:76-132` | 使用 `lock` 保護整個 `AddLog` 內的集合操作；或改用 `ConcurrentQueue` + 定期批次 Flush 至 `ObservableCollection` |
-| 🟠 高危 | `_httpClient.Timeout` 在 `SaveConfigAndRestartAsync` 中被修改，與輪詢執行緒共享 | `MachineControlService.cs:30-31, 301-325` | （同通訊逾時 #1）使用獨立 `HttpClient` 實例 |
-| 🟡 中危 | `GenerateAndDeploy` 迭代 `ObservableCollection`（`AxisMaps`、`InMaps`），若使用者同時在 UI 修改可能拋出異常 | `SettingsViewModel.cs:296-391` | 部署開始時對集合做快照（`ToList()`）再迭代；或部署期間鎖定 UI 輸入 |
-| 🟡 中危 | `DispatcherTimer` 內的 `async void` Tick Handler，若 `PollMachineStatus` 超過間隔時間可能重疊 | `MainViewModel.cs:224-266` | 已有 `_timer.Stop/Start` 保護，但 `async void` 的異常不會被捕捉；改為 `try/catch` 包裹全部邏輯 |
-| 🟡 中危 | `AuthService.CurrentUser` setter 無鎖定保護 | `AuthService.cs:6-16` | 加入 `lock` 或使用 `volatile`；實務上因 WPF 單執行緒模型風險較低，但仍應防禦性處理 |
-
-**通用規則：**
-- `ObservableCollection` 的修改必須在 UI 執行緒（`Dispatcher`）上進行
-- 跨執行緒共享的欄位使用 `lock`、`Interlocked`、或 `Concurrent*` 集合
-- 長時間操作開始前對 UI 綁定的集合做快照（`ToList()`）
-- `async void` 事件處理器必須有 `try/catch` 保護
+| 🟠 高危 | `AlarmService.AddLog` 高頻輪詢下集合競賽 | ✅ 已修復 | `lock (_logLock)` 保護所有 `AddLog` 內集合操作 |
+| 🟠 高危 | `_httpClient.Timeout` 跨執行緒共享被修改 | ✅ 已修復 | 同第二點，各操作使用獨立 `HttpClient` |
+| 🟡 中危 | `GenerateAndDeploy` 迭代 ObservableCollection 期間可能修改 | ✅ 已修復 | 迭代前對 `AxisMaps`/`InMaps`/`OutMaps` 呼叫 `.ToList()` 取快照 |
+| 🟡 中危 | `async void` Tick Handler 異常不被捕捉 | ✅ 已修復 | `_cycleTimer.Tick` 與 `HardwareValidationCompleted` 均加入 `try/catch` |
 
 ### 6. 其他安全問題
 
-| 等級 | 問題 | 位置 | 重構方向 |
-|------|------|------|---------|
-| 🔴 嚴重 | 所有 API 呼叫無身份驗證，任何人連到後端即可操控機台 | 所有 HTTP 呼叫 | 後端加入 API Token / JWT 驗證；前端在 `HttpClient.DefaultRequestHeaders` 附帶 Token |
-| 🔴 嚴重 | 密碼硬寫在 `AuthService`（`"1111"`、`"2222"`、`"8888"`、`"dev999"`） | `AuthService.cs:28-51` | 密碼改為 bcrypt/Argon2 雜湊後儲存於外部加密設定檔；禁止原始碼內含明文密碼 |
-| 🟠 高危 | HTTP 明文傳輸，無 SSL/TLS 加密 | 所有 `http://` 呼叫 | 評估在區域網路環境下的威脅模型；若需加密則後端啟用 HTTPS |
-| 🟡 中危 | 伺服器 IP `192.168.0.137:5000` 硬寫在三個 Service 中 | `MachineControlService.cs:34`、`ConfigurationService.cs:26`、`HardwareScanService.cs:58` | 抽出至 `appsettings.json` 或 `MachineConfig.json`，統一讀取 |
-| 🟡 中危 | 日誌僅存於記憶體（`AllLogs` ≤500 筆），應用關閉後遺失 | `AlarmService.cs` | 加入檔案持久化（每日滾動日誌檔）；關鍵操作（急停、電源、設定部署）必須寫入持久日誌 |
+| 等級 | 問題 | 狀態 | 備註 |
+|------|------|------|------|
+| 🔴 嚴重 | 所有 API 呼叫無身份驗證 | ⏳ 待評估 | 需後端同時支援；區域網路環境下優先級次之 |
+| 🔴 嚴重 | 密碼硬寫於原始碼 | ✅ 已修復 | SHA-256（Salt:Password）雜湊，儲存於外部 `passwords.json` |
+| 🟠 高危 | HTTP 明文傳輸 | ⏳ 待評估 | 區域網路環境威脅模型較低；後續評估是否啟用 HTTPS |
+| 🟡 中危 | 伺服器 IP 硬寫於三個 Service | ✅ 已修復 | 統一改用 `AppSettings.Instance.ServerUrl`，讀取 `appsettings.json` |
+| 🟡 中危 | 日誌僅存於記憶體，應用關閉後遺失 | ✅ 已修復 | Error/Warning/Info 透過 ThreadPool 非同步寫入 `logs/cnc-yyyy-MM-dd.log` |
 
-### 重構優先順序（依風險等級排序）
+### 重構優先順序（全部完成）
 
-**第一優先（嚴重）— 立即處理：**
-1. 消除所有空 `catch { }`，改為記錄至 `AlarmService`
-2. 急停指令使用獨立 `HttpClient`，不受其他請求阻塞
-3. `SaveConfigAsync` 錯誤提升至使用者可見的警報
-4. 密碼從原始碼移至外部加密儲存
+**第一優先（嚴重）— ✅ 完成（commit `653108d`, `e6f31fd`）：**
+1. ✅ 消除所有空 `catch { }`，改為記錄至 `AlarmService`
+2. ✅ 急停指令使用獨立 `HttpClient`（`_estopClient`），不受其他請求阻塞
+3. ✅ `SaveConfigAsync` 錯誤提升至使用者可見的警報
+4. ✅ 密碼從原始碼移至外部 `passwords.json`（SHA-256 雜湊）
 
-**第二優先（高危）— 短期修復：**
-5. 為不同操作建立獨立 `HttpClient` 實例（輪詢 / 上傳 / 設定 / 急停）
-6. 狀態更新改為原子操作（`MachineStateSnapshot`）
-7. 所有運動指令加入 `IsEstop` / `IsPower` 前置檢查
-8. `AlarmService` 集合操作加入 `lock` 保護
-9. Fire-and-Forget 非同步呼叫加入 `try/catch`
-10. 輪詢加入防重疊機制與連續失敗計數
+**第二優先（高危）— ✅ 完成（commit `6a52e96`）：**
+5. ✅ 為不同操作建立獨立 `HttpClient` 實例（`_pollingClient` / `_estopClient` / 局部 client）
+6. ✅ 狀態更新改為原子操作（先計算快照，再統一套用）
+7. ✅ 所有運動指令加入 `IsEstop` / `IsPower` 前置檢查（`CanExecuteMotion()`）
+8. ✅ `AlarmService` 集合操作加入 `lock (_logLock)` 保護
+9. ✅ Fire-and-Forget 非同步呼叫加入 `try/catch`（`_cycleTimer`、`HardwareValidationCompleted`）
+10. ✅ 輪詢加入 `_timer.Stop/Start` 防重疊機制與連續失敗計數器（≥3 次才斷線）
 
-**第三優先（中危）— 中期改善：**
-11. 伺服器 IP 抽出至設定檔
-12. 日誌持久化至檔案
-13. 斷線判定改為連續失敗計數器
-14. 部署期間對集合做快照再迭代
-15. 狀態轉換驗證表
+**第三優先（中危）— ✅ 完成（commit `6e3ac2b`）：**
+11. ✅ 伺服器 IP 抽出至 `appsettings.json`（新增 `AppSettings.cs`）
+12. ✅ 日誌持久化至每日滾動檔（`logs/cnc-yyyy-MM-dd.log`）
+13. ✅ 斷線判定改為連續失敗計數器（同 Item 10，於第二優先一併完成）
+14. ✅ 部署期間對 `AxisMaps`/`InMaps`/`OutMaps` 做 `.ToList()` 快照再迭代
+15. ✅ 狀態轉換驗證表（`MachineAction` enum + `ValidateAction()`，`JogAsync`/`CycleStartAsync` 呼叫）

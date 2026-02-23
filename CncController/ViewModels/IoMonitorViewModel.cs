@@ -1,4 +1,5 @@
 ﻿using CncController.Models;
+using CncController.Services;
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -73,7 +74,10 @@ namespace CncController.ViewModels
                     }
                 }
             }
-            catch { }
+            catch (Exception ex)
+            {
+                AlarmService.Instance.AddLog("ERR", $"IO DI parse error: {ex.GetType().Name}: {ex.Message}");
+            }
         }
 
         // ★★★ [核心] 智慧解析函式：支援 10進位 與 16進位 ★★★

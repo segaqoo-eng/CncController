@@ -2,6 +2,10 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## 語言規則
+
+回答一律使用繁體中文。
+
 ## Build & Run
 
 ```bash

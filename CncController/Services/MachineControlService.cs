@@ -31,12 +31,13 @@ namespace CncController.Services
         public static MachineControlService Instance => _instance ??= new MachineControlService();
 
         private readonly HttpClient _httpClient;
+        private readonly HttpClient _estopClient; // [安全] 急停專用通道，不受其他請求阻塞
         private string _serverUrl = "http://192.168.0.137:5000"; // 請確認您的 IP
         private readonly JsonSerializerOptions _jsonOptions;
 
         private CancellationTokenSource _jogCts;
 
-        // [修正] 用來記錄最後一次狀態 (供 Jog 防呆使用)
+        // [核心] 用來記錄最後一次狀態，用於本地端的快速防呆判斷
         private MachineStatusData _lastCachedStatus;
 
         public string ServerVersion { get; private set; } = "Unknown";
@@ -50,16 +51,16 @@ namespace CncController.Services
 
         public MachineControlService()
         {
+            // 全域 Client 只設定短 Timeout (適合高頻率 Polling)
             _httpClient = new HttpClient { Timeout = TimeSpan.FromSeconds(3) };
+            // [安全] 急停專用 HttpClient：Timeout 較短（2s），且獨立於一般通訊通道
+            _estopClient = new HttpClient { Timeout = TimeSpan.FromSeconds(2) };
             _jsonOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
         }
 
-        // --- 1. 狀態檢查 ---
+        // --- 1. 狀態檢查 (同步後端狀態) ---
         public async Task<(ConnectionState State, MachineStatusData Data)> GetStatusAsync()
         {
-            // [修正] 移除內部的 PollErrorsAsync，改由 MainViewModel 主動呼叫 GetErrorsAsync
-            // await PollErrorsAsync(); 
-
             try
             {
                 var response = await _httpClient.GetAsync($"{_serverUrl}/v2/status");
@@ -77,13 +78,16 @@ namespace CncController.Services
                         }
                     }
                 }
-                catch { }
+                catch (Exception ex)
+                {
+                    AlarmService.Instance.AddLog("API", $"Status JSON parse error: {ex.GetType().Name}: {ex.Message}");
+                }
 
                 if (response.IsSuccessStatusCode)
                 {
                     if (result?.Status == "Success")
                     {
-                        // [關鍵修正] 更新緩存，讓 JogAsync 的防呆邏輯生效
+                        // [關鍵] 更新本地緩存狀態，供 CycleStart/Jog 判斷使用
                         _lastCachedStatus = result.Data;
                         return (ConnectionState.Connected, result.Data);
                     }
@@ -103,33 +107,29 @@ namespace CncController.Services
             }
         }
 
-        // --- 2. [新增] 公開的錯誤查詢方法 (供 MainViewModel 呼叫) ---
+        // --- 2. 錯誤查詢 ---
         public async Task<List<ErrorData>> GetErrorsAsync()
         {
             try
             {
-                // 呼叫後端 API，這會取得並清空後端的錯誤佇列
                 var response = await _httpClient.GetAsync($"{_serverUrl}/v2/errors");
-
                 if (response.IsSuccessStatusCode)
                 {
                     var result = await response.Content.ReadFromJsonAsync<ApiResponse<List<ErrorData>>>(_jsonOptions);
-
                     if (result != null && result.Status == "Success")
                     {
-                        return result.Data; // 回傳 List<ErrorData> 給 ViewModel 處理
+                        return result.Data;
                     }
                 }
             }
-            catch
+            catch (Exception ex)
             {
-                // 錯誤查詢失敗通常是因為斷線，GetStatusAsync 那邊會處理斷線狀態，這邊靜默即可
+                AlarmService.Instance.AddLog("API", $"GetErrors failed: {ex.GetType().Name}: {ex.Message}");
             }
             return null;
         }
 
-        // --- 3. 輔助與指令 ---
-
+        // --- 3. 底層通訊輔助 ---
         public async Task<bool> CheckConnectionAsync()
         {
             var result = await GetStatusAsync();
@@ -138,7 +138,6 @@ namespace CncController.Services
 
         private async Task<T> SendV2CommandAsync<T>(string endpoint, object payload, CancellationToken token = default)
         {
-            // AlarmService.Instance.AddLog("API", $"REQ: {endpoint}"); // 視需求開啟 debug log
             try
             {
                 var response = await _httpClient.PostAsJsonAsync($"{_serverUrl}/v2/{endpoint}", payload ?? new { }, token);
@@ -146,24 +145,25 @@ namespace CncController.Services
                 if (response.IsSuccessStatusCode)
                 {
                     var result = await response.Content.ReadFromJsonAsync<ApiResponse<T>>(_jsonOptions, token);
+
+                    // [規範] 只有 Status == Success 才算成功，否則視為邏輯錯誤
                     if (result?.Status == "Success")
                     {
                         return result.Data;
                     }
-                    AlarmService.Instance.AddLog("API", $"RES: {endpoint} [Err: {result?.Message}]");
+
+                    // 記錄後端回傳的具體錯誤訊息 (如 ERR_NOT_HOMED)
+                    AlarmService.Instance.AddLog("API", $"CMD Fail: {endpoint} -> {result?.Message}");
                 }
                 else
                 {
-                    AlarmService.Instance.AddLog("API", $"HTTP: {response.StatusCode}");
+                    AlarmService.Instance.AddLog("API", $"HTTP Error: {response.StatusCode} on {endpoint}");
                 }
             }
-            catch (TaskCanceledException)
-            {
-                // Ignore cancel
-            }
+            catch (TaskCanceledException) { }
             catch (Exception ex)
             {
-                AlarmService.Instance.AddLog("API", $"EX: {ex.Message}");
+                AlarmService.Instance.AddLog("API", $"Exception: {ex.Message}");
             }
             return default;
         }
@@ -171,16 +171,65 @@ namespace CncController.Services
         private async Task SendV2CommandAsync(string endpoint, object payload = null, CancellationToken token = default)
             => await SendV2CommandAsync<object>(endpoint, payload, token);
 
-        // --- 4. 控制方法 ---
+
+        // --- [修正] 檔案上傳 (解決 Timeout 修改報錯問題) ---
+        public async Task<bool> UploadGCodeAsync(string fileName, string gcodeContent)
+        {
+            var payload = new { name = fileName, content = gcodeContent };
+
+            try
+            {
+                // ★★★ 修正點：建立一個全新的臨時 HttpClient ★★★
+                // 因為 _httpClient 已經被狀態輪詢使用過，Timeout 屬性被鎖定不可修改。
+                // 且上傳需要較長的 Timeout (例如 10秒)，不能用全域的 3秒。
+                using (var uploadClient = new HttpClient())
+                {
+                    uploadClient.Timeout = TimeSpan.FromSeconds(20); // 設定充裕的時間
+
+                    var response = await uploadClient.PostAsJsonAsync($"{_serverUrl}/api/files/upload", payload);
+                    return response.IsSuccessStatusCode;
+                }
+            }
+            catch (Exception ex)
+            {
+                AlarmService.Instance.AddLog("API", $"Upload Fail: {ex.Message}");
+                return false;
+            }
+        }
+
+
+        // --- 4. 控制指令 (對應新架構) ---
+
         public async Task ResetMachineAsync() => await SendV2CommandAsync("machine/reset");
-        public async Task TriggerEstopAsync() => await SendV2CommandAsync("machine/estop");
+
+        // [安全] 急停使用獨立 _estopClient，不受一般指令 HTTP 佇列阻塞
+        // 同時立即取消所有進行中的 JOG 操作
+        public async Task TriggerEstopAsync()
+        {
+            // 1. 先取消進行中的 JOG CancellationToken
+            _jogCts?.Cancel();
+
+            try
+            {
+                // 2. 用急停專用通道發送指令
+                var response = await _estopClient.PostAsJsonAsync($"{_serverUrl}/v2/machine/estop", new { });
+                if (!response.IsSuccessStatusCode)
+                {
+                    AlarmService.Instance.AddLog("API", $"E-Stop HTTP Error: {response.StatusCode}");
+                }
+            }
+            catch (Exception ex)
+            {
+                AlarmService.Instance.AddLog("API", $"E-Stop failed: {ex.GetType().Name}: {ex.Message}");
+            }
+        }
 
         public async Task JogAsync(int axis, double speed, double distance = 0)
         {
-            // 防呆：如果機器正在移動，禁止 Jog (除非是停止指令 speed=0)
+            // [防呆] 若機台非 IDLE 且非停止指令，禁止 JOG
             if (speed != 0 && _lastCachedStatus != null && _lastCachedStatus.Is_Moving)
             {
-                AlarmService.Instance.AddLog("WARN", "JOG blocked: Machine is moving.");
+                AlarmService.Instance.AddLog("WARN", "JOG Ignored: Machine is moving.");
                 return;
             }
 
@@ -205,18 +254,68 @@ namespace CncController.Services
             await SendV2CommandAsync("motion/jog", new { axis, speed = 0, dist = 0 });
         }
 
+        /// <summary>
+        /// [智慧啟動] 自動判斷是用 Run 還是 Resume
+        /// 符合新架構規範：Idle -> Run, Paused -> Resume
+        /// [更新] 支援 fileName 參數，用於指定執行檔
+        /// </summary>
         public async Task CycleStartAsync(string file = null)
         {
+            // 1. 本地狀態防呆
             if (_lastCachedStatus != null && _lastCachedStatus.Is_Moving)
             {
-                AlarmService.Instance.AddLog("WARN", "Run blocked: Machine is moving.");
-                return;
+                // 如果正在移動中 (RUNNING 且非 PAUSED)，則不允許再次 Start
+                // (注意：如果 Interp_State 是 RUNNING 但 Task_State 沒有 PAUSED 關鍵字，視為執行中)
+                if (_lastCachedStatus.Interp_State == "RUNNING" && !_lastCachedStatus.Task_State.ToUpper().Contains("PAUSED"))
+                {
+                    AlarmService.Instance.AddLog("WARN", "Machine is already running.");
+                    return;
+                }
             }
-            await SendV2CommandAsync("program/run", new { file_name = file });
+
+            string endpoint = "program/run";
+            object payload = new { file_name = file };
+
+            // 2. 判斷是否為暫停狀態 -> 改發 Resume 指令
+            if (_lastCachedStatus != null &&
+               (_lastCachedStatus.Interp_State == "PAUSED" || _lastCachedStatus.Interp_State == "INTERP_PAUSED"))
+            {
+                endpoint = "program/resume";
+                payload = new { }; // Resume 通常不需要參數
+                AlarmService.Instance.AddLog("INFO", "Resuming Program...");
+            }
+            else
+            {
+                AlarmService.Instance.AddLog("INFO", $"Starting Program: {file ?? "Current"}...");
+            }
+
+            await SendV2CommandAsync(endpoint, payload);
         }
 
         public async Task StopAsync() => await SendV2CommandAsync("program/stop");
         public async Task FeedHoldAsync() => await SendV2CommandAsync("program/pause");
+
+        public async Task<bool> SendMdiCommandAsync(string command)
+        {
+            if (string.IsNullOrWhiteSpace(command)) return false;
+            try
+            {
+                var response = await _httpClient.PostAsJsonAsync($"{_serverUrl}/v2/mdi", new { command });
+                if (!response.IsSuccessStatusCode) return false;
+                var result = await response.Content.ReadFromJsonAsync<ApiResponse<object>>(_jsonOptions);
+                if (result?.Status != "Success")
+                {
+                    AlarmService.Instance.AddLog("API", $"MDI Fail: {result?.Message}");
+                    return false;
+                }
+                return true;
+            }
+            catch (Exception ex)
+            {
+                AlarmService.Instance.AddLog("API", $"MDI Exception: {ex.Message}");
+                return false;
+            }
+        }
 
         public async Task<string> GetStartupLogAsync()
         {
@@ -226,48 +325,26 @@ namespace CncController.Services
                 var result = await response.Content.ReadFromJsonAsync<LogResponse>(_jsonOptions);
                 return result?.Log ?? "No Log";
             }
-            catch { return "Log Unavailable"; }
+            catch (Exception ex)
+            {
+                AlarmService.Instance.AddLog("API", $"Startup log fetch failed: {ex.Message}");
+                return "Log Unavailable";
+            }
         }
-
-        // 在 MachineControlService 類別中新增此方法
 
         public async Task SaveConfigAndRestartAsync(List<AxisSetting> axes)
         {
-            // 1. 準備 Payload
-            var payload = new
-            {
-                axes = axes
-            };
-
-            // 2. 序列化
-            string json = System.Text.Json.JsonSerializer.Serialize(payload);
-            var content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
-
-            // 3. 發送請求
-            // 注意：這裡假設您的 Service 內部已經維護了 _httpClient 或 BaseUrl
-            // 如果沒有，請使用與您現有方法相同的 URL 組合方式
+            var payload = new { axes = axes };
             string url = $"{_serverUrl}/api/machine/save_config";
 
-            try
+            // [安全] 使用獨立 HttpClient，避免修改全域 _httpClient.Timeout 而影響輪詢
+            using var configClient = new HttpClient { Timeout = TimeSpan.FromSeconds(10) };
+            var response = await configClient.PostAsJsonAsync(url, payload);
+
+            if (!response.IsSuccessStatusCode)
             {
-                // 設定較長的 Timeout，因為重啟需要時間
-                _httpClient.Timeout = TimeSpan.FromSeconds(10);
-
-                var response = await _httpClient.PostAsync(url, content);
-
-                if (!response.IsSuccessStatusCode)
-                {
-                    string error = await response.Content.ReadAsStringAsync();
-                    throw new Exception($"Server Error: {error}");
-                }
-
-                // 成功後，通常不需要回傳內容，因為接下來就是要等待重啟
-            }
-            catch (Exception)
-            {
-                // 恢復 Timeout (如果是全域 Client)
-                _httpClient.Timeout = TimeSpan.FromSeconds(5);
-                throw; // 將錯誤拋回給 ViewModel 顯示
+                string error = await response.Content.ReadAsStringAsync();
+                throw new Exception($"Server Error: {error}");
             }
         }
     }

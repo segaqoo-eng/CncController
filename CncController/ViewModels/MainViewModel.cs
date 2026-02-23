@@ -26,7 +26,19 @@ namespace CncController.ViewModels
         public List<DiscoveredSlave> LastValidatedSlaves { get; private set; }
         public MachineConfig LastValidatedConfig { get; private set; }
 
+        // ==============================================================================
+        // [ViewModel 實體管理] 全部改為長駐，確保切換頁面時狀態不流失
+        // ==============================================================================
+
+        // 1. 設定頁面 (保持原樣)
         public SettingsViewModel SettingsVM { get; } = new SettingsViewModel();
+
+        // 2. ★★★ [補回] 監控頁面 (MonitorVM) - 必須長駐以保留 G-Code ★★★
+        public MonitorViewModel MonitorVM { get; } = new MonitorViewModel();
+
+        // 3. ★★★ [補回] 歷史頁面 (HistoryVM) - 必須長駐以保留篩選器狀態 ★★★
+        public HistoryViewModel HistoryVM { get; } = new HistoryViewModel();
+
         // ==============================================================================
         // 1. 屬性定義
         // ==============================================================================
@@ -55,6 +67,9 @@ namespace CncController.ViewModels
         // [新增] Server 版本顯示
         [ObservableProperty] private string _serverVersionDisplay = "---";
 
+        // [新增] 加工時間顯示 (給 CycleControl 用)
+        [ObservableProperty] private string _cycleTimeDisplay = "00:00:00";
+
         [ObservableProperty]
         private User _currentUser = new User { Username = "Operator", Role = UserRole.Operator };
 
@@ -65,10 +80,31 @@ namespace CncController.ViewModels
 
         private readonly DispatcherTimer _timer;
 
+        // [新增] 加工計時器
+        private readonly DispatcherTimer _cycleTimer;
+        private DateTime _cycleStartTime;
+
         // [新增] 跑馬燈與連線狀態控制變數
         private DateTime _lastMarqueeTime = DateTime.MinValue; // 控制跑馬燈切換時間
         private int _marqueeIndex = 0;                         // 目前顯示第幾筆警報
         private MachineControlService.ConnectionState _connectionState = MachineControlService.ConnectionState.Disconnected; // 暫存連線狀態
+
+        // [新增] 暫存目前載入的檔名 (如果有透過 MonitorVM 載入的話)
+        // 實務上這應該透過 Messenger 或 Service 共享，這裡先做簡單欄位
+        private string _loadedFileName = null;
+
+
+        [ObservableProperty]
+        private bool _isFloodOn; // 用於 UI 顯示按鈕是否被按下 (變色)
+
+        [RelayCommand]
+        private async Task ToggleFlood()
+        {
+            string cmd = IsFloodOn ? "M9" : "M8";
+            bool success = await MachineControlService.Instance.SendMdiCommandAsync(cmd);
+            if (success)
+                IsFloodOn = !IsFloodOn;
+        }
 
         // ==============================================================================
         // 2. 建構子
@@ -76,7 +112,8 @@ namespace CncController.ViewModels
 
         public MainViewModel()
         {
-            CurrentViewModel = new MonitorViewModel();
+            // ★★★ [關鍵修改] 初始化時使用長駐的 MonitorVM ★★★
+            CurrentViewModel = MonitorVM;
 
             // [新增] 1. 初始化時，先從 AuthService 抓目前的狀態
             CurrentUser = AuthService.Instance.CurrentUser;
@@ -93,6 +130,18 @@ namespace CncController.ViewModels
             _timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(100) };
             _timer.Tick += StatusTimer_Tick; // 改用具名方法
             _timer.Start();
+
+            // 初始化加工計時器
+            _cycleTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
+            _cycleTimer.Tick += (s, e) =>
+            {
+                // 簡單計時邏輯：如果系統是在 RUNNING 狀態才更新
+                if (Status.InterpState == "RUNNING")
+                {
+                    var span = DateTime.Now - _cycleStartTime;
+                    CycleTimeDisplay = span.ToString(@"hh\:mm\:ss");
+                }
+            };
 
             // ★★★ [補充] 訂閱自己的事件，以連動 SettingsVM ★★★
             // 這是為了保留您原本 "事件驅動" 的邏輯，讓 SettingsVM 在收到通知時初始化
@@ -184,6 +233,20 @@ namespace CncController.ViewModels
                 if (data != null)
                 {
                     SettingsVM.UpdateMachineStatus(data);
+
+                    // [2026-02-11] 未來若 MonitorVM 需要即時座標更新，也可在此呼叫
+                    // MonitorVM.UpdateStatus(data); 
+                }
+
+                // [2026-02-11 新增] 連動加工計時器
+                if (data != null && data.Interp_State == "RUNNING" && !_cycleTimer.IsEnabled)
+                {
+                    _cycleStartTime = DateTime.Now; // 這裡簡化，實際應記錄開始時間
+                    _cycleTimer.Start();
+                }
+                else if (data != null && data.Interp_State == "IDLE" && _cycleTimer.IsEnabled)
+                {
+                    _cycleTimer.Stop();
                 }
 
                 // 3. 抓錯誤 (原有邏輯)
@@ -195,7 +258,10 @@ namespace CncController.ViewModels
                 // 4. 更新頂部狀態
                 UpdateHeaderStatus();
             }
-            catch { }
+            catch (Exception ex)
+            {
+                AlarmService.Instance.AddLog("ERR", $"Poll error: {ex.GetType().Name}: {ex.Message}");
+            }
             finally
             {
                 _timer.Start();
@@ -325,9 +391,19 @@ namespace CncController.ViewModels
                 if (data.Position.TryGetValue("C", out double c)) Status.C = c;
             }
 
+            if (data.DTG != null)
+            {
+                if (data.DTG.TryGetValue("X", out double dx)) Status.DtgX = dx;
+                if (data.DTG.TryGetValue("Y", out double dy)) Status.DtgY = dy;
+                if (data.DTG.TryGetValue("Z", out double dz)) Status.DtgZ = dz;
+            }
+
             Status.Feedrate = data.Feedrate;
             Status.SpindleSpeed = data.Spindle_Speed;
             Status.File = string.IsNullOrEmpty(data.File) ? "No File Loaded" : data.File;
+
+            // 更新 InterpState 供計時器判斷
+            Status.InterpState = data.Interp_State;
         }
 
         // [修改] 跑馬燈與狀態顯示邏輯 (修正連線判斷與時間控制)
@@ -406,11 +482,14 @@ namespace CncController.ViewModels
         {
             switch (viewName)
             {
-                case "Main": CurrentViewModel = new MonitorViewModel(); break;
-                //case "Settings": CurrentViewModel = new SettingsViewModel(); break;
-                // ★★★ [修正] 使用共用的 SettingsVM 實例，不要 new 新的 ★★★
+                // ★★★ [關鍵修改] 使用長駐實體，避免切換頁面後資料遺失 ★★★
+                case "Main": CurrentViewModel = MonitorVM; break;
+
+                // ★★★ [關鍵修改] 使用長駐實體，避免切換頁面後資料遺失 ★★★
                 case "Settings": CurrentViewModel = SettingsVM; break;
-                case "History": CurrentViewModel = new HistoryViewModel(); break;
+
+                // ★★★ [關鍵修改] 使用長駐實體，避免切換頁面後篩選狀態遺失 ★★★
+                case "History": CurrentViewModel = HistoryVM; break;
             }
         }
         // [修改] 電源切換邏輯
@@ -492,9 +571,37 @@ namespace CncController.ViewModels
             }
         }
 
-        [RelayCommand] private async Task CycleStart() => await MachineControlService.Instance.CycleStartAsync();
+        // [Cycle Control] 核心控制指令
+        [RelayCommand]
+        private async Task CycleStart()
+        {
+            // 這裡從 MonitorVM 取得當前檔名，確保執行的是畫面上看到的那個
+            _loadedFileName = MonitorVM.CurrentFileName;
+            await MachineControlService.Instance.CycleStartAsync(_loadedFileName);
+
+            // 重置計時器 (如果需要從頭開始算)
+            if (Status.InterpState == "IDLE")
+            {
+                _cycleStartTime = DateTime.Now;
+                CycleTimeDisplay = "00:00:00";
+            }
+        }
+
         [RelayCommand] private async Task FeedHold() => await MachineControlService.Instance.FeedHoldAsync();
         [RelayCommand] private async Task Stop() => await MachineControlService.Instance.StopAsync();
+
+        // [新增] Reload 指令 (重載當前檔案)
+        [RelayCommand]
+        private async Task ReloadCommand()
+        {
+            if (!string.IsNullOrEmpty(_loadedFileName))
+            {
+                // 重新發送 upload 或 run 指令
+                // 這裡暫時只記錄 Log
+                AlarmService.Instance.AddLog("INFO", $"Reloading {_loadedFileName}...");
+                // await MachineControlService.Instance.UploadGCodeAsync(...)
+            }
+        }
 
         // [新增] 清除警報指令 (綁定給 ESC)
         [RelayCommand]

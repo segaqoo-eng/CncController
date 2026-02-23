@@ -30,12 +30,17 @@ namespace CncController.Services
         private static MachineControlService _instance;
         public static MachineControlService Instance => _instance ??= new MachineControlService();
 
-        private readonly HttpClient _httpClient;
-        private readonly HttpClient _estopClient; // [安全] 急停專用通道，不受其他請求阻塞
+        // [安全] 各用途使用獨立 HttpClient，Timeout 互不影響
+        private readonly HttpClient _pollingClient;  // 輪詢 + 一般指令（3s）
+        private readonly HttpClient _estopClient;    // 急停專用（2s），最高優先
         private string _serverUrl = "http://192.168.0.137:5000"; // 請確認您的 IP
         private readonly JsonSerializerOptions _jsonOptions;
 
         private CancellationTokenSource _jogCts;
+
+        // [安全] 連續失敗計數器：連續 N 次失敗才判定為 Disconnected，避免短暫網路波動誤報
+        private int _consecutiveFailCount = 0;
+        private const int MaxConsecutiveFailsBeforeDisconnect = 3;
 
         // [核心] 用來記錄最後一次狀態，用於本地端的快速防呆判斷
         private MachineStatusData _lastCachedStatus;
@@ -51,10 +56,8 @@ namespace CncController.Services
 
         public MachineControlService()
         {
-            // 全域 Client 只設定短 Timeout (適合高頻率 Polling)
-            _httpClient = new HttpClient { Timeout = TimeSpan.FromSeconds(3) };
-            // [安全] 急停專用 HttpClient：Timeout 較短（2s），且獨立於一般通訊通道
-            _estopClient = new HttpClient { Timeout = TimeSpan.FromSeconds(2) };
+            _pollingClient = new HttpClient { Timeout = TimeSpan.FromSeconds(3) };
+            _estopClient   = new HttpClient { Timeout = TimeSpan.FromSeconds(2) };
             _jsonOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
         }
 
@@ -63,7 +66,7 @@ namespace CncController.Services
         {
             try
             {
-                var response = await _httpClient.GetAsync($"{_serverUrl}/v2/status");
+                var response = await _pollingClient.GetAsync($"{_serverUrl}/v2/status");
 
                 ApiResponse<MachineStatusData> result = null;
                 try
@@ -87,23 +90,30 @@ namespace CncController.Services
                 {
                     if (result?.Status == "Success")
                     {
-                        // [關鍵] 更新本地緩存狀態，供 CycleStart/Jog 判斷使用
+                        _consecutiveFailCount = 0; // 成功，重置計數器
                         _lastCachedStatus = result.Data;
                         return (ConnectionState.Connected, result.Data);
                     }
                     else
                     {
+                        _consecutiveFailCount = 0; // 伺服器可達，重置計數器
                         return (ConnectionState.ServerOnly, null);
                     }
                 }
                 else
                 {
+                    _consecutiveFailCount = 0; // HTTP 錯誤但伺服器可達
                     return (ConnectionState.ServerOnly, null);
                 }
             }
             catch
             {
-                return (ConnectionState.Disconnected, null);
+                // [安全] 連續失敗 N 次才判定 Disconnected，避免短暫波動誤報
+                _consecutiveFailCount++;
+                if (_consecutiveFailCount >= MaxConsecutiveFailsBeforeDisconnect)
+                    return (ConnectionState.Disconnected, null);
+                else
+                    return (ConnectionState.ServerOnly, null);
             }
         }
 
@@ -112,7 +122,7 @@ namespace CncController.Services
         {
             try
             {
-                var response = await _httpClient.GetAsync($"{_serverUrl}/v2/errors");
+                var response = await _pollingClient.GetAsync($"{_serverUrl}/v2/errors");
                 if (response.IsSuccessStatusCode)
                 {
                     var result = await response.Content.ReadFromJsonAsync<ApiResponse<List<ErrorData>>>(_jsonOptions);
@@ -140,7 +150,7 @@ namespace CncController.Services
         {
             try
             {
-                var response = await _httpClient.PostAsJsonAsync($"{_serverUrl}/v2/{endpoint}", payload ?? new { }, token);
+                var response = await _pollingClient.PostAsJsonAsync($"{_serverUrl}/v2/{endpoint}", payload ?? new { }, token);
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -180,7 +190,7 @@ namespace CncController.Services
             try
             {
                 // ★★★ 修正點：建立一個全新的臨時 HttpClient ★★★
-                // 因為 _httpClient 已經被狀態輪詢使用過，Timeout 屬性被鎖定不可修改。
+                // 因為 _pollingClient 已經被狀態輪詢使用過，Timeout 屬性被鎖定不可修改。
                 // 且上傳需要較長的 Timeout (例如 10秒)，不能用全域的 3秒。
                 using (var uploadClient = new HttpClient())
                 {
@@ -300,7 +310,7 @@ namespace CncController.Services
             if (string.IsNullOrWhiteSpace(command)) return false;
             try
             {
-                var response = await _httpClient.PostAsJsonAsync($"{_serverUrl}/v2/mdi", new { command });
+                var response = await _pollingClient.PostAsJsonAsync($"{_serverUrl}/v2/mdi", new { command });
                 if (!response.IsSuccessStatusCode) return false;
                 var result = await response.Content.ReadFromJsonAsync<ApiResponse<object>>(_jsonOptions);
                 if (result?.Status != "Success")
@@ -321,7 +331,7 @@ namespace CncController.Services
         {
             try
             {
-                var response = await _httpClient.GetAsync($"{_serverUrl}/api/machine/log");
+                var response = await _pollingClient.GetAsync($"{_serverUrl}/api/machine/log");
                 var result = await response.Content.ReadFromJsonAsync<LogResponse>(_jsonOptions);
                 return result?.Log ?? "No Log";
             }
@@ -337,7 +347,7 @@ namespace CncController.Services
             var payload = new { axes = axes };
             string url = $"{_serverUrl}/api/machine/save_config";
 
-            // [安全] 使用獨立 HttpClient，避免修改全域 _httpClient.Timeout 而影響輪詢
+            // [安全] 使用獨立 HttpClient，避免修改全域 _pollingClient.Timeout 而影響輪詢
             using var configClient = new HttpClient { Timeout = TimeSpan.FromSeconds(10) };
             var response = await configClient.PostAsJsonAsync(url, payload);
 

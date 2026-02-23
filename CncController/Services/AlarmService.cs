@@ -55,6 +55,9 @@ namespace CncController.Services
         private const int MAX_API_LOGS = 50;       // API 紀錄保留筆數
         private const int MAX_HISTORY_LOGS = 500;  // 歷史紀錄總筆數上限
 
+        // [安全] 保護集合操作，防止 Dispatcher 以外呼叫造成競賽
+        private readonly object _logLock = new();
+
         /// <summary>
         /// [保留] 相容舊程式碼的字串介面
         /// </summary>
@@ -75,58 +78,71 @@ namespace CncController.Services
         /// </summary>
         public void AddLog(LogType type, string messageKey)
         {
+            // [安全] Application 關閉期間 Current 可能為 null
+            if (Application.Current?.Dispatcher == null) return;
+
             Application.Current.Dispatcher.Invoke(() =>
             {
-                // 1. [過濾] API 輪詢過濾：若是 Debug 且包含 status/heartbeat 則忽略
-                if (type == LogType.Debug &&
-                   (messageKey.Contains("/v2/status") || messageKey.Contains("heartbeat")))
+                // [安全] lock 提供防禦性保護；Monitor 可重入，不會因遞迴呼叫死鎖
+                lock (_logLock)
                 {
-                    return;
-                }
-
-                // 2. [過濾] 重複訊息過濾：若最新一筆跟現在這筆完全一樣，只更新時間
-                var lastLog = AllLogs.FirstOrDefault();
-                if (lastLog != null && lastLog.Type == type && lastLog.MessageKey == messageKey)
-                {
-                    lastLog.Time = DateTime.Now;
-                    // 若需要讓 UI 更新時間顯示，可能需要重新賦值或實作 INPC
-                    return;
-                }
-
-                // 3. 執行新增 (處理數量限制)
-                // 3.1 針對 API/Debug 類型的個別限制
-                if (type == LogType.Debug)
-                {
-                    var debugCount = AllLogs.Count(x => x.Type == LogType.Debug);
-                    if (debugCount >= MAX_API_LOGS)
+                    try
                     {
-                        var oldest = AllLogs.LastOrDefault(x => x.Type == LogType.Debug);
-                        if (oldest != null) AllLogs.Remove(oldest);
+                        // 1. [過濾] API 輪詢過濾：若是 Debug 且包含 status/heartbeat 則忽略
+                        if (type == LogType.Debug &&
+                           (messageKey.Contains("/v2/status") || messageKey.Contains("heartbeat")))
+                        {
+                            return;
+                        }
+
+                        // 2. [過濾] 重複訊息過濾：若最新一筆跟現在這筆完全一樣，只更新時間
+                        var lastLog = AllLogs.FirstOrDefault();
+                        if (lastLog != null && lastLog.Type == type && lastLog.MessageKey == messageKey)
+                        {
+                            lastLog.Time = DateTime.Now;
+                            return;
+                        }
+
+                        // 3. 執行新增 (處理數量限制)
+                        // 3.1 針對 API/Debug 類型的個別限制
+                        if (type == LogType.Debug)
+                        {
+                            var debugCount = AllLogs.Count(x => x.Type == LogType.Debug);
+                            if (debugCount >= MAX_API_LOGS)
+                            {
+                                var oldest = AllLogs.LastOrDefault(x => x.Type == LogType.Debug);
+                                if (oldest != null) AllLogs.Remove(oldest);
+                            }
+                        }
+
+                        // 3.2 總歷史紀錄限制
+                        if (AllLogs.Count >= MAX_HISTORY_LOGS)
+                        {
+                            AllLogs.RemoveAt(AllLogs.Count - 1);
+                        }
+
+                        var newLog = new AlarmLog
+                        {
+                            Time = DateTime.Now,
+                            Type = type,
+                            MessageKey = messageKey
+                        };
+
+                        AllLogs.Insert(0, newLog);
+
+                        // 4. [新增] 處理活躍警報 (Warning & Error)
+                        if (type == LogType.Warning || type == LogType.Error)
+                        {
+                            if (!ActiveAlarms.Any(x => x.MessageKey == messageKey))
+                            {
+                                ActiveAlarms.Add(newLog);
+                            }
+                        }
                     }
-                }
-
-                // 3.2 總歷史紀錄限制
-                if (AllLogs.Count >= MAX_HISTORY_LOGS)
-                {
-                    AllLogs.RemoveAt(AllLogs.Count - 1);
-                }
-
-                var newLog = new AlarmLog
-                {
-                    Time = DateTime.Now,
-                    Type = type,
-                    MessageKey = messageKey
-                };
-
-                AllLogs.Insert(0, newLog);
-
-                // 4. [新增] 處理活躍警報 (Warning & Error)
-                if (type == LogType.Warning || type == LogType.Error)
-                {
-                    // 活躍清單也要防重複，避免跑馬燈出現兩次一樣的 Error
-                    if (!ActiveAlarms.Any(x => x.MessageKey == messageKey))
+                    catch (Exception ex)
                     {
-                        ActiveAlarms.Add(newLog);
+                        // 日誌系統自身異常，只寫 Debug 避免遞迴
+                        System.Diagnostics.Debug.WriteLine($"[AlarmService] AddLog internal error: {ex.Message}");
                     }
                 }
             });

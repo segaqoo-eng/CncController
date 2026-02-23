@@ -135,25 +135,35 @@ namespace CncController.ViewModels
             _cycleTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
             _cycleTimer.Tick += (s, e) =>
             {
-                // 簡單計時邏輯：如果系統是在 RUNNING 狀態才更新
-                if (Status.InterpState == "RUNNING")
+                // [安全] async void 事件必須有 try/catch，否則例外會直接 unhandled crash
+                try
                 {
-                    var span = DateTime.Now - _cycleStartTime;
-                    CycleTimeDisplay = span.ToString(@"hh\:mm\:ss");
+                    if (Status.InterpState == "RUNNING")
+                    {
+                        var span = DateTime.Now - _cycleStartTime;
+                        CycleTimeDisplay = span.ToString(@"hh\:mm\:ss");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    AlarmService.Instance.AddLog("ERR", $"CycleTimer error: {ex.Message}");
                 }
             };
 
-            // ★★★ [補充] 訂閱自己的事件，以連動 SettingsVM ★★★
-            // 這是為了保留您原本 "事件驅動" 的邏輯，讓 SettingsVM 在收到通知時初始化
-            // 雖然我們也可以直接呼叫，但這樣寫耦合度較低
             this.HardwareValidationCompleted += (slaves, config) =>
             {
-                // 當硬體驗證完成時，通知 SettingsVM 更新列表
-                // 注意：這裡使用 Dispatcher 確保 UI 安全
-                System.Windows.Application.Current.Dispatcher.Invoke(() =>
+                // [安全] 事件處理器加入 try/catch 防止例外向上傳播
+                try
                 {
-                    SettingsVM.Initialize(config, slaves);
-                });
+                    System.Windows.Application.Current.Dispatcher.Invoke(() =>
+                    {
+                        SettingsVM.Initialize(config, slaves);
+                    });
+                }
+                catch (Exception ex)
+                {
+                    AlarmService.Instance.AddLog("ERR", $"HardwareValidationCompleted handler error: {ex.Message}");
+                }
             };
 
             // [新增] 啟動後非同步執行硬體自動驗證（不阻塞 UI）
@@ -349,12 +359,16 @@ namespace CncController.ViewModels
 
                     if (data != null)
                     {
-                        // 更新狀態旗標
-                        IsPower = (data.Task_State == "ON");
-                        IsEstop = (data.Task_State == "ESTOP");
-                        IsSystemReady = !IsEstop && IsPower;
+                        // [安全] 先計算所有新狀態快照，再依序套用
+                        // 確保 IsSystemReady 永遠由「同批」的 IsEstop/IsPower 決定
+                        bool newIsPower = data.Task_State == "ON";
+                        bool newIsEstop = data.Task_State == "ESTOP";
+                        bool newIsReady = !newIsEstop && newIsPower;
 
-                        // 更新座標與數據
+                        IsPower       = newIsPower;
+                        IsEstop       = newIsEstop;
+                        IsSystemReady = newIsReady;
+
                         UpdateMachineData(data);
                     }
                     break;
@@ -492,6 +506,22 @@ namespace CncController.ViewModels
                 case "History": CurrentViewModel = HistoryVM; break;
             }
         }
+        // [安全] 統一運動指令前置檢查：IsEstop 與 IsPower 雙重驗證
+        private bool CanExecuteMotion()
+        {
+            if (IsEstop)
+            {
+                AlarmService.Instance.AddLog(LogType.Warning, "Motion blocked: E-Stop active");
+                return false;
+            }
+            if (!IsPower)
+            {
+                AlarmService.Instance.AddLog(LogType.Warning, "Motion blocked: Machine power off");
+                return false;
+            }
+            return true;
+        }
+
         // [修改] 電源切換邏輯
         [RelayCommand]
         private async Task TogglePower()
@@ -513,18 +543,23 @@ namespace CncController.ViewModels
         {
             if (IsEstop)
             {
-                // 情況 1: 目前是急停 (未解除, 灰色) -> 按下解除
+                // 情況 1: 目前是急停 (未解除) -> 解除急停
                 await MachineControlService.Instance.ResetMachineAsync();
             }
             else
             {
-                // 情況 2: 目前正常 (已解除, 紅色) -> 按下觸發急停
+                // 情況 2: 觸發急停
+                // [安全] 樂觀更新：立即設定 IsEstop=true，不等後端回應
+                // 讓 UI 立即反映急停狀態，實際狀態由下次輪詢確認
+                IsEstop       = true;
+                IsSystemReady = false;
                 await MachineControlService.Instance.TriggerEstopAsync();
             }
         }
         [RelayCommand]
         private async Task JogStart(string args)
         {
+            if (!CanExecuteMotion()) return;
             if (string.IsNullOrEmpty(args)) return;
             var parts = args.Split(',');
 
@@ -575,6 +610,7 @@ namespace CncController.ViewModels
         [RelayCommand]
         private async Task CycleStart()
         {
+            if (!CanExecuteMotion()) return;
             // 這裡從 MonitorVM 取得當前檔名，確保執行的是畫面上看到的那個
             _loadedFileName = MonitorVM.CurrentFileName;
             await MachineControlService.Instance.CycleStartAsync(_loadedFileName);

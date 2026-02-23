@@ -5,12 +5,9 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:hx="http://helix-toolkit.org/wpf"
              xmlns:vm="clr-namespace:CncController.ViewModels"
-             mc:Ignorable="d" 
-             d:DesignHeight="600" d:DesignWidth="1000">
-
-    <UserControl.DataContext>
-        <vm:MonitorViewModel/>
-    </UserControl.DataContext>
+             mc:Ignorable="d"
+             d:DesignHeight="600" d:DesignWidth="1000"
+             d:DataContext="{d:DesignInstance vm:MonitorViewModel, IsDesignTimeCreatable=True}">
 
     <Grid>
         <Grid.ColumnDefinitions>
@@ -25,21 +22,64 @@
                 <RowDefinition Height="*"/>
                 <RowDefinition Height="40"/>
             </Grid.RowDefinitions>
+
             <Border Grid.Row="0" Background="#444" CornerRadius="2,2,0,0">
-                <TextBlock Text="G-CODE PROGRAM" Foreground="White" VerticalAlignment="Center" Margin="10,0" FontWeight="Bold"/>
+                <Grid>
+                    <TextBlock Text="G-CODE PROGRAM" Foreground="White" VerticalAlignment="Center" Margin="10,0" FontWeight="Bold"/>
+
+                    <Button Content="📂 LOAD" Command="{Binding LoadLocalFileCommand}" 
+                            HorizontalAlignment="Right" VerticalAlignment="Center"
+                            Margin="0,0,5,0" Padding="10,2" 
+                            Background="#555" Foreground="White" BorderThickness="0"
+                            Cursor="Hand">
+                        <Button.Style>
+                            <Style TargetType="Button">
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="Button">
+                                            <Border Background="{TemplateBinding Background}" CornerRadius="3" Padding="{TemplateBinding Padding}">
+                                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            </Border>
+                                            <ControlTemplate.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter Property="Background" Value="#666"/>
+                                                </Trigger>
+                                                <Trigger Property="IsPressed" Value="True">
+                                                    <Setter Property="Background" Value="#333"/>
+                                                </Trigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </Button.Style>
+                    </Button>
+                </Grid>
             </Border>
+
             <Border Grid.Row="1" Background="White" BorderBrush="#444" BorderThickness="1">
                 <ScrollViewer>
                     <TextBlock Text="{Binding GCodeText}" Foreground="Black" FontFamily="Consolas" Margin="5"/>
                 </ScrollViewer>
             </Border>
+
             <Grid Grid.Row="2" Margin="0,2,0,0">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="60"/>
                 </Grid.ColumnDefinitions>
-                <TextBox Text="MDI Input..." VerticalContentAlignment="Center" Background="White" Padding="5"/>
-                <Button Grid.Column="1" Content="SEND" Margin="2,0,0,0" Background="#007ACC" Foreground="White" FontWeight="Bold"/>
+                <ComboBox IsEditable="True" IsTextSearchEnabled="False"
+                          Text="{Binding MdiInput, UpdateSourceTrigger=PropertyChanged}"
+                          ItemsSource="{Binding MdiHistory}"
+                          VerticalContentAlignment="Center" Padding="5"
+                          Background="White" FontFamily="Consolas">
+                    <ComboBox.InputBindings>
+                        <KeyBinding Key="Return" Command="{Binding SendMdiCommand}"/>
+                    </ComboBox.InputBindings>
+                </ComboBox>
+                <Button Grid.Column="1" Content="SEND" Margin="2,0,0,0"
+                        Command="{Binding SendMdiCommand}"
+                        Background="#007ACC" Foreground="White" FontWeight="Bold"/>
             </Grid>
         </Grid>
 

@@ -207,7 +207,7 @@ python3 server.py     # 直接啟動（除錯用）
 | ↳ Tab 5 IN MAP | `IoMapItem` + `PinSettings`；輸入模組 Pin 功能映射（NC 反向） |
 | ↳ Tab 6 OUT MAP | `IoMapItem` + `PinSettings`；輸出模組 Pin 功能映射（Active Low） |
 | 設定檔生成與部署 | `ConfigurationService.SaveConfigAsync`：生成 INI / HAL / XML / PostGUI HAL → 上傳後端 → 重啟 → 輪詢確認啟動 |
-| MDI（Manual Data Input，手動資料輸入）輸入框 UI | `MonitorView`（TextBox + SEND 按鈕已存在） |
+| MDI（Manual Data Input，手動資料輸入）送出 | `MonitorView`（TextBox→可編輯 ComboBox，含歷史下拉）+ `MonitorViewModel.SendMdiCommand`；ViewModel 層 `ValidateAction` + Service 層雙重守衛；`MdiHistory` 最近 20 筆；DataContext 根本 Bug 已修正（移除孤兒 VM） |
 | 加工計時器（Cycle Timer） | `MainViewModel`；RUNNING 時計時，IDLE 時停止 |
 | 開機硬體自動驗證 | `MainViewModel.AutoValidateHardware`；讀設定 → 掃描 → 驗證拓樸 → 通知 SettingsVM |
 | **[工控安全] 異常處理強化** | 消除所有空 `catch{}`；`AlarmService` 加入 `lock` + `try/catch`；Fire-and-Forget 均包裹 `try/catch` |
@@ -226,7 +226,6 @@ python3 server.py     # 直接啟動（除錯用）
 
 | 功能 | 說明 |
 |------|------|
-| MDI 送出 | SEND 按鈕無 `Command` 綁定（`MachineControlService.SendMdiCommandAsync` 已存在，僅缺 View 側綁定）；無指令歷史紀錄 |
 | 冷卻液後端連通 | `ToggleFlood` 只切換 `IsFloodOn` 旗標，M8/M9 的 HTTP 呼叫已被 Comment Out |
 | Offsets（工件補償）管理 | 無 G54–G59 工件座標系切換與設定介面 |
 | Probing（探測循環） | Outside Corners、Inside Corners、Boss/Pocket、Ridge/Valley、Edge Angle、Rotary Axis、Calibrate 全部未實作 |
@@ -246,7 +245,6 @@ python3 server.py     # 直接啟動（除錯用）
 | DRO 顯示 | X/Y/Z 輪詢正常；A/B/C 已解析 | DTG（Distance To Go）欄位硬寫 "0.000" 未綁定後端；無工件座標系切換（G54–G59） |
 | 刀具資訊（Tool Info） | 靜態顯示刀號，尺寸可編輯 | 未與 LinuxCNC 刀具表同步，儲存邏輯缺失 |
 | 3D 視圖 | HelixToolkit 框架已載入（座標系 + 網格 + 刀具圓錐） | 無刀具路徑模擬，無即時刀具位置顯示 |
-| MDI（手動資料輸入） | 有輸入框 | SEND 無命令，無指令歷史紀錄 |
 | JOG | X/Y/Z 三軸，防呆完整 | 缺 A/B/C 旋轉軸；連續/步進切換 UI 不完整 |
 | 警報系統 | 跑馬燈輪播；History 頁可過濾 | 無警報明細列表；無清除單筆功能 |
 | G-Code 預覽 | 純文字顯示 | 無行號高亮，無執行中行追蹤 |
@@ -254,12 +252,11 @@ python3 server.py     # 直接啟動（除錯用）
 
 ### 建議開發優先順序
 
-1. **MDI 送出** — 後端加 `SendMdiCommandAsync`，SEND 按鈕綁定命令，成本最低
-2. **冷卻液後端連通** — 解除 `ToggleFlood` 的 M8/M9 Comment Out
-3. **DTG 綁定後端** — 讓 DRO 資訊完整（需後端 `/v2/status` 新增 DTG 欄位）
-4. **Offsets / G54–G59 工件座標系** — CNC 基本操作必備
-5. **Probing 探測循環** — 差異化功能，工程師常用
-6. **Tool Table（刀具表）管理** — ATC 前置需求
+1. **冷卻液後端連通** — 解除 `ToggleFlood` 的 M8/M9 Comment Out
+2. **DTG 綁定後端** — 讓 DRO 資訊完整（需後端 `/v2/status` 新增 DTG 欄位）
+3. **Offsets / G54–G59 工件座標系** — CNC 基本操作必備
+4. **Probing 探測循環** — 差異化功能，工程師常用
+5. **Tool Table（刀具表）管理** — ATC 前置需求
 
 ---
 

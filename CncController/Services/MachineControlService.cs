@@ -381,6 +381,15 @@ namespace CncController.Services
         public async Task<bool> SendMdiCommandAsync(string command)
         {
             if (string.IsNullOrWhiteSpace(command)) return false;
+
+            // [Item 15] Service 層第二道防線（與 JogAsync/CycleStartAsync 一致）
+            var (allowed, reason) = ValidateAction(MachineAction.Mdi);
+            if (!allowed)
+            {
+                AlarmService.Instance.AddLog("WARN", $"MDI Blocked: {reason}");
+                return false;
+            }
+
             try
             {
                 var response = await _pollingClient.PostAsJsonAsync($"{_serverUrl}/v2/mdi", new { command });

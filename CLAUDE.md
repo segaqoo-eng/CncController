@@ -204,9 +204,10 @@ python3 server.py     # 直接啟動（除錯用）
 | G-Code 載入、預覽、上傳 | `MonitorView` + `MonitorViewModel.LoadLocalFileCommand` / `LoadFromCam()` |
 | 加工循環控制（Cycle Start / Stop / Feed Hold，進給保持） | `CycleControl.xaml` + `MainViewModel.CycleStartCommand` / `FeedHoldCommand` / `StopCommand` |
 | 電源 / 急停（Power / E-Stop） | `TogglePowerCommand` / `ToggleEstopCommand`；急停未解除時鎖定電源操作 |
-| DRO（Digital Read Out，數位讀數）顯示（X/Y/Z/A/B/C） | `DroDisplay.xaml`；後端 A/B/C 資料已解析並存入 `MachineStatus` |
+| DRO 顯示（X/Y/Z/A/B/C + DTG） | `DroDisplay.xaml`；六軸座標 + DTG 均綁定後端 `Status.X/Y/Z/DtgX/DtgY/DtgZ`；G54–G59 快選列 |
 | 手動 JOG（X/Y/Z 三軸，連續 + 寸動） | `JogPanel.xaml` + `JogStartCommand` / `JogStopCommand`；防呆：MouseDown 才發送 JogStop |
-| 冷卻液（Flood）UI 切換 | `CycleControl` + `IsFloodOn` 旗標切換（後端 MDI M8/M9 待連通） |
+| 冷卻液 Flood（M8/M9）| `CycleControl` + `ToggleFloodCommand`；實際送出 `SendMdiCommandAsync("M8"/"M9")`；`IsFloodOn` DataTrigger 變藍 |
+| MIST 霧化冷卻（M7/M9） | `CycleControl` + `ToggleMistCommand`；送 M7 開 / M9 關；M9 時同步清除 `IsFloodOn`（2026-02-23） |
 | 系統狀態顯示與警報輪播（Marquee） | `HeaderBar.xaml`；三層優先級（警報 > 連線狀態 > 機台邏輯） |
 | 使用者登入 / 登出 / 角色權限（4 種角色） | `AuthService` + `LoginWindow`；Admin/Developer 可編輯設定 |
 | 操作歷史（History） | `HistoryView.xaml` + `HistoryViewModel`；五級過濾（ALL/INFO/WARN/ERROR/DEBUG）；Clear Active Alarms 清除跑馬燈 |
@@ -232,47 +233,75 @@ python3 server.py     # 直接啟動（除錯用）
 | **[工控安全] IP 外部化** | `AppSettings.cs` 讀取 `appsettings.json`（`ServerUrl`）；三個 Service 統一使用，首次執行自動建立 |
 | **[工控安全] 日誌持久化** | Error/Warning/Info 透過 ThreadPool 非同步寫入 `logs/cnc-yyyy-MM-dd.log`（每日滾動） |
 | **[工控安全] 部署集合快照** | `GenerateAndDeploy` 迭代前對 `AxisMaps`/`InMaps`/`OutMaps` 呼叫 `.ToList()` 取快照 |
-| **Offsets Tab（G54–G59 工件座標系）** | `OffsetsView.xaml` + `OffsetsViewModel`；兩欄版面（表格 + 詳細面板）；`SelectOffsetCommand` 送 MDI；`ReloadTableCommand` 從 `/v2/offsets` 讀取；後端 `Active_WCS` 同步；`MachineStatus.ActiveCoordSystem` 跟蹤 |
-| **DRO G54–G59 快選列** | `DroDisplay.xaml` Row 4；六個按鈕綁定 `OffsetsVM.SelectOffsetCommand`；DataTrigger 高亮 Active 者 |
-| **MIST 霧化冷卻** | `CycleControl.xaml` MIST 按鈕連接 `ToggleMistCommand`（M7/M9）；`IsMistOn` 狀態 DataTrigger 變藍 |
-| **GO TO HOME（原點復歸）** | `CycleControl.xaml` 原 CLEAR PGM 改為 GO TO HOME；`HomeAllCommand` 送 MDI G28 |
-| **HeaderBar EXIT 選單** | File 選單加子項「EXIT（關閉程式）」；`ExitAppCommand` → `Application.Current.Shutdown()` |
-| **後端 /v2/offsets 端點** | `server.py` 新增 `read_work_offsets()`（讀 .var 參數檔）+ `GET /v2/offsets`；`/v2/status` 加 `Active_WCS` 欄位 |
+| **Offsets Tab（G54–G59 工件座標系）** | `OffsetsView.xaml` + `OffsetsViewModel`；兩欄版面（左 DataGrid 只顯示 XYZ + 詳細面板）；`SelectOffsetCommand` 送 MDI；`ReloadTableCommand` 從 `/v2/offsets` 讀取；建構子自動 `AutoLoad`；後端 `Active_WCS` 同步；`MachineStatus.ActiveCoordSystem` 跟蹤（2026-02-23） |
+| **DRO G54–G59 快選列** | `DroDisplay.xaml` Row 4；六個按鈕綁定 `OffsetsVM.SelectOffsetCommand`；DataTrigger 高亮 Active 者（2026-02-23） |
+| **GO TO HOME（原點復歸）** | `CycleControl.xaml` 原 CLEAR PGM 改為 GO TO HOME；`HomeAllCommand` → `HomeAsync(-1)`；後端 `POST /v2/machine/home` 呼叫 `cnc_cmd.home(-1)`（2026-02-23） |
+| **HeaderBar EXIT 選單** | File 選單加子項「EXIT（關閉程式）」；`ExitAppCommand` → `Application.Current.Shutdown()`（2026-02-23） |
+| **後端 /v2/offsets 端點** | `server.py` 新增 `read_work_offsets()`（讀 .var 參數檔）+ `GET /v2/offsets`；`/v2/status` 加 `Active_WCS` 欄位（2026-02-23） |
+| **後端 /v2/machine/home 端點** | `server.py` 新增 `POST /v2/machine/home`；使用 `cnc_cmd.home(axis)` 而非 G28 MDI；支援 -1=全軸 / 0~5=單軸（2026-02-23） |
 
 ### ❌ 尚未實作
 
 | 功能 | 說明 |
 |------|------|
-| 冷卻液後端連通 | `ToggleFlood` 只切換 `IsFloodOn` 旗標，M8/M9 的 HTTP 呼叫已被 Comment Out |
 | Probing（探測循環） | Outside Corners、Inside Corners、Boss/Pocket、Ridge/Valley、Edge Angle、Rotary Axis、Calibrate 全部未實作 |
 | ATC（Auto Tool Changer，自動刀庫） | 無換刀介面、刀庫狀態顯示 |
 | Tool Table（刀具表） | `ToolInfo` 僅靜態顯示，無完整刀具資料庫管理 |
 | Conversational（對話式加工） | 無 Facing、Holes、Pattern 等簡易程式產生器 |
-| Single Block / Block Delete / M01 | `CycleControl` 有按鈕但未實作 |
-| Spindle Override（主軸轉速覆蓋控制） | 無 RPM 控制介面 |
-| Feed Override 後端連動 | `SliderControl` 存在，未確認是否與後端正確連通 |
+| Single Block / Block Delete / M01 | `CycleControl` 有按鈕但無 Command 綁定，無後端對應 |
+| Spindle Override（主軸轉速覆蓋控制） | `SliderControl` 有 UI 但值 hardcode 100%，無後端綁定 |
+| Feed Override 後端連動 | `SliderControl` 有 UI 但值 hardcode 120%，無後端綁定 |
 | Offsets SET TO ZERO / CLEAR / SAVE | `OffsetsView` 底部按鈕為 TODO stub，尚未實作 G10 L20 指令送出 |
 
 ### ⚠️ 已實作但需加強
 
 | 功能 | 現況 | 待改善 |
 |------|------|--------|
-| DRO 顯示 | X/Y/Z 輪詢正常；A/B/C 已解析；G54–G59 快選列已加 | DTG（Distance To Go）欄位硬寫 "0.000" 未綁定後端 |
-| Offsets 右欄座標值 | MC Current / WC / G53/G52 欄全部 hardcode "0.000" | 等後端回傳實際 WCS 位置值後再連通 |
+| Offsets 右欄座標值 | MC Current / WC / G53/G52 欄全部 hardcode "0.000" | 需從後端取得 WCS 位置值再綁定 |
 | 刀具資訊（Tool Info） | 靜態顯示刀號，尺寸可編輯 | 未與 LinuxCNC 刀具表同步，儲存邏輯缺失 |
 | 3D 視圖 | HelixToolkit 框架已載入（座標系 + 網格 + 刀具圓錐） | 無刀具路徑模擬，無即時刀具位置顯示 |
 | JOG | X/Y/Z 三軸，防呆完整 | 缺 A/B/C 旋轉軸；連續/步進切換 UI 不完整 |
 | 警報系統 | 跑馬燈輪播；History 頁可過濾 | 無警報明細列表；無清除單筆功能 |
 | G-Code 預覽 | 純文字顯示 | 無行號高亮，無執行中行追蹤 |
 | HAL 生成—軸 Index 映射 | X→0、Y→2、Z→3 寫死於 `GenerateHal` | 未依 `AxisMappingViewModel` 的實際選擇動態生成 |
+| MachineConfigViewModel | 骨架存在，僅有 6 個 bool 屬性（EnableX~C） | 未連接到任何 View，無實際功能 |
 
 ### 建議開發優先順序
 
-1. **冷卻液後端連通** — 解除 `ToggleFlood` 的 M8/M9 Comment Out
-2. **DTG 綁定後端** — 讓 DRO 資訊完整（需後端 `/v2/status` 新增 DTG 欄位）
-3. **Offsets SET TO ZERO / G10 指令** — 完成座標系歸零功能
+1. **Offsets SET TO ZERO / G10 指令** — 完成座標系歸零功能
+2. **Offsets 右欄座標值連通** — MC Current / WC 改為綁定後端真實值
+3. **Feed Override / Spindle Override 連通** — SliderControl 綁定後端即時數值
 4. **Probing 探測循環** — 差異化功能，工程師常用
 5. **Tool Table（刀具表）管理** — ATC 前置需求
+
+---
+
+## 每日工作紀錄
+
+### 2026-02-23（今天完成）
+
+| 項目 | 說明 |
+|------|------|
+| **Offsets Tab 全新頁面** | `OffsetsView.xaml` + `OffsetsViewModel.cs`；兩欄版面（左 DataGrid G54–G59 表格 + 右側詳細面板）；建構子自動 `ReloadTable()` 載入後端 offset 值 |
+| **DRO G54–G59 快選列** | `DroDisplay.xaml` 新增 Row 4，六個按鈕送 MDI 切換座標系，DataTrigger 高亮 Active |
+| **MIST 霧化冷卻** | `ToggleMistCommand`（M7/M9）；`IsMistOn` 狀態 DataTrigger 變藍；M9 時同步清除 `IsFloodOn` |
+| **GO TO HOME 原點復歸** | 後端 `POST /v2/machine/home` + `cnc_cmd.home(-1)`；前端 `HomeAsync(-1)` 取代錯誤的 G28 MDI |
+| **HeaderBar EXIT 選單** | File 選單 → EXIT（關閉程式）→ `Application.Current.Shutdown()` |
+| **後端 /v2/offsets** | `read_work_offsets()` 從 .var 讀取 G54–G59；`GET /v2/offsets` 回傳 Active + Offsets 結構 |
+| **後端 Active_WCS** | `/v2/status` 新增 `Active_WCS` 欄位，前端自動同步至 `MachineStatus.ActiveCoordSystem` |
+| **CLAUDE.md 狀態修正** | 掃描全專案：Flood 已連通（非 Comment Out）；DTG 已綁定後端（非 hardcode）；移除錯誤標記 |
+| **VersionConfig 更新** | 版本號 `2026.02.23_OFFSETS_MIST_HOME` |
+| **程式碼註解規範** | 所有修改處補齊 `// [2026-02-23] 說明修改內容` 格式 |
+
+### 2026-02-24（預計明天）
+
+| 優先順序 | 項目 | 說明 |
+|---------|------|------|
+| 1 | Offsets SET TO ZERO | 實作 `G10 L20 P? X0 Y0 Z0` 指令送出；完成 SET TO ZERO X/Y/Z 與 ZERO ALL 按鈕功能 |
+| 2 | Offsets 右欄連通 | MC Current / WC / G53/G52 三欄改為綁定後端真實值（需從 `/v2/status` 或 `/v2/offsets` 擴充資料） |
+| 3 | Feed Override 連通 | `SliderControl` 綁定後端即時 Feedrate Override 百分比，加入滑桿互動 |
+| 4 | Spindle Override 連通 | `SliderControl` 綁定後端即時 Spindle Override 百分比 |
+| 5 | Single Block 實作 | 連接按鈕至後端 MDI 控制（需評估 LinuxCNC 的 single-block 模式切換 API） |
 
 ---
 

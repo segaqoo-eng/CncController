@@ -128,15 +128,21 @@ namespace CncController.ViewModels
         [RelayCommand]
         private async Task HomeAll()
         {
-            var (allowed, reason) = MachineControlService.Instance.ValidateAction(
-                MachineControlService.MachineAction.Jog);
-            if (!allowed)
+            // 回原點只需機台 ON 且非急停即可（不需要像 JOG 一樣要求非移動中）
+            if (IsEstop)
             {
-                AlarmService.Instance.AddLog("WARN", $"Home Blocked: {reason}");
+                AlarmService.Instance.AddLog("WARN", "Home Blocked: E-Stop active");
                 return;
             }
-            await MachineControlService.Instance.SendMdiCommandAsync("G28");
+            if (!IsPower)
+            {
+                AlarmService.Instance.AddLog("WARN", "Home Blocked: Machine power off");
+                return;
+            }
             AlarmService.Instance.AddLog("INFO", "Homing All Axes...");
+            bool ok = await MachineControlService.Instance.HomeAsync(-1);
+            if (!ok)
+                AlarmService.Instance.AddLog("WARN", "Home command failed");
         }
 
         [RelayCommand]

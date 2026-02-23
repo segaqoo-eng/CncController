@@ -111,13 +111,10 @@
                             </Style>
                         </DataGrid.CellStyle>
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="WCS" Binding="{Binding Name}" Width="60" IsReadOnly="True"/>
+                            <DataGridTextColumn Header="WCS" Binding="{Binding Name}" Width="70" IsReadOnly="True"/>
                             <DataGridTextColumn Header="X" Binding="{Binding X, StringFormat=F4}" Width="*"/>
                             <DataGridTextColumn Header="Y" Binding="{Binding Y, StringFormat=F4}" Width="*"/>
                             <DataGridTextColumn Header="Z" Binding="{Binding Z, StringFormat=F4}" Width="*"/>
-                            <DataGridTextColumn Header="A" Binding="{Binding A, StringFormat=F4}" Width="*"/>
-                            <DataGridTextColumn Header="B" Binding="{Binding B, StringFormat=F4}" Width="*"/>
-                            <DataGridTextColumn Header="C" Binding="{Binding C, StringFormat=F4}" Width="*"/>
                         </DataGrid.Columns>
                     </DataGrid>
                 </DockPanel>

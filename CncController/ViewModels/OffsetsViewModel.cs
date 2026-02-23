@@ -29,6 +29,18 @@ namespace CncController.ViewModels
             new() { Name = "G57" }, new() { Name = "G58" }, new() { Name = "G59" },
         };
 
+        public OffsetsViewModel()
+        {
+            // 開啟頁面時自動從後端載入 offset 值
+            _ = AutoLoad();
+        }
+
+        private async Task AutoLoad()
+        {
+            try { await ReloadTable(); }
+            catch { /* 離線時靜默失敗，等使用者手動 RELOAD */ }
+        }
+
         [RelayCommand]
         private async Task SelectOffset(string g)
         {

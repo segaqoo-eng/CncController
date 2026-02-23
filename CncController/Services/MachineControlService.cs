@@ -378,6 +378,32 @@ namespace CncController.Services
         public async Task StopAsync() => await SendV2CommandAsync("program/stop");
         public async Task FeedHoldAsync() => await SendV2CommandAsync("program/pause");
 
+        /// <summary>
+        /// 全軸回原點（axis=-1）或單軸回原點（axis=0~5）
+        /// 呼叫後端 /v2/machine/home，使用 cnc_cmd.home() 而非 G28 MDI
+        /// </summary>
+        public async Task<bool> HomeAsync(int axis = -1)
+        {
+            try
+            {
+                var response = await _pollingClient.PostAsJsonAsync(
+                    $"{_serverUrl}/v2/machine/home", new { axis });
+                if (!response.IsSuccessStatusCode) return false;
+                var result = await response.Content.ReadFromJsonAsync<ApiResponse<object>>(_jsonOptions);
+                if (result?.Status != "Success")
+                {
+                    AlarmService.Instance.AddLog("API", $"Home Fail: {result?.Message}");
+                    return false;
+                }
+                return true;
+            }
+            catch (Exception ex)
+            {
+                AlarmService.Instance.AddLog("API", $"Home Exception: {ex.Message}");
+                return false;
+            }
+        }
+
         public async Task<bool> SendMdiCommandAsync(string command)
         {
             if (string.IsNullOrWhiteSpace(command)) return false;

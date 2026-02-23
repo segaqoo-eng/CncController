@@ -775,6 +775,24 @@ def v2_machine_estop():
         return success_response()
     except Exception as e: return error_response(f"Estop Fail: {e}")
 
+@app.route('/v2/machine/home', methods=['POST'])
+def v2_machine_home():
+    """回原點：-1 = 全軸，0~5 = 單軸"""
+    if not ensure_cnc_connections(): return error_response("No connection")
+    try:
+        cnc_stat.poll()
+        if cnc_stat.task_state != linuxcnc.STATE_ON:
+            return error_response("Machine must be ON to home")
+        data = request.json or {}
+        axis = int(data.get('axis', -1))  # -1 = 全軸
+        cnc_cmd.mode(linuxcnc.MODE_MANUAL)
+        cnc_cmd.wait_complete()
+        cnc_cmd.home(axis)
+        app_log('CMD', f'Home axis={axis}')
+        return success_response()
+    except Exception as e:
+        return error_response(f"Home Fail: {e}")
+
 @app.route('/v2/mdi', methods=['POST'])
 def v2_mdi():
     if not ensure_cnc_connections(): return error_response("No connection")

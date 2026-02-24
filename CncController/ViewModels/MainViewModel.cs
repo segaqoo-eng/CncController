@@ -109,6 +109,11 @@ namespace CncController.ViewModels
         [ObservableProperty]
         private bool _isSingleBlock;
 
+        // [2026-02-24] 動態軸數支援：旋轉軸是否啟用（由 MachineConfig 決定，DRO/JOG/Offsets 依此顯示/隱藏）
+        [ObservableProperty] private bool _isAxisAEnabled;
+        [ObservableProperty] private bool _isAxisBEnabled;
+        [ObservableProperty] private bool _isAxisCEnabled;
+
         [RelayCommand]
         private async Task ToggleFlood()
         {
@@ -249,11 +254,12 @@ namespace CncController.ViewModels
                 LastValidatedSlaves = slaves;
                 LastValidatedConfig = config;
 
-                // [2026-02-24] 將 MachineConfig 的啟用軸列表傳遞給 OffsetsVM（G10 指令動態組合用）
-                if (config.Axes != null && config.Axes.Count > 0)
-                {
-                    OffsetsVM.EnabledAxes = config.Axes.Select(a => a.AxisID).ToList();
-                }
+                // [2026-02-24] 將 MachineConfig 的啟用軸列表傳遞給各 VM + 設定軸可見性
+                var enabledAxes = config.GetEnabledAxes();
+                OffsetsVM.EnabledAxes = enabledAxes;
+                IsAxisAEnabled = enabledAxes.Contains("A");
+                IsAxisBEnabled = enabledAxes.Contains("B");
+                IsAxisCEnabled = enabledAxes.Contains("C");
 
                 // ★★★ [關鍵修改] 無論成功失敗，都先廣播數據！ ★★★
                 // 這樣 SettingsViewModel 才能收到 slaves 並顯示在列表上
@@ -474,14 +480,21 @@ namespace CncController.ViewModels
                 if (data.DTG.TryGetValue("X", out double dx)) Status.DtgX = dx;
                 if (data.DTG.TryGetValue("Y", out double dy)) Status.DtgY = dy;
                 if (data.DTG.TryGetValue("Z", out double dz)) Status.DtgZ = dz;
+                // [2026-02-24] 補齊 A/B/C 軸 DTG（多軸機台支援）
+                if (data.DTG.TryGetValue("A", out double da)) Status.DtgA = da;
+                if (data.DTG.TryGetValue("B", out double db)) Status.DtgB = db;
+                if (data.DTG.TryGetValue("C", out double dc)) Status.DtgC = dc;
             }
 
-            // [2026-02-24] 新增：將後端工件座標同步至 MachineStatus
+            // [2026-02-24] 新增：將後端工件座標同步至 MachineStatus（含 A/B/C）
             if (data.Work_Position != null)
             {
                 if (data.Work_Position.TryGetValue("X", out double wx)) Status.WorkX = wx;
                 if (data.Work_Position.TryGetValue("Y", out double wy)) Status.WorkY = wy;
                 if (data.Work_Position.TryGetValue("Z", out double wz)) Status.WorkZ = wz;
+                if (data.Work_Position.TryGetValue("A", out double wa)) Status.WorkA = wa;
+                if (data.Work_Position.TryGetValue("B", out double wb)) Status.WorkB = wb;
+                if (data.Work_Position.TryGetValue("C", out double wc)) Status.WorkC = wc;
             }
 
             Status.Feedrate = data.Feedrate;

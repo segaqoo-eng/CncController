@@ -84,12 +84,45 @@ namespace CncController.Models
     // ==========================================
     // 4. 設定檔結構
     // ==========================================
+
+    // [2026-02-24] 新增 MachineType：CNC 機台類型定義（3/4/5/6 軸可配置）
+    //   三軸 VMC：XYZ（最基礎立式加工中心）
+    //   四軸：XYZ + A（第四軸分度盤）
+    //   五軸搖籃式：XYZ + AC（工件旋轉，主軸固定）
+    //   五軸擺頭式：XYZ + BC（主軸旋轉，工件固定）
+    //   六軸：XYZABC（完整六自由度）
+    public enum MachineType
+    {
+        ThreeAxis,          // XYZ
+        FourAxisA,          // XYZ + A（繞 X 軸旋轉）
+        FourAxisB,          // XYZ + B（繞 Y 軸旋轉）
+        FiveAxisTrunnion,   // XYZ + AC（搖籃式）
+        FiveAxisSwivel,     // XYZ + BC（主軸擺頭式）
+        SixAxis             // XYZABC
+    }
+
     public class MachineConfig
     {
         public int MasterIndex { get; set; } = 0;
+        // [2026-02-24] 新增 MachineType：預設三軸 VMC
+        public MachineType MachineType { get; set; } = MachineType.ThreeAxis;
         public List<AxisSetting> Axes { get; set; } = new();
         public List<IoSetting> IoMappings { get; set; } = new();
         public List<HardwareMapping> Mappings { get; set; } = new();
+
+        // [2026-02-24] 依 MachineType 取得啟用軸列表
+        public List<string> GetEnabledAxes()
+        {
+            return MachineType switch
+            {
+                MachineType.FourAxisA => new() { "X", "Y", "Z", "A" },
+                MachineType.FourAxisB => new() { "X", "Y", "Z", "B" },
+                MachineType.FiveAxisTrunnion => new() { "X", "Y", "Z", "A", "C" },
+                MachineType.FiveAxisSwivel => new() { "X", "Y", "Z", "B", "C" },
+                MachineType.SixAxis => new() { "X", "Y", "Z", "A", "B", "C" },
+                _ => new() { "X", "Y", "Z" } // ThreeAxis
+            };
+        }
     }
 
     public class HardwareMapping

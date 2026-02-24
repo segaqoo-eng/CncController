@@ -28,11 +28,19 @@ namespace CncController.Models
         [ObservableProperty] private double _dtgX;
         [ObservableProperty] private double _dtgY;
         [ObservableProperty] private double _dtgZ;
+        // [2026-02-24] 補齊 A/B/C 軸 DTG（多軸機台支援）
+        [ObservableProperty] private double _dtgA;
+        [ObservableProperty] private double _dtgB;
+        [ObservableProperty] private double _dtgC;
 
         // [2026-02-24] 新增工件座標（Work Coordinate = actual_position - g5x - g92 - tool）
         [ObservableProperty] private double _workX;
         [ObservableProperty] private double _workY;
         [ObservableProperty] private double _workZ;
+        // [2026-02-24] 補齊 A/B/C 軸工件座標（多軸機台支援）
+        [ObservableProperty] private double _workA;
+        [ObservableProperty] private double _workB;
+        [ObservableProperty] private double _workC;
 
         [ObservableProperty] private double _feedrate;
         [ObservableProperty] private double _spindleSpeed;

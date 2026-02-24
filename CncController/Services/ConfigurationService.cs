@@ -323,10 +323,20 @@ namespace CncController.Services
                 var axis = config.Axes[i];
                 string axisHalName = $"joint.{i}";
 
-                int sIdx = -1;
+                // [2026-02-24] 修正：從 Mappings 動態取得 EtherCAT Slave Index，不再寫死 X→0, Y→2, Z→3
+                //              支援任意軸（A/B/C）與任意 Slave 對應
                 string axName = axis.AxisID.ToUpper();
-                if (axName == "X") sIdx = 0; else if (axName == "Y") sIdx = 2; else if (axName == "Z") sIdx = 3;
-                if (sIdx == -1) continue;
+                var axisMapping = config.Mappings.FirstOrDefault(m => m.Type == MapType.Axis && m.ChannelIndex == i);
+                int sIdx;
+                if (axisMapping != null)
+                {
+                    sIdx = axisMapping.PhysicalIndex;
+                }
+                else
+                {
+                    // 無映射時回退為 Joint Index（向後相容）
+                    sIdx = axis.Index;
+                }
 
                 string sliceName = $"slice_{axis.AxisID}";
 

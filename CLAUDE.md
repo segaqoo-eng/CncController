@@ -166,8 +166,9 @@ DispatcherTimer (500ms) → MachineControlService.GetStatusAsync()
 
 ### ✅ 已完成
 
-- DRO 六軸顯示（Work/Machine 座標 + DTG） + G54–G59 快選列
-- JOG X/Y/Z（連續 + 寸動）+ 防呆
+- DRO 動態軸顯示（3~6 軸自動適配 + Work/Machine/DTG） + G54–G59 快選列
+- JOG X/Y/Z + A/B/C 旋轉軸（連續 + 寸動）+ 防呆
+- 機台類型定義（MachineType 枚舉：3/4/5/6 軸可配置）
 - 加工循環控制（Cycle Start / Stop / Feed Hold）
 - 電源 / 急停（含樂觀更新 + 獨立通道）
 - MDI 送出（含歷史記錄 ComboBox）
@@ -202,10 +203,8 @@ DispatcherTimer (500ms) → MachineControlService.GetStatusAsync()
 
 | 功能 | 待改善 |
 |------|--------|
-| JOG | 缺 A/B/C 旋轉軸 |
 | 3D 視圖 | 無刀具路徑模擬 |
 | G-Code 預覽 | 無行號高亮/執行中行追蹤 |
-| HAL 生成軸 Index | 寫死 X→0/Y→2/Z→3，未動態生成 |
 | Tool Info | 未與 LinuxCNC 刀具表同步 |
 | Rapid Override | SliderControl 第三列暫靜態 100% |
 
@@ -214,8 +213,7 @@ DispatcherTimer (500ms) → MachineControlService.GetStatusAsync()
 1. **Probing 探測循環** — 工程師常用差異化功能
 2. **Tool Table 管理** — ATC 前置需求
 3. **Block Delete / M01** — 連接按鈕至後端
-4. **JOG A/B/C 旋轉軸** — 補齊六軸
-5. **G-Code 行號高亮** — 執行中行追蹤
+4. **G-Code 行號高亮** — 執行中行追蹤
 
 ---
 
@@ -263,3 +261,13 @@ DispatcherTimer (500ms) → MachineControlService.GetStatusAsync()
 | **Single Block 模式** | `IsSingleBlock` 開關；CycleStart 依此切換 `CycleStartAsync` / `StepProgramAsync` |
 | **後端 Step 端點** | `POST /v2/program/step`（`cnc_cmd.auto(AUTO_STEP)`） |
 | **版本號更新** | `2026.02.24_OFFSETS_OVERRIDE_SINGLEBLOCK` |
+| **修正 GO TO HOME** | 後端加入 `teleop_enable(0)` 切換 Joint Mode，解決 home 指令被忽略 |
+| **修正 Offsets 寫入** | `SelectOffset` 同步 `SelectedRow`，解決 SET TO ZERO 未選擇座標系 |
+| **G10 動態軸數** | G10 指令改依 `EnabledAxes` 動態組合，不再寫死 XYZ |
+| **MachineType 枚舉** | 新增 `MachineType`（ThreeAxis/FourAxisA/FiveAxisTrunnion/SixAxis 等） |
+| **DRO 多軸動態** | A/B/C 軸行依 `IsAxisA/B/CEnabled` 自動顯示/隱藏 |
+| **JOG A/B/C** | JogPanel 新增旋轉軸 JOG 按鈕（axis=3/4/5），依啟用狀態顯示 |
+| **HAL 軸映射修正** | 移除寫死 X→0/Y→2/Z→3，改從 `Mappings.ChannelIndex` 動態取得 Slave Index |
+| **MachineStatus 補齊** | 新增 DtgA/B/C + WorkA/B/C 屬性（六軸完整支援） |
+| **Offsets DataGrid** | 新增 A/B/C 欄位，顯示全部六軸 offset 值 |
+| **版本號** | `2026.02.24_MULTIAXIS_FIXES` |

@@ -1,9 +1,10 @@
-﻿<UserControl x:Class="CncController.Views.Components.DroDisplay"
+<!-- [2026-02-24] 重寫 DroDisplay：支援 3~6 軸動態顯示（A/B/C 依 MachineConfig 啟用狀態自動顯示/隱藏） -->
+<UserControl x:Class="CncController.Views.Components.DroDisplay"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-             mc:Ignorable="d" 
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             mc:Ignorable="d"
              d:DesignHeight="300" d:DesignWidth="400">
 
     <Border BorderBrush="{DynamicResource Brush.Border}" BorderThickness="1" CornerRadius="4" Padding="5">
@@ -13,6 +14,10 @@
                 <RowDefinition Height="*"/>
                 <RowDefinition Height="*"/>
                 <RowDefinition Height="*"/>
+                <!-- [2026-02-24] A/B/C 軸行：Auto 高度，未啟用時 Collapsed 不佔空間 -->
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
                 <RowDefinition Height="28"/>
                 <RowDefinition Height="40"/>
             </Grid.RowDefinitions>
@@ -27,15 +32,16 @@
             <TextBlock Grid.Row="0" Grid.Column="2" Text="{DynamicResource Str.Label.Machine}" Foreground="{DynamicResource Brush.Text.Muted}" HorizontalAlignment="Center"/>
             <TextBlock Grid.Row="0" Grid.Column="3" Text="{DynamicResource Str.Label.DTG}" Foreground="{DynamicResource Brush.Text.Muted}" HorizontalAlignment="Center"/>
 
+            <!-- === X 軸 (Row 1) === -->
             <Border Grid.Row="1" Grid.Column="0" Background="{DynamicResource Brush.DRO.Label}" Margin="2" CornerRadius="2">
                 <TextBlock Text="X" Foreground="White" VerticalAlignment="Center" HorizontalAlignment="Center" FontWeight="Bold"/>
             </Border>
             <Border Grid.Row="1" Grid.Column="1" Background="{DynamicResource Brush.DRO.Background}" Margin="2" CornerRadius="2">
-                <TextBlock Text="{Binding DataContext.Status.X, RelativeSource={RelativeSource AncestorType=Window}, StringFormat=F3}" 
+                <TextBlock Text="{Binding DataContext.Status.X, RelativeSource={RelativeSource AncestorType=Window}, StringFormat=F3}"
                            Foreground="{DynamicResource Brush.DRO.Foreground}" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="5" FontSize="{DynamicResource FontSize.DRO}" FontWeight="Bold" FontFamily="Consolas"/>
             </Border>
             <Border Grid.Row="1" Grid.Column="2" Background="{DynamicResource Brush.DRO.Background}" Margin="2" CornerRadius="2">
-                <TextBlock Text="{Binding DataContext.Status.X, RelativeSource={RelativeSource AncestorType=Window}, StringFormat=F3}" 
+                <TextBlock Text="{Binding DataContext.Status.X, RelativeSource={RelativeSource AncestorType=Window}, StringFormat=F3}"
                            Foreground="{DynamicResource Brush.DRO.Foreground}" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="5" FontSize="{DynamicResource FontSize.DRO}" FontWeight="Bold" FontFamily="Consolas"/>
             </Border>
             <Border Grid.Row="1" Grid.Column="3" Background="{DynamicResource Brush.DRO.Background}" Margin="2" CornerRadius="2">
@@ -43,6 +49,7 @@
                            Foreground="{DynamicResource Brush.DRO.Foreground}" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="5" FontSize="{DynamicResource FontSize.DRO}" FontWeight="Bold" FontFamily="Consolas"/>
             </Border>
 
+            <!-- === Y 軸 (Row 2) === -->
             <Border Grid.Row="2" Grid.Column="0" Background="{DynamicResource Brush.DRO.Label}" Margin="2" CornerRadius="2">
                 <TextBlock Text="Y" Foreground="White" VerticalAlignment="Center" HorizontalAlignment="Center" FontWeight="Bold"/>
             </Border>
@@ -59,6 +66,7 @@
                            Foreground="{DynamicResource Brush.DRO.Foreground}" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="5" FontSize="{DynamicResource FontSize.DRO}" FontWeight="Bold" FontFamily="Consolas"/>
             </Border>
 
+            <!-- === Z 軸 (Row 3) === -->
             <Border Grid.Row="3" Grid.Column="0" Background="{DynamicResource Brush.DRO.Label}" Margin="2" CornerRadius="2">
                 <TextBlock Text="Z" Foreground="White" VerticalAlignment="Center" HorizontalAlignment="Center" FontWeight="Bold"/>
             </Border>
@@ -75,9 +83,71 @@
                            Foreground="{DynamicResource Brush.DRO.Foreground}" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="5" FontSize="{DynamicResource FontSize.DRO}" FontWeight="Bold" FontFamily="Consolas"/>
             </Border>
 
-            <!-- [2026-02-23] 新增 Row 4：G54–G59 快選列；點擊送 MDI 切換座標系；DataTrigger 高亮 Active 者 -->
-            <!-- Row 4: G54–G59 快選列 -->
-            <UniformGrid Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="4" Rows="1" Margin="2,1">
+            <!-- [2026-02-24] === A 軸 (Row 4) === 依 IsAxisAEnabled 顯示/隱藏 -->
+            <Border Grid.Row="4" Grid.Column="0" Background="{DynamicResource Brush.DRO.Label}" Margin="2" CornerRadius="2" Height="36"
+                    Visibility="{Binding DataContext.IsAxisAEnabled, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVis}}">
+                <TextBlock Text="A" Foreground="White" VerticalAlignment="Center" HorizontalAlignment="Center" FontWeight="Bold"/>
+            </Border>
+            <Border Grid.Row="4" Grid.Column="1" Background="{DynamicResource Brush.DRO.Background}" Margin="2" CornerRadius="2" Height="36"
+                    Visibility="{Binding DataContext.IsAxisAEnabled, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVis}}">
+                <TextBlock Text="{Binding DataContext.Status.A, RelativeSource={RelativeSource AncestorType=Window}, StringFormat=F3}"
+                           Foreground="{DynamicResource Brush.DRO.Foreground}" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="5" FontSize="{DynamicResource FontSize.DRO}" FontWeight="Bold" FontFamily="Consolas"/>
+            </Border>
+            <Border Grid.Row="4" Grid.Column="2" Background="{DynamicResource Brush.DRO.Background}" Margin="2" CornerRadius="2" Height="36"
+                    Visibility="{Binding DataContext.IsAxisAEnabled, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVis}}">
+                <TextBlock Text="{Binding DataContext.Status.A, RelativeSource={RelativeSource AncestorType=Window}, StringFormat=F3}"
+                           Foreground="{DynamicResource Brush.DRO.Foreground}" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="5" FontSize="{DynamicResource FontSize.DRO}" FontWeight="Bold" FontFamily="Consolas"/>
+            </Border>
+            <Border Grid.Row="4" Grid.Column="3" Background="{DynamicResource Brush.DRO.Background}" Margin="2" CornerRadius="2" Height="36"
+                    Visibility="{Binding DataContext.IsAxisAEnabled, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVis}}">
+                <TextBlock Text="{Binding DataContext.Status.DtgA, RelativeSource={RelativeSource AncestorType=Window}, StringFormat=F3}"
+                           Foreground="{DynamicResource Brush.DRO.Foreground}" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="5" FontSize="{DynamicResource FontSize.DRO}" FontWeight="Bold" FontFamily="Consolas"/>
+            </Border>
+
+            <!-- [2026-02-24] === B 軸 (Row 5) === 依 IsAxisBEnabled 顯示/隱藏 -->
+            <Border Grid.Row="5" Grid.Column="0" Background="{DynamicResource Brush.DRO.Label}" Margin="2" CornerRadius="2" Height="36"
+                    Visibility="{Binding DataContext.IsAxisBEnabled, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVis}}">
+                <TextBlock Text="B" Foreground="White" VerticalAlignment="Center" HorizontalAlignment="Center" FontWeight="Bold"/>
+            </Border>
+            <Border Grid.Row="5" Grid.Column="1" Background="{DynamicResource Brush.DRO.Background}" Margin="2" CornerRadius="2" Height="36"
+                    Visibility="{Binding DataContext.IsAxisBEnabled, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVis}}">
+                <TextBlock Text="{Binding DataContext.Status.B, RelativeSource={RelativeSource AncestorType=Window}, StringFormat=F3}"
+                           Foreground="{DynamicResource Brush.DRO.Foreground}" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="5" FontSize="{DynamicResource FontSize.DRO}" FontWeight="Bold" FontFamily="Consolas"/>
+            </Border>
+            <Border Grid.Row="5" Grid.Column="2" Background="{DynamicResource Brush.DRO.Background}" Margin="2" CornerRadius="2" Height="36"
+                    Visibility="{Binding DataContext.IsAxisBEnabled, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVis}}">
+                <TextBlock Text="{Binding DataContext.Status.B, RelativeSource={RelativeSource AncestorType=Window}, StringFormat=F3}"
+                           Foreground="{DynamicResource Brush.DRO.Foreground}" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="5" FontSize="{DynamicResource FontSize.DRO}" FontWeight="Bold" FontFamily="Consolas"/>
+            </Border>
+            <Border Grid.Row="5" Grid.Column="3" Background="{DynamicResource Brush.DRO.Background}" Margin="2" CornerRadius="2" Height="36"
+                    Visibility="{Binding DataContext.IsAxisBEnabled, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVis}}">
+                <TextBlock Text="{Binding DataContext.Status.DtgB, RelativeSource={RelativeSource AncestorType=Window}, StringFormat=F3}"
+                           Foreground="{DynamicResource Brush.DRO.Foreground}" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="5" FontSize="{DynamicResource FontSize.DRO}" FontWeight="Bold" FontFamily="Consolas"/>
+            </Border>
+
+            <!-- [2026-02-24] === C 軸 (Row 6) === 依 IsAxisCEnabled 顯示/隱藏 -->
+            <Border Grid.Row="6" Grid.Column="0" Background="{DynamicResource Brush.DRO.Label}" Margin="2" CornerRadius="2" Height="36"
+                    Visibility="{Binding DataContext.IsAxisCEnabled, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVis}}">
+                <TextBlock Text="C" Foreground="White" VerticalAlignment="Center" HorizontalAlignment="Center" FontWeight="Bold"/>
+            </Border>
+            <Border Grid.Row="6" Grid.Column="1" Background="{DynamicResource Brush.DRO.Background}" Margin="2" CornerRadius="2" Height="36"
+                    Visibility="{Binding DataContext.IsAxisCEnabled, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVis}}">
+                <TextBlock Text="{Binding DataContext.Status.C, RelativeSource={RelativeSource AncestorType=Window}, StringFormat=F3}"
+                           Foreground="{DynamicResource Brush.DRO.Foreground}" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="5" FontSize="{DynamicResource FontSize.DRO}" FontWeight="Bold" FontFamily="Consolas"/>
+            </Border>
+            <Border Grid.Row="6" Grid.Column="2" Background="{DynamicResource Brush.DRO.Background}" Margin="2" CornerRadius="2" Height="36"
+                    Visibility="{Binding DataContext.IsAxisCEnabled, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVis}}">
+                <TextBlock Text="{Binding DataContext.Status.C, RelativeSource={RelativeSource AncestorType=Window}, StringFormat=F3}"
+                           Foreground="{DynamicResource Brush.DRO.Foreground}" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="5" FontSize="{DynamicResource FontSize.DRO}" FontWeight="Bold" FontFamily="Consolas"/>
+            </Border>
+            <Border Grid.Row="6" Grid.Column="3" Background="{DynamicResource Brush.DRO.Background}" Margin="2" CornerRadius="2" Height="36"
+                    Visibility="{Binding DataContext.IsAxisCEnabled, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVis}}">
+                <TextBlock Text="{Binding DataContext.Status.DtgC, RelativeSource={RelativeSource AncestorType=Window}, StringFormat=F3}"
+                           Foreground="{DynamicResource Brush.DRO.Foreground}" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="5" FontSize="{DynamicResource FontSize.DRO}" FontWeight="Bold" FontFamily="Consolas"/>
+            </Border>
+
+            <!-- [2026-02-23] G54-G59 快選列（原 Row 4 → Row 7） -->
+            <UniformGrid Grid.Row="7" Grid.Column="0" Grid.ColumnSpan="4" Rows="1" Margin="2,1">
                 <Button Content="G54" FontSize="10" Margin="1"
                         Command="{Binding DataContext.OffsetsVM.SelectOffsetCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                         CommandParameter="G54">
@@ -194,9 +264,8 @@
                 </Button>
             </UniformGrid>
 
-            <!-- [2026-02-23] Zero All 從 Row 4 移至 Row 5 -->
-            <!-- Row 5: Zero All（原 Row 4） -->
-            <Button Grid.Row="5" Grid.Column="1" Grid.ColumnSpan="3" Content="{DynamicResource Str.Btn.ZeroAll}" Margin="20,5"/>
+            <!-- Zero All（原 Row 5 → Row 8） -->
+            <Button Grid.Row="8" Grid.Column="1" Grid.ColumnSpan="3" Content="{DynamicResource Str.Btn.ZeroAll}" Margin="20,5"/>
         </Grid>
     </Border>
 </UserControl>

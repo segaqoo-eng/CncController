@@ -37,6 +37,11 @@ namespace CncController.Models
         // [2026-02-24] 新增 Feed_Override / Spindle_Override：進給率/主軸覆蓋百分比
         public double Feed_Override { get; set; } = 100.0;
         public double Spindle_Override { get; set; } = 100.0;
+
+        // [2026-02-24] 新增刀具資訊：刀具號、刀長（Z 軸補正）、刀徑
+        public int Tool_Number { get; set; }
+        public double Tool_Length { get; set; }
+        public double Tool_Diameter { get; set; }
     }
 
     // ==========================================

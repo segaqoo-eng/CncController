@@ -55,5 +55,10 @@ namespace CncController.Models
 
         // [2026-02-23] 新增 ActiveCoordSystem：追蹤目前 Active 的工件座標系（G54–G59），由後端 Active_WCS 同步更新
         [ObservableProperty] private string _activeCoordSystem = "G54";
+
+        // [2026-02-24] 新增刀具資訊：刀具號、刀長（Z 軸補正）、刀徑（供 ToolInfo 元件綁定）
+        [ObservableProperty] private int _toolNumber;
+        [ObservableProperty] private double _toolLength;
+        [ObservableProperty] private double _toolDiameter;
     }
 }

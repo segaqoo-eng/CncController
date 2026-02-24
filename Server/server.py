@@ -578,6 +578,18 @@ def v2_status():
         except:
             pass
 
+        # [2026-02-24] 新增刀具資訊：刀具號、刀長（Z 軸補正）、刀徑
+        tool_number = 0
+        tool_length = 0.0
+        tool_diameter = 0.0
+        try:
+            tool_number = int(cnc_stat.tool_in_spindle)
+            tool_length = float(cnc_stat.tool_offset[2])  # Z 軸補正 = 刀長
+            if tool_number > 0 and tool_number < len(cnc_stat.tool_table):
+                tool_diameter = float(cnc_stat.tool_table[tool_number].diameter)
+        except:
+            pass
+
         return success_response({
             "Connected": True,
             "Task_State": t_state,
@@ -591,7 +603,10 @@ def v2_status():
             "Spindle_Override": spindle_override,
             "File": filename,
             "Servo_IO": servo_io_data,
-            "Active_WCS": active_wcs
+            "Active_WCS": active_wcs,
+            "Tool_Number": tool_number,
+            "Tool_Length": round(tool_length, 4),
+            "Tool_Diameter": round(tool_diameter, 4)
         })
 
     except Exception as e:

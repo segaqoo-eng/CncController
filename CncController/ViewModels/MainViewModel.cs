@@ -158,6 +158,24 @@ namespace CncController.ViewModels
                 AlarmService.Instance.AddLog("WARN", "Home command failed");
         }
 
+        // [2026-02-24] 新增 GoToZeroCommand：G53 G0 機械座標零點快速移動（ToolInfo 按鈕用）
+        [RelayCommand]
+        private async Task GoToZero()
+        {
+            if (!CanExecuteMotion()) return;
+            AlarmService.Instance.AddLog("INFO", "Go To Zero: G53 G0 X0 Y0 Z0");
+            await MachineControlService.Instance.SendMdiCommandAsync("G53 G0 X0 Y0 Z0");
+        }
+
+        // [2026-02-24] 新增 GoToG30Command：移至 G30 第二參考點（ToolInfo 按鈕用）
+        [RelayCommand]
+        private async Task GoToG30()
+        {
+            if (!CanExecuteMotion()) return;
+            AlarmService.Instance.AddLog("INFO", "Go To G30 Reference Point");
+            await MachineControlService.Instance.SendMdiCommandAsync("G30");
+        }
+
         // [2026-02-23] 新增 ExitAppCommand：HeaderBar File 選單 EXIT 項目，記錄 Log 後呼叫 Shutdown
         [RelayCommand]
         private void ExitApp()
@@ -508,6 +526,11 @@ namespace CncController.ViewModels
             // [2026-02-24] 新增：同步 Feed/Spindle Override 百分比
             Status.FeedOverride = data.Feed_Override;
             Status.SpindleOverride = data.Spindle_Override;
+
+            // [2026-02-24] 新增：同步刀具資訊（刀具號、刀長、刀徑）
+            Status.ToolNumber = data.Tool_Number;
+            Status.ToolLength = data.Tool_Length;
+            Status.ToolDiameter = data.Tool_Diameter;
 
             // 更新 InterpState 供計時器判斷
             Status.InterpState = data.Interp_State;

@@ -189,6 +189,7 @@ DispatcherTimer (500ms) → MachineControlService.GetStatusAsync()
 - 設定檔生成與部署（INI/HAL/XML/PostGUI → 上傳 → 重啟 → 輪詢確認）
 - 開機硬體自動驗證
 - 全套工控安全重構
+- ToolInfo 版面對齊 PB 版（即時刀具號/刀長/刀徑 + G43/G49 高亮 + GO TO ZERO/G30 按鈕）
 
 ### ❌ 尚未實作
 
@@ -206,7 +207,7 @@ DispatcherTimer (500ms) → MachineControlService.GetStatusAsync()
 |------|--------|
 | 3D 視圖 | 無刀具路徑模擬 |
 | G-Code 預覽 | 無行號高亮/執行中行追蹤 |
-| Tool Info | 未與 LinuxCNC 刀具表同步 |
+| Tool Info | ~~未與 LinuxCNC 刀具表同步~~ ✅ 已綁定即時資料（刀具號/刀長/刀徑），尚缺完整刀具表管理 |
 | Rapid Override | SliderControl 第三列暫靜態 100% |
 
 ### 📋 開發優先順序
@@ -273,3 +274,7 @@ DispatcherTimer (500ms) → MachineControlService.GetStatusAsync()
 | **Offsets DataGrid** | 新增 A/B/C 欄位，顯示全部六軸 offset 值 |
 | **IO Monitor 連動** | 卡片依軸映射過濾（3 軸只顯示 3 張）+ 標題標註軸名（例如 "X Axis Slave #0"） |
 | **版本號** | `2026.02.24_IOMONITOR_LINKAGE` |
+| **ToolInfo PB 版** | 版面對齊 PB：T [N] / M6 G43 / G43-G49 高亮 / LENGTH / DIAM 即時綁定後端 |
+| **後端刀具資訊** | `/v2/status` 新增 `Tool_Number`（tool_in_spindle）/ `Tool_Length`（tool_offset[2]）/ `Tool_Diameter`（tool_table） |
+| **GO TO ZERO / G30** | `GoToZeroCommand`（G53 G0 X0 Y0 Z0）、`GoToG30Command`（G30）—— ToolInfo 按鈕 |
+| **版本號** | `2026.02.24_TOOLINFO_PB` |

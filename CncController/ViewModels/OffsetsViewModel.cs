@@ -178,6 +178,7 @@ namespace CncController.ViewModels
             if (ok)
             {
                 AlarmService.Instance.AddLog("INFO", $"Cleared {SelectedRow.Name} offsets");
+                await Task.Delay(300);  // [2026-02-24] 等待 .var 檔同步
                 await ReloadTable();
             }
         }
@@ -207,6 +208,7 @@ namespace CncController.ViewModels
                 }
             }
             AlarmService.Instance.AddLog("INFO", "All WCS offsets cleared");
+            await Task.Delay(300);  // [2026-02-24] 等待 .var 檔同步
             await ReloadTable();
         }
 
@@ -246,6 +248,7 @@ namespace CncController.ViewModels
                 }
             }
             AlarmService.Instance.AddLog("INFO", "Offset table saved to LinuxCNC");
+            await Task.Delay(300);  // [2026-02-24] 等待 .var 檔同步
             await ReloadTable();
         }
 

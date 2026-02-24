@@ -594,7 +594,8 @@ def v2_status():
         homed_dict = {}
         for i, name in enumerate(['X', 'Y', 'Z', 'A', 'B', 'C']):
             try:
-                homed_dict[name] = (cnc_stat.joint[i].homed == 1)
+                # [2026-02-24] 修正：改用 cnc_stat.homed[i] 取代 joint[i].homed（joint 回傳 dict 無 homed 屬性）
+                homed_dict[name] = bool(cnc_stat.homed[i])
             except:
                 homed_dict[name] = False
 
@@ -717,8 +718,9 @@ def v2_motion_jog():
 
         is_homed = False
         try:
-            if hasattr(cnc_stat, 'joint') and len(cnc_stat.joint) > axis:
-                is_homed = (cnc_stat.joint[axis].homed == 1)
+            # [2026-02-24] 修正：改用 cnc_stat.homed[axis] 取代 joint[axis].homed
+            if hasattr(cnc_stat, 'homed') and len(cnc_stat.homed) > axis:
+                is_homed = bool(cnc_stat.homed[axis])
         except: pass
 
         if is_homed:
@@ -874,6 +876,7 @@ def v2_mdi():
             cnc_cmd.wait_complete()
 
         cnc_cmd.mdi(command)
+        cnc_cmd.wait_complete()  # [2026-02-24] 等待 MDI 執行完畢，避免後續讀取到舊值
         app_log('CMD', f"MDI: {command}")
         return success_response({"command": command})
     except Exception as e:

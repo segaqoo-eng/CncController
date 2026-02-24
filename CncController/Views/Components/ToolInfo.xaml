@@ -191,9 +191,9 @@
                         Style="{StaticResource ToolBtnStyle}"/>
             </Grid>
 
-            <!-- [2026-02-24] Row 6: GO TO HOME — 全寬按鈕（對齊 PB 版） -->
+            <!-- [2026-02-24] Row 6: GO TO HOME — 機械零點 G53 G0（對齊 PB 版） -->
             <Button Content="GO TO HOME" Margin="3,4,3,2"
-                    Command="{Binding HomeAllCommand}"
+                    Command="{Binding GoToHomeCommand}"
                     Style="{StaticResource ToolBtnStyle}"/>
         </StackPanel>
     </Border>

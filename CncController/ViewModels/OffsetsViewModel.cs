@@ -145,7 +145,8 @@ namespace CncController.ViewModels
             if (ok)
             {
                 AlarmService.Instance.AddLog("INFO", $"Set {SelectedRow.Name} {axesPart} to zero");
-                // 成功後自動重新載入 offset 表
+                // [2026-02-24] 修正：延遲後重載，後端已用 cnc_stat.g5x_offset 覆蓋 Active WCS
+                await Task.Delay(200);
                 await ReloadTable();
             }
         }
@@ -177,9 +178,20 @@ namespace CncController.ViewModels
             bool ok = await MachineControlService.Instance.SendMdiCommandAsync(mdiCmd);
             if (ok)
             {
+                // [2026-02-24] 修正：本地歸零取代 ReloadTable（.var 檔僅關機時寫入，讀回必為舊值）
+                foreach (var ax in EnabledAxes)
+                {
+                    switch (ax)
+                    {
+                        case "X": SelectedRow.X = 0; break;
+                        case "Y": SelectedRow.Y = 0; break;
+                        case "Z": SelectedRow.Z = 0; break;
+                        case "A": SelectedRow.A = 0; break;
+                        case "B": SelectedRow.B = 0; break;
+                        case "C": SelectedRow.C = 0; break;
+                    }
+                }
                 AlarmService.Instance.AddLog("INFO", $"Cleared {SelectedRow.Name} offsets");
-                await Task.Delay(300);  // [2026-02-24] 等待 .var 檔同步
-                await ReloadTable();
             }
         }
 
@@ -207,9 +219,23 @@ namespace CncController.ViewModels
                     break;
                 }
             }
+            // [2026-02-24] 修正：本地歸零取代 ReloadTable（.var 檔僅關機時寫入，讀回必為舊值）
+            foreach (var row in OffsetTable)
+            {
+                foreach (var ax in EnabledAxes)
+                {
+                    switch (ax)
+                    {
+                        case "X": row.X = 0; break;
+                        case "Y": row.Y = 0; break;
+                        case "Z": row.Z = 0; break;
+                        case "A": row.A = 0; break;
+                        case "B": row.B = 0; break;
+                        case "C": row.C = 0; break;
+                    }
+                }
+            }
             AlarmService.Instance.AddLog("INFO", "All WCS offsets cleared");
-            await Task.Delay(300);  // [2026-02-24] 等待 .var 檔同步
-            await ReloadTable();
         }
 
         // [2026-02-24] 實作 SaveTable：透過 G10 L2 將表格中的值寫入各 WCS
@@ -247,9 +273,9 @@ namespace CncController.ViewModels
                     break;
                 }
             }
+            // [2026-02-24] 修正：SaveTable 不再 ReloadTable（.var 檔僅關機時寫入，讀回必為舊值）
+            //              DataGrid 已顯示使用者輸入的正確值，無需重載
             AlarmService.Instance.AddLog("INFO", "Offset table saved to LinuxCNC");
-            await Task.Delay(300);  // [2026-02-24] 等待 .var 檔同步
-            await ReloadTable();
         }
 
         [RelayCommand]

@@ -674,6 +674,20 @@ def read_work_offsets():
         except Exception:
             pass
 
+    # [2026-02-24] 用 cnc_stat 記憶體值覆蓋 Active WCS（.var 檔僅關機時寫入，G10 後必定過時）
+    try:
+        if cnc_stat:
+            cnc_stat.poll()
+            idx = cnc_stat.g5x_index  # 1=G54, 2=G55, ..., 6=G59
+            if 1 <= idx <= 6:
+                active_wcs = f"G{53 + idx}"
+                g5x = cnc_stat.g5x_offset
+                for i, axis in enumerate(axes):
+                    if i < len(g5x):
+                        offsets[active_wcs][axis] = round(float(g5x[i]), 4)
+    except Exception:
+        pass
+
     return offsets
 
 

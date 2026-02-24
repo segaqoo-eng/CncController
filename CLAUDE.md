@@ -279,8 +279,11 @@ DispatcherTimer (500ms) → MachineControlService.GetStatusAsync()
 | **GO TO ZERO / G30** | `GoToZeroCommand`（G53 G0 X0 Y0 Z0）、`GoToG30Command`（G30）—— ToolInfo 按鈕 |
 | **版本號** | `2026.02.24_TOOLINFO_PB` |
 | **DRO 對齊 PB 版** | 5 欄佈局：ZERO X/Y/Z | G5X WORK（WorkX）| MACHINE（X）| DTG | REF X/Y/Z；標題動態顯示 G5X；移除 G54–G59 快選列 |
-| **後端 Homed 狀態** | `/v2/status` 新增 `Homed` dict（各軸 joint[i].homed）|
+| **後端 Homed 狀態** | `/v2/status` 新增 `Homed` dict（~~joint[i].homed~~ → `cnc_stat.homed[i]`）|
 | **DRO ZERO 按鈕** | `DroZeroAxisCommand`（G10 L20 單軸歸零）+ `DroZeroAllCommand`（全軸歸零）|
 | **DRO REF 按鈕** | `RefAxisCommand`（單軸原點復歸 + 樂觀更新紅→綠）+ HomeAll 樂觀更新 |
 | **Homed 狀態映射** | `MachineStatus.IsXHomed~IsCHomed + IsAllHomed`；底部按鈕紅/綠切換 |
 | **版本號** | `2026.02.24_DRO_PB` |
+| **修正 Homed 不變綠** | 後端 `cnc_stat.joint[i].homed` → `cnc_stat.homed[i]`（joint 回傳 dict 無屬性），JOG 端點同步修正 |
+| **修正 Offsets SAVE 歸零** | 後端 MDI 加 `wait_complete()` 等待執行完畢 + 前端 ReloadTable 前加 300ms 延遲等待 .var 同步 |
+| **修正 ToolInfo GO TO HOME** | 按鈕 Command 綁定從 `HomeAllCommand` 修正為 `GoToHomeCommand` |

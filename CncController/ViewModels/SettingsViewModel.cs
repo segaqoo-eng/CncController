@@ -60,10 +60,14 @@ namespace CncController.ViewModels
             // 1. 初始化 IO 映射預設值
             InitializeIoMaps();
 
-            // 2. 內部連動：當 HardwareVM 的 Slaves 變動時，通知 MappingVM 更新選項
+            // 2. 內部連動：當 HardwareVM 的 Slaves 變動時（手動 Scan Bus），更新所有下拉選單
             HardwareVM.Slaves.CollectionChanged += (s, e) =>
             {
+                // [2026-02-24] AXIS MAPPING 下拉
                 MappingVM.UpdateSlaves(HardwareVM.Slaves);
+
+                // [2026-02-24] IN MAP / OUT MAP 下拉（重建 IO 設備篩選清單）
+                RebuildIoSlaveDropdowns(HardwareVM.Slaves);
             };
 
             // [2026-02-24] 訂閱機台類型變更事件：即時連動 AxisParameters + DRO/JOG/Offsets
@@ -124,28 +128,13 @@ namespace CncController.ViewModels
             }
         }
 
-        // [2026-02-24] 機台類型即時連動 handler
+        // [2026-02-24] 機台類型下拉選單變更 handler
+        // 下拉僅更新軸勾選框（由 MachineConfigVM 自動處理）
+        // 軸參數 / 軸映射 / DRO / JOG / Offsets / IO Monitor 全部延遲到
+        // 使用者按下 UPDATE MAPPING TABLE 按鈕時才連動（見 ApplyMachineConfig）
         private void OnMachineTypeChanged(MachineType machineType, List<string> enabledAxes)
         {
-            // 1. 重建 AXIS PARAMETERS Tab（保留現有參數值）
-            RebuildAxisParameters(enabledAxes);
-
-            // [2026-02-24] 下拉選單僅更新軸勾選 + 軸參數，AXIS MAPPING / IO Monitor
-            // 等使用者按 UPDATE MAPPING TABLE 按鈕才更新（見 ApplyMachineConfig）
-
-            // 2. 通知 MainViewModel 更新 DRO/JOG/Offsets
-            try
-            {
-                var app = System.Windows.Application.Current;
-                if (app?.MainWindow?.DataContext is MainViewModel mainVM)
-                {
-                    mainVM.ApplyMachineType(machineType, enabledAxes);
-                }
-            }
-            catch (Exception ex)
-            {
-                AlarmService.Instance.AddLog("ERR", $"OnMachineTypeChanged relay error: {ex.Message}");
-            }
+            // 不做任何事 — 勾選框已由 MachineConfigVM.OnSelectedMachineTypeItemChanged 更新
         }
 
         // [2026-02-24] 依據啟用軸列表重建 AxisVM.Axes，保留已存在軸的參數值
@@ -245,49 +234,8 @@ namespace CncController.ViewModels
             // [2026-02-24] Step 3.5: 同步 IO Monitor 卡片過濾（依軸映射）
             IoMonitorVM.UpdateAxisMapping(MappingVM.AxisMaps);
 
-            // ★★★ Step 4: 過濾設備到 IO 下拉選單 ★★★
-            AvailableInputSlaves.Clear();
-            AvailableOutputSlaves.Clear();
-
-            // 加入 "無" 的選項
-            var noneSlave = new DiscoveredSlave
-            {
-                Name = "--- None ---",
-                VendorId = "",
-                ProductCode = "", // 加上這一行
-                Category = ""
-            };
-
-            AvailableInputSlaves.Add(noneSlave);
-            AvailableOutputSlaves.Add(noneSlave);
-
-            foreach (var slave in slaves)
-            {
-                // 判斷是否為輸入裝置 
-                // 條件：純輸入 (DigIn)、混合型 (DiDo)、耦合器 (Coupler)
-                // ★★★ [新增] Debug 輸出：顯示目前掃描到的設備分類 ★★★
-                System.Diagnostics.Debug.WriteLine($"[Scan] Slave #{slave.Index} ({slave.Name}): Category='{slave.Category}', ProductCode='{slave.ProductCode}'");
-
-                if (slave.Category == DeviceCategory.DigIn ||
-                    slave.Category == DeviceCategory.DiDo ||
-                    
-                    slave.ProductCode.Contains("902") // 特殊處理台達 902
-                    )
-                {
-                    AvailableInputSlaves.Add(slave);
-                }
-
-                // 判斷是否為輸出裝置 
-                // 條件：純輸出 (DigOut)、混合型 (DiDo)、耦合器 (Coupler)
-                if (slave.Category == DeviceCategory.DigOut ||
-                    slave.Category == DeviceCategory.DiDo ||
-                   
-                    slave.ProductCode.Contains("902") // 特殊處理台達 902
-                    )
-                {
-                    AvailableOutputSlaves.Add(slave);
-                }
-            }
+            // Step 4: 過濾設備到 IO 下拉選單
+            RebuildIoSlaveDropdowns(slaves);
 
             // Step 5: 初始化驗證 (如果已經有 Config)
             if (config.Mappings.Count > 0)
@@ -346,13 +294,77 @@ namespace CncController.ViewModels
             }
         }
 
+        // [2026-02-24] UPDATE MAPPING TABLE 按鈕：一次性套用所有機台類型連動
         [RelayCommand]
         private void ApplyMachineConfig()
         {
+            // 1. 取得目前啟用軸列表
+            var machineType = MachineConfigVM.SelectedMachineType;
+            var enabledAxes = new MachineConfig { MachineType = machineType }.GetEnabledAxes();
+
+            // 2. 重建 AXIS PARAMETERS（保留現有參數值）
+            RebuildAxisParameters(enabledAxes);
+
+            // 3. 重建 AXIS MAPPING
             MappingVM.UpdateSlaves(HardwareVM.Slaves);
             MappingVM.GenerateAxisTable(MachineConfigVM);
-            // [2026-02-24] 同步 IO Monitor 卡片過濾
+
+            // 4. 同步 IO Monitor 軸名標註
             IoMonitorVM.UpdateAxisMapping(MappingVM.AxisMaps);
+
+            // 5. 通知 MainViewModel 更新 DRO / JOG / Offsets
+            try
+            {
+                var app = System.Windows.Application.Current;
+                if (app?.MainWindow?.DataContext is MainViewModel mainVM)
+                {
+                    mainVM.ApplyMachineType(machineType, enabledAxes);
+                }
+            }
+            catch (Exception ex)
+            {
+                AlarmService.Instance.AddLog("ERR", $"ApplyMachineConfig error: {ex.Message}");
+            }
+        }
+
+        // [2026-02-24] 重建 IN MAP / OUT MAP 的 IO Slave 下拉選單
+        // 共用於 Initialize（開機載入）及手動 Scan Bus
+        private void RebuildIoSlaveDropdowns(IEnumerable<DiscoveredSlave> slaves)
+        {
+            AvailableInputSlaves.Clear();
+            AvailableOutputSlaves.Clear();
+
+            var noneSlave = new DiscoveredSlave
+            {
+                Name = "--- None ---",
+                VendorId = "",
+                ProductCode = "",
+                Category = ""
+            };
+
+            AvailableInputSlaves.Add(noneSlave);
+            AvailableOutputSlaves.Add(noneSlave);
+
+            foreach (var slave in slaves)
+            {
+                System.Diagnostics.Debug.WriteLine($"[Scan] Slave #{slave.Index} ({slave.Name}): Category='{slave.Category}', ProductCode='{slave.ProductCode}'");
+
+                // 輸入裝置：DigIn / DiDo / 台達 902
+                if (slave.Category == DeviceCategory.DigIn ||
+                    slave.Category == DeviceCategory.DiDo ||
+                    (slave.ProductCode != null && slave.ProductCode.Contains("902")))
+                {
+                    AvailableInputSlaves.Add(slave);
+                }
+
+                // 輸出裝置：DigOut / DiDo / 台達 902
+                if (slave.Category == DeviceCategory.DigOut ||
+                    slave.Category == DeviceCategory.DiDo ||
+                    (slave.ProductCode != null && slave.ProductCode.Contains("902")))
+                {
+                    AvailableOutputSlaves.Add(slave);
+                }
+            }
         }
 
         [RelayCommand]

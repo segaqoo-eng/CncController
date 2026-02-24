@@ -130,7 +130,13 @@ namespace CncController.ViewModels
             // 1. 重建 AXIS PARAMETERS Tab（保留現有參數值）
             RebuildAxisParameters(enabledAxes);
 
-            // 2. 通知 MainViewModel 更新 DRO/JOG/Offsets
+            // 2. 重建 AXIS MAPPING Tab + 同步 IO Monitor 過濾
+            MappingVM.GenerateAxisTable(MachineConfigVM);
+
+            // [2026-02-24] 同步 IO Monitor 卡片過濾（依軸映射）
+            IoMonitorVM.UpdateAxisMapping(MappingVM.AxisMaps);
+
+            // 3. 通知 MainViewModel 更新 DRO/JOG/Offsets
             try
             {
                 var app = System.Windows.Application.Current;
@@ -239,6 +245,9 @@ namespace CncController.ViewModels
             // Step 3: 載入 AXIS MAPPING
             MappingVM.LoadMapping(config, slaves);
 
+            // [2026-02-24] Step 3.5: 同步 IO Monitor 卡片過濾（依軸映射）
+            IoMonitorVM.UpdateAxisMapping(MappingVM.AxisMaps);
+
             // ★★★ Step 4: 過濾設備到 IO 下拉選單 ★★★
             AvailableInputSlaves.Clear();
             AvailableOutputSlaves.Clear();
@@ -345,6 +354,8 @@ namespace CncController.ViewModels
         {
             MappingVM.UpdateSlaves(HardwareVM.Slaves);
             MappingVM.GenerateAxisTable(MachineConfigVM);
+            // [2026-02-24] 同步 IO Monitor 卡片過濾
+            IoMonitorVM.UpdateAxisMapping(MappingVM.AxisMaps);
         }
 
         [RelayCommand]

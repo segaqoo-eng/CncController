@@ -1,6 +1,7 @@
 ﻿using CncController.Models;
 using CncController.Services;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -11,7 +12,16 @@ namespace CncController.ViewModels
     public partial class ServoIoCard : ObservableObject
     {
         public int SlaveIndex { get; set; }
-        public string Title => $"Slave #{SlaveIndex}";
+
+        // [2026-02-24] 軸名稱（由軸映射決定，例如 "X Axis"）
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(Title))]
+        private string _axisName = "";
+
+        // [2026-02-24] 標題：有軸名時顯示軸名，無則只顯示 Slave#
+        public string Title => string.IsNullOrEmpty(AxisName)
+            ? $"Slave #{SlaveIndex}"
+            : $"{AxisName}";
 
         // 介面顯示用的 Hex 字串 (e.g. "0x6041")
         [ObservableProperty]
@@ -111,6 +121,46 @@ namespace CncController.ViewModels
     {
         public ObservableCollection<ServoIoCard> Cards { get; } = new ObservableCollection<ServoIoCard>();
 
+        // [2026-02-24] 軸映射：Slave Index → 軸名（僅顯示已映射的 Slave 卡片）
+        private Dictionary<int, string> _axisSlaveMap = new();
+
+        // [2026-02-24] 從 AxisMapping 更新過濾條件
+        public void UpdateAxisMapping(IEnumerable<AxisMapItem> axisMaps)
+        {
+            _axisSlaveMap.Clear();
+
+            if (axisMaps != null)
+            {
+                foreach (var map in axisMaps)
+                {
+                    if (map.SelectedSlave != null &&
+                        !string.IsNullOrEmpty(map.SelectedSlave.Name) &&
+                        map.SelectedSlave.Name != "--- None ---")
+                    {
+                        _axisSlaveMap[map.SelectedSlave.Index] = map.AxisName;
+                    }
+                }
+            }
+
+            // 移除不在映射中的舊卡片
+            if (_axisSlaveMap.Count > 0)
+            {
+                for (int i = Cards.Count - 1; i >= 0; i--)
+                {
+                    if (!_axisSlaveMap.ContainsKey(Cards[i].SlaveIndex))
+                    {
+                        Cards.RemoveAt(i);
+                    }
+                }
+            }
+
+            // 更新現有卡片的軸名（AxisName 變更會自動通知 Title 更新）
+            foreach (var card in Cards)
+            {
+                card.AxisName = _axisSlaveMap.TryGetValue(card.SlaveIndex, out var name) ? name : "";
+            }
+        }
+
         public void UpdateData(MachineStatusData data)
         {
             if (data?.Servo_IO == null) return;
@@ -124,11 +174,16 @@ namespace CncController.ViewModels
                 if (raw == null || (string.IsNullOrEmpty(raw.DI) && string.IsNullOrEmpty(raw.Status)))
                     continue;
 
+                // [2026-02-24] 有軸映射時，只顯示已映射的 Slave
+                if (_axisSlaveMap.Count > 0 && !_axisSlaveMap.ContainsKey(slaveIdx))
+                    continue;
+
                 // 找找看有沒有這張卡，沒有就新增
                 var card = Cards.FirstOrDefault(c => c.SlaveIndex == slaveIdx);
                 if (card == null)
                 {
-                    card = new ServoIoCard(slaveIdx);
+                    var axisName = _axisSlaveMap.TryGetValue(slaveIdx, out var name) ? name : "";
+                    card = new ServoIoCard(slaveIdx) { AxisName = axisName };
                     InsertCardSorted(card);
                 }
 

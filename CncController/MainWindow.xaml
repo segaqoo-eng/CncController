@@ -19,7 +19,7 @@
         <KeyBinding Key="F2" Command="{Binding ToggleEstopCommand}"/>
     </Window.InputBindings>
     <Window.Resources>
-        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+        <!-- [2026-02-24] BoolToVis 已移至 App.xaml 全域資源 -->
         <DataTemplate DataType="{x:Type vm:MonitorViewModel}">
             <pages:MonitorView/>
         </DataTemplate>

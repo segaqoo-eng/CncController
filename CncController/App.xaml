@@ -39,8 +39,11 @@
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="Resources/Themes/Theme.Dark.xaml"/>
-                <ResourceDictionary Source="Resources/Languages/Lang.zh-TW.xaml"/> 
+                <ResourceDictionary Source="Resources/Languages/Lang.zh-TW.xaml"/>
             </ResourceDictionary.MergedDictionaries>
+
+            <!-- [2026-02-24] 全域 BoolToVis 轉換器，供所有 UserControl 使用 -->
+            <BooleanToVisibilityConverter x:Key="BoolToVis"/>
 
             <Style x:Key="NavBtnStyle" TargetType="RadioButton">
                 <Setter Property="Background" Value="{DynamicResource Brush.Button.Static}"/>

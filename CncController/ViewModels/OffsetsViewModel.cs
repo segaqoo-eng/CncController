@@ -43,6 +43,11 @@ namespace CncController.ViewModels
             set => SetProperty(ref _enabledAxes, value ?? new() { "X", "Y", "Z" });
         }
 
+        // [2026-02-24] 旋轉軸可見性（由 MachineType 變更時即時設定，控制 DataGrid 欄位 + 右欄行 + SET TO ZERO 按鈕）
+        [ObservableProperty] private bool _isAxisAEnabled;
+        [ObservableProperty] private bool _isAxisBEnabled;
+        [ObservableProperty] private bool _isAxisCEnabled;
+
         public ObservableCollection<WorkOffsetRow> OffsetTable { get; } = new()
         {
             new() { Name = "G54" }, new() { Name = "G55" }, new() { Name = "G56" },

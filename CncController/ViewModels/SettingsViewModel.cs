@@ -66,6 +66,9 @@ namespace CncController.ViewModels
                 MappingVM.UpdateSlaves(HardwareVM.Slaves);
             };
 
+            // [2026-02-24] 訂閱機台類型變更事件：即時連動 AxisParameters + DRO/JOG/Offsets
+            MachineConfigVM.MachineTypeChanged += OnMachineTypeChanged;
+
             // 3. 權限管理
             AuthService.Instance.CurrentUserChanged += OnUserChanged;
             OnUserChanged(AuthService.Instance.CurrentUser);
@@ -118,6 +121,62 @@ namespace CncController.ViewModels
                     Index = i,
                     LogicalName = $"Output_Group_{i}"
                 });
+            }
+        }
+
+        // [2026-02-24] 機台類型即時連動 handler
+        private void OnMachineTypeChanged(MachineType machineType, List<string> enabledAxes)
+        {
+            // 1. 重建 AXIS PARAMETERS Tab（保留現有參數值）
+            RebuildAxisParameters(enabledAxes);
+
+            // 2. 通知 MainViewModel 更新 DRO/JOG/Offsets
+            try
+            {
+                var app = System.Windows.Application.Current;
+                if (app?.MainWindow?.DataContext is MainViewModel mainVM)
+                {
+                    mainVM.ApplyMachineType(machineType, enabledAxes);
+                }
+            }
+            catch (Exception ex)
+            {
+                AlarmService.Instance.AddLog("ERR", $"OnMachineTypeChanged relay error: {ex.Message}");
+            }
+        }
+
+        // [2026-02-24] 依據啟用軸列表重建 AxisVM.Axes，保留已存在軸的參數值
+        private void RebuildAxisParameters(List<string> enabledAxes)
+        {
+            // 快照現有軸參數（以 AxisID 為 Key）
+            var existing = new Dictionary<string, AxisSetting>();
+            foreach (var ax in AxisVM.Axes)
+            {
+                if (!string.IsNullOrEmpty(ax.AxisID))
+                    existing[ax.AxisID] = ax;
+            }
+
+            AxisVM.Axes.Clear();
+            int idx = 0;
+            foreach (var axId in enabledAxes)
+            {
+                if (existing.TryGetValue(axId, out var prev))
+                {
+                    // 保留現有參數值，僅更新 Index
+                    prev.Index = idx;
+                    AxisVM.Axes.Add(prev);
+                }
+                else
+                {
+                    // 新增預設軸參數
+                    AxisVM.Axes.Add(new AxisSetting
+                    {
+                        Index = idx,
+                        AxisID = axId,
+                        Name = $"{axId} Axis"
+                    });
+                }
+                idx++;
             }
         }
 

@@ -260,6 +260,10 @@ namespace CncController.ViewModels
                 IsAxisAEnabled = enabledAxes.Contains("A");
                 IsAxisBEnabled = enabledAxes.Contains("B");
                 IsAxisCEnabled = enabledAxes.Contains("C");
+                // [2026-02-24] 同步 OffsetsVM 軸可見性（開機載入 + 即時切換共用邏輯）
+                OffsetsVM.IsAxisAEnabled = IsAxisAEnabled;
+                OffsetsVM.IsAxisBEnabled = IsAxisBEnabled;
+                OffsetsVM.IsAxisCEnabled = IsAxisCEnabled;
 
                 // ★★★ [關鍵修改] 無論成功失敗，都先廣播數據！ ★★★
                 // 這樣 SettingsViewModel 才能收到 slaves 並顯示在列表上
@@ -771,6 +775,23 @@ namespace CncController.ViewModels
                 AlarmService.Instance.AddLog("INFO", $"Reloading {_loadedFileName}...");
                 // await MachineControlService.Instance.UploadGCodeAsync(...)
             }
+        }
+
+        // [2026-02-24] 機台類型即時連動：由 SettingsVM 呼叫，更新 DRO/JOG/Offsets 軸可見性
+        public void ApplyMachineType(MachineType machineType, List<string> enabledAxes)
+        {
+            // DRO + JOG 自動更新（綁定 MainViewModel.IsAxisA/B/CEnabled）
+            IsAxisAEnabled = enabledAxes.Contains("A");
+            IsAxisBEnabled = enabledAxes.Contains("B");
+            IsAxisCEnabled = enabledAxes.Contains("C");
+
+            // Offsets Tab：G10 指令軸數 + 欄位可見性
+            OffsetsVM.EnabledAxes = enabledAxes;
+            OffsetsVM.IsAxisAEnabled = IsAxisAEnabled;
+            OffsetsVM.IsAxisBEnabled = IsAxisBEnabled;
+            OffsetsVM.IsAxisCEnabled = IsAxisCEnabled;
+
+            AlarmService.Instance.AddLog("INFO", $"MachineType changed: {machineType} → axes={string.Join(",", enabledAxes)}");
         }
 
         // [新增] 清除警報指令 (綁定給 ESC)

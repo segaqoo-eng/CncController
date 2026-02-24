@@ -14,6 +14,8 @@ namespace CncController.ViewModels
 
     public partial class MachineConfigViewModel : ObservableObject
     {
+        // [2026-02-24] 機台類型變更事件：通知外部（SettingsVM）即時連動 DRO/JOG/Offsets/AxisParameters
+        public event Action<MachineType, List<string>> MachineTypeChanged;
         // 基礎三軸 (預設開啟)
         [ObservableProperty] private bool _enableX = true;
         [ObservableProperty] private bool _enableY = true;
@@ -44,7 +46,7 @@ namespace CncController.ViewModels
             _selectedMachineTypeItem = MachineTypeOptions[0];
         }
 
-        // [2026-02-24] 選項變更時自動更新勾選框
+        // [2026-02-24] 選項變更時自動更新勾選框 + 廣播事件
         partial void OnSelectedMachineTypeItemChanged(MachineTypeItem? value)
         {
             if (value == null) return;
@@ -52,6 +54,9 @@ namespace CncController.ViewModels
             EnableA = axes.Contains("A");
             EnableB = axes.Contains("B");
             EnableC = axes.Contains("C");
+
+            // [2026-02-24] 觸發事件通知 SettingsVM → MainVM 即時連動
+            MachineTypeChanged?.Invoke(value.Value, axes);
         }
 
         // [2026-02-24] 供外部設定 MachineType（從 config 載入時使用）

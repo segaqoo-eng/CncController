@@ -2,6 +2,7 @@
 using CommunityToolkit.Mvvm.Input;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Threading;
 using System.Windows.Media; // [重要] 必須引用，為了使用 Color 和 Brush
@@ -247,6 +248,12 @@ namespace CncController.ViewModels
                 // [新增] 保存一份在本地 (供 Debug 或其他用途)
                 LastValidatedSlaves = slaves;
                 LastValidatedConfig = config;
+
+                // [2026-02-24] 將 MachineConfig 的啟用軸列表傳遞給 OffsetsVM（G10 指令動態組合用）
+                if (config.Axes != null && config.Axes.Count > 0)
+                {
+                    OffsetsVM.EnabledAxes = config.Axes.Select(a => a.AxisID).ToList();
+                }
 
                 // ★★★ [關鍵修改] 無論成功失敗，都先廣播數據！ ★★★
                 // 這樣 SettingsViewModel 才能收到 slaves 並顯示在列表上

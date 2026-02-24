@@ -820,6 +820,10 @@ def v2_machine_home():
         axis = int(data.get('axis', -1))  # -1 = 全軸
         cnc_cmd.mode(linuxcnc.MODE_MANUAL)
         cnc_cmd.wait_complete()
+        # [2026-02-24] 修正：回原點前必須切換至 Joint Mode（teleop_enable(0)）
+        # LinuxCNC 在 Teleop（世界座標）模式下 home() 指令會被忽略
+        cnc_cmd.teleop_enable(0)
+        cnc_cmd.wait_complete()
         cnc_cmd.home(axis)
         app_log('CMD', f'Home axis={axis}')
         return success_response()

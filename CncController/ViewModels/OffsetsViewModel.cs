@@ -8,6 +8,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Threading.Tasks;
 using CncController.Models;
 using CncController.Services;
@@ -32,6 +33,15 @@ namespace CncController.ViewModels
 
         // [2026-02-24] 新增：引用 MachineStatus 讓右欄可綁定即時機台座標（MC Current / WC）
         [ObservableProperty] private MachineStatus _machineStatus;
+
+        // [2026-02-24] 新增：啟用軸列表（從 MachineConfig 動態取得，預設 X/Y/Z）
+        //              G10 指令僅包含已啟用的軸，不寫死 XYZ
+        private List<string> _enabledAxes = new() { "X", "Y", "Z" };
+        public List<string> EnabledAxes
+        {
+            get => _enabledAxes;
+            set => SetProperty(ref _enabledAxes, value ?? new() { "X", "Y", "Z" });
+        }
 
         public ObservableCollection<WorkOffsetRow> OffsetTable { get; } = new()
         {
@@ -73,6 +83,8 @@ namespace CncController.ViewModels
             if (ok)
             {
                 ActiveOffset = g;
+                // [2026-02-24] 修正：切換 WCS 時同步選取 DataGrid 對應列，解決 SET TO ZERO 提示「未選擇座標系」
+                SelectedRow = OffsetTable.FirstOrDefault(r => r.Name == g);
                 AlarmService.Instance.AddLog("INFO", $"Active Coord: {g}");
             }
         }
@@ -103,15 +115,23 @@ namespace CncController.ViewModels
                 return;
             }
 
-            // 組合 G10 L20 指令
-            string axesPart = axis switch
+            // [2026-02-24] 修改：依據 EnabledAxes 動態組合 G10 L20 指令，不再寫死 XYZ
+            string axesPart;
+            if (axis == "ALL")
             {
-                "X" => "X0",
-                "Y" => "Y0",
-                "Z" => "Z0",
-                "ALL" => "X0 Y0 Z0",
-                _ => ""
-            };
+                // ALL：將所有啟用軸歸零
+                axesPart = string.Join(" ", EnabledAxes.Select(a => $"{a}0"));
+            }
+            else if (EnabledAxes.Contains(axis))
+            {
+                // 單軸歸零
+                axesPart = $"{axis}0";
+            }
+            else
+            {
+                AlarmService.Instance.AddLog("WARN", $"SET TO ZERO: 軸 {axis} 未啟用");
+                return;
+            }
 
             if (string.IsNullOrEmpty(axesPart)) return;
 
@@ -146,7 +166,9 @@ namespace CncController.ViewModels
                 return;
             }
 
-            string mdiCmd = $"G10 L2 P{pNum} X0 Y0 Z0 A0 B0 C0";
+            // [2026-02-24] 修改：依據 EnabledAxes 動態組合，不寫死六軸
+            string axesPart = string.Join(" ", EnabledAxes.Select(a => $"{a}0"));
+            string mdiCmd = $"G10 L2 P{pNum} {axesPart}";
             bool ok = await MachineControlService.Instance.SendMdiCommandAsync(mdiCmd);
             if (ok)
             {
@@ -167,9 +189,11 @@ namespace CncController.ViewModels
                 return;
             }
 
+            // [2026-02-24] 修改：依據 EnabledAxes 動態組合
+            string clearAxesPart = string.Join(" ", EnabledAxes.Select(a => $"{a}0"));
             foreach (var kv in WcsToPNumber)
             {
-                string mdiCmd = $"G10 L2 P{kv.Value} X0 Y0 Z0 A0 B0 C0";
+                string mdiCmd = $"G10 L2 P{kv.Value} {clearAxesPart}";
                 bool ok = await MachineControlService.Instance.SendMdiCommandAsync(mdiCmd);
                 if (!ok)
                 {
@@ -194,10 +218,21 @@ namespace CncController.ViewModels
                 return;
             }
 
+            // [2026-02-24] 修改：依據 EnabledAxes 動態組合回寫指令
             foreach (var row in OffsetTable)
             {
                 if (!WcsToPNumber.TryGetValue(row.Name, out int pNum)) continue;
-                string mdiCmd = $"G10 L2 P{pNum} X{row.X:F4} Y{row.Y:F4} Z{row.Z:F4} A{row.A:F4} B{row.B:F4} C{row.C:F4}";
+                var axisValues = new List<string>();
+                foreach (var ax in EnabledAxes)
+                {
+                    double val = ax switch
+                    {
+                        "X" => row.X, "Y" => row.Y, "Z" => row.Z,
+                        "A" => row.A, "B" => row.B, "C" => row.C, _ => 0.0
+                    };
+                    axisValues.Add($"{ax}{val:F4}");
+                }
+                string mdiCmd = $"G10 L2 P{pNum} {string.Join(" ", axisValues)}";
                 bool ok = await MachineControlService.Instance.SendMdiCommandAsync(mdiCmd);
                 if (!ok)
                 {

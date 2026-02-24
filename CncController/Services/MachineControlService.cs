@@ -528,6 +528,29 @@ namespace CncController.Services
             }
         }
 
+        // [2026-02-24] 新增 SetTaskModeAsync：切換任務模式（MANUAL/AUTO/MDI）
+        public async Task<bool> SetTaskModeAsync(string mode)
+        {
+            try
+            {
+                var response = await _pollingClient.PostAsJsonAsync(
+                    $"{_serverUrl}/v2/machine/mode", new { mode });
+                if (!response.IsSuccessStatusCode) return false;
+                var result = await response.Content.ReadFromJsonAsync<ApiResponse<object>>(_jsonOptions);
+                if (result?.Status != "Success")
+                {
+                    AlarmService.Instance.AddLog("API", $"SetMode Fail: {result?.Message}");
+                    return false;
+                }
+                return true;
+            }
+            catch (Exception ex)
+            {
+                AlarmService.Instance.AddLog("API", $"SetMode Exception: {ex.Message}");
+                return false;
+            }
+        }
+
         // [2026-02-23] 新增 GetOffsetsAsync：從後端 /v2/offsets 讀取 G54–G59 offset 值
         /// <summary>
         /// 取得 G54–G59 工件座標系偏移值（從後端 /v2/offsets）

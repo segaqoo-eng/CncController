@@ -543,12 +543,13 @@ def v2_status():
 
         servo_io_data = read_servo_raw_data()
 
-        # [2026-02-23] 新增 Active_WCS：讀取目前 Active WCS (1=G54, 2=G55, ... 6=G59) 回傳給前端
+        # [2026-02-24] 擴充 Active_WCS 支援 G59.1-G59.3（g5x_index: 7=G59.1, 8=G59.2, 9=G59.3）
         active_wcs = "G54"
         try:
             idx = cnc_stat.g5x_index
-            if 1 <= idx <= 6:
-                active_wcs = f"G{53 + idx}"
+            _idx_map = {1:'G54', 2:'G55', 3:'G56', 4:'G57', 5:'G58', 6:'G59',
+                        7:'G59.1', 8:'G59.2', 9:'G59.3'}
+            active_wcs = _idx_map.get(idx, "G54")
         except:
             pass
 
@@ -599,6 +600,27 @@ def v2_status():
             except:
                 homed_dict[name] = False
 
+        # [2026-02-24] 新增 G92 偏移量（供 Offsets 右欄 G52/G92 OFFSET 欄位顯示）
+        g92_dict = {}
+        try:
+            for i, axis in enumerate(['X', 'Y', 'Z', 'A', 'B', 'C']):
+                if i < len(g92):
+                    g92_dict[axis] = round(float(g92[i]), 4)
+        except:
+            pass
+
+        # [2026-02-24] 新增完整刀具偏移（供 Offsets 右欄 TOOL OFFSET 欄位顯示）
+        tool_offset_dict = {}
+        try:
+            for i, axis in enumerate(['X', 'Y', 'Z', 'A', 'B', 'C']):
+                if i < len(tool):
+                    tool_offset_dict[axis] = round(float(tool[i]), 4)
+        except:
+            pass
+
+        # [2026-02-24] 新增任務模式（供 Offsets 右下角 MAN/AUTO/MDI 按鈕高亮）
+        task_mode_str = {1: "MANUAL", 2: "AUTO", 3: "MDI"}.get(cnc_stat.task_mode, "UNKNOWN")
+
         return success_response({
             "Connected": True,
             "Task_State": t_state,
@@ -616,7 +638,10 @@ def v2_status():
             "Tool_Number": tool_number,
             "Tool_Length": round(tool_length, 4),
             "Tool_Diameter": round(tool_diameter, 4),
-            "Homed": homed_dict
+            "Homed": homed_dict,
+            "G92_Offset": g92_dict,
+            "Tool_Offset_XYZ": tool_offset_dict,
+            "Task_Mode": task_mode_str
         })
 
     except Exception as e:
@@ -636,9 +661,11 @@ def v2_errors():
 # [2026-02-23] 新增 read_work_offsets：從 LinuxCNC .var 參數檔讀取 G54–G59 六組 offset 值
 def read_work_offsets():
     """從 LinuxCNC Parameter File (.var) 讀取 G54–G59 六組 WCS 座標值"""
+    # [2026-02-24] 擴充 G59.1-G59.3（對齊 PB 版 Offsets 頁面）
     param_bases = {
         'G54': 5221, 'G55': 5241, 'G56': 5261,
-        'G57': 5281, 'G58': 5301, 'G59': 5321
+        'G57': 5281, 'G58': 5301, 'G59': 5321,
+        'G59.1': 5341, 'G59.2': 5361, 'G59.3': 5381
     }
     axes = ['X', 'Y', 'Z', 'A', 'B', 'C']
     offsets = {wcs: {a: 0.0 for a in axes} for wcs in param_bases}
@@ -675,12 +702,15 @@ def read_work_offsets():
             pass
 
     # [2026-02-24] 用 cnc_stat 記憶體值覆蓋 Active WCS（.var 檔僅關機時寫入，G10 後必定過時）
+    # [2026-02-24] 擴充支援 G59.1-G59.3（g5x_index: 7=G59.1, 8=G59.2, 9=G59.3）
     try:
         if cnc_stat:
             cnc_stat.poll()
-            idx = cnc_stat.g5x_index  # 1=G54, 2=G55, ..., 6=G59
-            if 1 <= idx <= 6:
-                active_wcs = f"G{53 + idx}"
+            idx = cnc_stat.g5x_index  # 1=G54, 2=G55, ..., 6=G59, 7=G59.1, 8=G59.2, 9=G59.3
+            idx_to_wcs = {1:'G54', 2:'G55', 3:'G56', 4:'G57', 5:'G58', 6:'G59',
+                          7:'G59.1', 8:'G59.2', 9:'G59.3'}
+            active_wcs = idx_to_wcs.get(idx)
+            if active_wcs and active_wcs in offsets:
                 g5x = cnc_stat.g5x_offset
                 for i, axis in enumerate(axes):
                     if i < len(g5x):
@@ -695,13 +725,15 @@ def read_work_offsets():
 @app.route('/v2/offsets', methods=['GET'])
 def v2_offsets():
     """回傳 G54–G59 所有工件座標系偏移值 + 目前 Active WCS"""
+    # [2026-02-24] 擴充支援 G59.1-G59.3
     active_wcs = "G54"
     try:
         if ensure_cnc_connections():
             cnc_stat.poll()
             idx = cnc_stat.g5x_index
-            if 1 <= idx <= 6:
-                active_wcs = f"G{53 + idx}"
+            _idx_map = {1:'G54', 2:'G55', 3:'G56', 4:'G57', 5:'G58', 6:'G59',
+                        7:'G59.1', 8:'G59.2', 9:'G59.3'}
+            active_wcs = _idx_map.get(idx, "G54")
     except Exception:
         pass
 
@@ -869,6 +901,28 @@ def v2_machine_home():
         return success_response()
     except Exception as e:
         return error_response(f"Home Fail: {e}")
+
+# [2026-02-24] 新增 /v2/machine/mode 端點：切換任務模式（MAN/AUTO/MDI）
+@app.route('/v2/machine/mode', methods=['POST'])
+def v2_machine_mode():
+    """切換任務模式：MANUAL / AUTO / MDI"""
+    if not ensure_cnc_connections(): return error_response("No connection")
+    try:
+        data = request.json or {}
+        mode = data.get('mode', '').upper()
+        mode_map = {
+            'MANUAL': linuxcnc.MODE_MANUAL,
+            'AUTO': linuxcnc.MODE_AUTO,
+            'MDI': linuxcnc.MODE_MDI
+        }
+        if mode not in mode_map:
+            return error_response(f"Invalid mode: {mode}. Use MANUAL/AUTO/MDI", 400)
+        cnc_cmd.mode(mode_map[mode])
+        cnc_cmd.wait_complete()
+        app_log('CMD', f'Mode changed to {mode}')
+        return success_response({"mode": mode})
+    except Exception as e:
+        return error_response(f"Mode Fail: {e}")
 
 @app.route('/v2/mdi', methods=['POST'])
 def v2_mdi():

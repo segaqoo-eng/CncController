@@ -48,17 +48,20 @@ namespace CncController.ViewModels
         [ObservableProperty] private bool _isAxisBEnabled;
         [ObservableProperty] private bool _isAxisCEnabled;
 
+        // [2026-02-24] 擴充 G59.1-G59.3（對齊 PB 版）
         public ObservableCollection<WorkOffsetRow> OffsetTable { get; } = new()
         {
             new() { Name = "G54" }, new() { Name = "G55" }, new() { Name = "G56" },
             new() { Name = "G57" }, new() { Name = "G58" }, new() { Name = "G59" },
+            new() { Name = "G59.1" }, new() { Name = "G59.2" }, new() { Name = "G59.3" },
         };
 
-        // [2026-02-24] G-code 名稱 → G10 L20 的 P 號對照（G54=P1, G55=P2, ..., G59=P6）
+        // [2026-02-24] G-code 名稱 → G10 L20 的 P 號對照（擴充 G59.1=P7, G59.2=P8, G59.3=P9）
         private static readonly Dictionary<string, int> WcsToPNumber = new()
         {
             ["G54"] = 1, ["G55"] = 2, ["G56"] = 3,
             ["G57"] = 4, ["G58"] = 5, ["G59"] = 6,
+            ["G59.1"] = 7, ["G59.2"] = 8, ["G59.3"] = 9,
         };
 
         public OffsetsViewModel()
@@ -296,6 +299,13 @@ namespace CncController.ViewModels
                 }
             }
             AlarmService.Instance.AddLog("INFO", "Offset table reloaded.");
+        }
+
+        // [2026-02-24] 新增 SetModeCommand：切換任務模式（MAN/AUTO/MDI），供右下角按鈕使用
+        [RelayCommand]
+        private async Task SetMode(string mode)
+        {
+            await MachineControlService.Instance.SetTaskModeAsync(mode);
         }
     }
 }

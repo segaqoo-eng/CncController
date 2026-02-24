@@ -558,6 +558,29 @@ namespace CncController.ViewModels
                 Status.IsAllHomed = enabled.All(a => data.Homed.TryGetValue(a, out bool v) && v);
             }
 
+            // [2026-02-24] 新增：G92 偏移量映射（供 Offsets 右欄 G52/G92 OFFSET 欄位）
+            if (data.G92_Offset != null)
+            {
+                if (data.G92_Offset.TryGetValue("X", out double g92x)) Status.G92X = g92x;
+                if (data.G92_Offset.TryGetValue("Y", out double g92y)) Status.G92Y = g92y;
+                if (data.G92_Offset.TryGetValue("Z", out double g92z)) Status.G92Z = g92z;
+                if (data.G92_Offset.TryGetValue("A", out double g92a)) Status.G92A = g92a;
+                if (data.G92_Offset.TryGetValue("B", out double g92b)) Status.G92B = g92b;
+                if (data.G92_Offset.TryGetValue("C", out double g92c)) Status.G92C = g92c;
+            }
+
+            // [2026-02-24] 新增：完整刀具偏移映射（供 Offsets 右欄 TOOL OFFSET 欄位）
+            if (data.Tool_Offset_XYZ != null)
+            {
+                if (data.Tool_Offset_XYZ.TryGetValue("X", out double tox)) Status.ToolOffsetX = tox;
+                if (data.Tool_Offset_XYZ.TryGetValue("Y", out double toy)) Status.ToolOffsetY = toy;
+                if (data.Tool_Offset_XYZ.TryGetValue("Z", out double toz)) Status.ToolOffsetZ = toz;
+            }
+
+            // [2026-02-24] 新增：任務模式映射（供 Offsets 右下角 MAN/AUTO/MDI 按鈕高亮）
+            if (!string.IsNullOrEmpty(data.Task_Mode))
+                Status.TaskMode = data.Task_Mode;
+
             // 更新 InterpState 供計時器判斷
             Status.InterpState = data.Interp_State;
 
@@ -827,25 +850,28 @@ namespace CncController.ViewModels
         }
 
         // [2026-02-24] DRO 單軸歸零：G10 L20 P<wcs> <axis>0
+        // [2026-02-24] 擴充 G59.1-G59.3 支援（P7/P8/P9）
         [RelayCommand]
         private async Task DroZeroAxis(string axisName)
         {
             if (!CanExecuteMotion()) return;
             var wcsMap = new Dictionary<string, int>
-                { {"G54",1}, {"G55",2}, {"G56",3}, {"G57",4}, {"G58",5}, {"G59",6} };
+                { {"G54",1}, {"G55",2}, {"G56",3}, {"G57",4}, {"G58",5}, {"G59",6},
+                  {"G59.1",7}, {"G59.2",8}, {"G59.3",9} };
             if (!wcsMap.TryGetValue(Status.ActiveCoordSystem, out int pNum)) return;
             string cmd = $"G10 L20 P{pNum} {axisName}0";
             AlarmService.Instance.AddLog("INFO", $"DRO Zero {axisName}: {cmd}");
             await MachineControlService.Instance.SendMdiCommandAsync(cmd);
         }
 
-        // [2026-02-24] DRO 全軸歸零
+        // [2026-02-24] DRO 全軸歸零（擴充 G59.1-G59.3）
         [RelayCommand]
         private async Task DroZeroAll()
         {
             if (!CanExecuteMotion()) return;
             var wcsMap = new Dictionary<string, int>
-                { {"G54",1}, {"G55",2}, {"G56",3}, {"G57",4}, {"G58",5}, {"G59",6} };
+                { {"G54",1}, {"G55",2}, {"G56",3}, {"G57",4}, {"G58",5}, {"G59",6},
+                  {"G59.1",7}, {"G59.2",8}, {"G59.3",9} };
             if (!wcsMap.TryGetValue(Status.ActiveCoordSystem, out int pNum)) return;
             var axes = LastValidatedConfig?.GetEnabledAxes() ?? new() { "X", "Y", "Z" };
             string axesPart = string.Join(" ", axes.Select(a => $"{a}0"));

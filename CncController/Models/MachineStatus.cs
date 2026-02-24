@@ -69,5 +69,21 @@ namespace CncController.Models
         [ObservableProperty] private bool _isBHomed;
         [ObservableProperty] private bool _isCHomed;
         [ObservableProperty] private bool _isAllHomed;
+
+        // [2026-02-24] 新增 G92 偏移量（供 Offsets 右欄 G52/G92 OFFSET 欄位）
+        [ObservableProperty] private double _g92X;
+        [ObservableProperty] private double _g92Y;
+        [ObservableProperty] private double _g92Z;
+        [ObservableProperty] private double _g92A;
+        [ObservableProperty] private double _g92B;
+        [ObservableProperty] private double _g92C;
+
+        // [2026-02-24] 新增完整刀具偏移（供 Offsets 右欄 TOOL OFFSET 欄位）
+        [ObservableProperty] private double _toolOffsetX;
+        [ObservableProperty] private double _toolOffsetY;
+        [ObservableProperty] private double _toolOffsetZ;
+
+        // [2026-02-24] 新增任務模式（供 Offsets 右下角 MAN/AUTO/MDI 按鈕高亮）
+        [ObservableProperty] private string _taskMode = "MANUAL";
     }
 }

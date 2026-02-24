@@ -1,6 +1,5 @@
 <!-- [2026-02-23] 新增 OffsetsView：G54–G59 工件座標系管理頁面；左欄 DataGrid 總表，右欄詳細面板 -->
-<!-- [2026-02-24] 右欄 MC Current / WC / OFFSET 綁定即時資料；SET TO ZERO 按鈕綁定 G10 L20 指令 -->
-<!-- [2026-02-24] 機台類型即時連動：A/B/C 軸 DataGrid 欄位 + 右欄行 + SET TO ZERO 按鈕依 MachineType 動態顯示/隱藏 -->
+<!-- [2026-02-24] 右欄對齊 PB 版：7 欄表格（ZERO/AXIS/WC/MC/WC_OFFSET/G92/TOOL）+ 2 行 WCS 按鈕 + MAN/AUTO/MDI -->
 <UserControl x:Class="CncController.Views.Pages.OffsetsView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -49,13 +48,29 @@
             <Setter Property="FontSize" Value="13"/>
             <Setter Property="Margin" Value="4,3"/>
         </Style>
+
+        <!-- [2026-02-24] ZERO 按鈕樣式（表格內嵌小按鈕） -->
+        <Style x:Key="ZeroBtnStyle" TargetType="Button" BasedOn="{StaticResource OffsetBtnStyle}">
+            <Setter Property="FontSize" Value="9"/>
+            <Setter Property="Padding" Value="4,2"/>
+            <Setter Property="Margin" Value="1"/>
+            <Setter Property="Background" Value="#664422"/>
+        </Style>
+
+        <!-- [2026-02-24] 模式按鈕樣式（MAN/AUTO/MDI） -->
+        <Style x:Key="ModeBtnStyle" TargetType="Button" BasedOn="{StaticResource OffsetBtnStyle}">
+            <Setter Property="Height" Value="40"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Margin" Value="4,3"/>
+            <Setter Property="MinWidth" Value="80"/>
+        </Style>
     </UserControl.Resources>
 
     <Border Background="#1E1E1E" Padding="10">
         <Grid>
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="55*"/>
                 <ColumnDefinition Width="45*"/>
+                <ColumnDefinition Width="55*"/>
             </Grid.ColumnDefinitions>
 
             <!-- ========== 左欄：座標系總表 ========== -->
@@ -64,7 +79,6 @@
                     <TextBlock DockPanel.Dock="Top" Text="WORK OFFSET TABLE" Foreground="#AAAAAA"
                                FontSize="12" FontWeight="Bold" Margin="0,0,0,6"/>
 
-                    <!-- [2026-02-24] 修正按鈕綁定：CLEAR SELECTED → ClearSelectedCommand，CLEAR ALL → ClearAllCommand -->
                     <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Margin="0,8,0,0"
                                 HorizontalAlignment="Left">
                         <Button Content="CLEAR SELECTED" Style="{StaticResource OffsetBtnStyle}"
@@ -117,7 +131,6 @@
                                 </Style.Triggers>
                             </Style>
                         </DataGrid.CellStyle>
-                        <!-- [2026-02-24] DataGrid 顯示全部六軸欄位（A/B/C 依 MachineType 即時顯示/隱藏） -->
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="WCS" Binding="{Binding Name}" Width="70" IsReadOnly="True"/>
                             <DataGridTextColumn Header="X" Binding="{Binding X, StringFormat=F4}" Width="*"/>
@@ -134,252 +147,388 @@
                 </DockPanel>
             </Border>
 
-            <!-- ========== 右欄：WORK COORDINATE OFFSETS ========== -->
+            <!-- ========== 右欄：WORK COORDINATE OFFSETS（對齊 PB 版） ========== -->
             <Border Grid.Column="1" Background="#252526" BorderBrush="#444" BorderThickness="1" CornerRadius="4" Margin="5,0,0,0">
-                <StackPanel Margin="10">
-                    <TextBlock Text="WORK COORDINATE OFFSETS" Foreground="#AAAAAA"
-                               FontSize="12" FontWeight="Bold" Margin="0,0,0,10"/>
+                <DockPanel Margin="10">
+                    <TextBlock DockPanel.Dock="Top" Text="WORK COORDINATE OFFSETS" Foreground="#AAAAAA"
+                               FontSize="12" FontWeight="Bold" Margin="0,0,0,8"/>
 
-                    <!-- G54–G59 快選按鈕 -->
-                    <UniformGrid Rows="1" Margin="0,0,0,10">
-                        <Button Content="G54" Command="{Binding SelectOffsetCommand}" CommandParameter="G54">
-                            <Button.Style>
-                                <Style TargetType="Button" BasedOn="{StaticResource WcsBtnStyle}">
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding ActiveOffset}" Value="G54">
-                                            <Setter Property="Background" Value="#007ACC"/>
-                                            <Setter Property="BorderBrush" Value="#005A9E"/>
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </Button.Style>
-                        </Button>
-                        <Button Content="G55" Command="{Binding SelectOffsetCommand}" CommandParameter="G55">
-                            <Button.Style>
-                                <Style TargetType="Button" BasedOn="{StaticResource WcsBtnStyle}">
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding ActiveOffset}" Value="G55">
-                                            <Setter Property="Background" Value="#007ACC"/>
-                                            <Setter Property="BorderBrush" Value="#005A9E"/>
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </Button.Style>
-                        </Button>
-                        <Button Content="G56" Command="{Binding SelectOffsetCommand}" CommandParameter="G56">
-                            <Button.Style>
-                                <Style TargetType="Button" BasedOn="{StaticResource WcsBtnStyle}">
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding ActiveOffset}" Value="G56">
-                                            <Setter Property="Background" Value="#007ACC"/>
-                                            <Setter Property="BorderBrush" Value="#005A9E"/>
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </Button.Style>
-                        </Button>
-                        <Button Content="G57" Command="{Binding SelectOffsetCommand}" CommandParameter="G57">
-                            <Button.Style>
-                                <Style TargetType="Button" BasedOn="{StaticResource WcsBtnStyle}">
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding ActiveOffset}" Value="G57">
-                                            <Setter Property="Background" Value="#007ACC"/>
-                                            <Setter Property="BorderBrush" Value="#005A9E"/>
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </Button.Style>
-                        </Button>
-                        <Button Content="G58" Command="{Binding SelectOffsetCommand}" CommandParameter="G58">
-                            <Button.Style>
-                                <Style TargetType="Button" BasedOn="{StaticResource WcsBtnStyle}">
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding ActiveOffset}" Value="G58">
-                                            <Setter Property="Background" Value="#007ACC"/>
-                                            <Setter Property="BorderBrush" Value="#005A9E"/>
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </Button.Style>
-                        </Button>
-                        <Button Content="G59" Command="{Binding SelectOffsetCommand}" CommandParameter="G59">
-                            <Button.Style>
-                                <Style TargetType="Button" BasedOn="{StaticResource WcsBtnStyle}">
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding ActiveOffset}" Value="G59">
-                                            <Setter Property="Background" Value="#007ACC"/>
-                                            <Setter Property="BorderBrush" Value="#005A9E"/>
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </Button.Style>
-                        </Button>
-                    </UniformGrid>
+                    <!-- [2026-02-24] WCS 按鈕改為 2 行（對齊 PB 版：Row1=G54-G58，Row2=G59/G59.1-G59.3） -->
+                    <StackPanel DockPanel.Dock="Top" Margin="0,0,0,4">
+                        <!-- Row 1: G54, G55, G56, G57, G58 -->
+                        <UniformGrid Rows="1" Columns="5">
+                            <Button Content="G54" Command="{Binding SelectOffsetCommand}" CommandParameter="G54">
+                                <Button.Style>
+                                    <Style TargetType="Button" BasedOn="{StaticResource WcsBtnStyle}">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding ActiveOffset}" Value="G54">
+                                                <Setter Property="Background" Value="#007ACC"/>
+                                                <Setter Property="BorderBrush" Value="#005A9E"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Button.Style>
+                            </Button>
+                            <Button Content="G55" Command="{Binding SelectOffsetCommand}" CommandParameter="G55">
+                                <Button.Style>
+                                    <Style TargetType="Button" BasedOn="{StaticResource WcsBtnStyle}">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding ActiveOffset}" Value="G55">
+                                                <Setter Property="Background" Value="#007ACC"/>
+                                                <Setter Property="BorderBrush" Value="#005A9E"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Button.Style>
+                            </Button>
+                            <Button Content="G56" Command="{Binding SelectOffsetCommand}" CommandParameter="G56">
+                                <Button.Style>
+                                    <Style TargetType="Button" BasedOn="{StaticResource WcsBtnStyle}">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding ActiveOffset}" Value="G56">
+                                                <Setter Property="Background" Value="#007ACC"/>
+                                                <Setter Property="BorderBrush" Value="#005A9E"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Button.Style>
+                            </Button>
+                            <Button Content="G57" Command="{Binding SelectOffsetCommand}" CommandParameter="G57">
+                                <Button.Style>
+                                    <Style TargetType="Button" BasedOn="{StaticResource WcsBtnStyle}">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding ActiveOffset}" Value="G57">
+                                                <Setter Property="Background" Value="#007ACC"/>
+                                                <Setter Property="BorderBrush" Value="#005A9E"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Button.Style>
+                            </Button>
+                            <Button Content="G58" Command="{Binding SelectOffsetCommand}" CommandParameter="G58">
+                                <Button.Style>
+                                    <Style TargetType="Button" BasedOn="{StaticResource WcsBtnStyle}">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding ActiveOffset}" Value="G58">
+                                                <Setter Property="Background" Value="#007ACC"/>
+                                                <Setter Property="BorderBrush" Value="#005A9E"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Button.Style>
+                            </Button>
+                        </UniformGrid>
+                        <!-- Row 2: G59, G59.1, G59.2, G59.3 -->
+                        <UniformGrid Rows="1" Columns="5">
+                            <Button Content="G59" Command="{Binding SelectOffsetCommand}" CommandParameter="G59">
+                                <Button.Style>
+                                    <Style TargetType="Button" BasedOn="{StaticResource WcsBtnStyle}">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding ActiveOffset}" Value="G59">
+                                                <Setter Property="Background" Value="#007ACC"/>
+                                                <Setter Property="BorderBrush" Value="#005A9E"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Button.Style>
+                            </Button>
+                            <Button Content="G59.1" Command="{Binding SelectOffsetCommand}" CommandParameter="G59.1">
+                                <Button.Style>
+                                    <Style TargetType="Button" BasedOn="{StaticResource WcsBtnStyle}">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding ActiveOffset}" Value="G59.1">
+                                                <Setter Property="Background" Value="#007ACC"/>
+                                                <Setter Property="BorderBrush" Value="#005A9E"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Button.Style>
+                            </Button>
+                            <Button Content="G59.2" Command="{Binding SelectOffsetCommand}" CommandParameter="G59.2">
+                                <Button.Style>
+                                    <Style TargetType="Button" BasedOn="{StaticResource WcsBtnStyle}">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding ActiveOffset}" Value="G59.2">
+                                                <Setter Property="Background" Value="#007ACC"/>
+                                                <Setter Property="BorderBrush" Value="#005A9E"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Button.Style>
+                            </Button>
+                            <Button Content="G59.3" Command="{Binding SelectOffsetCommand}" CommandParameter="G59.3">
+                                <Button.Style>
+                                    <Style TargetType="Button" BasedOn="{StaticResource WcsBtnStyle}">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding ActiveOffset}" Value="G59.3">
+                                                <Setter Property="Background" Value="#007ACC"/>
+                                                <Setter Property="BorderBrush" Value="#005A9E"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Button.Style>
+                            </Button>
+                            <!-- 第 5 格留空維持對齊 -->
+                            <Border/>
+                        </UniformGrid>
+                    </StackPanel>
 
-                    <Separator Background="#444" Margin="0,0,0,10"/>
+                    <Separator DockPanel.Dock="Top" Background="#444" Margin="0,4,0,8"/>
 
-                    <!-- [2026-02-24] 座標值顯示：MC Current / WC / OFFSET；A/B/C 行依 MachineType 動態顯示 -->
-                    <Grid>
+                    <!-- [2026-02-24] 右下角 MAN / AUTO / MDI 按鈕（對齊 PB 版） -->
+                    <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,8,0,0">
+                        <Button Content="MAN" Command="{Binding SetModeCommand}" CommandParameter="MANUAL">
+                            <Button.Style>
+                                <Style TargetType="Button" BasedOn="{StaticResource ModeBtnStyle}">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding MachineStatus.TaskMode}" Value="MANUAL">
+                                            <Setter Property="Background" Value="#007ACC"/>
+                                            <Setter Property="BorderBrush" Value="#005A9E"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
+                        </Button>
+                        <Button Content="AUTO" Command="{Binding SetModeCommand}" CommandParameter="AUTO">
+                            <Button.Style>
+                                <Style TargetType="Button" BasedOn="{StaticResource ModeBtnStyle}">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding MachineStatus.TaskMode}" Value="AUTO">
+                                            <Setter Property="Background" Value="#007ACC"/>
+                                            <Setter Property="BorderBrush" Value="#005A9E"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
+                        </Button>
+                        <Button Content="MDI" Command="{Binding SetModeCommand}" CommandParameter="MDI">
+                            <Button.Style>
+                                <Style TargetType="Button" BasedOn="{StaticResource ModeBtnStyle}">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding MachineStatus.TaskMode}" Value="MDI">
+                                            <Setter Property="Background" Value="#007ACC"/>
+                                            <Setter Property="BorderBrush" Value="#005A9E"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
+                        </Button>
+                    </StackPanel>
+
+                    <!-- [2026-02-24] 7 欄座標表格（對齊 PB 版：ZERO | AXIS | WC CURRENT POS | MACHINE COORDS | WC OFFSET | G52/G92 OFFSET | TOOL OFFSET） -->
+                    <Grid Margin="0,0,0,0">
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="40"/>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="60"/>  <!-- ZERO 按鈕 -->
+                            <ColumnDefinition Width="35"/>  <!-- AXIS 標籤 -->
+                            <ColumnDefinition Width="*"/>   <!-- WC CURRENT POS -->
+                            <ColumnDefinition Width="*"/>   <!-- MACHINE COORDS -->
+                            <ColumnDefinition Width="*"/>   <!-- WC OFFSET -->
+                            <ColumnDefinition Width="*"/>   <!-- G52/G92 OFFSET -->
+                            <ColumnDefinition Width="*"/>   <!-- TOOL OFFSET -->
                         </Grid.ColumnDefinitions>
                         <Grid.RowDefinitions>
-                            <RowDefinition Height="24"/>
-                            <RowDefinition Height="36"/>
-                            <RowDefinition Height="36"/>
-                            <RowDefinition Height="36"/>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="24"/>   <!-- 表頭 -->
+                            <RowDefinition Height="36"/>   <!-- X -->
+                            <RowDefinition Height="36"/>   <!-- Y -->
+                            <RowDefinition Height="36"/>   <!-- Z -->
+                            <RowDefinition Height="Auto"/> <!-- A -->
+                            <RowDefinition Height="Auto"/> <!-- B -->
+                            <RowDefinition Height="Auto"/> <!-- C -->
                         </Grid.RowDefinitions>
 
                         <!-- 表頭 -->
-                        <TextBlock Grid.Row="0" Grid.Column="1" Text="MC CURRENT" Foreground="#888" FontSize="10" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        <TextBlock Grid.Row="0" Grid.Column="2" Text="WORK COORD" Foreground="#888" FontSize="10" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        <TextBlock Grid.Row="0" Grid.Column="3" Text="OFFSET" Foreground="#888" FontSize="10" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Row="0" Grid.Column="0" Text="SET TO&#x0a;ZERO" Foreground="#888" FontSize="8" HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center"/>
+                        <TextBlock Grid.Row="0" Grid.Column="1" Text="AXIS" Foreground="#888" FontSize="9" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Row="0" Grid.Column="2" Text="WC CURRENT POS" Foreground="#888" FontSize="9" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Row="0" Grid.Column="3" Text="MACHINE COORDS" Foreground="#888" FontSize="9" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Row="0" Grid.Column="4" Text="WC OFFSET" Foreground="#888" FontSize="9" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Row="0" Grid.Column="5" Text="G52/G92 OFFSET" Foreground="#888" FontSize="9" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Row="0" Grid.Column="6" Text="TOOL OFFSET" Foreground="#888" FontSize="9" HorizontalAlignment="Center" VerticalAlignment="Center"/>
 
-                        <!-- X 行 -->
-                        <Border Grid.Row="1" Grid.Column="0" Background="#3A2A2A" Margin="1" CornerRadius="2">
-                            <TextBlock Text="X" Foreground="White" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        </Border>
-                        <Border Grid.Row="1" Grid.Column="1" Background="#1A1A2E" Margin="1" CornerRadius="2">
-                            <TextBlock Text="{Binding MachineStatus.X, StringFormat={}{0:F3}}" Foreground="#00BFFF" FontFamily="Consolas" FontSize="14" FontWeight="Bold"
-                                       HorizontalAlignment="Right" VerticalAlignment="Center" Margin="6,0"/>
+                        <!-- ===== X 行 ===== -->
+                        <Button Grid.Row="1" Grid.Column="0" Content="ZERO" Style="{StaticResource ZeroBtnStyle}"
+                                Command="{Binding SetToZeroAxisCommand}" CommandParameter="X"/>
+                        <Border Grid.Row="1" Grid.Column="1" Background="#3A2A2A" Margin="1" CornerRadius="2">
+                            <TextBlock Text="X" Foreground="White" FontWeight="Bold" FontSize="14" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <Border Grid.Row="1" Grid.Column="2" Background="#1A2E1A" Margin="1" CornerRadius="2">
-                            <TextBlock Text="{Binding MachineStatus.WorkX, StringFormat={}{0:F3}}" Foreground="#90EE90" FontFamily="Consolas" FontSize="14" FontWeight="Bold"
-                                       HorizontalAlignment="Right" VerticalAlignment="Center" Margin="6,0"/>
+                            <TextBlock Text="{Binding MachineStatus.WorkX, StringFormat={}{0:F4}}" Foreground="#90EE90" FontFamily="Consolas" FontSize="13" FontWeight="Bold"
+                                       HorizontalAlignment="Right" VerticalAlignment="Center" Margin="4,0"/>
                         </Border>
-                        <Border Grid.Row="1" Grid.Column="3" Background="#2A2A2A" Margin="1" CornerRadius="2">
-                            <TextBlock Text="{Binding SelectedRow.X, StringFormat={}{0:F4}}" Foreground="#AAAAAA" FontFamily="Consolas" FontSize="14" FontWeight="Bold"
-                                       HorizontalAlignment="Right" VerticalAlignment="Center" Margin="6,0"/>
+                        <Border Grid.Row="1" Grid.Column="3" Background="#1A1A2E" Margin="1" CornerRadius="2">
+                            <TextBlock Text="{Binding MachineStatus.X, StringFormat={}{0:F4}}" Foreground="#00BFFF" FontFamily="Consolas" FontSize="13" FontWeight="Bold"
+                                       HorizontalAlignment="Right" VerticalAlignment="Center" Margin="4,0"/>
+                        </Border>
+                        <Border Grid.Row="1" Grid.Column="4" Background="#2A2A2A" Margin="1" CornerRadius="2">
+                            <TextBlock Text="{Binding SelectedRow.X, StringFormat={}{0:F4}}" Foreground="#AAAAAA" FontFamily="Consolas" FontSize="13" FontWeight="Bold"
+                                       HorizontalAlignment="Right" VerticalAlignment="Center" Margin="4,0"/>
+                        </Border>
+                        <Border Grid.Row="1" Grid.Column="5" Background="#2A2A22" Margin="1" CornerRadius="2">
+                            <TextBlock Text="{Binding MachineStatus.G92X, StringFormat={}{0:F4}}" Foreground="#CCCC88" FontFamily="Consolas" FontSize="13" FontWeight="Bold"
+                                       HorizontalAlignment="Right" VerticalAlignment="Center" Margin="4,0"/>
+                        </Border>
+                        <Border Grid.Row="1" Grid.Column="6" Background="#2A222A" Margin="1" CornerRadius="2">
+                            <TextBlock Text="{Binding MachineStatus.ToolOffsetX, StringFormat={}{0:F4}}" Foreground="#CC88CC" FontFamily="Consolas" FontSize="13" FontWeight="Bold"
+                                       HorizontalAlignment="Right" VerticalAlignment="Center" Margin="4,0"/>
                         </Border>
 
-                        <!-- Y 行 -->
-                        <Border Grid.Row="2" Grid.Column="0" Background="#3A2A2A" Margin="1" CornerRadius="2">
-                            <TextBlock Text="Y" Foreground="White" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        </Border>
-                        <Border Grid.Row="2" Grid.Column="1" Background="#1A1A2E" Margin="1" CornerRadius="2">
-                            <TextBlock Text="{Binding MachineStatus.Y, StringFormat={}{0:F3}}" Foreground="#00BFFF" FontFamily="Consolas" FontSize="14" FontWeight="Bold"
-                                       HorizontalAlignment="Right" VerticalAlignment="Center" Margin="6,0"/>
+                        <!-- ===== Y 行 ===== -->
+                        <Button Grid.Row="2" Grid.Column="0" Content="ZERO" Style="{StaticResource ZeroBtnStyle}"
+                                Command="{Binding SetToZeroAxisCommand}" CommandParameter="Y"/>
+                        <Border Grid.Row="2" Grid.Column="1" Background="#3A2A2A" Margin="1" CornerRadius="2">
+                            <TextBlock Text="Y" Foreground="White" FontWeight="Bold" FontSize="14" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <Border Grid.Row="2" Grid.Column="2" Background="#1A2E1A" Margin="1" CornerRadius="2">
-                            <TextBlock Text="{Binding MachineStatus.WorkY, StringFormat={}{0:F3}}" Foreground="#90EE90" FontFamily="Consolas" FontSize="14" FontWeight="Bold"
-                                       HorizontalAlignment="Right" VerticalAlignment="Center" Margin="6,0"/>
+                            <TextBlock Text="{Binding MachineStatus.WorkY, StringFormat={}{0:F4}}" Foreground="#90EE90" FontFamily="Consolas" FontSize="13" FontWeight="Bold"
+                                       HorizontalAlignment="Right" VerticalAlignment="Center" Margin="4,0"/>
                         </Border>
-                        <Border Grid.Row="2" Grid.Column="3" Background="#2A2A2A" Margin="1" CornerRadius="2">
-                            <TextBlock Text="{Binding SelectedRow.Y, StringFormat={}{0:F4}}" Foreground="#AAAAAA" FontFamily="Consolas" FontSize="14" FontWeight="Bold"
-                                       HorizontalAlignment="Right" VerticalAlignment="Center" Margin="6,0"/>
+                        <Border Grid.Row="2" Grid.Column="3" Background="#1A1A2E" Margin="1" CornerRadius="2">
+                            <TextBlock Text="{Binding MachineStatus.Y, StringFormat={}{0:F4}}" Foreground="#00BFFF" FontFamily="Consolas" FontSize="13" FontWeight="Bold"
+                                       HorizontalAlignment="Right" VerticalAlignment="Center" Margin="4,0"/>
+                        </Border>
+                        <Border Grid.Row="2" Grid.Column="4" Background="#2A2A2A" Margin="1" CornerRadius="2">
+                            <TextBlock Text="{Binding SelectedRow.Y, StringFormat={}{0:F4}}" Foreground="#AAAAAA" FontFamily="Consolas" FontSize="13" FontWeight="Bold"
+                                       HorizontalAlignment="Right" VerticalAlignment="Center" Margin="4,0"/>
+                        </Border>
+                        <Border Grid.Row="2" Grid.Column="5" Background="#2A2A22" Margin="1" CornerRadius="2">
+                            <TextBlock Text="{Binding MachineStatus.G92Y, StringFormat={}{0:F4}}" Foreground="#CCCC88" FontFamily="Consolas" FontSize="13" FontWeight="Bold"
+                                       HorizontalAlignment="Right" VerticalAlignment="Center" Margin="4,0"/>
+                        </Border>
+                        <Border Grid.Row="2" Grid.Column="6" Background="#2A222A" Margin="1" CornerRadius="2">
+                            <TextBlock Text="{Binding MachineStatus.ToolOffsetY, StringFormat={}{0:F4}}" Foreground="#CC88CC" FontFamily="Consolas" FontSize="13" FontWeight="Bold"
+                                       HorizontalAlignment="Right" VerticalAlignment="Center" Margin="4,0"/>
                         </Border>
 
-                        <!-- Z 行 -->
-                        <Border Grid.Row="3" Grid.Column="0" Background="#3A2A2A" Margin="1" CornerRadius="2">
-                            <TextBlock Text="Z" Foreground="White" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        </Border>
-                        <Border Grid.Row="3" Grid.Column="1" Background="#1A1A2E" Margin="1" CornerRadius="2">
-                            <TextBlock Text="{Binding MachineStatus.Z, StringFormat={}{0:F3}}" Foreground="#00BFFF" FontFamily="Consolas" FontSize="14" FontWeight="Bold"
-                                       HorizontalAlignment="Right" VerticalAlignment="Center" Margin="6,0"/>
+                        <!-- ===== Z 行 ===== -->
+                        <Button Grid.Row="3" Grid.Column="0" Content="ZERO" Style="{StaticResource ZeroBtnStyle}"
+                                Command="{Binding SetToZeroAxisCommand}" CommandParameter="Z"/>
+                        <Border Grid.Row="3" Grid.Column="1" Background="#3A2A2A" Margin="1" CornerRadius="2">
+                            <TextBlock Text="Z" Foreground="White" FontWeight="Bold" FontSize="14" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <Border Grid.Row="3" Grid.Column="2" Background="#1A2E1A" Margin="1" CornerRadius="2">
-                            <TextBlock Text="{Binding MachineStatus.WorkZ, StringFormat={}{0:F3}}" Foreground="#90EE90" FontFamily="Consolas" FontSize="14" FontWeight="Bold"
-                                       HorizontalAlignment="Right" VerticalAlignment="Center" Margin="6,0"/>
+                            <TextBlock Text="{Binding MachineStatus.WorkZ, StringFormat={}{0:F4}}" Foreground="#90EE90" FontFamily="Consolas" FontSize="13" FontWeight="Bold"
+                                       HorizontalAlignment="Right" VerticalAlignment="Center" Margin="4,0"/>
                         </Border>
-                        <Border Grid.Row="3" Grid.Column="3" Background="#2A2A2A" Margin="1" CornerRadius="2">
-                            <TextBlock Text="{Binding SelectedRow.Z, StringFormat={}{0:F4}}" Foreground="#AAAAAA" FontFamily="Consolas" FontSize="14" FontWeight="Bold"
-                                       HorizontalAlignment="Right" VerticalAlignment="Center" Margin="6,0"/>
+                        <Border Grid.Row="3" Grid.Column="3" Background="#1A1A2E" Margin="1" CornerRadius="2">
+                            <TextBlock Text="{Binding MachineStatus.Z, StringFormat={}{0:F4}}" Foreground="#00BFFF" FontFamily="Consolas" FontSize="13" FontWeight="Bold"
+                                       HorizontalAlignment="Right" VerticalAlignment="Center" Margin="4,0"/>
+                        </Border>
+                        <Border Grid.Row="3" Grid.Column="4" Background="#2A2A2A" Margin="1" CornerRadius="2">
+                            <TextBlock Text="{Binding SelectedRow.Z, StringFormat={}{0:F4}}" Foreground="#AAAAAA" FontFamily="Consolas" FontSize="13" FontWeight="Bold"
+                                       HorizontalAlignment="Right" VerticalAlignment="Center" Margin="4,0"/>
+                        </Border>
+                        <Border Grid.Row="3" Grid.Column="5" Background="#2A2A22" Margin="1" CornerRadius="2">
+                            <TextBlock Text="{Binding MachineStatus.G92Z, StringFormat={}{0:F4}}" Foreground="#CCCC88" FontFamily="Consolas" FontSize="13" FontWeight="Bold"
+                                       HorizontalAlignment="Right" VerticalAlignment="Center" Margin="4,0"/>
+                        </Border>
+                        <Border Grid.Row="3" Grid.Column="6" Background="#2A222A" Margin="1" CornerRadius="2">
+                            <TextBlock Text="{Binding MachineStatus.ToolOffsetZ, StringFormat={}{0:F4}}" Foreground="#CC88CC" FontFamily="Consolas" FontSize="13" FontWeight="Bold"
+                                       HorizontalAlignment="Right" VerticalAlignment="Center" Margin="4,0"/>
                         </Border>
 
-                        <!-- [2026-02-24] A 行（依 IsAxisAEnabled 動態顯示） -->
-                        <Border Grid.Row="4" Grid.Column="0" Background="#3A2A2A" Margin="1" CornerRadius="2" Height="36"
+                        <!-- ===== A 行（依 IsAxisAEnabled 動態顯示） ===== -->
+                        <Button Grid.Row="4" Grid.Column="0" Content="ZERO" Style="{StaticResource ZeroBtnStyle}" Height="36"
+                                Command="{Binding SetToZeroAxisCommand}" CommandParameter="A"
+                                Visibility="{Binding IsAxisAEnabled, Converter={StaticResource BoolToVis}}"/>
+                        <Border Grid.Row="4" Grid.Column="1" Background="#3A2A2A" Margin="1" CornerRadius="2" Height="36"
                                 Visibility="{Binding IsAxisAEnabled, Converter={StaticResource BoolToVis}}">
-                            <TextBlock Text="A" Foreground="White" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        </Border>
-                        <Border Grid.Row="4" Grid.Column="1" Background="#1A1A2E" Margin="1" CornerRadius="2" Height="36"
-                                Visibility="{Binding IsAxisAEnabled, Converter={StaticResource BoolToVis}}">
-                            <TextBlock Text="{Binding MachineStatus.A, StringFormat={}{0:F3}}" Foreground="#00BFFF" FontFamily="Consolas" FontSize="14" FontWeight="Bold"
-                                       HorizontalAlignment="Right" VerticalAlignment="Center" Margin="6,0"/>
+                            <TextBlock Text="A" Foreground="White" FontWeight="Bold" FontSize="14" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <Border Grid.Row="4" Grid.Column="2" Background="#1A2E1A" Margin="1" CornerRadius="2" Height="36"
                                 Visibility="{Binding IsAxisAEnabled, Converter={StaticResource BoolToVis}}">
-                            <TextBlock Text="{Binding MachineStatus.WorkA, StringFormat={}{0:F3}}" Foreground="#90EE90" FontFamily="Consolas" FontSize="14" FontWeight="Bold"
-                                       HorizontalAlignment="Right" VerticalAlignment="Center" Margin="6,0"/>
+                            <TextBlock Text="{Binding MachineStatus.WorkA, StringFormat={}{0:F4}}" Foreground="#90EE90" FontFamily="Consolas" FontSize="13" FontWeight="Bold"
+                                       HorizontalAlignment="Right" VerticalAlignment="Center" Margin="4,0"/>
                         </Border>
-                        <Border Grid.Row="4" Grid.Column="3" Background="#2A2A2A" Margin="1" CornerRadius="2" Height="36"
+                        <Border Grid.Row="4" Grid.Column="3" Background="#1A1A2E" Margin="1" CornerRadius="2" Height="36"
                                 Visibility="{Binding IsAxisAEnabled, Converter={StaticResource BoolToVis}}">
-                            <TextBlock Text="{Binding SelectedRow.A, StringFormat={}{0:F4}}" Foreground="#AAAAAA" FontFamily="Consolas" FontSize="14" FontWeight="Bold"
-                                       HorizontalAlignment="Right" VerticalAlignment="Center" Margin="6,0"/>
+                            <TextBlock Text="{Binding MachineStatus.A, StringFormat={}{0:F4}}" Foreground="#00BFFF" FontFamily="Consolas" FontSize="13" FontWeight="Bold"
+                                       HorizontalAlignment="Right" VerticalAlignment="Center" Margin="4,0"/>
+                        </Border>
+                        <Border Grid.Row="4" Grid.Column="4" Background="#2A2A2A" Margin="1" CornerRadius="2" Height="36"
+                                Visibility="{Binding IsAxisAEnabled, Converter={StaticResource BoolToVis}}">
+                            <TextBlock Text="{Binding SelectedRow.A, StringFormat={}{0:F4}}" Foreground="#AAAAAA" FontFamily="Consolas" FontSize="13" FontWeight="Bold"
+                                       HorizontalAlignment="Right" VerticalAlignment="Center" Margin="4,0"/>
+                        </Border>
+                        <Border Grid.Row="4" Grid.Column="5" Background="#2A2A22" Margin="1" CornerRadius="2" Height="36"
+                                Visibility="{Binding IsAxisAEnabled, Converter={StaticResource BoolToVis}}">
+                            <TextBlock Text="{Binding MachineStatus.G92A, StringFormat={}{0:F4}}" Foreground="#CCCC88" FontFamily="Consolas" FontSize="13" FontWeight="Bold"
+                                       HorizontalAlignment="Right" VerticalAlignment="Center" Margin="4,0"/>
+                        </Border>
+                        <Border Grid.Row="4" Grid.Column="6" Background="#2A222A" Margin="1" CornerRadius="2" Height="36"
+                                Visibility="{Binding IsAxisAEnabled, Converter={StaticResource BoolToVis}}">
+                            <TextBlock Text="0.0000" Foreground="#CC88CC" FontFamily="Consolas" FontSize="13" FontWeight="Bold"
+                                       HorizontalAlignment="Right" VerticalAlignment="Center" Margin="4,0"/>
                         </Border>
 
-                        <!-- [2026-02-24] B 行（依 IsAxisBEnabled 動態顯示） -->
-                        <Border Grid.Row="5" Grid.Column="0" Background="#3A2A2A" Margin="1" CornerRadius="2" Height="36"
+                        <!-- ===== B 行（依 IsAxisBEnabled 動態顯示） ===== -->
+                        <Button Grid.Row="5" Grid.Column="0" Content="ZERO" Style="{StaticResource ZeroBtnStyle}" Height="36"
+                                Command="{Binding SetToZeroAxisCommand}" CommandParameter="B"
+                                Visibility="{Binding IsAxisBEnabled, Converter={StaticResource BoolToVis}}"/>
+                        <Border Grid.Row="5" Grid.Column="1" Background="#3A2A2A" Margin="1" CornerRadius="2" Height="36"
                                 Visibility="{Binding IsAxisBEnabled, Converter={StaticResource BoolToVis}}">
-                            <TextBlock Text="B" Foreground="White" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        </Border>
-                        <Border Grid.Row="5" Grid.Column="1" Background="#1A1A2E" Margin="1" CornerRadius="2" Height="36"
-                                Visibility="{Binding IsAxisBEnabled, Converter={StaticResource BoolToVis}}">
-                            <TextBlock Text="{Binding MachineStatus.B, StringFormat={}{0:F3}}" Foreground="#00BFFF" FontFamily="Consolas" FontSize="14" FontWeight="Bold"
-                                       HorizontalAlignment="Right" VerticalAlignment="Center" Margin="6,0"/>
+                            <TextBlock Text="B" Foreground="White" FontWeight="Bold" FontSize="14" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <Border Grid.Row="5" Grid.Column="2" Background="#1A2E1A" Margin="1" CornerRadius="2" Height="36"
                                 Visibility="{Binding IsAxisBEnabled, Converter={StaticResource BoolToVis}}">
-                            <TextBlock Text="{Binding MachineStatus.WorkB, StringFormat={}{0:F3}}" Foreground="#90EE90" FontFamily="Consolas" FontSize="14" FontWeight="Bold"
-                                       HorizontalAlignment="Right" VerticalAlignment="Center" Margin="6,0"/>
+                            <TextBlock Text="{Binding MachineStatus.WorkB, StringFormat={}{0:F4}}" Foreground="#90EE90" FontFamily="Consolas" FontSize="13" FontWeight="Bold"
+                                       HorizontalAlignment="Right" VerticalAlignment="Center" Margin="4,0"/>
                         </Border>
-                        <Border Grid.Row="5" Grid.Column="3" Background="#2A2A2A" Margin="1" CornerRadius="2" Height="36"
+                        <Border Grid.Row="5" Grid.Column="3" Background="#1A1A2E" Margin="1" CornerRadius="2" Height="36"
                                 Visibility="{Binding IsAxisBEnabled, Converter={StaticResource BoolToVis}}">
-                            <TextBlock Text="{Binding SelectedRow.B, StringFormat={}{0:F4}}" Foreground="#AAAAAA" FontFamily="Consolas" FontSize="14" FontWeight="Bold"
-                                       HorizontalAlignment="Right" VerticalAlignment="Center" Margin="6,0"/>
+                            <TextBlock Text="{Binding MachineStatus.B, StringFormat={}{0:F4}}" Foreground="#00BFFF" FontFamily="Consolas" FontSize="13" FontWeight="Bold"
+                                       HorizontalAlignment="Right" VerticalAlignment="Center" Margin="4,0"/>
+                        </Border>
+                        <Border Grid.Row="5" Grid.Column="4" Background="#2A2A2A" Margin="1" CornerRadius="2" Height="36"
+                                Visibility="{Binding IsAxisBEnabled, Converter={StaticResource BoolToVis}}">
+                            <TextBlock Text="{Binding SelectedRow.B, StringFormat={}{0:F4}}" Foreground="#AAAAAA" FontFamily="Consolas" FontSize="13" FontWeight="Bold"
+                                       HorizontalAlignment="Right" VerticalAlignment="Center" Margin="4,0"/>
+                        </Border>
+                        <Border Grid.Row="5" Grid.Column="5" Background="#2A2A22" Margin="1" CornerRadius="2" Height="36"
+                                Visibility="{Binding IsAxisBEnabled, Converter={StaticResource BoolToVis}}">
+                            <TextBlock Text="{Binding MachineStatus.G92B, StringFormat={}{0:F4}}" Foreground="#CCCC88" FontFamily="Consolas" FontSize="13" FontWeight="Bold"
+                                       HorizontalAlignment="Right" VerticalAlignment="Center" Margin="4,0"/>
+                        </Border>
+                        <Border Grid.Row="5" Grid.Column="6" Background="#2A222A" Margin="1" CornerRadius="2" Height="36"
+                                Visibility="{Binding IsAxisBEnabled, Converter={StaticResource BoolToVis}}">
+                            <TextBlock Text="0.0000" Foreground="#CC88CC" FontFamily="Consolas" FontSize="13" FontWeight="Bold"
+                                       HorizontalAlignment="Right" VerticalAlignment="Center" Margin="4,0"/>
                         </Border>
 
-                        <!-- [2026-02-24] C 行（依 IsAxisCEnabled 動態顯示） -->
-                        <Border Grid.Row="6" Grid.Column="0" Background="#3A2A2A" Margin="1" CornerRadius="2" Height="36"
+                        <!-- ===== C 行（依 IsAxisCEnabled 動態顯示） ===== -->
+                        <Button Grid.Row="6" Grid.Column="0" Content="ZERO" Style="{StaticResource ZeroBtnStyle}" Height="36"
+                                Command="{Binding SetToZeroAxisCommand}" CommandParameter="C"
+                                Visibility="{Binding IsAxisCEnabled, Converter={StaticResource BoolToVis}}"/>
+                        <Border Grid.Row="6" Grid.Column="1" Background="#3A2A2A" Margin="1" CornerRadius="2" Height="36"
                                 Visibility="{Binding IsAxisCEnabled, Converter={StaticResource BoolToVis}}">
-                            <TextBlock Text="C" Foreground="White" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        </Border>
-                        <Border Grid.Row="6" Grid.Column="1" Background="#1A1A2E" Margin="1" CornerRadius="2" Height="36"
-                                Visibility="{Binding IsAxisCEnabled, Converter={StaticResource BoolToVis}}">
-                            <TextBlock Text="{Binding MachineStatus.C, StringFormat={}{0:F3}}" Foreground="#00BFFF" FontFamily="Consolas" FontSize="14" FontWeight="Bold"
-                                       HorizontalAlignment="Right" VerticalAlignment="Center" Margin="6,0"/>
+                            <TextBlock Text="C" Foreground="White" FontWeight="Bold" FontSize="14" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <Border Grid.Row="6" Grid.Column="2" Background="#1A2E1A" Margin="1" CornerRadius="2" Height="36"
                                 Visibility="{Binding IsAxisCEnabled, Converter={StaticResource BoolToVis}}">
-                            <TextBlock Text="{Binding MachineStatus.WorkC, StringFormat={}{0:F3}}" Foreground="#90EE90" FontFamily="Consolas" FontSize="14" FontWeight="Bold"
-                                       HorizontalAlignment="Right" VerticalAlignment="Center" Margin="6,0"/>
+                            <TextBlock Text="{Binding MachineStatus.WorkC, StringFormat={}{0:F4}}" Foreground="#90EE90" FontFamily="Consolas" FontSize="13" FontWeight="Bold"
+                                       HorizontalAlignment="Right" VerticalAlignment="Center" Margin="4,0"/>
                         </Border>
-                        <Border Grid.Row="6" Grid.Column="3" Background="#2A2A2A" Margin="1" CornerRadius="2" Height="36"
+                        <Border Grid.Row="6" Grid.Column="3" Background="#1A1A2E" Margin="1" CornerRadius="2" Height="36"
                                 Visibility="{Binding IsAxisCEnabled, Converter={StaticResource BoolToVis}}">
-                            <TextBlock Text="{Binding SelectedRow.C, StringFormat={}{0:F4}}" Foreground="#AAAAAA" FontFamily="Consolas" FontSize="14" FontWeight="Bold"
-                                       HorizontalAlignment="Right" VerticalAlignment="Center" Margin="6,0"/>
+                            <TextBlock Text="{Binding MachineStatus.C, StringFormat={}{0:F4}}" Foreground="#00BFFF" FontFamily="Consolas" FontSize="13" FontWeight="Bold"
+                                       HorizontalAlignment="Right" VerticalAlignment="Center" Margin="4,0"/>
+                        </Border>
+                        <Border Grid.Row="6" Grid.Column="4" Background="#2A2A2A" Margin="1" CornerRadius="2" Height="36"
+                                Visibility="{Binding IsAxisCEnabled, Converter={StaticResource BoolToVis}}">
+                            <TextBlock Text="{Binding SelectedRow.C, StringFormat={}{0:F4}}" Foreground="#AAAAAA" FontFamily="Consolas" FontSize="13" FontWeight="Bold"
+                                       HorizontalAlignment="Right" VerticalAlignment="Center" Margin="4,0"/>
+                        </Border>
+                        <Border Grid.Row="6" Grid.Column="5" Background="#2A2A22" Margin="1" CornerRadius="2" Height="36"
+                                Visibility="{Binding IsAxisCEnabled, Converter={StaticResource BoolToVis}}">
+                            <TextBlock Text="{Binding MachineStatus.G92C, StringFormat={}{0:F4}}" Foreground="#CCCC88" FontFamily="Consolas" FontSize="13" FontWeight="Bold"
+                                       HorizontalAlignment="Right" VerticalAlignment="Center" Margin="4,0"/>
+                        </Border>
+                        <Border Grid.Row="6" Grid.Column="6" Background="#2A222A" Margin="1" CornerRadius="2" Height="36"
+                                Visibility="{Binding IsAxisCEnabled, Converter={StaticResource BoolToVis}}">
+                            <TextBlock Text="0.0000" Foreground="#CC88CC" FontFamily="Consolas" FontSize="13" FontWeight="Bold"
+                                       HorizontalAlignment="Right" VerticalAlignment="Center" Margin="4,0"/>
                         </Border>
                     </Grid>
-
-                    <Separator Background="#444" Margin="0,10,0,8"/>
-
-                    <!-- [2026-02-24] 底部動作按鈕：SET TO ZERO X/Y/Z/A/B/C/ALL；A/B/C 依 MachineType 動態顯示 -->
-                    <WrapPanel HorizontalAlignment="Left">
-                        <Button Content="SET TO ZERO X" Style="{StaticResource OffsetBtnStyle}"
-                                Command="{Binding SetToZeroAxisCommand}" CommandParameter="X" Width="120"/>
-                        <Button Content="SET TO ZERO Y" Style="{StaticResource OffsetBtnStyle}"
-                                Command="{Binding SetToZeroAxisCommand}" CommandParameter="Y" Width="120"/>
-                        <Button Content="SET TO ZERO Z" Style="{StaticResource OffsetBtnStyle}"
-                                Command="{Binding SetToZeroAxisCommand}" CommandParameter="Z" Width="120"/>
-                        <Button Content="SET TO ZERO A" Style="{StaticResource OffsetBtnStyle}"
-                                Command="{Binding SetToZeroAxisCommand}" CommandParameter="A" Width="120"
-                                Visibility="{Binding IsAxisAEnabled, Converter={StaticResource BoolToVis}}"/>
-                        <Button Content="SET TO ZERO B" Style="{StaticResource OffsetBtnStyle}"
-                                Command="{Binding SetToZeroAxisCommand}" CommandParameter="B" Width="120"
-                                Visibility="{Binding IsAxisBEnabled, Converter={StaticResource BoolToVis}}"/>
-                        <Button Content="SET TO ZERO C" Style="{StaticResource OffsetBtnStyle}"
-                                Command="{Binding SetToZeroAxisCommand}" CommandParameter="C" Width="120"
-                                Visibility="{Binding IsAxisCEnabled, Converter={StaticResource BoolToVis}}"/>
-                        <Button Content="ZERO ALL" Style="{StaticResource OffsetBtnStyle}"
-                                Command="{Binding SetToZeroAxisCommand}" CommandParameter="ALL" Width="90"
-                                Background="#664422"/>
-                    </WrapPanel>
-                </StackPanel>
+                </DockPanel>
             </Border>
         </Grid>
     </Border>

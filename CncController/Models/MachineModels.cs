@@ -45,6 +45,15 @@ namespace CncController.Models
 
         // [2026-02-24] 新增 Homed：各軸原點復歸狀態
         public Dictionary<string, bool> Homed { get; set; }
+
+        // [2026-02-24] 新增 G92 偏移量（供 Offsets 右欄 G52/G92 OFFSET 欄位）
+        public Dictionary<string, double> G92_Offset { get; set; }
+
+        // [2026-02-24] 新增完整刀具偏移（供 Offsets 右欄 TOOL OFFSET 欄位）
+        public Dictionary<string, double> Tool_Offset_XYZ { get; set; }
+
+        // [2026-02-24] 新增任務模式（MANUAL/AUTO/MDI，供 Offsets 右下角模式按鈕高亮）
+        public string Task_Mode { get; set; }
     }
 
     // ==========================================

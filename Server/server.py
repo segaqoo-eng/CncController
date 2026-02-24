@@ -590,6 +590,14 @@ def v2_status():
         except:
             pass
 
+        # [2026-02-24] 新增 Homed 狀態：各軸原點復歸是否完成
+        homed_dict = {}
+        for i, name in enumerate(['X', 'Y', 'Z', 'A', 'B', 'C']):
+            try:
+                homed_dict[name] = (cnc_stat.joint[i].homed == 1)
+            except:
+                homed_dict[name] = False
+
         return success_response({
             "Connected": True,
             "Task_State": t_state,
@@ -606,7 +614,8 @@ def v2_status():
             "Active_WCS": active_wcs,
             "Tool_Number": tool_number,
             "Tool_Length": round(tool_length, 4),
-            "Tool_Diameter": round(tool_diameter, 4)
+            "Tool_Diameter": round(tool_diameter, 4),
+            "Homed": homed_dict
         })
 
     except Exception as e:

@@ -138,10 +138,10 @@ namespace CncController.ViewModels
         }
 
         // [2026-02-23] 新增 HomeAllCommand：呼叫 HomeAsync(-1) 全軸回原點；條件：IsPower=true + IsEstop=false
+        // [2026-02-24] 加入樂觀更新：全軸 Homed 先設 false（按鈕變紅），等後端輪詢回報再變綠
         [RelayCommand]
         private async Task HomeAll()
         {
-            // 回原點只需機台 ON 且非急停即可（不需要像 JOG 一樣要求非移動中）
             if (IsEstop)
             {
                 AlarmService.Instance.AddLog("WARN", "Home Blocked: E-Stop active");
@@ -152,18 +152,31 @@ namespace CncController.ViewModels
                 AlarmService.Instance.AddLog("WARN", "Home Blocked: Machine power off");
                 return;
             }
+            // [2026-02-24] 樂觀更新：立即設為未復歸
+            Status.IsXHomed = false; Status.IsYHomed = false; Status.IsZHomed = false;
+            Status.IsAHomed = false; Status.IsBHomed = false; Status.IsCHomed = false;
+            Status.IsAllHomed = false;
             AlarmService.Instance.AddLog("INFO", "Homing All Axes...");
             bool ok = await MachineControlService.Instance.HomeAsync(-1);
             if (!ok)
                 AlarmService.Instance.AddLog("WARN", "Home command failed");
         }
 
-        // [2026-02-24] 新增 GoToZeroCommand：G53 G0 機械座標零點快速移動（ToolInfo 按鈕用）
+        // [2026-02-24] 修正 GoToZeroCommand：移至當前 G5X 工件座標零點（G0 X0 Y0 Z0）
         [RelayCommand]
         private async Task GoToZero()
         {
             if (!CanExecuteMotion()) return;
-            AlarmService.Instance.AddLog("INFO", "Go To Zero: G53 G0 X0 Y0 Z0");
+            AlarmService.Instance.AddLog("INFO", $"Go To Zero (Work): G0 X0 Y0 Z0 [{Status.ActiveCoordSystem}]");
+            await MachineControlService.Instance.SendMdiCommandAsync("G0 X0 Y0 Z0");
+        }
+
+        // [2026-02-24] 新增 GoToHomeCommand：移至機械零點（G53 G0 X0 Y0 Z0）
+        [RelayCommand]
+        private async Task GoToHome()
+        {
+            if (!CanExecuteMotion()) return;
+            AlarmService.Instance.AddLog("INFO", "Go To Home (Machine): G53 G0 X0 Y0 Z0");
             await MachineControlService.Instance.SendMdiCommandAsync("G53 G0 X0 Y0 Z0");
         }
 
@@ -532,6 +545,19 @@ namespace CncController.ViewModels
             Status.ToolLength = data.Tool_Length;
             Status.ToolDiameter = data.Tool_Diameter;
 
+            // [2026-02-24] 映射各軸 Homed 狀態
+            if (data.Homed != null)
+            {
+                Status.IsXHomed = data.Homed.TryGetValue("X", out bool hx) && hx;
+                Status.IsYHomed = data.Homed.TryGetValue("Y", out bool hy) && hy;
+                Status.IsZHomed = data.Homed.TryGetValue("Z", out bool hz) && hz;
+                Status.IsAHomed = data.Homed.TryGetValue("A", out bool ha) && ha;
+                Status.IsBHomed = data.Homed.TryGetValue("B", out bool hb) && hb;
+                Status.IsCHomed = data.Homed.TryGetValue("C", out bool hc) && hc;
+                var enabled = LastValidatedConfig?.GetEnabledAxes() ?? new() { "X", "Y", "Z" };
+                Status.IsAllHomed = enabled.All(a => data.Homed.TryGetValue(a, out bool v) && v);
+            }
+
             // 更新 InterpState 供計時器判斷
             Status.InterpState = data.Interp_State;
 
@@ -797,6 +823,61 @@ namespace CncController.ViewModels
                 // 這裡暫時只記錄 Log
                 AlarmService.Instance.AddLog("INFO", $"Reloading {_loadedFileName}...");
                 // await MachineControlService.Instance.UploadGCodeAsync(...)
+            }
+        }
+
+        // [2026-02-24] DRO 單軸歸零：G10 L20 P<wcs> <axis>0
+        [RelayCommand]
+        private async Task DroZeroAxis(string axisName)
+        {
+            if (!CanExecuteMotion()) return;
+            var wcsMap = new Dictionary<string, int>
+                { {"G54",1}, {"G55",2}, {"G56",3}, {"G57",4}, {"G58",5}, {"G59",6} };
+            if (!wcsMap.TryGetValue(Status.ActiveCoordSystem, out int pNum)) return;
+            string cmd = $"G10 L20 P{pNum} {axisName}0";
+            AlarmService.Instance.AddLog("INFO", $"DRO Zero {axisName}: {cmd}");
+            await MachineControlService.Instance.SendMdiCommandAsync(cmd);
+        }
+
+        // [2026-02-24] DRO 全軸歸零
+        [RelayCommand]
+        private async Task DroZeroAll()
+        {
+            if (!CanExecuteMotion()) return;
+            var wcsMap = new Dictionary<string, int>
+                { {"G54",1}, {"G55",2}, {"G56",3}, {"G57",4}, {"G58",5}, {"G59",6} };
+            if (!wcsMap.TryGetValue(Status.ActiveCoordSystem, out int pNum)) return;
+            var axes = LastValidatedConfig?.GetEnabledAxes() ?? new() { "X", "Y", "Z" };
+            string axesPart = string.Join(" ", axes.Select(a => $"{a}0"));
+            string cmd = $"G10 L20 P{pNum} {axesPart}";
+            AlarmService.Instance.AddLog("INFO", $"DRO Zero All: {cmd}");
+            await MachineControlService.Instance.SendMdiCommandAsync(cmd);
+        }
+
+        // [2026-02-24] DRO 單軸原點復歸（樂觀更新：先變紅，等後端回報再變綠）
+        [RelayCommand]
+        private async Task RefAxis(string axisName)
+        {
+            var map = new Dictionary<string, int>
+                { {"X",0}, {"Y",1}, {"Z",2}, {"A",3}, {"B",4}, {"C",5} };
+            if (!map.TryGetValue(axisName, out int idx)) return;
+            SetAxisHomed(axisName, false);
+            Status.IsAllHomed = false;
+            AlarmService.Instance.AddLog("INFO", $"REF {axisName}: HomeAsync({idx})");
+            await MachineControlService.Instance.HomeAsync(idx);
+        }
+
+        // [2026-02-24] 輔助：依軸名設定 Homed 狀態
+        private void SetAxisHomed(string axis, bool value)
+        {
+            switch (axis)
+            {
+                case "X": Status.IsXHomed = value; break;
+                case "Y": Status.IsYHomed = value; break;
+                case "Z": Status.IsZHomed = value; break;
+                case "A": Status.IsAHomed = value; break;
+                case "B": Status.IsBHomed = value; break;
+                case "C": Status.IsCHomed = value; break;
             }
         }
 

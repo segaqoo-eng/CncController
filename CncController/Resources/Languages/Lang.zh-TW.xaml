@@ -34,4 +34,8 @@
     <sys:String x:Key="Str.Jog.Spindle">主軸轉速</sys:String>
     <sys:String x:Key="Str.Btn.Fwd">正轉</sys:String>
     <sys:String x:Key="Str.Btn.Rev">反轉</sys:String>
+
+    <!-- [2026-02-24] DRO PB 版：ZERO ALL / REF ALL / 已復歸 -->
+    <sys:String x:Key="Str.Btn.RefAll">原點復歸 ALL</sys:String>
+    <sys:String x:Key="Str.Btn.Homed">已復歸</sys:String>
 </ResourceDictionary>

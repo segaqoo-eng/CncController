@@ -128,7 +128,7 @@ DispatcherTimer (500ms) → MachineControlService.GetStatusAsync()
 
 | 方法 | 路由 | 功能 |
 |------|------|------|
-| GET | `/v2/status` | 機台即時狀態（含 Position、Task_State、Servo_IO、Active_WCS） |
+| GET | `/v2/status` | 機台即時狀態（含 Position、Task_State、Servo_IO、Active_WCS、Homed） |
 | GET | `/v2/errors` | 錯誤快取（≤20 筆） |
 | GET | `/v2/offsets` | G54–G59 工件座標偏移值 |
 | POST | `/v2/motion/jog` | JOG 手動移動（axis, speed, dist） |
@@ -166,7 +166,7 @@ DispatcherTimer (500ms) → MachineControlService.GetStatusAsync()
 
 ### ✅ 已完成
 
-- DRO 動態軸顯示（3~6 軸自動適配 + Work/Machine/DTG） + G54–G59 快選列
+- DRO 對齊 PB 版（5 欄：ZERO | G5X WORK | MACHINE | DTG | REF + 單軸歸零/原點復歸 + Homed 紅綠燈）
 - JOG X/Y/Z + A/B/C 旋轉軸（連續 + 寸動）+ 防呆
 - 機台類型定義（MachineType 枚舉：3/4/5/6 軸可配置）
 - 加工循環控制（Cycle Start / Stop / Feed Hold）
@@ -278,3 +278,9 @@ DispatcherTimer (500ms) → MachineControlService.GetStatusAsync()
 | **後端刀具資訊** | `/v2/status` 新增 `Tool_Number`（tool_in_spindle）/ `Tool_Length`（tool_offset[2]）/ `Tool_Diameter`（tool_table） |
 | **GO TO ZERO / G30** | `GoToZeroCommand`（G53 G0 X0 Y0 Z0）、`GoToG30Command`（G30）—— ToolInfo 按鈕 |
 | **版本號** | `2026.02.24_TOOLINFO_PB` |
+| **DRO 對齊 PB 版** | 5 欄佈局：ZERO X/Y/Z | G5X WORK（WorkX）| MACHINE（X）| DTG | REF X/Y/Z；標題動態顯示 G5X；移除 G54–G59 快選列 |
+| **後端 Homed 狀態** | `/v2/status` 新增 `Homed` dict（各軸 joint[i].homed）|
+| **DRO ZERO 按鈕** | `DroZeroAxisCommand`（G10 L20 單軸歸零）+ `DroZeroAllCommand`（全軸歸零）|
+| **DRO REF 按鈕** | `RefAxisCommand`（單軸原點復歸 + 樂觀更新紅→綠）+ HomeAll 樂觀更新 |
+| **Homed 狀態映射** | `MachineStatus.IsXHomed~IsCHomed + IsAllHomed`；底部按鈕紅/綠切換 |
+| **版本號** | `2026.02.24_DRO_PB` |

@@ -60,5 +60,14 @@ namespace CncController.Models
         [ObservableProperty] private int _toolNumber;
         [ObservableProperty] private double _toolLength;
         [ObservableProperty] private double _toolDiameter;
+
+        // [2026-02-24] 新增各軸 Homed 狀態（供 DRO REF 按鈕紅/綠顯示）
+        [ObservableProperty] private bool _isXHomed;
+        [ObservableProperty] private bool _isYHomed;
+        [ObservableProperty] private bool _isZHomed;
+        [ObservableProperty] private bool _isAHomed;
+        [ObservableProperty] private bool _isBHomed;
+        [ObservableProperty] private bool _isCHomed;
+        [ObservableProperty] private bool _isAllHomed;
     }
 }

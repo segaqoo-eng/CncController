@@ -42,6 +42,9 @@ namespace CncController.Models
         public int Tool_Number { get; set; }
         public double Tool_Length { get; set; }
         public double Tool_Diameter { get; set; }
+
+        // [2026-02-24] 新增 Homed：各軸原點復歸狀態
+        public Dictionary<string, bool> Homed { get; set; }
     }
 
     // ==========================================

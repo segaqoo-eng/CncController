@@ -1,11 +1,11 @@
-<!-- [2026-02-24] 重寫 DroDisplay：支援 3~6 軸動態顯示（A/B/C 依 MachineConfig 啟用狀態自動顯示/隱藏） -->
+<!-- [2026-02-24] 重寫 DroDisplay：對齊 PB 版 5 欄佈局（ZERO | G5X WORK | MACHINE | DTG | REF） -->
 <UserControl x:Class="CncController.Views.Components.DroDisplay"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              mc:Ignorable="d"
-             d:DesignHeight="300" d:DesignWidth="400">
+             d:DesignHeight="300" d:DesignWidth="500">
 
     <Border BorderBrush="{DynamicResource Brush.Border}" BorderThickness="1" CornerRadius="4" Padding="5">
         <Grid>
@@ -18,43 +18,74 @@
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
-                <RowDefinition Height="28"/>
                 <RowDefinition Height="40"/>
             </Grid.RowDefinitions>
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="50"/>
+                <ColumnDefinition Width="70"/>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="60"/>
             </Grid.ColumnDefinitions>
 
-            <TextBlock Grid.Row="0" Grid.Column="1" Text="{DynamicResource Str.Label.Work}" Foreground="{DynamicResource Brush.Text.Muted}" HorizontalAlignment="Center"/>
-            <TextBlock Grid.Row="0" Grid.Column="2" Text="{DynamicResource Str.Label.Machine}" Foreground="{DynamicResource Brush.Text.Muted}" HorizontalAlignment="Center"/>
-            <TextBlock Grid.Row="0" Grid.Column="3" Text="{DynamicResource Str.Label.DTG}" Foreground="{DynamicResource Brush.Text.Muted}" HorizontalAlignment="Center"/>
+            <!-- ========== 標題列 (Row 0) ========== -->
+            <TextBlock Grid.Row="0" Grid.Column="0" Text="AXIS" Foreground="{DynamicResource Brush.Text.Muted}" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="11"/>
+            <!-- [2026-02-24] Work 欄標題動態顯示 G5X（如 "G54 WORK"） -->
+            <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                <TextBlock Text="{Binding DataContext.Status.ActiveCoordSystem, RelativeSource={RelativeSource AncestorType=Window}}" Foreground="#007ACC" FontWeight="Bold" FontSize="11"/>
+                <TextBlock Text=" WORK" Foreground="{DynamicResource Brush.Text.Muted}" FontSize="11"/>
+            </StackPanel>
+            <TextBlock Grid.Row="0" Grid.Column="2" Text="MACHINE" Foreground="{DynamicResource Brush.Text.Muted}" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="11"/>
+            <TextBlock Grid.Row="0" Grid.Column="3" Text="DTG" Foreground="{DynamicResource Brush.Text.Muted}" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="11"/>
+            <TextBlock Grid.Row="0" Grid.Column="4" Text="REF" Foreground="{DynamicResource Brush.Text.Muted}" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="11"/>
 
-            <!-- === X 軸 (Row 1) === -->
-            <Border Grid.Row="1" Grid.Column="0" Background="{DynamicResource Brush.DRO.Label}" Margin="2" CornerRadius="2">
-                <TextBlock Text="X" Foreground="White" VerticalAlignment="Center" HorizontalAlignment="Center" FontWeight="Bold"/>
-            </Border>
+            <!-- ========== X 軸 (Row 1) ========== -->
+            <!-- ZERO X -->
+            <Button Grid.Row="1" Grid.Column="0" Content="ZERO X" Margin="2" FontSize="10" FontWeight="Bold"
+                    Foreground="White" Background="#555" BorderBrush="#666" BorderThickness="1"
+                    Command="{Binding DataContext.DroZeroAxisCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                    CommandParameter="X"/>
+            <!-- Work X -->
             <Border Grid.Row="1" Grid.Column="1" Background="{DynamicResource Brush.DRO.Background}" Margin="2" CornerRadius="2">
-                <TextBlock Text="{Binding DataContext.Status.X, RelativeSource={RelativeSource AncestorType=Window}, StringFormat=F3}"
+                <TextBlock Text="{Binding DataContext.Status.WorkX, RelativeSource={RelativeSource AncestorType=Window}, StringFormat=F3}"
                            Foreground="{DynamicResource Brush.DRO.Foreground}" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="5" FontSize="{DynamicResource FontSize.DRO}" FontWeight="Bold" FontFamily="Consolas"/>
             </Border>
+            <!-- Machine X -->
             <Border Grid.Row="1" Grid.Column="2" Background="{DynamicResource Brush.DRO.Background}" Margin="2" CornerRadius="2">
                 <TextBlock Text="{Binding DataContext.Status.X, RelativeSource={RelativeSource AncestorType=Window}, StringFormat=F3}"
                            Foreground="{DynamicResource Brush.DRO.Foreground}" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="5" FontSize="{DynamicResource FontSize.DRO}" FontWeight="Bold" FontFamily="Consolas"/>
             </Border>
+            <!-- DTG X -->
             <Border Grid.Row="1" Grid.Column="3" Background="{DynamicResource Brush.DRO.Background}" Margin="2" CornerRadius="2">
                 <TextBlock Text="{Binding DataContext.Status.DtgX, RelativeSource={RelativeSource AncestorType=Window}, StringFormat=F3}"
                            Foreground="{DynamicResource Brush.DRO.Foreground}" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="5" FontSize="{DynamicResource FontSize.DRO}" FontWeight="Bold" FontFamily="Consolas"/>
             </Border>
+            <!-- REF X -->
+            <Button Grid.Row="1" Grid.Column="4" Content="REF X" Margin="2" FontSize="10" FontWeight="Bold"
+                    Foreground="White" BorderThickness="1"
+                    Command="{Binding DataContext.RefAxisCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                    CommandParameter="X">
+                <Button.Style>
+                    <Style TargetType="Button">
+                        <Setter Property="Background" Value="#D32F2F"/>
+                        <Setter Property="BorderBrush" Value="#B71C1C"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding DataContext.Status.IsXHomed, RelativeSource={RelativeSource AncestorType=Window}}" Value="True">
+                                <Setter Property="Background" Value="#4CAF50"/>
+                                <Setter Property="BorderBrush" Value="#388E3C"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Button.Style>
+            </Button>
 
-            <!-- === Y 軸 (Row 2) === -->
-            <Border Grid.Row="2" Grid.Column="0" Background="{DynamicResource Brush.DRO.Label}" Margin="2" CornerRadius="2">
-                <TextBlock Text="Y" Foreground="White" VerticalAlignment="Center" HorizontalAlignment="Center" FontWeight="Bold"/>
-            </Border>
+            <!-- ========== Y 軸 (Row 2) ========== -->
+            <Button Grid.Row="2" Grid.Column="0" Content="ZERO Y" Margin="2" FontSize="10" FontWeight="Bold"
+                    Foreground="White" Background="#555" BorderBrush="#666" BorderThickness="1"
+                    Command="{Binding DataContext.DroZeroAxisCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                    CommandParameter="Y"/>
             <Border Grid.Row="2" Grid.Column="1" Background="{DynamicResource Brush.DRO.Background}" Margin="2" CornerRadius="2">
-                <TextBlock Text="{Binding DataContext.Status.Y, RelativeSource={RelativeSource AncestorType=Window}, StringFormat=F3}"
+                <TextBlock Text="{Binding DataContext.Status.WorkY, RelativeSource={RelativeSource AncestorType=Window}, StringFormat=F3}"
                            Foreground="{DynamicResource Brush.DRO.Foreground}" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="5" FontSize="{DynamicResource FontSize.DRO}" FontWeight="Bold" FontFamily="Consolas"/>
             </Border>
             <Border Grid.Row="2" Grid.Column="2" Background="{DynamicResource Brush.DRO.Background}" Margin="2" CornerRadius="2">
@@ -65,13 +96,31 @@
                 <TextBlock Text="{Binding DataContext.Status.DtgY, RelativeSource={RelativeSource AncestorType=Window}, StringFormat=F3}"
                            Foreground="{DynamicResource Brush.DRO.Foreground}" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="5" FontSize="{DynamicResource FontSize.DRO}" FontWeight="Bold" FontFamily="Consolas"/>
             </Border>
+            <Button Grid.Row="2" Grid.Column="4" Content="REF Y" Margin="2" FontSize="10" FontWeight="Bold"
+                    Foreground="White" BorderThickness="1"
+                    Command="{Binding DataContext.RefAxisCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                    CommandParameter="Y">
+                <Button.Style>
+                    <Style TargetType="Button">
+                        <Setter Property="Background" Value="#D32F2F"/>
+                        <Setter Property="BorderBrush" Value="#B71C1C"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding DataContext.Status.IsYHomed, RelativeSource={RelativeSource AncestorType=Window}}" Value="True">
+                                <Setter Property="Background" Value="#4CAF50"/>
+                                <Setter Property="BorderBrush" Value="#388E3C"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Button.Style>
+            </Button>
 
-            <!-- === Z 軸 (Row 3) === -->
-            <Border Grid.Row="3" Grid.Column="0" Background="{DynamicResource Brush.DRO.Label}" Margin="2" CornerRadius="2">
-                <TextBlock Text="Z" Foreground="White" VerticalAlignment="Center" HorizontalAlignment="Center" FontWeight="Bold"/>
-            </Border>
+            <!-- ========== Z 軸 (Row 3) ========== -->
+            <Button Grid.Row="3" Grid.Column="0" Content="ZERO Z" Margin="2" FontSize="10" FontWeight="Bold"
+                    Foreground="White" Background="#555" BorderBrush="#666" BorderThickness="1"
+                    Command="{Binding DataContext.DroZeroAxisCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                    CommandParameter="Z"/>
             <Border Grid.Row="3" Grid.Column="1" Background="{DynamicResource Brush.DRO.Background}" Margin="2" CornerRadius="2">
-                <TextBlock Text="{Binding DataContext.Status.Z, RelativeSource={RelativeSource AncestorType=Window}, StringFormat=F3}"
+                <TextBlock Text="{Binding DataContext.Status.WorkZ, RelativeSource={RelativeSource AncestorType=Window}, StringFormat=F3}"
                            Foreground="{DynamicResource Brush.DRO.Foreground}" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="5" FontSize="{DynamicResource FontSize.DRO}" FontWeight="Bold" FontFamily="Consolas"/>
             </Border>
             <Border Grid.Row="3" Grid.Column="2" Background="{DynamicResource Brush.DRO.Background}" Margin="2" CornerRadius="2">
@@ -82,15 +131,33 @@
                 <TextBlock Text="{Binding DataContext.Status.DtgZ, RelativeSource={RelativeSource AncestorType=Window}, StringFormat=F3}"
                            Foreground="{DynamicResource Brush.DRO.Foreground}" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="5" FontSize="{DynamicResource FontSize.DRO}" FontWeight="Bold" FontFamily="Consolas"/>
             </Border>
+            <Button Grid.Row="3" Grid.Column="4" Content="REF Z" Margin="2" FontSize="10" FontWeight="Bold"
+                    Foreground="White" BorderThickness="1"
+                    Command="{Binding DataContext.RefAxisCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                    CommandParameter="Z">
+                <Button.Style>
+                    <Style TargetType="Button">
+                        <Setter Property="Background" Value="#D32F2F"/>
+                        <Setter Property="BorderBrush" Value="#B71C1C"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding DataContext.Status.IsZHomed, RelativeSource={RelativeSource AncestorType=Window}}" Value="True">
+                                <Setter Property="Background" Value="#4CAF50"/>
+                                <Setter Property="BorderBrush" Value="#388E3C"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Button.Style>
+            </Button>
 
-            <!-- [2026-02-24] === A 軸 (Row 4) === 依 IsAxisAEnabled 顯示/隱藏 -->
-            <Border Grid.Row="4" Grid.Column="0" Background="{DynamicResource Brush.DRO.Label}" Margin="2" CornerRadius="2" Height="36"
-                    Visibility="{Binding DataContext.IsAxisAEnabled, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVis}}">
-                <TextBlock Text="A" Foreground="White" VerticalAlignment="Center" HorizontalAlignment="Center" FontWeight="Bold"/>
-            </Border>
+            <!-- ========== A 軸 (Row 4) — 動態顯示 ========== -->
+            <Button Grid.Row="4" Grid.Column="0" Content="ZERO A" Margin="2" FontSize="10" FontWeight="Bold" Height="36"
+                    Foreground="White" Background="#555" BorderBrush="#666" BorderThickness="1"
+                    Visibility="{Binding DataContext.IsAxisAEnabled, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVis}}"
+                    Command="{Binding DataContext.DroZeroAxisCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                    CommandParameter="A"/>
             <Border Grid.Row="4" Grid.Column="1" Background="{DynamicResource Brush.DRO.Background}" Margin="2" CornerRadius="2" Height="36"
                     Visibility="{Binding DataContext.IsAxisAEnabled, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVis}}">
-                <TextBlock Text="{Binding DataContext.Status.A, RelativeSource={RelativeSource AncestorType=Window}, StringFormat=F3}"
+                <TextBlock Text="{Binding DataContext.Status.WorkA, RelativeSource={RelativeSource AncestorType=Window}, StringFormat=F3}"
                            Foreground="{DynamicResource Brush.DRO.Foreground}" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="5" FontSize="{DynamicResource FontSize.DRO}" FontWeight="Bold" FontFamily="Consolas"/>
             </Border>
             <Border Grid.Row="4" Grid.Column="2" Background="{DynamicResource Brush.DRO.Background}" Margin="2" CornerRadius="2" Height="36"
@@ -103,15 +170,34 @@
                 <TextBlock Text="{Binding DataContext.Status.DtgA, RelativeSource={RelativeSource AncestorType=Window}, StringFormat=F3}"
                            Foreground="{DynamicResource Brush.DRO.Foreground}" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="5" FontSize="{DynamicResource FontSize.DRO}" FontWeight="Bold" FontFamily="Consolas"/>
             </Border>
+            <Button Grid.Row="4" Grid.Column="4" Content="REF A" Margin="2" FontSize="10" FontWeight="Bold" Height="36"
+                    Foreground="White" BorderThickness="1"
+                    Visibility="{Binding DataContext.IsAxisAEnabled, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVis}}"
+                    Command="{Binding DataContext.RefAxisCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                    CommandParameter="A">
+                <Button.Style>
+                    <Style TargetType="Button">
+                        <Setter Property="Background" Value="#D32F2F"/>
+                        <Setter Property="BorderBrush" Value="#B71C1C"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding DataContext.Status.IsAHomed, RelativeSource={RelativeSource AncestorType=Window}}" Value="True">
+                                <Setter Property="Background" Value="#4CAF50"/>
+                                <Setter Property="BorderBrush" Value="#388E3C"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Button.Style>
+            </Button>
 
-            <!-- [2026-02-24] === B 軸 (Row 5) === 依 IsAxisBEnabled 顯示/隱藏 -->
-            <Border Grid.Row="5" Grid.Column="0" Background="{DynamicResource Brush.DRO.Label}" Margin="2" CornerRadius="2" Height="36"
-                    Visibility="{Binding DataContext.IsAxisBEnabled, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVis}}">
-                <TextBlock Text="B" Foreground="White" VerticalAlignment="Center" HorizontalAlignment="Center" FontWeight="Bold"/>
-            </Border>
+            <!-- ========== B 軸 (Row 5) — 動態顯示 ========== -->
+            <Button Grid.Row="5" Grid.Column="0" Content="ZERO B" Margin="2" FontSize="10" FontWeight="Bold" Height="36"
+                    Foreground="White" Background="#555" BorderBrush="#666" BorderThickness="1"
+                    Visibility="{Binding DataContext.IsAxisBEnabled, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVis}}"
+                    Command="{Binding DataContext.DroZeroAxisCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                    CommandParameter="B"/>
             <Border Grid.Row="5" Grid.Column="1" Background="{DynamicResource Brush.DRO.Background}" Margin="2" CornerRadius="2" Height="36"
                     Visibility="{Binding DataContext.IsAxisBEnabled, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVis}}">
-                <TextBlock Text="{Binding DataContext.Status.B, RelativeSource={RelativeSource AncestorType=Window}, StringFormat=F3}"
+                <TextBlock Text="{Binding DataContext.Status.WorkB, RelativeSource={RelativeSource AncestorType=Window}, StringFormat=F3}"
                            Foreground="{DynamicResource Brush.DRO.Foreground}" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="5" FontSize="{DynamicResource FontSize.DRO}" FontWeight="Bold" FontFamily="Consolas"/>
             </Border>
             <Border Grid.Row="5" Grid.Column="2" Background="{DynamicResource Brush.DRO.Background}" Margin="2" CornerRadius="2" Height="36"
@@ -124,15 +210,34 @@
                 <TextBlock Text="{Binding DataContext.Status.DtgB, RelativeSource={RelativeSource AncestorType=Window}, StringFormat=F3}"
                            Foreground="{DynamicResource Brush.DRO.Foreground}" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="5" FontSize="{DynamicResource FontSize.DRO}" FontWeight="Bold" FontFamily="Consolas"/>
             </Border>
+            <Button Grid.Row="5" Grid.Column="4" Content="REF B" Margin="2" FontSize="10" FontWeight="Bold" Height="36"
+                    Foreground="White" BorderThickness="1"
+                    Visibility="{Binding DataContext.IsAxisBEnabled, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVis}}"
+                    Command="{Binding DataContext.RefAxisCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                    CommandParameter="B">
+                <Button.Style>
+                    <Style TargetType="Button">
+                        <Setter Property="Background" Value="#D32F2F"/>
+                        <Setter Property="BorderBrush" Value="#B71C1C"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding DataContext.Status.IsBHomed, RelativeSource={RelativeSource AncestorType=Window}}" Value="True">
+                                <Setter Property="Background" Value="#4CAF50"/>
+                                <Setter Property="BorderBrush" Value="#388E3C"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Button.Style>
+            </Button>
 
-            <!-- [2026-02-24] === C 軸 (Row 6) === 依 IsAxisCEnabled 顯示/隱藏 -->
-            <Border Grid.Row="6" Grid.Column="0" Background="{DynamicResource Brush.DRO.Label}" Margin="2" CornerRadius="2" Height="36"
-                    Visibility="{Binding DataContext.IsAxisCEnabled, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVis}}">
-                <TextBlock Text="C" Foreground="White" VerticalAlignment="Center" HorizontalAlignment="Center" FontWeight="Bold"/>
-            </Border>
+            <!-- ========== C 軸 (Row 6) — 動態顯示 ========== -->
+            <Button Grid.Row="6" Grid.Column="0" Content="ZERO C" Margin="2" FontSize="10" FontWeight="Bold" Height="36"
+                    Foreground="White" Background="#555" BorderBrush="#666" BorderThickness="1"
+                    Visibility="{Binding DataContext.IsAxisCEnabled, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVis}}"
+                    Command="{Binding DataContext.DroZeroAxisCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                    CommandParameter="C"/>
             <Border Grid.Row="6" Grid.Column="1" Background="{DynamicResource Brush.DRO.Background}" Margin="2" CornerRadius="2" Height="36"
                     Visibility="{Binding DataContext.IsAxisCEnabled, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVis}}">
-                <TextBlock Text="{Binding DataContext.Status.C, RelativeSource={RelativeSource AncestorType=Window}, StringFormat=F3}"
+                <TextBlock Text="{Binding DataContext.Status.WorkC, RelativeSource={RelativeSource AncestorType=Window}, StringFormat=F3}"
                            Foreground="{DynamicResource Brush.DRO.Foreground}" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="5" FontSize="{DynamicResource FontSize.DRO}" FontWeight="Bold" FontFamily="Consolas"/>
             </Border>
             <Border Grid.Row="6" Grid.Column="2" Background="{DynamicResource Brush.DRO.Background}" Margin="2" CornerRadius="2" Height="36"
@@ -145,127 +250,50 @@
                 <TextBlock Text="{Binding DataContext.Status.DtgC, RelativeSource={RelativeSource AncestorType=Window}, StringFormat=F3}"
                            Foreground="{DynamicResource Brush.DRO.Foreground}" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="5" FontSize="{DynamicResource FontSize.DRO}" FontWeight="Bold" FontFamily="Consolas"/>
             </Border>
+            <Button Grid.Row="6" Grid.Column="4" Content="REF C" Margin="2" FontSize="10" FontWeight="Bold" Height="36"
+                    Foreground="White" BorderThickness="1"
+                    Visibility="{Binding DataContext.IsAxisCEnabled, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVis}}"
+                    Command="{Binding DataContext.RefAxisCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                    CommandParameter="C">
+                <Button.Style>
+                    <Style TargetType="Button">
+                        <Setter Property="Background" Value="#D32F2F"/>
+                        <Setter Property="BorderBrush" Value="#B71C1C"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding DataContext.Status.IsCHomed, RelativeSource={RelativeSource AncestorType=Window}}" Value="True">
+                                <Setter Property="Background" Value="#4CAF50"/>
+                                <Setter Property="BorderBrush" Value="#388E3C"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Button.Style>
+            </Button>
 
-            <!-- [2026-02-23] G54-G59 快選列（原 Row 4 → Row 7） -->
-            <UniformGrid Grid.Row="7" Grid.Column="0" Grid.ColumnSpan="4" Rows="1" Margin="2,1">
-                <Button Content="G54" FontSize="10" Margin="1"
-                        Command="{Binding DataContext.OffsetsVM.SelectOffsetCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                        CommandParameter="G54">
-                    <Button.Style>
-                        <Style TargetType="Button">
-                            <Setter Property="Foreground" Value="White"/>
-                            <Setter Property="Background" Value="#3C3C3C"/>
-                            <Setter Property="BorderBrush" Value="#555"/>
-                            <Setter Property="BorderThickness" Value="1"/>
-                            <Setter Property="Height" Value="24"/>
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding DataContext.OffsetsVM.ActiveOffset, RelativeSource={RelativeSource AncestorType=Window}}" Value="G54">
-                                    <Setter Property="Background" Value="#007ACC"/>
-                                    <Setter Property="BorderBrush" Value="#005A9E"/>
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </Button.Style>
-                </Button>
-                <Button Content="G55" FontSize="10" Margin="1"
-                        Command="{Binding DataContext.OffsetsVM.SelectOffsetCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                        CommandParameter="G55">
-                    <Button.Style>
-                        <Style TargetType="Button">
-                            <Setter Property="Foreground" Value="White"/>
-                            <Setter Property="Background" Value="#3C3C3C"/>
-                            <Setter Property="BorderBrush" Value="#555"/>
-                            <Setter Property="BorderThickness" Value="1"/>
-                            <Setter Property="Height" Value="24"/>
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding DataContext.OffsetsVM.ActiveOffset, RelativeSource={RelativeSource AncestorType=Window}}" Value="G55">
-                                    <Setter Property="Background" Value="#007ACC"/>
-                                    <Setter Property="BorderBrush" Value="#005A9E"/>
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </Button.Style>
-                </Button>
-                <Button Content="G56" FontSize="10" Margin="1"
-                        Command="{Binding DataContext.OffsetsVM.SelectOffsetCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                        CommandParameter="G56">
-                    <Button.Style>
-                        <Style TargetType="Button">
-                            <Setter Property="Foreground" Value="White"/>
-                            <Setter Property="Background" Value="#3C3C3C"/>
-                            <Setter Property="BorderBrush" Value="#555"/>
-                            <Setter Property="BorderThickness" Value="1"/>
-                            <Setter Property="Height" Value="24"/>
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding DataContext.OffsetsVM.ActiveOffset, RelativeSource={RelativeSource AncestorType=Window}}" Value="G56">
-                                    <Setter Property="Background" Value="#007ACC"/>
-                                    <Setter Property="BorderBrush" Value="#005A9E"/>
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </Button.Style>
-                </Button>
-                <Button Content="G57" FontSize="10" Margin="1"
-                        Command="{Binding DataContext.OffsetsVM.SelectOffsetCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                        CommandParameter="G57">
-                    <Button.Style>
-                        <Style TargetType="Button">
-                            <Setter Property="Foreground" Value="White"/>
-                            <Setter Property="Background" Value="#3C3C3C"/>
-                            <Setter Property="BorderBrush" Value="#555"/>
-                            <Setter Property="BorderThickness" Value="1"/>
-                            <Setter Property="Height" Value="24"/>
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding DataContext.OffsetsVM.ActiveOffset, RelativeSource={RelativeSource AncestorType=Window}}" Value="G57">
-                                    <Setter Property="Background" Value="#007ACC"/>
-                                    <Setter Property="BorderBrush" Value="#005A9E"/>
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </Button.Style>
-                </Button>
-                <Button Content="G58" FontSize="10" Margin="1"
-                        Command="{Binding DataContext.OffsetsVM.SelectOffsetCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                        CommandParameter="G58">
-                    <Button.Style>
-                        <Style TargetType="Button">
-                            <Setter Property="Foreground" Value="White"/>
-                            <Setter Property="Background" Value="#3C3C3C"/>
-                            <Setter Property="BorderBrush" Value="#555"/>
-                            <Setter Property="BorderThickness" Value="1"/>
-                            <Setter Property="Height" Value="24"/>
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding DataContext.OffsetsVM.ActiveOffset, RelativeSource={RelativeSource AncestorType=Window}}" Value="G58">
-                                    <Setter Property="Background" Value="#007ACC"/>
-                                    <Setter Property="BorderBrush" Value="#005A9E"/>
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </Button.Style>
-                </Button>
-                <Button Content="G59" FontSize="10" Margin="1"
-                        Command="{Binding DataContext.OffsetsVM.SelectOffsetCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                        CommandParameter="G59">
-                    <Button.Style>
-                        <Style TargetType="Button">
-                            <Setter Property="Foreground" Value="White"/>
-                            <Setter Property="Background" Value="#3C3C3C"/>
-                            <Setter Property="BorderBrush" Value="#555"/>
-                            <Setter Property="BorderThickness" Value="1"/>
-                            <Setter Property="Height" Value="24"/>
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding DataContext.OffsetsVM.ActiveOffset, RelativeSource={RelativeSource AncestorType=Window}}" Value="G59">
-                                    <Setter Property="Background" Value="#007ACC"/>
-                                    <Setter Property="BorderBrush" Value="#005A9E"/>
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </Button.Style>
-                </Button>
-            </UniformGrid>
+            <!-- ========== 底部按鈕列 (Row 7) ========== -->
+            <Button Grid.Row="7" Grid.Column="0" Grid.ColumnSpan="2" Margin="2,5"
+                    Content="{DynamicResource Str.Btn.ZeroAll}" FontSize="12" FontWeight="Bold"
+                    Foreground="White" Background="#555" BorderBrush="#666" BorderThickness="1"
+                    Command="{Binding DataContext.DroZeroAllCommand, RelativeSource={RelativeSource AncestorType=Window}}"/>
 
-            <!-- Zero All（原 Row 5 → Row 8） -->
-            <Button Grid.Row="8" Grid.Column="1" Grid.ColumnSpan="3" Content="{DynamicResource Str.Btn.ZeroAll}" Margin="20,5"/>
+            <!-- [2026-02-24] 原點復歸 ALL：未復歸→紅色（原點復歸 ALL）/ 已復歸→綠色（已復歸），仍可再次點擊 -->
+            <Button Grid.Row="7" Grid.Column="2" Grid.ColumnSpan="3" Margin="2,5"
+                    FontSize="12" FontWeight="Bold" Foreground="White" BorderThickness="1"
+                    Command="{Binding DataContext.HomeAllCommand, RelativeSource={RelativeSource AncestorType=Window}}">
+                <Button.Style>
+                    <Style TargetType="Button">
+                        <Setter Property="Background" Value="#D32F2F"/>
+                        <Setter Property="BorderBrush" Value="#B71C1C"/>
+                        <Setter Property="Content" Value="{DynamicResource Str.Btn.RefAll}"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding DataContext.Status.IsAllHomed, RelativeSource={RelativeSource AncestorType=Window}}" Value="True">
+                                <Setter Property="Background" Value="#4CAF50"/>
+                                <Setter Property="BorderBrush" Value="#388E3C"/>
+                                <Setter Property="Content" Value="{DynamicResource Str.Btn.Homed}"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Button.Style>
+            </Button>
         </Grid>
     </Border>
 </UserControl>

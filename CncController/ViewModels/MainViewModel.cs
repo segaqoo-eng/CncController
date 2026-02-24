@@ -104,6 +104,10 @@ namespace CncController.ViewModels
         [ObservableProperty]
         private bool _isMistOn;
 
+        // [2026-02-24] 新增 IsSingleBlock：Single Block 模式（每次 Cycle Start 僅執行一行 G-Code）
+        [ObservableProperty]
+        private bool _isSingleBlock;
+
         [RelayCommand]
         private async Task ToggleFlood()
         {
@@ -164,6 +168,9 @@ namespace CncController.ViewModels
         {
             // ★★★ [關鍵修改] 初始化時使用長駐的 MonitorVM ★★★
             CurrentViewModel = MonitorVM;
+
+            // [2026-02-24] 將 Status 傳遞給 OffsetsVM，讓 Offsets 右欄可綁定即時座標
+            OffsetsVM.MachineStatus = Status;
 
             // [新增] 1. 初始化時，先從 AuthService 抓目前的狀態
             CurrentUser = AuthService.Instance.CurrentUser;
@@ -462,9 +469,21 @@ namespace CncController.ViewModels
                 if (data.DTG.TryGetValue("Z", out double dz)) Status.DtgZ = dz;
             }
 
+            // [2026-02-24] 新增：將後端工件座標同步至 MachineStatus
+            if (data.Work_Position != null)
+            {
+                if (data.Work_Position.TryGetValue("X", out double wx)) Status.WorkX = wx;
+                if (data.Work_Position.TryGetValue("Y", out double wy)) Status.WorkY = wy;
+                if (data.Work_Position.TryGetValue("Z", out double wz)) Status.WorkZ = wz;
+            }
+
             Status.Feedrate = data.Feedrate;
             Status.SpindleSpeed = data.Spindle_Speed;
             Status.File = string.IsNullOrEmpty(data.File) ? "No File Loaded" : data.File;
+
+            // [2026-02-24] 新增：同步 Feed/Spindle Override 百分比
+            Status.FeedOverride = data.Feed_Override;
+            Status.SpindleOverride = data.Spindle_Override;
 
             // 更新 InterpState 供計時器判斷
             Status.InterpState = data.Interp_State;
@@ -666,13 +685,23 @@ namespace CncController.ViewModels
         }
 
         // [Cycle Control] 核心控制指令
+        // [2026-02-24] 修改：IsSingleBlock 模式下改用 StepProgramAsync 單節執行
         [RelayCommand]
         private async Task CycleStart()
         {
             if (!CanExecuteMotion()) return;
-            // 這裡從 MonitorVM 取得當前檔名，確保執行的是畫面上看到的那個
-            _loadedFileName = MonitorVM.CurrentFileName;
-            await MachineControlService.Instance.CycleStartAsync(_loadedFileName);
+
+            if (IsSingleBlock)
+            {
+                // Single Block 模式：每次僅執行一行
+                await MachineControlService.Instance.StepProgramAsync();
+            }
+            else
+            {
+                // 正常模式
+                _loadedFileName = MonitorVM.CurrentFileName;
+                await MachineControlService.Instance.CycleStartAsync(_loadedFileName);
+            }
 
             // 重置計時器 (如果需要從頭開始算)
             if (Status.InterpState == "IDLE")
@@ -684,6 +713,32 @@ namespace CncController.ViewModels
 
         [RelayCommand] private async Task FeedHold() => await MachineControlService.Instance.FeedHoldAsync();
         [RelayCommand] private async Task Stop() => await MachineControlService.Instance.StopAsync();
+
+        // [2026-02-24] 新增 ToggleSingleBlock：切換 Single Block 模式
+        [RelayCommand]
+        private void ToggleSingleBlock()
+        {
+            IsSingleBlock = !IsSingleBlock;
+            AlarmService.Instance.AddLog("INFO", $"Single Block: {(IsSingleBlock ? "ON" : "OFF")}");
+        }
+
+        // [2026-02-24] 新增 AdjustFeedOverride：增減進給率覆蓋百分比（delta = +10 或 -10）
+        [RelayCommand]
+        private async Task AdjustFeedOverride(string deltaStr)
+        {
+            if (!double.TryParse(deltaStr, out double delta)) return;
+            double newValue = Math.Clamp(Status.FeedOverride + delta, 0, 200);
+            await MachineControlService.Instance.SetFeedOverrideAsync(newValue);
+        }
+
+        // [2026-02-24] 新增 AdjustSpindleOverride：增減主軸轉速覆蓋百分比（delta = +10 或 -10）
+        [RelayCommand]
+        private async Task AdjustSpindleOverride(string deltaStr)
+        {
+            if (!double.TryParse(deltaStr, out double delta)) return;
+            double newValue = Math.Clamp(Status.SpindleOverride + delta, 0, 200);
+            await MachineControlService.Instance.SetSpindleOverrideAsync(newValue);
+        }
 
         // [新增] Reload 指令 (重載當前檔案)
         [RelayCommand]

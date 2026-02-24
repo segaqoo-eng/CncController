@@ -30,6 +30,13 @@ namespace CncController.Models
 
         // [2026-02-23] 新增 Active_WCS：對應後端 /v2/status 回傳的目前工件座標系（G54–G59）
         public string Active_WCS { get; set; } = "G54";
+
+        // [2026-02-24] 新增 Work_Position：工件座標（= actual_position - g5x - g92 - tool）
+        public Dictionary<string, double> Work_Position { get; set; }
+
+        // [2026-02-24] 新增 Feed_Override / Spindle_Override：進給率/主軸覆蓋百分比
+        public double Feed_Override { get; set; } = 100.0;
+        public double Spindle_Override { get; set; } = 100.0;
     }
 
     // ==========================================

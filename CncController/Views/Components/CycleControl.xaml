@@ -68,7 +68,19 @@
                 <Button Content="FEED HOLD" Command="{Binding FeedHoldCommand}" Style="{StaticResource CycleBtnStyle}"/>
                 <!-- [2026-02-23] CLEAR PGM 改為 GO TO HOME，連結 HomeAllCommand（全軸回原點） -->
                 <Button Content="GO TO HOME" Command="{Binding HomeAllCommand}" Style="{StaticResource CycleBtnStyle}"/>
-                <Button Content="SINGLE BLOCK" Style="{StaticResource CycleBtnStyle}"/>
+                <!-- [2026-02-24] SINGLE BLOCK 綁定 ToggleSingleBlockCommand，IsSingleBlock=true 時背景變藍 -->
+                <Button Content="SINGLE BLOCK" Command="{Binding ToggleSingleBlockCommand}">
+                    <Button.Style>
+                        <Style TargetType="Button" BasedOn="{StaticResource CycleBtnStyle}">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsSingleBlock}" Value="True">
+                                    <Setter Property="Background" Value="#007ACC"/>
+                                    <Setter Property="BorderBrush" Value="#005A9E"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                </Button>
                 <Button Content="FLOOD" Command="{Binding ToggleFloodCommand}">
                     <Button.Style>
                         <Style TargetType="Button" BasedOn="{StaticResource CycleBtnStyle}">

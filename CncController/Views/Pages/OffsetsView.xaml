@@ -1,4 +1,5 @@
 <!-- [2026-02-23] 新增 OffsetsView：G54–G59 工件座標系管理頁面；左欄 DataGrid 總表，右欄詳細面板 -->
+<!-- [2026-02-24] 右欄 MC Current / WC / OFFSET 綁定即時資料；SET TO ZERO 按鈕綁定 G10 L20 指令 -->
 <UserControl x:Class="CncController.Views.Pages.OffsetsView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -59,10 +60,11 @@
                     <TextBlock DockPanel.Dock="Top" Text="WORK OFFSET TABLE" Foreground="#AAAAAA"
                                FontSize="12" FontWeight="Bold" Margin="0,0,0,6"/>
 
+                    <!-- [2026-02-24] 修正按鈕綁定：CLEAR SELECTED → ClearSelectedCommand，CLEAR ALL → ClearAllCommand -->
                     <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Margin="0,8,0,0"
                                 HorizontalAlignment="Left">
                         <Button Content="CLEAR SELECTED" Style="{StaticResource OffsetBtnStyle}"
-                                Command="{Binding ClearAllCommand}" Width="130"/>
+                                Command="{Binding ClearSelectedCommand}" Width="130"/>
                         <Button Content="CLEAR ALL" Style="{StaticResource OffsetBtnStyle}"
                                 Command="{Binding ClearAllCommand}" Width="90"/>
                         <Button Content="SAVE TABLE" Style="{StaticResource OffsetBtnStyle}"
@@ -205,7 +207,7 @@
 
                     <Separator Background="#444" Margin="0,0,0,10"/>
 
-                    <!-- 座標值顯示（MC Current / WC / G53/G52），暫 hardcode 0.000 -->
+                    <!-- [2026-02-24] 座標值顯示：MC Current 綁定即時機台座標、WC 綁定即時工件座標、OFFSET 綁定選定 WCS 的 offset 值 -->
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="40"/>
@@ -222,23 +224,23 @@
 
                         <!-- 表頭 -->
                         <TextBlock Grid.Row="0" Grid.Column="1" Text="MC CURRENT" Foreground="#888" FontSize="10" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        <TextBlock Grid.Row="0" Grid.Column="2" Text="WC" Foreground="#888" FontSize="10" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        <TextBlock Grid.Row="0" Grid.Column="3" Text="G53/G52" Foreground="#888" FontSize="10" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Row="0" Grid.Column="2" Text="WORK COORD" Foreground="#888" FontSize="10" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Row="0" Grid.Column="3" Text="OFFSET" Foreground="#888" FontSize="10" HorizontalAlignment="Center" VerticalAlignment="Center"/>
 
                         <!-- X 行 -->
                         <Border Grid.Row="1" Grid.Column="0" Background="#3A2A2A" Margin="1" CornerRadius="2">
                             <TextBlock Text="X" Foreground="White" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <Border Grid.Row="1" Grid.Column="1" Background="#1A1A2E" Margin="1" CornerRadius="2">
-                            <TextBlock Text="0.000" Foreground="#00BFFF" FontFamily="Consolas" FontSize="14" FontWeight="Bold"
+                            <TextBlock Text="{Binding MachineStatus.X, StringFormat={}{0:F3}}" Foreground="#00BFFF" FontFamily="Consolas" FontSize="14" FontWeight="Bold"
                                        HorizontalAlignment="Right" VerticalAlignment="Center" Margin="6,0"/>
                         </Border>
                         <Border Grid.Row="1" Grid.Column="2" Background="#1A2E1A" Margin="1" CornerRadius="2">
-                            <TextBlock Text="0.000" Foreground="#90EE90" FontFamily="Consolas" FontSize="14" FontWeight="Bold"
+                            <TextBlock Text="{Binding MachineStatus.WorkX, StringFormat={}{0:F3}}" Foreground="#90EE90" FontFamily="Consolas" FontSize="14" FontWeight="Bold"
                                        HorizontalAlignment="Right" VerticalAlignment="Center" Margin="6,0"/>
                         </Border>
                         <Border Grid.Row="1" Grid.Column="3" Background="#2A2A2A" Margin="1" CornerRadius="2">
-                            <TextBlock Text="0.000" Foreground="#AAAAAA" FontFamily="Consolas" FontSize="14" FontWeight="Bold"
+                            <TextBlock Text="{Binding SelectedRow.X, StringFormat={}{0:F4}}" Foreground="#AAAAAA" FontFamily="Consolas" FontSize="14" FontWeight="Bold"
                                        HorizontalAlignment="Right" VerticalAlignment="Center" Margin="6,0"/>
                         </Border>
 
@@ -247,15 +249,15 @@
                             <TextBlock Text="Y" Foreground="White" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <Border Grid.Row="2" Grid.Column="1" Background="#1A1A2E" Margin="1" CornerRadius="2">
-                            <TextBlock Text="0.000" Foreground="#00BFFF" FontFamily="Consolas" FontSize="14" FontWeight="Bold"
+                            <TextBlock Text="{Binding MachineStatus.Y, StringFormat={}{0:F3}}" Foreground="#00BFFF" FontFamily="Consolas" FontSize="14" FontWeight="Bold"
                                        HorizontalAlignment="Right" VerticalAlignment="Center" Margin="6,0"/>
                         </Border>
                         <Border Grid.Row="2" Grid.Column="2" Background="#1A2E1A" Margin="1" CornerRadius="2">
-                            <TextBlock Text="0.000" Foreground="#90EE90" FontFamily="Consolas" FontSize="14" FontWeight="Bold"
+                            <TextBlock Text="{Binding MachineStatus.WorkY, StringFormat={}{0:F3}}" Foreground="#90EE90" FontFamily="Consolas" FontSize="14" FontWeight="Bold"
                                        HorizontalAlignment="Right" VerticalAlignment="Center" Margin="6,0"/>
                         </Border>
                         <Border Grid.Row="2" Grid.Column="3" Background="#2A2A2A" Margin="1" CornerRadius="2">
-                            <TextBlock Text="0.000" Foreground="#AAAAAA" FontFamily="Consolas" FontSize="14" FontWeight="Bold"
+                            <TextBlock Text="{Binding SelectedRow.Y, StringFormat={}{0:F4}}" Foreground="#AAAAAA" FontFamily="Consolas" FontSize="14" FontWeight="Bold"
                                        HorizontalAlignment="Right" VerticalAlignment="Center" Margin="6,0"/>
                         </Border>
 
@@ -264,31 +266,31 @@
                             <TextBlock Text="Z" Foreground="White" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <Border Grid.Row="3" Grid.Column="1" Background="#1A1A2E" Margin="1" CornerRadius="2">
-                            <TextBlock Text="0.000" Foreground="#00BFFF" FontFamily="Consolas" FontSize="14" FontWeight="Bold"
+                            <TextBlock Text="{Binding MachineStatus.Z, StringFormat={}{0:F3}}" Foreground="#00BFFF" FontFamily="Consolas" FontSize="14" FontWeight="Bold"
                                        HorizontalAlignment="Right" VerticalAlignment="Center" Margin="6,0"/>
                         </Border>
                         <Border Grid.Row="3" Grid.Column="2" Background="#1A2E1A" Margin="1" CornerRadius="2">
-                            <TextBlock Text="0.000" Foreground="#90EE90" FontFamily="Consolas" FontSize="14" FontWeight="Bold"
+                            <TextBlock Text="{Binding MachineStatus.WorkZ, StringFormat={}{0:F3}}" Foreground="#90EE90" FontFamily="Consolas" FontSize="14" FontWeight="Bold"
                                        HorizontalAlignment="Right" VerticalAlignment="Center" Margin="6,0"/>
                         </Border>
                         <Border Grid.Row="3" Grid.Column="3" Background="#2A2A2A" Margin="1" CornerRadius="2">
-                            <TextBlock Text="0.000" Foreground="#AAAAAA" FontFamily="Consolas" FontSize="14" FontWeight="Bold"
+                            <TextBlock Text="{Binding SelectedRow.Z, StringFormat={}{0:F4}}" Foreground="#AAAAAA" FontFamily="Consolas" FontSize="14" FontWeight="Bold"
                                        HorizontalAlignment="Right" VerticalAlignment="Center" Margin="6,0"/>
                         </Border>
                     </Grid>
 
                     <Separator Background="#444" Margin="0,10,0,8"/>
 
-                    <!-- 底部動作按鈕 -->
+                    <!-- [2026-02-24] 底部動作按鈕：SET TO ZERO X/Y/Z/ALL 綁定 SetToZeroAxisCommand + CommandParameter -->
                     <WrapPanel HorizontalAlignment="Left">
                         <Button Content="SET TO ZERO X" Style="{StaticResource OffsetBtnStyle}"
-                                Command="{Binding SetToZeroCommand}" Width="120"/>
+                                Command="{Binding SetToZeroAxisCommand}" CommandParameter="X" Width="120"/>
                         <Button Content="SET TO ZERO Y" Style="{StaticResource OffsetBtnStyle}"
-                                Command="{Binding SetToZeroCommand}" Width="120"/>
+                                Command="{Binding SetToZeroAxisCommand}" CommandParameter="Y" Width="120"/>
                         <Button Content="SET TO ZERO Z" Style="{StaticResource OffsetBtnStyle}"
-                                Command="{Binding SetToZeroCommand}" Width="120"/>
+                                Command="{Binding SetToZeroAxisCommand}" CommandParameter="Z" Width="120"/>
                         <Button Content="ZERO ALL" Style="{StaticResource OffsetBtnStyle}"
-                                Command="{Binding SetToZeroCommand}" Width="90"
+                                Command="{Binding SetToZeroAxisCommand}" CommandParameter="ALL" Width="90"
                                 Background="#664422"/>
                     </WrapPanel>
                 </StackPanel>

@@ -29,8 +29,17 @@ namespace CncController.Models
         [ObservableProperty] private double _dtgY;
         [ObservableProperty] private double _dtgZ;
 
+        // [2026-02-24] 新增工件座標（Work Coordinate = actual_position - g5x - g92 - tool）
+        [ObservableProperty] private double _workX;
+        [ObservableProperty] private double _workY;
+        [ObservableProperty] private double _workZ;
+
         [ObservableProperty] private double _feedrate;
         [ObservableProperty] private double _spindleSpeed;
+
+        // [2026-02-24] 新增 Feed/Spindle Override 百分比（由後端 /v2/status 回傳）
+        [ObservableProperty] private double _feedOverride = 100.0;
+        [ObservableProperty] private double _spindleOverride = 100.0;
         [ObservableProperty] private string _file = "No File Loaded";
 
         // [新增] 警報訊息集合 (供 UI 顯示跑馬燈或列表)

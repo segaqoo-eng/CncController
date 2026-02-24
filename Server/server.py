@@ -552,14 +552,43 @@ def v2_status():
         except:
             pass
 
+        # [2026-02-24] 新增 Work_Position：計算工件座標 = actual_position - g5x_offset - g92_offset - tool_offset
+        work_pos = {}
+        try:
+            g5x = cnc_stat.g5x_offset
+            g92 = cnc_stat.g92_offset
+            tool = cnc_stat.tool_offset
+            for i, axis in enumerate(['X', 'Y', 'Z', 'A', 'B', 'C']):
+                if i < len(raw_pos):
+                    work_pos[axis] = float(f"{raw_pos[i] - g5x[i] - g92[i] - tool[i]:.4f}")
+        except:
+            pass
+
+        # [2026-02-24] 新增 Feed_Override / Spindle_Override：讀取目前的進給率與主軸轉速覆蓋百分比
+        feed_override = 100.0
+        try:
+            feed_override = round(cnc_stat.feedrate * 100.0, 1)
+        except:
+            pass
+
+        spindle_override = 100.0
+        try:
+            if hasattr(cnc_stat, 'spindle') and len(cnc_stat.spindle) > 0:
+                spindle_override = round(cnc_stat.spindle[0]['override'] * 100.0, 1)
+        except:
+            pass
+
         return success_response({
             "Connected": True,
             "Task_State": t_state,
             "Interp_State": i_state,
             "Position": pos_dict,
+            "Work_Position": work_pos,
             "DTG": dtg_dict,
             "Feedrate": feed,
             "Spindle_Speed": spindle_speed,
+            "Feed_Override": feed_override,
+            "Spindle_Override": spindle_override,
             "File": filename,
             "Servo_IO": servo_io_data,
             "Active_WCS": active_wcs
@@ -822,9 +851,55 @@ def v2_mdi():
     except Exception as e:
         return error_response(f"MDI Fail: {e}")
 
+# [2026-02-24] 新增 /v2/override/feed 端點：設定進給率覆蓋百分比
+@app.route('/v2/override/feed', methods=['POST'])
+def v2_override_feed():
+    if not ensure_cnc_connections(): return error_response("No connection")
+    try:
+        data = request.json or {}
+        value = float(data.get('value', 100.0))
+        scale = max(0.0, min(value / 100.0, 2.0))  # 限制 0%~200%
+        cnc_cmd.feedrate(scale)
+        app_log('CMD', f'Feed Override: {value}%')
+        return success_response({"feed_override": value})
+    except Exception as e:
+        return error_response(f"Feed Override Fail: {e}")
+
+# [2026-02-24] 新增 /v2/override/spindle 端點：設定主軸轉速覆蓋百分比
+@app.route('/v2/override/spindle', methods=['POST'])
+def v2_override_spindle():
+    if not ensure_cnc_connections(): return error_response("No connection")
+    try:
+        data = request.json or {}
+        value = float(data.get('value', 100.0))
+        scale = max(0.0, min(value / 100.0, 2.0))  # 限制 0%~200%
+        cnc_cmd.spindleoverride(scale)
+        app_log('CMD', f'Spindle Override: {value}%')
+        return success_response({"spindle_override": value})
+    except Exception as e:
+        return error_response(f"Spindle Override Fail: {e}")
+
+# [2026-02-24] 新增 /v2/program/step 端點：單節執行（Single Block）
+@app.route('/v2/program/step', methods=['POST'])
+def v2_program_step():
+    """單節執行：每次 Cycle Start 僅執行一行 G-Code"""
+    if not ensure_cnc_connections(): return error_response("No connection")
+    try:
+        cnc_stat.poll()
+        if cnc_stat.task_state != linuxcnc.STATE_ON:
+            return error_response("Machine OFF")
+        if cnc_stat.task_mode != linuxcnc.MODE_AUTO:
+            cnc_cmd.mode(linuxcnc.MODE_AUTO)
+            cnc_cmd.wait_complete()
+        cnc_cmd.auto(linuxcnc.AUTO_STEP)
+        app_log('CMD', 'Single Block Step')
+        return success_response("Stepped")
+    except Exception as e:
+        return error_response(f"Step Fail: {e}")
+
 if __name__ == '__main__':
     print("[INIT] Server starting...", flush=True)
-    start_linuxcnc_process() 
+    start_linuxcnc_process()
     port = SETTINGS['PORT']
     print(f"[START] Server running on port {port}")
     app.run(host='0.0.0.0', port=port, debug=False, use_reloader=False)

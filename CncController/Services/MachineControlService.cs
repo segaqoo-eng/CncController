@@ -467,6 +467,67 @@ namespace CncController.Services
             }
         }
 
+        // [2026-02-24] 新增 SetFeedOverrideAsync：設定進給率覆蓋百分比（0~200%）
+        public async Task<bool> SetFeedOverrideAsync(double percent)
+        {
+            try
+            {
+                var response = await _pollingClient.PostAsJsonAsync(
+                    $"{_serverUrl}/v2/override/feed", new { value = percent });
+                return response.IsSuccessStatusCode;
+            }
+            catch (Exception ex)
+            {
+                AlarmService.Instance.AddLog("API", $"SetFeedOverride failed: {ex.Message}");
+                return false;
+            }
+        }
+
+        // [2026-02-24] 新增 SetSpindleOverrideAsync：設定主軸轉速覆蓋百分比（0~200%）
+        public async Task<bool> SetSpindleOverrideAsync(double percent)
+        {
+            try
+            {
+                var response = await _pollingClient.PostAsJsonAsync(
+                    $"{_serverUrl}/v2/override/spindle", new { value = percent });
+                return response.IsSuccessStatusCode;
+            }
+            catch (Exception ex)
+            {
+                AlarmService.Instance.AddLog("API", $"SetSpindleOverride failed: {ex.Message}");
+                return false;
+            }
+        }
+
+        // [2026-02-24] 新增 StepProgramAsync：單節執行（Single Block），每次僅執行一行 G-Code
+        public async Task<bool> StepProgramAsync()
+        {
+            var (allowed, reason) = ValidateAction(MachineAction.CycleStart);
+            if (!allowed)
+            {
+                AlarmService.Instance.AddLog("WARN", $"Step Blocked: {reason}");
+                return false;
+            }
+            try
+            {
+                var response = await _pollingClient.PostAsJsonAsync(
+                    $"{_serverUrl}/v2/program/step", new { });
+                if (!response.IsSuccessStatusCode) return false;
+                var result = await response.Content.ReadFromJsonAsync<ApiResponse<object>>(_jsonOptions);
+                if (result?.Status != "Success")
+                {
+                    AlarmService.Instance.AddLog("API", $"Step Fail: {result?.Message}");
+                    return false;
+                }
+                return true;
+            }
+            catch (Exception ex)
+            {
+                AlarmService.Instance.AddLog("API", $"Step Exception: {ex.Message}");
+                return false;
+            }
+        }
+
         // [2026-02-23] 新增 GetOffsetsAsync：從後端 /v2/offsets 讀取 G54–G59 offset 值
         /// <summary>
         /// 取得 G54–G59 工件座標系偏移值（從後端 /v2/offsets）

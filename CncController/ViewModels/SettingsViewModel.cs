@@ -156,6 +156,9 @@ namespace CncController.ViewModels
             HardwareVM.Slaves.Clear();
             foreach (var s in slaves) HardwareVM.Slaves.Add(s);
 
+            // [2026-02-24] 同步機台類型至 MachineConfigVM
+            MachineConfigVM.SelectedMachineType = config.MachineType;
+
             // Step 2: 初始化軸參數頁面
             AxisVM.Axes.Clear();
             if (config.Axes != null && config.Axes.Count > 0)
@@ -293,6 +296,8 @@ namespace CncController.ViewModels
                 DeployStatus = "Saving Config...";
 
                 var config = new MachineConfig();
+                // [2026-02-24] 儲存機台類型
+                config.MachineType = MachineConfigVM.SelectedMachineType;
                 config.Axes.AddRange(AxisVM.Axes);
 
                 // [修正] 清單重建：先清除再新增（避免重複）

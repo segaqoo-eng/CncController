@@ -190,6 +190,8 @@ DispatcherTimer (500ms) → MachineControlService.GetStatusAsync()
 - 開機硬體自動驗證
 - 全套工控安全重構
 - ToolInfo 版面對齊 PB 版（即時刀具號/刀長/刀徑 + G43/G49 高亮 + GO TO ZERO/G30 按鈕）
+- 機台類型 UI + 即時連動（繁中下拉選單 + DRO/JOG/Offsets/AxisParameters 動態切換）
+- OffsetsView 對齊 PB 版（7 欄表格 + G59.1-G59.3 擴展座標系 + MAN/AUTO/MDI 模式切換）
 
 ### ❌ 尚未實作
 
@@ -287,3 +289,21 @@ DispatcherTimer (500ms) → MachineControlService.GetStatusAsync()
 | **修正 Homed 不變綠** | 後端 `cnc_stat.joint[i].homed` → `cnc_stat.homed[i]`（joint 回傳 dict 無屬性），JOG 端點同步修正 |
 | **修正 Offsets SAVE 歸零** | 後端 MDI 加 `wait_complete()` 等待執行完畢 + 前端 ReloadTable 前加 300ms 延遲等待 .var 同步 |
 | **修正 ToolInfo GO TO HOME** | 按鈕 Command 綁定從 `HomeAllCommand` 修正為 `GoToHomeCommand` |
+| **機台類型 UI** | 繁體中文下拉選單 + 設定存讀連通（`bf1b481`） |
+| **機台類型即時連動** | DRO/JOG/Offsets/AxisParameters 依 MachineType 動態顯示/隱藏（`6c97e67`） |
+| **修正雙擊 exe 無法開啟** | BoolToVis 資源移至 App.xaml 全域（`d7b96f2`） |
+| **設定連動延遲** | 所有連動延遲至 UPDATE 按鈕 + 手動 Scan 更新 IO Slave 下拉（`578850e`） |
+| **IO Monitor 修正** | 修正下拉選單過早觸發映射表重建 + IO 卡片改為標註不過濾（`ac6294b`） |
+| **修正 SAVE TABLE 值歸零** | 後端改讀記憶體值（`cnc_stat.g5x_offset`）取代 .var 檔（僅關機寫入）（`c8c1840`） |
+| **OffsetsView 對齊 PB 版** | 7 欄表格（X/Y/Z/A/B/C + Name）+ G59.1-G59.3 擴展座標系 + MAN/AUTO/MDI 模式切換按鈕（`34ff2e7`） |
+| **版本號** | `2026.02.24_OFFSETS_PB` |
+
+### 2026-02-25（預計）
+
+| 優先序 | 項目 | 說明 |
+|--------|------|------|
+| 1 | **Probing 探測循環** | Outside/Inside Corners、Boss/Pocket、Ridge/Valley、Edge Angle、Calibrate — 工程師常用差異化功能 |
+| 2 | **Tool Table 管理** | 完整刀具表 CRUD（新增/編輯/刪除刀具）— ATC 前置需求 |
+| 3 | **Block Delete / M01** | 連接現有按鈕至後端 Command 綁定 |
+| 4 | **G-Code 行號高亮** | 執行中行追蹤 + 自動捲動 |
+| 5 | **Rapid Override** | 連通第三列 SliderControl 至後端即時百分比 |

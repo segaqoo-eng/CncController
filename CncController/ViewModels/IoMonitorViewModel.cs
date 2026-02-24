@@ -121,10 +121,10 @@ namespace CncController.ViewModels
     {
         public ObservableCollection<ServoIoCard> Cards { get; } = new ObservableCollection<ServoIoCard>();
 
-        // [2026-02-24] 軸映射：Slave Index → 軸名（僅顯示已映射的 Slave 卡片）
+        // [2026-02-24] 軸映射：Slave Index → 軸名（不過濾卡片，僅標註軸名）
         private Dictionary<int, string> _axisSlaveMap = new();
 
-        // [2026-02-24] 從 AxisMapping 更新過濾條件
+        // [2026-02-24] 從 AxisMapping 更新軸名標註（不過濾，所有 Slave 卡片皆顯示）
         public void UpdateAxisMapping(IEnumerable<AxisMapItem> axisMaps)
         {
             _axisSlaveMap.Clear();
@@ -138,18 +138,6 @@ namespace CncController.ViewModels
                         map.SelectedSlave.Name != "--- None ---")
                     {
                         _axisSlaveMap[map.SelectedSlave.Index] = map.AxisName;
-                    }
-                }
-            }
-
-            // 移除不在映射中的舊卡片
-            if (_axisSlaveMap.Count > 0)
-            {
-                for (int i = Cards.Count - 1; i >= 0; i--)
-                {
-                    if (!_axisSlaveMap.ContainsKey(Cards[i].SlaveIndex))
-                    {
-                        Cards.RemoveAt(i);
                     }
                 }
             }
@@ -174,14 +162,11 @@ namespace CncController.ViewModels
                 if (raw == null || (string.IsNullOrEmpty(raw.DI) && string.IsNullOrEmpty(raw.Status)))
                     continue;
 
-                // [2026-02-24] 有軸映射時，只顯示已映射的 Slave
-                if (_axisSlaveMap.Count > 0 && !_axisSlaveMap.ContainsKey(slaveIdx))
-                    continue;
-
                 // 找找看有沒有這張卡，沒有就新增
                 var card = Cards.FirstOrDefault(c => c.SlaveIndex == slaveIdx);
                 if (card == null)
                 {
+                    // [2026-02-24] 有軸映射就標註軸名，無則顯示 Slave#
                     var axisName = _axisSlaveMap.TryGetValue(slaveIdx, out var name) ? name : "";
                     card = new ServoIoCard(slaveIdx) { AxisName = axisName };
                     InsertCardSorted(card);

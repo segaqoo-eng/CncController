@@ -130,13 +130,10 @@ namespace CncController.ViewModels
             // 1. 重建 AXIS PARAMETERS Tab（保留現有參數值）
             RebuildAxisParameters(enabledAxes);
 
-            // 2. 重建 AXIS MAPPING Tab + 同步 IO Monitor 過濾
-            MappingVM.GenerateAxisTable(MachineConfigVM);
+            // [2026-02-24] 下拉選單僅更新軸勾選 + 軸參數，AXIS MAPPING / IO Monitor
+            // 等使用者按 UPDATE MAPPING TABLE 按鈕才更新（見 ApplyMachineConfig）
 
-            // [2026-02-24] 同步 IO Monitor 卡片過濾（依軸映射）
-            IoMonitorVM.UpdateAxisMapping(MappingVM.AxisMaps);
-
-            // 3. 通知 MainViewModel 更新 DRO/JOG/Offsets
+            // 2. 通知 MainViewModel 更新 DRO/JOG/Offsets
             try
             {
                 var app = System.Windows.Application.Current;

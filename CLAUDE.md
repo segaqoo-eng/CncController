@@ -185,6 +185,7 @@ DispatcherTimer (500ms) → MachineControlService.GetStatusAsync()
 - 使用者登入/登出/角色權限（4 種）
 - 操作歷史（五級過濾）+ 加工計時器
 - 機台設定介面（6 Tab：掃描/軸指派/軸參數/IO 監控/IN MAP/OUT MAP）
+- IO Monitor 卡片連動機台類型（依軸映射過濾 Slave + 卡片標註軸名）
 - 設定檔生成與部署（INI/HAL/XML/PostGUI → 上傳 → 重啟 → 輪詢確認）
 - 開機硬體自動驗證
 - 全套工控安全重構
@@ -270,4 +271,5 @@ DispatcherTimer (500ms) → MachineControlService.GetStatusAsync()
 | **HAL 軸映射修正** | 移除寫死 X→0/Y→2/Z→3，改從 `Mappings.ChannelIndex` 動態取得 Slave Index |
 | **MachineStatus 補齊** | 新增 DtgA/B/C + WorkA/B/C 屬性（六軸完整支援） |
 | **Offsets DataGrid** | 新增 A/B/C 欄位，顯示全部六軸 offset 值 |
-| **版本號** | `2026.02.24_MULTIAXIS_FIXES` |
+| **IO Monitor 連動** | 卡片依軸映射過濾（3 軸只顯示 3 張）+ 標題標註軸名（例如 "X Axis Slave #0"） |
+| **版本號** | `2026.02.24_IOMONITOR_LINKAGE` |

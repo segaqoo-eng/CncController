@@ -298,12 +298,8 @@ DispatcherTimer (500ms) → MachineControlService.GetStatusAsync()
 | **OffsetsView 對齊 PB 版** | 7 欄表格（X/Y/Z/A/B/C + Name）+ G59.1-G59.3 擴展座標系 + MAN/AUTO/MDI 模式切換按鈕（`34ff2e7`） |
 | **版本號** | `2026.02.24_OFFSETS_PB` |
 
-### 2026-02-25（預計）
+### 2026-02-25
 
-| 優先序 | 項目 | 說明 |
-|--------|------|------|
-| 1 | **Probing 探測循環** | Outside/Inside Corners、Boss/Pocket、Ridge/Valley、Edge Angle、Calibrate — 工程師常用差異化功能 |
-| 2 | **Tool Table 管理** | 完整刀具表 CRUD（新增/編輯/刪除刀具）— ATC 前置需求 |
-| 3 | **Block Delete / M01** | 連接現有按鈕至後端 Command 綁定 |
-| 4 | **G-Code 行號高亮** | 執行中行追蹤 + 自動捲動 |
-| 5 | **Rapid Override** | 連通第三列 SliderControl 至後端即時百分比 |
+| 項目 | 說明 |
+|------|------|
+| **修正 CLEAR ALL/SELECTED → RELOAD 顯示舊值** | 新增 server.py in-memory WCS cache（`_wcs_cache`）；MDI 送出 G10 L2 後即時更新 cache；`read_work_offsets()` 優先級：.var < cache < cnc_stat active WCS（`5a4e14b`） |

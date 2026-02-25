@@ -274,6 +274,29 @@ cnc_stat = None
 cached_errors = collections.deque(maxlen=SETTINGS['ERROR_CACHE_SIZE'])
 error_lock = threading.Lock()
 
+# [2026-02-25] in-memory WCS offset cache
+# 解決 .var 檔僅關機時寫入，RELOAD 後非 Active WCS 仍顯示舊值的問題
+# 更新時機：每次透過 MDI 送出 G10 L2 指令後即時更新
+_wcs_cache = {}
+
+def _update_wcs_cache_from_g10(command):
+    """解析 G10 L2 P<n> ... 指令，並更新 _wcs_cache"""
+    import re
+    m = re.match(r'G10\s+L2\s+P(\d+)\s+(.*)', command.strip(), re.IGNORECASE)
+    if not m:
+        return
+    p_num = int(m.group(1))
+    p_to_wcs = {1:'G54', 2:'G55', 3:'G56', 4:'G57', 5:'G58', 6:'G59',
+                7:'G59.1', 8:'G59.2', 9:'G59.3'}
+    wcs = p_to_wcs.get(p_num)
+    if not wcs:
+        return
+    axes_vals = re.findall(r'([XYZABC])([-+]?[\d.]+)', m.group(2), re.IGNORECASE)
+    if wcs not in _wcs_cache:
+        _wcs_cache[wcs] = {}
+    for ax, val in axes_vals:
+        _wcs_cache[wcs][ax.upper()] = round(float(val), 4)
+
 def ensure_cnc_connections():
     global cnc_cmd, cnc_stat
     if linuxcnc is None: return False
@@ -701,6 +724,11 @@ def read_work_offsets():
         except Exception:
             pass
 
+    # [2026-02-25] 用 in-memory cache 覆蓋 .var 的值（G10 L2 執行後立即更新，比 .var 更新）
+    for wcs, cached_vals in _wcs_cache.items():
+        if wcs in offsets:
+            offsets[wcs].update(cached_vals)
+
     # [2026-02-24] 用 cnc_stat 記憶體值覆蓋 Active WCS（.var 檔僅關機時寫入，G10 後必定過時）
     # [2026-02-24] 擴充支援 G59.1-G59.3（g5x_index: 7=G59.1, 8=G59.2, 9=G59.3）
     try:
@@ -945,6 +973,7 @@ def v2_mdi():
 
         cnc_cmd.mdi(command)
         cnc_cmd.wait_complete()  # [2026-02-24] 等待 MDI 執行完畢，避免後續讀取到舊值
+        _update_wcs_cache_from_g10(command)  # [2026-02-25] 若為 G10 L2，即時更新 WCS cache
         app_log('CMD', f"MDI: {command}")
         return success_response({"command": command})
     except Exception as e:

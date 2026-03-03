@@ -1,0 +1,300 @@
+<!-- [2026-03-03] 新增 AtcView：ATC 自動刀庫頁面（對齊 PB 版 ATC MAN.png / ATC PROGRAM.png）
+     ATC_Back.png 為整頁背景，左面板（模式切換+按鈕）/ 中央（REMARK+MDI）/ 右面板（自動控制）浮在上面 -->
+<UserControl x:Class="CncController.Views.Pages.AtcView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:vm="clr-namespace:CncController.ViewModels"
+             mc:Ignorable="d"
+             d:DataContext="{d:DesignInstance Type=vm:AtcViewModel}"
+             d:DesignHeight="700" d:DesignWidth="1700">
+
+    <UserControl.Resources>
+        <!-- [2026-03-03] 通用按鈕樣式（複用 ToolTableView 的深色按鈕） -->
+        <Style x:Key="AtcBtnStyle" TargetType="Button">
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Margin" Value="3"/>
+            <Setter Property="Padding" Value="8,6"/>
+            <Setter Property="Background" Value="#3C3C3C"/>
+            <Setter Property="BorderBrush" Value="#555"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="bd" Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="3" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="bd" Property="Background" Value="#111"/>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="bd" Property="Background" Value="#4A4A4A"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- [2026-03-03] 右側面板大按鈕 -->
+        <Style x:Key="PanelBtnStyle" TargetType="Button" BasedOn="{StaticResource AtcBtnStyle}">
+            <Setter Property="Height" Value="38"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Margin" Value="4,4"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+        </Style>
+
+        <!-- [2026-03-03] 模式切換 ToggleButton 樣式 -->
+        <Style x:Key="ModeToggleStyle" TargetType="RadioButton">
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Margin" Value="2"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="RadioButton">
+                        <Border x:Name="bd" Background="#3C3C3C" BorderBrush="#555" BorderThickness="1"
+                                CornerRadius="3" Padding="10,6">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="bd" Property="Background" Value="#00539C"/>
+                                <Setter TargetName="bd" Property="BorderBrush" Value="#2980B9"/>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="bd" Property="Background" Value="#4A4A4A"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Resources>
+
+    <!-- [2026-03-03] 最外層：Layer 0 = 背景圖，Layer 1 = 所有 UI -->
+    <Grid ClipToBounds="True">
+
+        <!-- Layer 0: ATC_Back.png 填滿背景 -->
+        <Image Source="/Resources/Images/ATC_Back.png"
+               Stretch="UniformToFill" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+
+        <!-- Layer 1: 三欄浮動 UI -->
+        <Grid Margin="10">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="280"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="230"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- ======================================================================
+                 左欄（Col 0）：模式切換 + MANUAL ATC 按鈕 / PROGRAM TOOLS 列表
+                 ====================================================================== -->
+            <DockPanel Grid.Column="0">
+
+                <!-- 左側垂直標籤 RACK ATC -->
+                <Border DockPanel.Dock="Left" Background="#DD333333" Width="22" CornerRadius="3,0,0,3"
+                        BorderBrush="#555" BorderThickness="1,1,0,1">
+                    <TextBlock Text="RACK ATC" Foreground="#AAA" FontSize="10" FontWeight="Bold"
+                               HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <TextBlock.LayoutTransform>
+                            <RotateTransform Angle="-90"/>
+                        </TextBlock.LayoutTransform>
+                    </TextBlock>
+                </Border>
+
+                <StackPanel>
+                    <!-- 頂部模式切換按鈕 -->
+                    <UniformGrid Rows="1" Columns="2" Margin="0,0,0,6">
+                        <RadioButton Content="PROGRAM TOOLS" Style="{StaticResource ModeToggleStyle}"
+                                     GroupName="AtcMode"
+                                     IsChecked="{Binding IsProgramMode, Mode=OneWay}"
+                                     Command="{Binding SwitchModeCommand}" CommandParameter="ProgramTools"/>
+                        <RadioButton Content="MANUAL ATC" Style="{StaticResource ModeToggleStyle}"
+                                     GroupName="AtcMode"
+                                     IsChecked="{Binding IsManualMode, Mode=OneWay}"
+                                     Command="{Binding SwitchModeCommand}" CommandParameter="ManualAtc"/>
+                    </UniformGrid>
+
+                    <!-- ===== MANUAL ATC 面板（IsManualMode=True 時顯示）===== -->
+                    <Border Background="#DD252526" BorderBrush="#444" BorderThickness="1" CornerRadius="4"
+                            Padding="8" Margin="0,0,0,6"
+                            Visibility="{Binding IsManualMode, Converter={StaticResource BoolToVis}}">
+                        <StackPanel>
+                            <TextBlock Text="ATC MANUAL CONTROL PANEL" Foreground="#AAAAAA"
+                                       FontSize="11" FontWeight="Bold" Margin="0,0,0,8"
+                                       HorizontalAlignment="Center"/>
+
+                            <!-- 2x4 按鈕 Grid -->
+                            <UniformGrid Rows="4" Columns="2">
+                                <Button Content="AIR BLAST" Style="{StaticResource AtcBtnStyle}"
+                                        Command="{Binding AirBlastCommand}"/>
+                                <Button Content="RETR DUST BOOT" Style="{StaticResource AtcBtnStyle}"
+                                        Command="{Binding RetrDustBootCommand}"/>
+                                <Button Content="CLAMP TOOL" Style="{StaticResource AtcBtnStyle}"
+                                        Command="{Binding ClampToolCommand}"/>
+                                <Button Content="RELEASE TOOL" Style="{StaticResource AtcBtnStyle}"
+                                        Command="{Binding ReleaseToolCommand}"/>
+                                <Button Content="ORIENT SPINDLE" Style="{StaticResource AtcBtnStyle}"
+                                        Command="{Binding OrientSpindleCommand}"/>
+                                <Button Content="UNLOCK SPINDLE" Style="{StaticResource AtcBtnStyle}"
+                                        Command="{Binding UnlockSpindleCommand}"/>
+                                <Button Content="HEAD UP" Style="{StaticResource AtcBtnStyle}"
+                                        Command="{Binding HeadUpCommand}"/>
+                                <Button Content="HEAD DOWN" Style="{StaticResource AtcBtnStyle}"
+                                        Command="{Binding HeadDownCommand}"/>
+                            </UniformGrid>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- ===== PROGRAM TOOLS 面板（IsProgramMode=True 時顯示）===== -->
+                    <Border Background="#DD252526" BorderBrush="#444" BorderThickness="1" CornerRadius="4"
+                            Padding="8" Margin="0,0,0,6"
+                            Visibility="{Binding IsProgramMode, Converter={StaticResource BoolToVis}}">
+                        <StackPanel>
+                            <TextBlock Text="CURRENT PROGRAM TOOLS" Foreground="#AAAAAA"
+                                       FontSize="11" FontWeight="Bold" Margin="0,0,0,8"
+                                       HorizontalAlignment="Center"/>
+
+                            <!-- 程式刀具列表（預留，目前為空白佔位） -->
+                            <ListBox ItemsSource="{Binding ProgramTools}"
+                                     Background="#2D2D2D" Foreground="White"
+                                     BorderThickness="0" MinHeight="160"
+                                     FontSize="12" FontFamily="Consolas"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- REF RACK DATA 按鈕 -->
+                    <Button Content="REF RACK DATA" Style="{StaticResource AtcBtnStyle}"
+                            Command="{Binding RefRackDataCommand}"
+                            Background="#445588" HorizontalAlignment="Stretch"
+                            FontSize="12" Padding="8,8"/>
+                </StackPanel>
+            </DockPanel>
+
+            <!-- ======================================================================
+                 中央（Col 1）：REMARK + T{n} 刀具標籤 + MDI
+                 ====================================================================== -->
+            <DockPanel Grid.Column="1" Margin="8,0">
+
+                <!-- 頂部：REMARK 半透明條 -->
+                <Border DockPanel.Dock="Top" Background="#DD333333" CornerRadius="3" Padding="6,4"
+                        Margin="0,0,0,6" BorderBrush="#666" BorderThickness="1">
+                    <DockPanel>
+                        <TextBlock DockPanel.Dock="Left" Text="REMARK" Foreground="#CCC"
+                                   FontSize="11" FontWeight="Bold" VerticalAlignment="Center"
+                                   Margin="0,0,8,0"/>
+                        <TextBox Text="{Binding RemarkText, UpdateSourceTrigger=PropertyChanged}"
+                                 Background="White" Foreground="Black" FontSize="12"
+                                 FontWeight="Bold" Padding="6,3"
+                                 BorderBrush="#888" BorderThickness="1"/>
+                    </DockPanel>
+                </Border>
+
+                <!-- 底部：MDI 半透明條 -->
+                <Border DockPanel.Dock="Bottom" Background="#DD333333" CornerRadius="3" Padding="6,4"
+                        Margin="0,6,0,0" BorderBrush="#666" BorderThickness="1">
+                    <DockPanel>
+                        <TextBlock DockPanel.Dock="Left" Text="MDI" Foreground="#CCC"
+                                   FontSize="11" FontWeight="Bold" VerticalAlignment="Center"
+                                   Margin="0,0,6,0"/>
+                        <Button DockPanel.Dock="Right" Content="SEND" Style="{StaticResource AtcBtnStyle}"
+                                Command="{Binding SendMdiCommand}" Width="60" Margin="4,0,0,0"/>
+                        <TextBox Text="{Binding MdiInput, UpdateSourceTrigger=PropertyChanged}"
+                                 Background="White" Foreground="Black" FontSize="12" Padding="6,3"
+                                 BorderBrush="#888" BorderThickness="1">
+                            <TextBox.InputBindings>
+                                <KeyBinding Key="Return" Command="{Binding SendMdiCommand}"/>
+                            </TextBox.InputBindings>
+                        </TextBox>
+                    </DockPanel>
+                </Border>
+
+                <!-- 中央：T{n} 刀具號標籤（Canvas 定位，對齊背景圖主軸位置） -->
+                <Grid>
+                    <Canvas>
+                        <Border Canvas.Left="370" Canvas.Top="180" Background="White" CornerRadius="3"
+                                Padding="10,3" BorderBrush="#666" BorderThickness="1">
+                            <TextBlock Foreground="Black" FontSize="14" FontWeight="Bold"
+                                       HorizontalAlignment="Center">
+                                <Run Text="T"/>
+                                <Run Text="{Binding MachineStatus.ToolNumber, Mode=OneWay}"/>
+                            </TextBlock>
+                        </Border>
+                    </Canvas>
+                </Grid>
+            </DockPanel>
+
+            <!-- ======================================================================
+                 右欄（Col 2）：ATC AUTOMATIC CONTROL PANEL
+                 ====================================================================== -->
+            <StackPanel Grid.Column="2" VerticalAlignment="Top" Margin="0,0,0,0">
+
+                <!-- [2026-03-03] ATC AUTOMATIC CONTROL PANEL 標題（深藍底，非按鈕） -->
+                <Border Background="#1A5276" CornerRadius="3" Padding="8,5" Margin="0,0,0,6"
+                        BorderBrush="#2980B9" BorderThickness="1">
+                    <TextBlock Text="ATC AUTOMATIC&#x0a;CONTROL PANEL" Foreground="White"
+                               FontSize="12" FontWeight="Bold" HorizontalAlignment="Center"
+                               TextAlignment="Center"/>
+                </Border>
+
+                <!-- [n] LOAD SPINDLE -->
+                <Grid Margin="0,0,0,4">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="50"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Border Grid.Column="0" Background="White" CornerRadius="2" Margin="0,0,4,0"
+                            BorderBrush="#666" BorderThickness="1">
+                        <TextBox Text="{Binding ChangeToolNumber, UpdateSourceTrigger=PropertyChanged}"
+                                 Background="Transparent" Foreground="Black" FontSize="14" FontWeight="Bold"
+                                 TextAlignment="Center" BorderThickness="0" VerticalContentAlignment="Center"
+                                 Padding="2"/>
+                    </Border>
+                    <Button Grid.Column="1" Content="LOAD SPINDLE" Style="{StaticResource PanelBtnStyle}"
+                            Command="{Binding LoadSpindleCommand}" Background="#444" BorderBrush="#666"/>
+                </Grid>
+
+                <!-- UNLOAD SPINDLE -->
+                <Button Content="UNLOAD SPINDLE" Style="{StaticResource PanelBtnStyle}"
+                        Command="{Binding UnloadSpindleCommand}" Background="#444" BorderBrush="#666"/>
+
+                <!-- STORE TOOL IN RACK -->
+                <Button Content="STORE TOOL IN RACK" Style="{StaticResource PanelBtnStyle}"
+                        Command="{Binding StoreToolInRackCommand}" Background="#444" BorderBrush="#666"/>
+
+                <!-- [n] M6 G43 -->
+                <Grid Margin="0,4,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="50"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Border Grid.Column="0" Background="White" CornerRadius="2" Margin="0,0,4,0"
+                            BorderBrush="#666" BorderThickness="1">
+                        <TextBox Text="{Binding ChangeToolNumber, UpdateSourceTrigger=PropertyChanged}"
+                                 Background="Transparent" Foreground="Black" FontSize="14" FontWeight="Bold"
+                                 TextAlignment="Center" BorderThickness="0" VerticalContentAlignment="Center"
+                                 Padding="2"/>
+                    </Border>
+                    <Button Grid.Column="1" Content="M6 G43" Style="{StaticResource PanelBtnStyle}"
+                            Command="{Binding M6G43Command}" Background="#444" BorderBrush="#666"/>
+                </Grid>
+
+                <Separator Background="Transparent" Margin="0,8,0,8"/>
+
+                <!-- TOUCH OFF CURRENT TOOL -->
+                <Button Content="TOUCH OFF CURRENT TOOL" Style="{StaticResource PanelBtnStyle}"
+                        Command="{Binding TouchOffCurrentToolCommand}" Background="#444" BorderBrush="#666"/>
+            </StackPanel>
+        </Grid>
+    </Grid>
+</UserControl>

@@ -43,6 +43,12 @@ namespace CncController.ViewModels
         // [2026-02-23] 新增 OffsetsVM：Offsets 頁面長駐 ViewModel（保留狀態）
         public OffsetsViewModel OffsetsVM { get; } = new OffsetsViewModel();
 
+        // [2026-03-03] 新增 ToolTableVM：TOOL 分頁長駐 ViewModel
+        public ToolTableViewModel ToolTableVM { get; } = new ToolTableViewModel();
+
+        // [2026-03-03] 新增 AtcVM：ATC 自動刀庫分頁長駐 ViewModel
+        public AtcViewModel AtcVM { get; } = new AtcViewModel();
+
         // ==============================================================================
         // 1. 屬性定義
         // ==============================================================================
@@ -209,6 +215,12 @@ namespace CncController.ViewModels
             // [2026-02-24] 將 Status 傳遞給 OffsetsVM，讓 Offsets 右欄可綁定即時座標
             OffsetsVM.MachineStatus = Status;
 
+            // [2026-03-03] 將 Status 傳遞給 ToolTableVM，讓右欄可綁定即時刀具資訊
+            ToolTableVM.MachineStatus = Status;
+
+            // [2026-03-03] 將 Status 傳遞給 AtcVM，讓 ATC 頁可綁定即時刀具號
+            AtcVM.MachineStatus = Status;
+
             // [新增] 1. 初始化時，先從 AuthService 抓目前的狀態
             CurrentUser = AuthService.Instance.CurrentUser;
 
@@ -295,6 +307,11 @@ namespace CncController.ViewModels
                 OffsetsVM.IsAxisAEnabled = IsAxisAEnabled;
                 OffsetsVM.IsAxisBEnabled = IsAxisBEnabled;
                 OffsetsVM.IsAxisCEnabled = IsAxisCEnabled;
+
+                // [2026-03-03] 同步 ToolTableVM 軸可見性
+                ToolTableVM.IsAxisAEnabled = IsAxisAEnabled;
+                ToolTableVM.IsAxisBEnabled = IsAxisBEnabled;
+                ToolTableVM.IsAxisCEnabled = IsAxisCEnabled;
 
                 // ★★★ [關鍵修改] 無論成功失敗，都先廣播數據！ ★★★
                 // 這樣 SettingsViewModel 才能收到 slaves 並顯示在列表上
@@ -678,6 +695,8 @@ namespace CncController.ViewModels
                 case "History": CurrentViewModel = HistoryVM; break;
 
                 case "Offsets": CurrentViewModel = OffsetsVM; break; // [2026-02-23] 新增 Offsets Tab 導航
+                case "Tool": CurrentViewModel = ToolTableVM; break; // [2026-03-03] 新增 TOOL Tab 導航
+                case "Atc": CurrentViewModel = AtcVM; break; // [2026-03-03] 新增 ATC Tab 導航
             }
         }
         // [安全] 統一運動指令前置檢查：IsEstop 與 IsPower 雙重驗證
@@ -810,6 +829,13 @@ namespace CncController.ViewModels
         [RelayCommand] private async Task FeedHold() => await MachineControlService.Instance.FeedHoldAsync();
         [RelayCommand] private async Task Stop() => await MachineControlService.Instance.StopAsync();
 
+        // [2026-03-03] 新增 SetModeCommand：切換任務模式（MAN/AUTO/MDI），供 JogPanel 底部按鈕使用
+        [RelayCommand]
+        private async Task SetMode(string mode)
+        {
+            await MachineControlService.Instance.SetTaskModeAsync(mode);
+        }
+
         // [2026-02-24] 新增 ToggleSingleBlock：切換 Single Block 模式
         [RelayCommand]
         private void ToggleSingleBlock()
@@ -920,6 +946,11 @@ namespace CncController.ViewModels
             OffsetsVM.IsAxisAEnabled = IsAxisAEnabled;
             OffsetsVM.IsAxisBEnabled = IsAxisBEnabled;
             OffsetsVM.IsAxisCEnabled = IsAxisCEnabled;
+
+            // [2026-03-03] Tool Tab：刀具表欄位可見性同步
+            ToolTableVM.IsAxisAEnabled = IsAxisAEnabled;
+            ToolTableVM.IsAxisBEnabled = IsAxisBEnabled;
+            ToolTableVM.IsAxisCEnabled = IsAxisCEnabled;
 
             AlarmService.Instance.AddLog("INFO", $"MachineType changed: {machineType} → axes={string.Join(",", enabledAxes)}");
         }

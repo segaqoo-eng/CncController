@@ -26,4 +26,11 @@
     <Folder Include="Converters\" />
   </ItemGroup>
 
+  <!-- [2026-03-03] 將 TOOL_BACK.png 標記為嵌入資源，供 ToolTableView 顯示刀具圖 -->
+  <ItemGroup>
+    <Resource Include="Resources\Images\TOOL_BACK.png" />
+    <!-- [2026-03-03] 新增 ATC_Back.png 嵌入資源，供 AtcView 顯示 ATC 背景圖 -->
+    <Resource Include="Resources\Images\ATC_Back.png" />
+  </ItemGroup>
+
 </Project>

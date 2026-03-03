@@ -301,11 +301,6 @@ namespace CncController.ViewModels
             AlarmService.Instance.AddLog("INFO", "Offset table reloaded.");
         }
 
-        // [2026-02-24] 新增 SetModeCommand：切換任務模式（MAN/AUTO/MDI），供右下角按鈕使用
-        [RelayCommand]
-        private async Task SetMode(string mode)
-        {
-            await MachineControlService.Instance.SetTaskModeAsync(mode);
-        }
+        // [2026-03-03] 移除 SetModeCommand：MAN/AUTO/MDI 按鈕已移至 JogPanel 區域
     }
 }

@@ -33,6 +33,14 @@
         <DataTemplate DataType="{x:Type vm:OffsetsViewModel}">
             <pages:OffsetsView/>
         </DataTemplate>
+        <!-- [2026-03-03] 新增 ToolTableViewModel DataTemplate，導航至 ToolTableView -->
+        <DataTemplate DataType="{x:Type vm:ToolTableViewModel}">
+            <pages:ToolTableView/>
+        </DataTemplate>
+        <!-- [2026-03-03] 新增 AtcViewModel DataTemplate，導航至 AtcView -->
+        <DataTemplate DataType="{x:Type vm:AtcViewModel}">
+            <pages:AtcView/>
+        </DataTemplate>
     </Window.Resources>
 
     <Viewbox Stretch="Uniform">
@@ -46,7 +54,8 @@
             </Grid.RowDefinitions>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="180"/>
+                <!-- [2026-03-03] JogPanel 寬度修正：180→250，避免 X+/X- 按鈕被裁切 -->
+                <ColumnDefinition Width="250"/>
             </Grid.ColumnDefinitions>
 
             <Border Grid.Row="0" Grid.ColumnSpan="2" Background="#D80000" Padding="5">
@@ -72,7 +81,12 @@
                 <RadioButton Content="MAIN" Style="{StaticResource NavBtnStyle}" IsChecked="True"
                              Command="{Binding NavigateCommand}" CommandParameter="Main"/>
                 <RadioButton Content="FILE" Style="{StaticResource NavBtnStyle}"/>
-                <RadioButton Content="ATC" Style="{StaticResource NavBtnStyle}"/>
+                <!-- [2026-03-03] 新增 ATC Tab 導航按鈕 -->
+                <RadioButton Content="ATC" Style="{StaticResource NavBtnStyle}"
+                             Command="{Binding NavigateCommand}" CommandParameter="Atc"/>
+                <!-- [2026-03-03] TOOL：綁定導航至 ToolTableView -->
+                <RadioButton Content="TOOL" Style="{StaticResource NavBtnStyle}"
+                             Command="{Binding NavigateCommand}" CommandParameter="Tool"/>
                 <!-- [2026-02-23] 新增 OFFSETS Tab 導航按鈕 -->
                 <RadioButton Content="OFFSETS" Style="{StaticResource NavBtnStyle}"
                              Command="{Binding NavigateCommand}" CommandParameter="Offsets"/>

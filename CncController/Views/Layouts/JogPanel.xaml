@@ -62,6 +62,9 @@
             <!-- [2026-02-24] 旋轉軸區域 -->
             <RowDefinition Height="10"/>
             <RowDefinition Height="Auto"/>
+            <!-- [2026-03-03] MAN/AUTO/MDI 模式按鈕 -->
+            <RowDefinition Height="16"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
         <StackPanel Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Center">
@@ -265,5 +268,54 @@
                 </Button>
             </StackPanel>
         </StackPanel>
+
+        <!-- [2026-03-03] MAN/AUTO/MDI 模式切換按鈕（從 OffsetsView 移至此） -->
+        <UniformGrid Grid.Row="6" Rows="1" Columns="3" HorizontalAlignment="Center">
+            <Button Content="MAN" Command="{Binding SetModeCommand}" CommandParameter="MANUAL">
+                <Button.Style>
+                    <Style TargetType="Button" BasedOn="{StaticResource JogRotaryBtn}">
+                        <Setter Property="Width" Value="60"/>
+                        <Setter Property="Height" Value="32"/>
+                        <Setter Property="FontSize" Value="11"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding Status.TaskMode}" Value="MANUAL">
+                                <Setter Property="Background" Value="#007ACC"/>
+                                <Setter Property="BorderBrush" Value="#005A9E"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Button.Style>
+            </Button>
+            <Button Content="AUTO" Command="{Binding SetModeCommand}" CommandParameter="AUTO">
+                <Button.Style>
+                    <Style TargetType="Button" BasedOn="{StaticResource JogRotaryBtn}">
+                        <Setter Property="Width" Value="60"/>
+                        <Setter Property="Height" Value="32"/>
+                        <Setter Property="FontSize" Value="11"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding Status.TaskMode}" Value="AUTO">
+                                <Setter Property="Background" Value="#007ACC"/>
+                                <Setter Property="BorderBrush" Value="#005A9E"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Button.Style>
+            </Button>
+            <Button Content="MDI" Command="{Binding SetModeCommand}" CommandParameter="MDI">
+                <Button.Style>
+                    <Style TargetType="Button" BasedOn="{StaticResource JogRotaryBtn}">
+                        <Setter Property="Width" Value="60"/>
+                        <Setter Property="Height" Value="32"/>
+                        <Setter Property="FontSize" Value="11"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding Status.TaskMode}" Value="MDI">
+                                <Setter Property="Background" Value="#007ACC"/>
+                                <Setter Property="BorderBrush" Value="#005A9E"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Button.Style>
+            </Button>
+        </UniformGrid>
     </Grid>
 </UserControl>

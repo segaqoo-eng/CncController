@@ -300,6 +300,29 @@ namespace CncController.Models
         public bool IsInverted { get; set; } // True = NC, False = NO
     }
 
+    // [2026-03-03] 新增 ToolEntry：刀具表條目（對齊 PB 版 TOOL 分頁 DataGrid）
+    public partial class ToolEntry : ObservableObject
+    {
+        [ObservableProperty] private int _toolNumber;
+        [ObservableProperty] private int _pocket;
+        [ObservableProperty] private double _xOffset;
+        [ObservableProperty] private double _yOffset;
+        [ObservableProperty] private double _zOffset;
+        [ObservableProperty] private double _aOffset;
+        [ObservableProperty] private double _bOffset;
+        [ObservableProperty] private double _cOffset;
+        [ObservableProperty] private double _uOffset;
+        [ObservableProperty] private double _vOffset;
+        [ObservableProperty] private double _wOffset;
+        [ObservableProperty] private double _diameter;
+        // [2026-03-03] 新增 FNT ANG / BAK ANG / ORIENT（對齊 PB 版 TOOLPARAM）
+        [ObservableProperty] private double _frontAngle;
+        [ObservableProperty] private double _backAngle;
+        [ObservableProperty] private int _orientation;
+        // [2026-03-03] 欄位名稱對齊後端 Remark
+        [ObservableProperty] private string _remark = "";
+    }
+
     public static class StandardSignals
     {
         // 定義常用的 Output 訊號名稱 (必須與 GenerateHal 中的名稱一致)

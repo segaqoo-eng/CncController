@@ -109,6 +109,8 @@ namespace CncController.Services
             sb.AppendLine("INCREMENTS = JOG 0.1 0.01 0.001");
             sb.AppendLine($"GEOMETRY = {geometry}");
             sb.AppendLine($"DRO_DISPLAY = {geometry}");
+            // [2026-03-03] 依啟用軸動態產生 OFFSET_COLUMNS，告訴 PB UI 表格顯示哪些軸
+            sb.AppendLine($"OFFSET_COLUMNS = {coordinates}");
             sb.AppendLine("ATC_TAB_DISPLAY = 2");
             sb.AppendLine("USER_BUTTONS_PATH = user_buttons/");
             sb.AppendLine("USER_ATC_BUTTONS_PATH = user_atc_buttons/");
@@ -372,7 +374,7 @@ namespace CncController.Services
 
                 sb.AppendLine($"net {axis.AxisID}-pos-fb lcec.0.{sIdx}.position_actual_value_J{sIdx} => cia402.{i}.drv-actual-position");
 
-                if (isServo)
+                if (isServo && !isPulseGen)
                 {
                     sb.AppendLine("# [Feedback] Real Encoder Feedback (Closed Loop)");
                     sb.AppendLine($"net {axis.AxisID}-pos-fb-final cia402.{i}.pos-fb => {axisHalName}.motor-pos-fb");

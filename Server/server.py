@@ -1025,6 +1025,168 @@ def v2_program_step():
     except Exception as e:
         return error_response(f"Step Fail: {e}")
 
+# [2026-03-03] 新增 /v2/tool/table 端點：讀取 LinuxCNC 刀具表
+@app.route('/v2/tool/table', methods=['GET'])
+def v2_tool_table():
+    """回傳完整刀具表（tool_table + tool.tbl 註解）"""
+    tools = []
+    try:
+        # [2026-03-03] 從 INI 讀取刀具表檔名（預設 tool.tbl，可能是 tool_metric.tbl）
+        _tool_tbl_name = "tool.tbl"
+        try:
+            import configparser
+            _ini = configparser.ConfigParser(strict=False)
+            _ini.read(LINUXCNC_INI_PATH)
+            _tool_tbl_name = _ini.get('EMCIO', 'TOOL_TABLE', fallback='tool.tbl')
+        except Exception:
+            pass
+        tool_tbl_path = os.path.join(CONFIG_DIR, _tool_tbl_name)
+        tbl_comments = {}
+        if os.path.exists(tool_tbl_path):
+            with open(tool_tbl_path, 'r', encoding='utf-8', errors='ignore') as f:
+                for line in f:
+                    line = line.strip()
+                    if not line or line.startswith(';'):
+                        continue
+                    # LinuxCNC tool.tbl 格式: T1 P1 D0.0 Z0.0 ; comment
+                    if ';' in line:
+                        parts_split = line.split(';', 1)
+                        comment = parts_split[1].strip()
+                    else:
+                        comment = ""
+                    # 解析 T 號
+                    import re as _re
+                    t_match = _re.search(r'T(\d+)', line)
+                    if t_match:
+                        tbl_comments[int(t_match.group(1))] = comment
+
+        # 從 cnc_stat 讀取刀具表（記憶體值）
+        if ensure_cnc_connections():
+            cnc_stat.poll()
+            for i, entry in enumerate(cnc_stat.tool_table):
+                if i == 0:
+                    continue  # tool_table[0] 通常是空的
+                t_id = int(entry.id) if hasattr(entry, 'id') else i
+                if t_id <= 0:
+                    continue
+                pocket = int(entry.pocket) if hasattr(entry, 'pocket') else i
+                tools.append({
+                    "ToolNumber": t_id,
+                    "Pocket": pocket,
+                    "XOffset": round(float(entry.xoffset), 4) if hasattr(entry, 'xoffset') else 0.0,
+                    "YOffset": round(float(entry.yoffset), 4) if hasattr(entry, 'yoffset') else 0.0,
+                    "ZOffset": round(float(entry.zoffset), 4) if hasattr(entry, 'zoffset') else 0.0,
+                    "AOffset": round(float(entry.aoffset), 4) if hasattr(entry, 'aoffset') else 0.0,
+                    "BOffset": round(float(entry.boffset), 4) if hasattr(entry, 'boffset') else 0.0,
+                    "COffset": round(float(entry.coffset), 4) if hasattr(entry, 'coffset') else 0.0,
+                    "UOffset": round(float(entry.uoffset), 4) if hasattr(entry, 'uoffset') else 0.0,
+                    "VOffset": round(float(entry.voffset), 4) if hasattr(entry, 'voffset') else 0.0,
+                    "WOffset": round(float(entry.woffset), 4) if hasattr(entry, 'woffset') else 0.0,
+                    "Diameter": round(float(entry.diameter), 4) if hasattr(entry, 'diameter') else 0.0,
+                    "FrontAngle": round(float(entry.frontangle), 4) if hasattr(entry, 'frontangle') else 0.0,
+                    "BackAngle": round(float(entry.backangle), 4) if hasattr(entry, 'backangle') else 0.0,
+                    "Orientation": int(entry.orientation) if hasattr(entry, 'orientation') else 0,
+                    "Remark": tbl_comments.get(t_id, "")
+                })
+        else:
+            # 離線時從 tool.tbl 解析
+            if os.path.exists(tool_tbl_path):
+                import re as _re
+                with open(tool_tbl_path, 'r', encoding='utf-8', errors='ignore') as f:
+                    for line in f:
+                        line = line.strip()
+                        if not line or line.startswith(';'):
+                            continue
+                        comment = ""
+                        if ';' in line:
+                            parts_split = line.split(';', 1)
+                            comment = parts_split[1].strip()
+                            line = parts_split[0]
+                        t_match = _re.search(r'T(\d+)', line)
+                        p_match = _re.search(r'P(\d+)', line)
+                        d_match = _re.search(r'D([-+]?[\d.]+)', line)
+                        z_match = _re.search(r'Z([-+]?[\d.]+)', line)
+                        if t_match:
+                            tools.append({
+                                "ToolNumber": int(t_match.group(1)),
+                                "Pocket": int(p_match.group(1)) if p_match else 0,
+                                "XOffset": 0.0, "YOffset": 0.0,
+                                "ZOffset": float(z_match.group(1)) if z_match else 0.0,
+                                "AOffset": 0.0, "BOffset": 0.0, "COffset": 0.0,
+                                "UOffset": 0.0, "VOffset": 0.0, "WOffset": 0.0,
+                                "Diameter": float(d_match.group(1)) if d_match else 0.0,
+                                "FrontAngle": 0.0, "BackAngle": 0.0, "Orientation": 0,
+                                "Remark": comment
+                            })
+
+        return success_response(tools)
+    except Exception as e:
+        return error_response(f"ToolTable Read Fail: {e}")
+
+
+# [2026-03-03] 新增 /v2/tool/save 端點：寫入刀具表
+@app.route('/v2/tool/save', methods=['POST'])
+def v2_tool_save():
+    """將前端刀具表寫入 tool.tbl 並重載"""
+    try:
+        data = request.json or {}
+        tools = data.get('tools', [])
+        if not tools:
+            return error_response("No tool data provided", 400)
+
+        # [2026-03-03] 從 INI 讀取刀具表檔名
+        _tool_tbl_name = "tool.tbl"
+        try:
+            import configparser
+            _ini = configparser.ConfigParser(strict=False)
+            _ini.read(LINUXCNC_INI_PATH)
+            _tool_tbl_name = _ini.get('EMCIO', 'TOOL_TABLE', fallback='tool.tbl')
+        except Exception:
+            pass
+        tool_tbl_path = os.path.join(CONFIG_DIR, _tool_tbl_name)
+        lines = []
+        # [2026-03-03] 寫入完整 tool.tbl（含全軸 offset + FNT ANG/BAK ANG/ORIENT/Remark）
+        for t in tools:
+            t_num = int(t.get('ToolNumber', 0))
+            pocket = int(t.get('Pocket', 0))
+            diameter = float(t.get('Diameter', 0))
+            x_offset = float(t.get('XOffset', 0))
+            y_offset = float(t.get('YOffset', 0))
+            z_offset = float(t.get('ZOffset', 0))
+            a_offset = float(t.get('AOffset', 0))
+            b_offset = float(t.get('BOffset', 0))
+            c_offset = float(t.get('COffset', 0))
+            u_offset = float(t.get('UOffset', 0))
+            v_offset = float(t.get('VOffset', 0))
+            w_offset = float(t.get('WOffset', 0))
+            front_angle = float(t.get('FrontAngle', 0))
+            back_angle = float(t.get('BackAngle', 0))
+            orientation = int(t.get('Orientation', 0))
+            remark = t.get('Remark', '')
+            # LinuxCNC tool.tbl 格式
+            line = (f"T{t_num} P{pocket}"
+                    f" X{x_offset:.4f} Y{y_offset:.4f} Z{z_offset:.4f}"
+                    f" A{a_offset:.4f} B{b_offset:.4f} C{c_offset:.4f}"
+                    f" U{u_offset:.4f} V{v_offset:.4f} W{w_offset:.4f}"
+                    f" D{diameter:.4f}"
+                    f" I{front_angle:.4f} J{back_angle:.4f} Q{orientation}")
+            if remark:
+                line += f" ; {remark}"
+            lines.append(line)
+
+        with open(tool_tbl_path, 'w', encoding='utf-8') as f:
+            f.write('\n'.join(lines) + '\n')
+
+        # 重載刀具表至 LinuxCNC
+        if ensure_cnc_connections():
+            cnc_cmd.load_tool_table()
+            app_log('CMD', f'Tool table saved & reloaded ({len(tools)} tools)')
+
+        return success_response({"saved": len(tools)})
+    except Exception as e:
+        return error_response(f"ToolTable Save Fail: {e}")
+
+
 if __name__ == '__main__':
     print("[INIT] Server starting...", flush=True)
     start_linuxcnc_process()

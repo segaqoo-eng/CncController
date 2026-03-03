@@ -57,13 +57,7 @@
             <Setter Property="Background" Value="#664422"/>
         </Style>
 
-        <!-- [2026-02-24] 模式按鈕樣式（MAN/AUTO/MDI） -->
-        <Style x:Key="ModeBtnStyle" TargetType="Button" BasedOn="{StaticResource OffsetBtnStyle}">
-            <Setter Property="Height" Value="40"/>
-            <Setter Property="FontSize" Value="14"/>
-            <Setter Property="Margin" Value="4,3"/>
-            <Setter Property="MinWidth" Value="80"/>
-        </Style>
+        <!-- [2026-03-03] 移除 ModeBtnStyle：MAN/AUTO/MDI 按鈕已移至 JogPanel 區域 -->
     </UserControl.Resources>
 
     <Border Background="#1E1E1E" Padding="10">
@@ -275,45 +269,7 @@
 
                     <Separator DockPanel.Dock="Top" Background="#444" Margin="0,4,0,8"/>
 
-                    <!-- [2026-02-24] 右下角 MAN / AUTO / MDI 按鈕（對齊 PB 版） -->
-                    <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,8,0,0">
-                        <Button Content="MAN" Command="{Binding SetModeCommand}" CommandParameter="MANUAL">
-                            <Button.Style>
-                                <Style TargetType="Button" BasedOn="{StaticResource ModeBtnStyle}">
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding MachineStatus.TaskMode}" Value="MANUAL">
-                                            <Setter Property="Background" Value="#007ACC"/>
-                                            <Setter Property="BorderBrush" Value="#005A9E"/>
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </Button.Style>
-                        </Button>
-                        <Button Content="AUTO" Command="{Binding SetModeCommand}" CommandParameter="AUTO">
-                            <Button.Style>
-                                <Style TargetType="Button" BasedOn="{StaticResource ModeBtnStyle}">
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding MachineStatus.TaskMode}" Value="AUTO">
-                                            <Setter Property="Background" Value="#007ACC"/>
-                                            <Setter Property="BorderBrush" Value="#005A9E"/>
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </Button.Style>
-                        </Button>
-                        <Button Content="MDI" Command="{Binding SetModeCommand}" CommandParameter="MDI">
-                            <Button.Style>
-                                <Style TargetType="Button" BasedOn="{StaticResource ModeBtnStyle}">
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding MachineStatus.TaskMode}" Value="MDI">
-                                            <Setter Property="Background" Value="#007ACC"/>
-                                            <Setter Property="BorderBrush" Value="#005A9E"/>
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </Button.Style>
-                        </Button>
-                    </StackPanel>
+                    <!-- [2026-03-03] 移除 MAN/AUTO/MDI 按鈕（屬於 JogPanel 區域） -->
 
                     <!-- [2026-02-24] 7 欄座標表格（對齊 PB 版：ZERO | AXIS | WC CURRENT POS | MACHINE COORDS | WC OFFSET | G52/G92 OFFSET | TOOL OFFSET） -->
                     <Grid Margin="0,0,0,0">

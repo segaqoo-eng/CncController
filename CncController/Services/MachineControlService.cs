@@ -574,6 +574,45 @@ namespace CncController.Services
             return null;
         }
 
+        // [2026-03-03] 新增 GetToolTableAsync：從後端 /v2/tool/table 讀取刀具表
+        public async Task<List<ToolEntry>> GetToolTableAsync()
+        {
+            try
+            {
+                var response = await _pollingClient.GetAsync($"{_serverUrl}/v2/tool/table");
+                if (response.IsSuccessStatusCode)
+                {
+                    var result = await response.Content
+                        .ReadFromJsonAsync<ApiResponse<List<ToolEntry>>>(_jsonOptions);
+                    if (result?.Status == "Success")
+                        return result.Data;
+                }
+            }
+            catch (Exception ex)
+            {
+                AlarmService.Instance.AddLog("API", $"GetToolTable failed: {ex.Message}");
+            }
+            return null;
+        }
+
+        // [2026-03-03] 新增 SaveToolTableAsync：將刀具表寫入後端 /v2/tool/save
+        public async Task<bool> SaveToolTableAsync(List<ToolEntry> tools)
+        {
+            try
+            {
+                var response = await _pollingClient.PostAsJsonAsync(
+                    $"{_serverUrl}/v2/tool/save", new { tools });
+                if (!response.IsSuccessStatusCode) return false;
+                var result = await response.Content.ReadFromJsonAsync<ApiResponse<object>>(_jsonOptions);
+                return result?.Status == "Success";
+            }
+            catch (Exception ex)
+            {
+                AlarmService.Instance.AddLog("API", $"SaveToolTable failed: {ex.Message}");
+                return false;
+            }
+        }
+
         // 輕量 DTO（僅供 GetOffsetsAsync 使用）
         private class OffsetsData
         {

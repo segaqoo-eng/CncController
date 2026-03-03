@@ -109,6 +109,8 @@ DispatcherTimer (500ms) → MachineControlService.GetStatusAsync()
 | **ViewModel** | `ViewModels/AxisMappingViewModel.cs` | 軸與 EtherCAT Slave 對應 |
 | **ViewModel** | `ViewModels/AxisParameterViewModel.cs` | 軸機械/運動/原點復歸參數 |
 | **ViewModel** | `ViewModels/IoMonitorViewModel.cs` | 即時 IO 監控、CiA 402 狀態解析 |
+| **ViewModel** | `ViewModels/ToolTableViewModel.cs` | 刀具表 CRUD、LOAD/UNLOAD/M6G43/TOUCH OFF |
+| **ViewModel** | `ViewModels/AtcViewModel.cs` | ATC 自動刀庫（MANUAL ATC + ATC AUTOMATIC） |
 | **Model** | `Models/MachineModels.cs` | MachineConfig、AxisSetting、DiscoveredSlave 等 |
 | **Model** | `Models/MachineStatus.cs` | 機台即時狀態（Observable） |
 | **Resource** | `Resources/Languages/Lang.zh-TW.xaml` | 全 UI 文字（繁體中文） |
@@ -143,6 +145,8 @@ DispatcherTimer (500ms) → MachineControlService.GetStatusAsync()
 | GET/POST | `/api/ethercat/scan` | 掃描 EtherCAT 拓撲 |
 | POST | `/api/config/update` | 更新 INI/HAL/XML 設定檔 |
 | POST | `/api/files/upload` | 上傳 G-Code 檔案 |
+| GET | `/v2/tool/table` | 讀取刀具表（cnc_stat.tool_table + tool.tbl 註解） |
+| POST | `/v2/tool/save` | 寫入刀具表（tool.tbl + load_tool_table()） |
 
 ---
 
@@ -192,14 +196,16 @@ DispatcherTimer (500ms) → MachineControlService.GetStatusAsync()
 - ToolInfo 版面對齊 PB 版（即時刀具號/刀長/刀徑 + G43/G49 高亮 + GO TO ZERO/G30 按鈕）
 - 機台類型 UI + 即時連動（繁中下拉選單 + DRO/JOG/Offsets/AxisParameters 動態切換）
 - OffsetsView 對齊 PB 版（7 欄表格 + G59.1-G59.3 擴展座標系 + MAN/AUTO/MDI 模式切換）
+- Tool Table 刀具表管理（DataGrid CRUD + LOAD/UNLOAD/M6G43/TOUCH OFF + 後端 /v2/tool/table & /v2/tool/save）
+- ATC 自動刀庫頁面（MANUAL ATC 8 按鈕 + ATC AUTOMATIC 5 按鈕 + 雙模式切換 + ATC_Back.png 背景）
+- MAN/AUTO/MDI 模式切換按鈕移至 JogPanel（全頁面可用）
 
 ### ❌ 尚未實作
 
 | 功能 | 說明 |
 |------|------|
 | Probing 探測循環 | Outside/Inside Corners、Boss/Pocket、Ridge/Valley、Edge Angle、Calibrate |
-| ATC 自動刀庫 | 無換刀介面 |
-| Tool Table 刀具表 | 僅靜態顯示，無完整管理 |
+| ATC PROGRAM TOOLS | ATC 頁 PROGRAM TOOLS 列表目前為預留空白 |
 | Conversational 對話式加工 | 無 Facing/Holes/Pattern 產生器 |
 | Block Delete / M01 | 按鈕存在但無 Command 綁定 |
 
@@ -209,15 +215,15 @@ DispatcherTimer (500ms) → MachineControlService.GetStatusAsync()
 |------|--------|
 | 3D 視圖 | 無刀具路徑模擬 |
 | G-Code 預覽 | 無行號高亮/執行中行追蹤 |
-| Tool Info | ~~未與 LinuxCNC 刀具表同步~~ ✅ 已綁定即時資料（刀具號/刀長/刀徑），尚缺完整刀具表管理 |
+| Tool Info | ✅ 已綁定即時資料 + ✅ 完整刀具表管理（TOOL Tab） |
 | Rapid Override | SliderControl 第三列暫靜態 100% |
 
 ### 📋 開發優先順序
 
 1. **Probing 探測循環** — 工程師常用差異化功能
-2. **Tool Table 管理** — ATC 前置需求
-3. **Block Delete / M01** — 連接按鈕至後端
-4. **G-Code 行號高亮** — 執行中行追蹤
+2. **Block Delete / M01** — 連接按鈕至後端
+3. **G-Code 行號高亮** — 執行中行追蹤
+4. **ATC PROGRAM TOOLS** — 解析 G-Code 自動列出程式刀具
 
 ---
 
@@ -303,3 +309,18 @@ DispatcherTimer (500ms) → MachineControlService.GetStatusAsync()
 | 項目 | 說明 |
 |------|------|
 | **修正 CLEAR ALL/SELECTED → RELOAD 顯示舊值** | 新增 server.py in-memory WCS cache（`_wcs_cache`）；MDI 送出 G10 L2 後即時更新 cache；`read_work_offsets()` 優先級：.var < cache < cnc_stat active WCS（`5a4e14b`） |
+
+### 2026-03-03
+
+| 項目 | 說明 |
+|------|------|
+| **TOOL 分頁（對齊 PB 版）** | ToolTableViewModel + ToolTableView：DataGrid（全軸 offset + FNT/BAK ANG + ORIENT + REMARK）+ CRUD（ADD/DELETE/SAVE/RELOAD）+ 右側 TOOL CHANGE PANEL（LOAD/UNLOAD/M6G43/TOUCH OFF）+ TOOL_BACK.png 背景 |
+| **ToolEntry 模型** | MachineModels.cs 新增 ToolEntry（ObservableObject，全軸 offset + Diameter + FrontAngle/BackAngle/Orientation/Remark） |
+| **後端刀具表端點** | `/v2/tool/table`（GET）讀取 cnc_stat.tool_table + tool.tbl 註解；`/v2/tool/save`（POST）寫入 tool.tbl + cnc_cmd.load_tool_table() |
+| **MachineControlService 擴充** | GetToolTableAsync() + SaveToolTableAsync()（ApiResponse<List<ToolEntry>>） |
+| **ATC 自動刀庫分頁** | AtcViewModel + AtcView：ATC_Back.png 背景 + 三欄佈局（左面板/中央/右面板）；MANUAL ATC（8 按鈕：AIR BLAST / RETR DUST BOOT / CLAMP TOOL / RELEASE TOOL / ORIENT SPINDLE / UNLOCK SPINDLE / HEAD UP / HEAD DOWN）+ PROGRAM TOOLS（預留 ListBox） |
+| **ATC 右面板** | ATC AUTOMATIC CONTROL PANEL：LOAD SPINDLE（T{n} M6）/ UNLOAD SPINDLE（T0 M6）/ STORE TOOL IN RACK / M6 G43（T{n} M6 G43）/ TOUCH OFF CURRENT TOOL（G10 L11 P{n} Z0）+ MDI |
+| **MAN/AUTO/MDI 搬遷** | 模式切換按鈕從 OffsetsView 移至 JogPanel 底部（全頁面可用）；SetModeCommand 從 OffsetsViewModel 移至 MainViewModel |
+| **JogPanel 寬度修正** | 180→250，避免 X+/X- 按鈕被裁切 |
+| **ConfigurationService 修正** | HAL：isServo && !isPulseGen 條件；INI：新增 OFFSET_COLUMNS 動態軸欄位 |
+| **版本號** | `2026.03.03_TOOL_ATC` |

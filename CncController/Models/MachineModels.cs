@@ -323,6 +323,41 @@ namespace CncController.Models
         [ObservableProperty] private string _remark = "";
     }
 
+    // [2026-03-04] 探測結果（後端 /v2/probe/run 回傳）
+    public class ProbeResult
+    {
+        public bool Tripped { get; set; }
+        public double X { get; set; }
+        public double Y { get; set; }
+        public double Z { get; set; }
+        public string Error { get; set; }
+        // [2026-03-04] Edge Angle / Calibrate 擴展欄位
+        public double Angle { get; set; }
+        public double EdgeWidth { get; set; }
+        // [2026-03-04] Boss/Pocket 實測 X/Y 寬度
+        public double WidthX { get; set; }
+        public double WidthY { get; set; }
+    }
+
+    // [2026-03-04] 探測參數（前端 ProbingViewModel → 後端 /v2/probe/run）
+    public class ProbeParameters
+    {
+        public double TraverseSpeed { get; set; } = 300.0;
+        public double SearchSpeed { get; set; } = 50.0;
+        public double MaxXYDistance { get; set; } = 20.0;
+        public double MaxZDistance { get; set; } = 20.0;
+        public double XYClearance { get; set; } = 5.0;
+        public double ZClearance { get; set; } = 5.0;
+        public double ExtraDepth { get; set; } = 2.0;
+        // [2026-03-04] Boss/Pocket 近似直徑
+        public double Diameter { get; set; } = 20.0;
+        // [2026-03-04] Boss/Pocket 特徵中心相對當前位置的近似偏移
+        public double OffsetX { get; set; }
+        public double OffsetY { get; set; }
+        // [2026-03-04] Edge Angle 邊緣寬度（使用者輸入，作為探測間距）
+        public double EdgeWidth { get; set; }
+    }
+
     public static class StandardSignals
     {
         // 定義常用的 Output 訊號名稱 (必須與 GenerateHal 中的名稱一致)

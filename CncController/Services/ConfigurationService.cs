@@ -497,6 +497,12 @@ namespace CncController.Services
                     {
                         sb.AppendLine($"net {signalName} {hwPin}");
                     }
+
+                    // [2026-03-04] 探針訊號 probe-in → motion.probe-input 接線
+                    if (signalName == "probe-in")
+                    {
+                        sb.AppendLine($"net {signalName} => motion.probe-input");
+                    }
                 }
                 sb.AppendLine();
             }

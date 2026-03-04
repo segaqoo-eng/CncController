@@ -31,6 +31,16 @@
     <Resource Include="Resources\Images\TOOL_BACK.png" />
     <!-- [2026-03-03] 新增 ATC_Back.png 嵌入資源，供 AtcView 顯示 ATC 背景圖 -->
     <Resource Include="Resources\Images\ATC_Back.png" />
+    <!-- [2026-03-04] 新增 Porbing_BACK.png 嵌入資源，供 ProbingView 顯示探針背景圖 -->
+    <Resource Include="Resources\Images\Porbing_BACK.png" />
+    <!-- [2026-03-04] PROBE HELP 7 張說明圖片 -->
+    <Resource Include="Resources\Images\HELP\Image(1).png" />
+    <Resource Include="Resources\Images\HELP\Image(2).png" />
+    <Resource Include="Resources\Images\HELP\Image(3).png" />
+    <Resource Include="Resources\Images\HELP\Image(4).png" />
+    <Resource Include="Resources\Images\HELP\Image(5).png" />
+    <Resource Include="Resources\Images\HELP\Image(6).png" />
+    <Resource Include="Resources\Images\HELP\Image(7).png" />
   </ItemGroup>
 
 </Project>

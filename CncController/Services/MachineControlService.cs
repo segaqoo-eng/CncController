@@ -613,6 +613,55 @@ namespace CncController.Services
             }
         }
 
+        // [2026-03-04] 新增 RunProbeAsync：執行探測循環（POST /v2/probe/run）
+        // 獨立使用 30s timeout HttpClient，因探測涉及多段移動
+        public async Task<ProbeResult> RunProbeAsync(
+            string probeType, string direction, ProbeParameters parameters)
+        {
+            try
+            {
+                using var probeClient = new HttpClient { Timeout = TimeSpan.FromSeconds(30) };
+                var payload = new
+                {
+                    probe_type = probeType,
+                    direction = direction,
+                    traverse_speed = parameters.TraverseSpeed,
+                    search_speed = parameters.SearchSpeed,
+                    max_xy_distance = parameters.MaxXYDistance,
+                    max_z_distance = parameters.MaxZDistance,
+                    xy_clearance = parameters.XYClearance,
+                    z_clearance = parameters.ZClearance,
+                    extra_depth = parameters.ExtraDepth,
+                    diameter = parameters.Diameter,   // [2026-03-04] Boss/Pocket 近似直徑
+                    offset_x = parameters.OffsetX,    // [2026-03-04] 特徵中心近似偏移
+                    offset_y = parameters.OffsetY,
+                    edge_width = parameters.EdgeWidth  // [2026-03-04] Edge Angle 邊緣寬度
+                };
+                var response = await probeClient.PostAsJsonAsync(
+                    $"{_serverUrl}/v2/probe/run", payload);
+                if (response.IsSuccessStatusCode)
+                {
+                    var result = await response.Content
+                        .ReadFromJsonAsync<ApiResponse<ProbeResult>>(_jsonOptions);
+                    if (result?.Status == "Success")
+                        return result.Data;
+                    return new ProbeResult { Error = result?.Message ?? "Unknown error" };
+                }
+                var errorBody = await response.Content.ReadAsStringAsync();
+                return new ProbeResult { Error = $"HTTP {(int)response.StatusCode}: {errorBody}" };
+            }
+            catch (TaskCanceledException)
+            {
+                AlarmService.Instance.AddLog("ERROR", "Probe timeout (30s)");
+                return new ProbeResult { Error = "探測超時（30 秒）" };
+            }
+            catch (Exception ex)
+            {
+                AlarmService.Instance.AddLog("ERROR", $"RunProbe failed: {ex.Message}");
+                return new ProbeResult { Error = ex.Message };
+            }
+        }
+
         // 輕量 DTO（僅供 GetOffsetsAsync 使用）
         private class OffsetsData
         {

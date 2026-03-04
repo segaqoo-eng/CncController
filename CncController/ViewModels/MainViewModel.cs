@@ -49,6 +49,9 @@ namespace CncController.ViewModels
         // [2026-03-03] 新增 AtcVM：ATC 自動刀庫分頁長駐 ViewModel
         public AtcViewModel AtcVM { get; } = new AtcViewModel();
 
+        // [2026-03-04] 新增 ProbingVM：探測循環分頁長駐 ViewModel
+        public ProbingViewModel ProbingVM { get; } = new ProbingViewModel();
+
         // ==============================================================================
         // 1. 屬性定義
         // ==============================================================================
@@ -220,6 +223,9 @@ namespace CncController.ViewModels
 
             // [2026-03-03] 將 Status 傳遞給 AtcVM，讓 ATC 頁可綁定即時刀具號
             AtcVM.MachineStatus = Status;
+
+            // [2026-03-04] 將 Status 傳遞給 ProbingVM，讓探測頁可綁定即時座標
+            ProbingVM.MachineStatus = Status;
 
             // [新增] 1. 初始化時，先從 AuthService 抓目前的狀態
             CurrentUser = AuthService.Instance.CurrentUser;
@@ -697,6 +703,7 @@ namespace CncController.ViewModels
                 case "Offsets": CurrentViewModel = OffsetsVM; break; // [2026-02-23] 新增 Offsets Tab 導航
                 case "Tool": CurrentViewModel = ToolTableVM; break; // [2026-03-03] 新增 TOOL Tab 導航
                 case "Atc": CurrentViewModel = AtcVM; break; // [2026-03-03] 新增 ATC Tab 導航
+                case "Probing": CurrentViewModel = ProbingVM; break; // [2026-03-04] 新增 PROBING Tab 導航
             }
         }
         // [安全] 統一運動指令前置檢查：IsEstop 與 IsPower 雙重驗證

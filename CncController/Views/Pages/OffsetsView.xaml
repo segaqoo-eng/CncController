@@ -14,42 +14,21 @@
     <UserControl.Resources>
         <!-- [2026-02-24] BindingProxy：讓 DataGridColumn 可綁定 ViewModel 的軸可見性屬性 -->
         <helpers:BindingProxy x:Key="Proxy" Data="{Binding}"/>
-        <Style x:Key="OffsetBtnStyle" TargetType="Button">
-            <Setter Property="Foreground" Value="White"/>
+        <!-- [2026-03-04] OffsetBtnStyle 改為 BasedOn BaseBtnStyle，移除自訂 Template -->
+        <Style x:Key="OffsetBtnStyle" TargetType="Button" BasedOn="{StaticResource BaseBtnStyle}">
             <Setter Property="FontSize" Value="11"/>
-            <Setter Property="FontWeight" Value="Bold"/>
             <Setter Property="Margin" Value="3"/>
             <Setter Property="Padding" Value="8,4"/>
-            <Setter Property="Background" Value="#3C3C3C"/>
-            <Setter Property="BorderBrush" Value="#555"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border x:Name="bd" Background="{TemplateBinding Background}"
-                                BorderBrush="{TemplateBinding BorderBrush}"
-                                BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="3" Padding="{TemplateBinding Padding}">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="bd" Property="Background" Value="#111"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
         </Style>
 
-        <!-- WCS 選擇按鈕樣式（大按鈕）-->
+        <!-- [2026-03-04] WCS 選擇按鈕樣式（大按鈕），BasedOn OffsetBtnStyle -->
         <Style x:Key="WcsBtnStyle" TargetType="Button" BasedOn="{StaticResource OffsetBtnStyle}">
             <Setter Property="Height" Value="36"/>
             <Setter Property="FontSize" Value="13"/>
             <Setter Property="Margin" Value="4,3"/>
         </Style>
 
-        <!-- [2026-02-24] ZERO 按鈕樣式（表格內嵌小按鈕） -->
+        <!-- [2026-03-04] ZERO 按鈕樣式（表格內嵌小按鈕），BasedOn OffsetBtnStyle，保留棕色背景 -->
         <Style x:Key="ZeroBtnStyle" TargetType="Button" BasedOn="{StaticResource OffsetBtnStyle}">
             <Setter Property="FontSize" Value="9"/>
             <Setter Property="Padding" Value="4,2"/>

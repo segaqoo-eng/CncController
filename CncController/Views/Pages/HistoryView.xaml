@@ -12,28 +12,11 @@
     </UserControl.DataContext>
 
     <UserControl.Resources>
-        <Style x:Key="TabButtonStyle" TargetType="RadioButton">
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="RadioButton">
-                        <Border x:Name="border" BorderBrush="#444" BorderThickness="1" CornerRadius="4,4,0,0" Margin="2,0" Background="#222">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsChecked" Value="True">
-                                <Setter TargetName="border" Property="Background" Value="#007ACC"/>
-                                <Setter TargetName="border" Property="BorderBrush" Value="#007ACC"/>
-                            </Trigger>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="border" Property="Background" Value="#333"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
+        <!-- [2026-03-04] TabButtonStyle 改繼承 BaseRadioBtnStyle，移除本地 Template -->
+        <Style x:Key="TabButtonStyle" TargetType="RadioButton" BasedOn="{StaticResource BaseRadioBtnStyle}">
             <Setter Property="Foreground" Value="White"/>
-            <Setter Property="FontSize" Value="16"/>
-            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="FontSize" Value="{DynamicResource BtnFontSize.Large}"/>
+            <Setter Property="Padding" Value="{DynamicResource BtnPadding.Large}"/>
             <Setter Property="Height" Value="45"/>
             <Setter Property="Width" Value="120"/>
         </Style>

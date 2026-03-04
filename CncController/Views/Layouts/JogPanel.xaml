@@ -11,6 +11,7 @@
              d:DesignHeight="400" d:DesignWidth="300">
 
     <UserControl.Resources>
+        <!-- [2026-03-04] JOG 方向按鈕（漸層凸起 + Hover 亮 + Pressed 橙色） -->
         <Style x:Key="JogArrowBtn" TargetType="Button">
             <Setter Property="Width" Value="70"/>
             <Setter Property="Height" Value="70"/>
@@ -18,21 +19,32 @@
             <Setter Property="FontSize" Value="24"/>
             <Setter Property="FontWeight" Value="Black"/>
             <Setter Property="Foreground" Value="#E0E0E0"/>
-            <Setter Property="Background" Value="#2D2D30"/>
-            <Setter Property="BorderBrush" Value="#454545"/>
-            <Setter Property="BorderThickness" Value="2"/>
+            <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border x:Name="bd" Background="{TemplateBinding Background}"
-                                BorderBrush="{TemplateBinding BorderBrush}"
-                                BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="6">
+                        <Border x:Name="bd" BorderBrush="#555" BorderThickness="2" CornerRadius="6">
+                            <Border.Background>
+                                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                    <GradientStop Color="#4A4A4E" Offset="0"/>
+                                    <GradientStop Color="#3A3A3E" Offset="0.5"/>
+                                    <GradientStop Color="#2A2A2E" Offset="1"/>
+                                </LinearGradientBrush>
+                            </Border.Background>
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="bd" Property="Background" Value="#3E3E42"/>
+                                <Setter TargetName="bd" Property="BorderBrush" Value="#0090FF"/>
+                                <Setter TargetName="bd" Property="Background">
+                                    <Setter.Value>
+                                        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                            <GradientStop Color="#5E5E62" Offset="0"/>
+                                            <GradientStop Color="#4E4E52" Offset="0.5"/>
+                                            <GradientStop Color="#3E3E42" Offset="1"/>
+                                        </LinearGradientBrush>
+                                    </Setter.Value>
+                                </Setter>
                             </Trigger>
                             <Trigger Property="IsPressed" Value="True">
                                 <Setter TargetName="bd" Property="Background" Value="#FFAA00"/>

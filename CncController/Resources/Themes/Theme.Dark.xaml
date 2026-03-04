@@ -19,4 +19,14 @@
     <sys:Double x:Key="FontSize.Normal">14</sys:Double>
     <sys:Double x:Key="FontSize.Large">18</sys:Double>
     <sys:Double x:Key="FontSize.DRO">24</sys:Double>
+
+    <!-- [2026-03-04] 按鈕尺寸預設（方案 B：全域變數，各頁面引用） -->
+    <sys:Double x:Key="BtnFontSize.Large">16</sys:Double>
+    <sys:Double x:Key="BtnFontSize.Medium">14</sys:Double>
+    <sys:Double x:Key="BtnFontSize.Small">12</sys:Double>
+    <sys:Double x:Key="BtnFontSize.XSmall">10</sys:Double>
+    <Thickness x:Key="BtnPadding.Large">14,8</Thickness>
+    <Thickness x:Key="BtnPadding.Medium">10,6</Thickness>
+    <Thickness x:Key="BtnPadding.Small">8,4</Thickness>
+    <Thickness x:Key="BtnPadding.XSmall">6,3</Thickness>
 </ResourceDictionary>

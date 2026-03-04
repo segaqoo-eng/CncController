@@ -13,91 +13,61 @@
     <UserControl.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
 
-        <!-- [2026-03-04] 子頁籤 RadioButton（對齊 PB 版大尺寸） -->
-        <Style x:Key="ProbeTabStyle" TargetType="RadioButton">
-            <Setter Property="Foreground" Value="#CCC"/>
-            <Setter Property="FontSize" Value="14"/>
-            <Setter Property="FontWeight" Value="Bold"/>
+        <!-- [2026-03-04] 子頁籤 → 繼承全域 BaseRadioBtnStyle -->
+        <Style x:Key="ProbeTabStyle" TargetType="RadioButton" BasedOn="{StaticResource BaseRadioBtnStyle}">
+            <Setter Property="FontSize" Value="{DynamicResource BtnFontSize.Medium}"/>
+            <Setter Property="Padding" Value="12,6"/>
             <Setter Property="Margin" Value="1,0"/>
-            <Setter Property="Padding" Value="12,6"/>
-            <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="RadioButton">
-                        <Border x:Name="bd" Background="#3A3A3A" BorderBrush="#555"
-                                BorderThickness="1" CornerRadius="3,3,0,0"
-                                Padding="{TemplateBinding Padding}">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsChecked" Value="True">
-                                <Setter TargetName="bd" Property="Background" Value="#0078D4"/>
-                                <Setter Property="Foreground" Value="White"/>
-                            </Trigger>
-                            <Trigger Property="IsEnabled" Value="False">
-                                <Setter Property="Foreground" Value="#666"/>
-                                <Setter TargetName="bd" Property="Background" Value="#2A2A2A"/>
-                            </Trigger>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="bd" Property="Background" Value="#4A4A4A"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
         </Style>
 
-        <!-- [2026-03-04] WCS 按鈕（對齊 PB 版大尺寸） -->
-        <Style x:Key="WcsSelectStyle" TargetType="RadioButton">
-            <Setter Property="Foreground" Value="#CCC"/>
-            <Setter Property="FontSize" Value="16"/>
-            <Setter Property="FontWeight" Value="Bold"/>
-            <Setter Property="Margin" Value="2,0"/>
+        <!-- [2026-03-04] WCS 按鈕 → 繼承全域 BaseRadioBtnStyle -->
+        <Style x:Key="WcsSelectStyle" TargetType="RadioButton" BasedOn="{StaticResource BaseRadioBtnStyle}">
+            <Setter Property="FontSize" Value="{DynamicResource BtnFontSize.Large}"/>
             <Setter Property="Padding" Value="12,6"/>
-            <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="RadioButton">
-                        <Border x:Name="bd" Background="#3A3A3A" BorderBrush="#555"
-                                BorderThickness="1" CornerRadius="3"
-                                Padding="{TemplateBinding Padding}">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsChecked" Value="True">
-                                <Setter TargetName="bd" Property="Background" Value="#0078D4"/>
-                                <Setter Property="Foreground" Value="White"/>
-                            </Trigger>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="bd" Property="Background" Value="#4A4A4A"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
         </Style>
 
-        <!-- [2026-03-04] 九宮格探測按鈕（大尺寸，對齊 PB 版） -->
+        <!-- [2026-03-04] 九宮格探測按鈕（淺色底 + Canvas 繪圖，保留獨立 Template） -->
         <Style x:Key="ProbeGridBtnStyle" TargetType="Button">
-            <Setter Property="Background" Value="#E8E8E8"/>
             <Setter Property="Margin" Value="4"/>
             <Setter Property="Padding" Value="2"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border x:Name="bd" Background="{TemplateBinding Background}"
-                                BorderBrush="#999" BorderThickness="1.5" CornerRadius="5"
+                        <Border x:Name="bd" CornerRadius="5" BorderThickness="1.5" BorderBrush="#999"
                                 Padding="{TemplateBinding Padding}">
+                            <Border.Background>
+                                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                    <GradientStop Color="#F5F5F5" Offset="0"/>
+                                    <GradientStop Color="#E0E0E0" Offset="0.5"/>
+                                    <GradientStop Color="#D0D0D0" Offset="1"/>
+                                </LinearGradientBrush>
+                            </Border.Background>
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="bd" Property="Background" Value="#D0D0D0"/>
                                 <Setter TargetName="bd" Property="BorderBrush" Value="#0078D4"/>
+                                <Setter TargetName="bd" Property="Background">
+                                    <Setter.Value>
+                                        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                            <GradientStop Color="#FFFFFF" Offset="0"/>
+                                            <GradientStop Color="#ECECEC" Offset="0.5"/>
+                                            <GradientStop Color="#DDDDDD" Offset="1"/>
+                                        </LinearGradientBrush>
+                                    </Setter.Value>
+                                </Setter>
                             </Trigger>
                             <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="bd" Property="Background" Value="#B0B0B0"/>
+                                <Setter TargetName="bd" Property="Background">
+                                    <Setter.Value>
+                                        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                            <GradientStop Color="#C0C0C0" Offset="0"/>
+                                            <GradientStop Color="#D0D0D0" Offset="0.5"/>
+                                            <GradientStop Color="#E0E0E0" Offset="1"/>
+                                        </LinearGradientBrush>
+                                    </Setter.Value>
+                                </Setter>
                             </Trigger>
                             <Trigger Property="IsEnabled" Value="False">
                                 <Setter TargetName="bd" Property="Opacity" Value="0.4"/>
@@ -113,20 +83,20 @@
             </Style.Triggers>
         </Style>
 
-        <!-- [2026-03-04] 參數標籤（對齊 PB 版大尺寸） -->
+        <!-- [2026-03-04] 參數標籤 -->
         <Style x:Key="ParamLbl" TargetType="TextBlock">
             <Setter Property="Foreground" Value="#DDD"/>
-            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontSize" Value="{DynamicResource BtnFontSize.Medium}"/>
             <Setter Property="FontWeight" Value="Bold"/>
             <Setter Property="VerticalAlignment" Value="Center"/>
             <Setter Property="Margin" Value="0,2"/>
         </Style>
 
-        <!-- [2026-03-04] 參數輸入框（白底黑字，對齊 PB 版大尺寸） -->
+        <!-- [2026-03-04] 參數輸入框（白底黑字） -->
         <Style x:Key="ParamTxt" TargetType="TextBox">
             <Setter Property="Background" Value="#F0F0F0"/>
             <Setter Property="Foreground" Value="#111"/>
-            <Setter Property="FontSize" Value="16"/>
+            <Setter Property="FontSize" Value="{DynamicResource BtnFontSize.Large}"/>
             <Setter Property="FontFamily" Value="Consolas"/>
             <Setter Property="BorderBrush" Value="#888"/>
             <Setter Property="BorderThickness" Value="1.5"/>
@@ -137,19 +107,19 @@
             <Setter Property="HorizontalContentAlignment" Value="Right"/>
         </Style>
 
-        <!-- [2026-03-04] 結果標籤（對齊 PB 版大尺寸） -->
+        <!-- [2026-03-04] 結果標籤 -->
         <Style x:Key="ResultLbl" TargetType="TextBlock">
             <Setter Property="Foreground" Value="#DDD"/>
-            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontSize" Value="{DynamicResource BtnFontSize.Medium}"/>
             <Setter Property="FontWeight" Value="Bold"/>
             <Setter Property="VerticalAlignment" Value="Center"/>
             <Setter Property="Margin" Value="0,2"/>
         </Style>
 
-        <!-- [2026-03-04] 結果值（白底黑字，對齊 PB 版大尺寸） -->
+        <!-- [2026-03-04] 結果值（白底黑字） -->
         <Style x:Key="ResultVal" TargetType="TextBlock">
             <Setter Property="Foreground" Value="#111"/>
-            <Setter Property="FontSize" Value="16"/>
+            <Setter Property="FontSize" Value="{DynamicResource BtnFontSize.Large}"/>
             <Setter Property="FontFamily" Value="Consolas"/>
             <Setter Property="VerticalAlignment" Value="Center"/>
             <Setter Property="Margin" Value="2,2"/>
@@ -159,37 +129,8 @@
             <Setter Property="TextAlignment" Value="Right"/>
         </Style>
 
-        <!-- [2026-03-04] 通用按鈕（對齊 PB 版大尺寸） -->
-        <Style x:Key="ProbeBtnStyle" TargetType="Button">
-            <Setter Property="Foreground" Value="White"/>
-            <Setter Property="FontSize" Value="14"/>
-            <Setter Property="FontWeight" Value="Bold"/>
-            <Setter Property="Margin" Value="2"/>
-            <Setter Property="Padding" Value="10,6"/>
-            <Setter Property="Background" Value="#3C3C3C"/>
-            <Setter Property="BorderBrush" Value="#555"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border x:Name="bd" Background="{TemplateBinding Background}"
-                                BorderBrush="{TemplateBinding BorderBrush}"
-                                BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="3" Padding="{TemplateBinding Padding}">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="bd" Property="Background" Value="#111"/>
-                            </Trigger>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="bd" Property="Background" Value="#4A4A4A"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
+        <!-- [2026-03-04] 通用按鈕 → 繼承全域 BaseBtnStyle -->
+        <Style x:Key="ProbeBtnStyle" TargetType="Button" BasedOn="{StaticResource BaseBtnStyle}">
         </Style>
     </UserControl.Resources>
 

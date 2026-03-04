@@ -9,48 +9,15 @@
              d:DesignHeight="350" d:DesignWidth="220">
 
     <UserControl.Resources>
-        <Style x:Key="CycleBtnStyle" TargetType="Button">
+        <!-- [2026-03-04] CycleBtnStyle 改繼承 BaseBtnStyle，移除本地 Template -->
+        <Style x:Key="CycleBtnStyle" TargetType="Button" BasedOn="{StaticResource BaseBtnStyle}">
             <Setter Property="Height" Value="38"/>
             <Setter Property="Margin" Value="2,3"/>
-            <Setter Property="Foreground" Value="White"/>
-            <Setter Property="FontSize" Value="12"/>
-            <Setter Property="FontWeight" Value="Bold"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="BorderBrush" Value="#555"/>
-            <Setter Property="Background">
-                <Setter.Value>
-                    <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                        <GradientStop Color="#4E4E4E" Offset="0.0"/>
-                        <GradientStop Color="#2D2D2D" Offset="1.0"/>
-                    </LinearGradientBrush>
-                </Setter.Value>
-            </Setter>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border x:Name="border" Background="{TemplateBinding Background}" 
-                                BorderBrush="{TemplateBinding BorderBrush}" 
-                                BorderThickness="{TemplateBinding BorderThickness}" 
-                                CornerRadius="3">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="border" Property="Background" Value="#111"/>
-                            </Trigger>
-                            <Trigger Property="IsEnabled" Value="False">
-                                <Setter TargetName="border" Property="Opacity" Value="0.4"/>
-                                <Setter TargetName="border" Property="Background" Value="#222"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
+            <Setter Property="FontSize" Value="{DynamicResource BtnFontSize.Small}"/>
+            <Setter Property="Padding" Value="{DynamicResource BtnPadding.Small}"/>
         </Style>
 
-        <Style x:Key="FunctionBtnStyle" TargetType="Button" BasedOn="{StaticResource CycleBtnStyle}">
-            <Setter Property="Background" Value="#4455AA"/>
-        </Style>
+        <Style x:Key="FunctionBtnStyle" TargetType="Button" BasedOn="{StaticResource CycleBtnStyle}"/>
     </UserControl.Resources>
 
     <Border Background="#252526" BorderBrush="#444" BorderThickness="1" CornerRadius="0" Padding="5">
@@ -120,14 +87,43 @@
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
 
-                <Button Grid.Column="0" Command="{Binding TogglePowerCommand}" Margin="2" Content="POWER">
+                <!-- [2026-03-04] POWER：保留獨立 Template（綠色動態切換），加 Cursor=Hand -->
+                <Button Grid.Column="0" Command="{Binding TogglePowerCommand}" Margin="2" Content="POWER" Cursor="Hand"
+                        Height="38" FontSize="{DynamicResource BtnFontSize.Small}" FontWeight="Bold" Foreground="White">
                     <Button.Style>
-                        <Style TargetType="Button" BasedOn="{StaticResource CycleBtnStyle}">
+                        <Style TargetType="Button">
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border x:Name="border" Background="{TemplateBinding Background}"
+                                                BorderBrush="{TemplateBinding BorderBrush}"
+                                                BorderThickness="1" CornerRadius="4">
+                                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsPressed" Value="True">
+                                                <Setter TargetName="border" Property="Background" Value="#111"/>
+                                            </Trigger>
+                                            <Trigger Property="IsEnabled" Value="False">
+                                                <Setter TargetName="border" Property="Opacity" Value="0.4"/>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                            <Setter Property="Background">
+                                <Setter.Value>
+                                    <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                        <GradientStop Color="#5E5E5E" Offset="0"/>
+                                        <GradientStop Color="#353535" Offset="1"/>
+                                    </LinearGradientBrush>
+                                </Setter.Value>
+                            </Setter>
+                            <Setter Property="BorderBrush" Value="#555"/>
                             <Style.Triggers>
                                 <DataTrigger Binding="{Binding IsEstop}" Value="True">
                                     <Setter Property="IsEnabled" Value="False"/>
                                 </DataTrigger>
-
                                 <DataTrigger Binding="{Binding IsPower}" Value="True">
                                     <Setter Property="Background" Value="#32CD32"/>
                                     <Setter Property="BorderBrush" Value="#006400"/>
@@ -143,9 +139,36 @@
                                VerticalAlignment="Center" HorizontalAlignment="Center"/>
                 </Border>
 
-                <Button Grid.Column="2" Command="{Binding ToggleEstopCommand}" Margin="2" Content="E-STOP">
+                <!-- [2026-03-04] E-STOP：保留獨立 Template（紅色動態切換），加 Cursor=Hand -->
+                <Button Grid.Column="2" Command="{Binding ToggleEstopCommand}" Margin="2" Content="E-STOP" Cursor="Hand"
+                        Height="38" FontSize="{DynamicResource BtnFontSize.Small}" FontWeight="Bold" Foreground="White">
                     <Button.Style>
-                        <Style TargetType="Button" BasedOn="{StaticResource CycleBtnStyle}">
+                        <Style TargetType="Button">
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border x:Name="border" Background="{TemplateBinding Background}"
+                                                BorderBrush="{TemplateBinding BorderBrush}"
+                                                BorderThickness="1" CornerRadius="4">
+                                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsPressed" Value="True">
+                                                <Setter TargetName="border" Property="Background" Value="#111"/>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                            <Setter Property="Background">
+                                <Setter.Value>
+                                    <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                        <GradientStop Color="#5E5E5E" Offset="0"/>
+                                        <GradientStop Color="#353535" Offset="1"/>
+                                    </LinearGradientBrush>
+                                </Setter.Value>
+                            </Setter>
+                            <Setter Property="BorderBrush" Value="#555"/>
                             <Style.Triggers>
                                 <DataTrigger Binding="{Binding IsEstop}" Value="False">
                                     <Setter Property="Background" Value="#FF0000"/>

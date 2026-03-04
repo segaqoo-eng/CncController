@@ -11,73 +11,26 @@
              d:DesignHeight="700" d:DesignWidth="1700">
 
     <UserControl.Resources>
-        <!-- [2026-03-03] 通用按鈕樣式（複用 ToolTableView 的深色按鈕） -->
-        <Style x:Key="AtcBtnStyle" TargetType="Button">
-            <Setter Property="Foreground" Value="White"/>
-            <Setter Property="FontSize" Value="11"/>
-            <Setter Property="FontWeight" Value="Bold"/>
+        <!-- [2026-03-04] AtcBtnStyle：繼承全域 BaseBtnStyle（漸層+Hover+Pressed），覆寫尺寸為 Small -->
+        <Style x:Key="AtcBtnStyle" TargetType="Button" BasedOn="{StaticResource BaseBtnStyle}">
+            <Setter Property="FontSize" Value="{DynamicResource BtnFontSize.Small}"/>
+            <Setter Property="Padding" Value="{DynamicResource BtnPadding.Small}"/>
             <Setter Property="Margin" Value="3"/>
-            <Setter Property="Padding" Value="8,6"/>
-            <Setter Property="Background" Value="#3C3C3C"/>
-            <Setter Property="BorderBrush" Value="#555"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border x:Name="bd" Background="{TemplateBinding Background}"
-                                BorderBrush="{TemplateBinding BorderBrush}"
-                                BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="3" Padding="{TemplateBinding Padding}">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="bd" Property="Background" Value="#111"/>
-                            </Trigger>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="bd" Property="Background" Value="#4A4A4A"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
         </Style>
 
-        <!-- [2026-03-03] 右側面板大按鈕 -->
+        <!-- [2026-03-04] PanelBtnStyle：繼承 AtcBtnStyle，右側面板大按鈕 -->
         <Style x:Key="PanelBtnStyle" TargetType="Button" BasedOn="{StaticResource AtcBtnStyle}">
             <Setter Property="Height" Value="38"/>
-            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="FontSize" Value="{DynamicResource BtnFontSize.Small}"/>
             <Setter Property="Margin" Value="4,4"/>
             <Setter Property="HorizontalContentAlignment" Value="Center"/>
         </Style>
 
-        <!-- [2026-03-03] 模式切換 ToggleButton 樣式 -->
-        <Style x:Key="ModeToggleStyle" TargetType="RadioButton">
-            <Setter Property="Foreground" Value="White"/>
-            <Setter Property="FontSize" Value="11"/>
-            <Setter Property="FontWeight" Value="Bold"/>
+        <!-- [2026-03-04] ModeToggleStyle：繼承全域 BaseRadioBtnStyle（漸層+Checked 藍漸層），覆寫尺寸為 Small -->
+        <Style x:Key="ModeToggleStyle" TargetType="RadioButton" BasedOn="{StaticResource BaseRadioBtnStyle}">
+            <Setter Property="FontSize" Value="{DynamicResource BtnFontSize.Small}"/>
+            <Setter Property="Padding" Value="{DynamicResource BtnPadding.Small}"/>
             <Setter Property="Margin" Value="2"/>
-            <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="RadioButton">
-                        <Border x:Name="bd" Background="#3C3C3C" BorderBrush="#555" BorderThickness="1"
-                                CornerRadius="3" Padding="10,6">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsChecked" Value="True">
-                                <Setter TargetName="bd" Property="Background" Value="#00539C"/>
-                                <Setter TargetName="bd" Property="BorderBrush" Value="#2980B9"/>
-                            </Trigger>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="bd" Property="Background" Value="#4A4A4A"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
         </Style>
     </UserControl.Resources>
 

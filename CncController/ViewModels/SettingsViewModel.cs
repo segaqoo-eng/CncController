@@ -49,6 +49,10 @@ namespace CncController.ViewModels
         [ObservableProperty]
         private Brush _scanResultColor = Brushes.Gray;
 
+        // [2026-03-04] IN MAP / OUT MAP 自動選取第一個有設備的列（-1 = 無選取）
+        [ObservableProperty] private int _selectedInMapIndex = -1;
+        [ObservableProperty] private int _selectedOutMapIndex = -1;
+
         // ★★★ [新增] 提供給 UI 綁定的訊號清單 ★★★
         public List<string> CommonOutputSignals => StandardSignals.OutputSignals;
 
@@ -275,6 +279,12 @@ namespace CncController.ViewModels
                     }
                 }
             }
+
+            // [2026-03-04] Step 7: 自動選取第一個有設備的 IN MAP / OUT MAP 列
+            SelectedInMapIndex = InMaps.ToList().FindIndex(m =>
+                m.SelectedSlave != null && m.SelectedSlave.Name != "--- None ---");
+            SelectedOutMapIndex = OutMaps.ToList().FindIndex(m =>
+                m.SelectedSlave != null && m.SelectedSlave.Name != "--- None ---");
         }
 
         // [新增] 驗證邏輯封裝

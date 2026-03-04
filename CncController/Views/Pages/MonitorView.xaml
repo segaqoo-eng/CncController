@@ -23,44 +23,93 @@
                 <RowDefinition Height="40"/>
             </Grid.RowDefinitions>
 
+            <!-- [2026-03-04] 標題列：G-CODE PROGRAM + 檔名 + LOAD 按鈕 -->
             <Border Grid.Row="0" Background="#444" CornerRadius="2,2,0,0">
-                <Grid>
-                    <TextBlock Text="G-CODE PROGRAM" Foreground="White" VerticalAlignment="Center" Margin="10,0" FontWeight="Bold"/>
-
-                    <Button Content="📂 LOAD" Command="{Binding LoadLocalFileCommand}" 
-                            HorizontalAlignment="Right" VerticalAlignment="Center"
-                            Margin="0,0,5,0" Padding="10,2" 
-                            Background="#555" Foreground="White" BorderThickness="0"
-                            Cursor="Hand">
-                        <Button.Style>
-                            <Style TargetType="Button">
-                                <Setter Property="Template">
-                                    <Setter.Value>
-                                        <ControlTemplate TargetType="Button">
-                                            <Border Background="{TemplateBinding Background}" CornerRadius="3" Padding="{TemplateBinding Padding}">
-                                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                            </Border>
-                                            <ControlTemplate.Triggers>
-                                                <Trigger Property="IsMouseOver" Value="True">
-                                                    <Setter Property="Background" Value="#666"/>
-                                                </Trigger>
-                                                <Trigger Property="IsPressed" Value="True">
-                                                    <Setter Property="Background" Value="#333"/>
-                                                </Trigger>
-                                            </ControlTemplate.Triggers>
-                                        </ControlTemplate>
-                                    </Setter.Value>
-                                </Setter>
-                            </Style>
-                        </Button.Style>
-                    </Button>
-                </Grid>
+                <DockPanel Margin="10,0,5,0">
+                    <TextBlock DockPanel.Dock="Left" Text="G-CODE" Foreground="White"
+                               VerticalAlignment="Center" FontWeight="Bold" FontSize="12"/>
+                    <Button DockPanel.Dock="Right" Content="LOAD" Command="{Binding LoadLocalFileCommand}"
+                            Style="{StaticResource BaseBtnStyle}" Padding="12,2" Margin="4,2"
+                            FontSize="11" VerticalAlignment="Center"/>
+                    <!-- [2026-03-04] 已載入檔名顯示（無檔案時隱藏） -->
+                    <TextBlock Text="{Binding CurrentFileName}" Foreground="#AAA" FontSize="11"
+                               VerticalAlignment="Center" Margin="8,0,0,0" TextTrimming="CharacterEllipsis"/>
+                </DockPanel>
             </Border>
 
+            <!-- [2026-03-04] G-Code 逐行顯示（行號 + 高亮執行中行 + 自動捲動） -->
             <Border Grid.Row="1" Background="White" BorderBrush="#444" BorderThickness="1">
-                <ScrollViewer>
-                    <TextBlock Text="{Binding GCodeText}" Foreground="Black" FontFamily="Consolas" Margin="5"/>
-                </ScrollViewer>
+                <Grid>
+                <!-- [2026-03-04] 空狀態提示：無程式載入時居中顯示 -->
+                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center"
+                            Visibility="{Binding IsGCodeEmpty, Converter={StaticResource BoolToVis}}">
+                    <TextBlock Text="NO PROGRAM LOADED" Foreground="#BBB" FontSize="16"
+                               FontWeight="Bold" HorizontalAlignment="Center" Margin="0,0,0,8"/>
+                    <TextBlock Text="Click LOAD to open a G-Code file" Foreground="#CCC" FontSize="12"
+                               HorizontalAlignment="Center"/>
+                </StackPanel>
+                <ListBox x:Name="GCodeListBox" ItemsSource="{Binding GCodeLines}"
+                         VirtualizingStackPanel.IsVirtualizing="True"
+                         VirtualizingStackPanel.VirtualizationMode="Recycling"
+                         ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                         Background="White" BorderThickness="0"
+                         HorizontalContentAlignment="Stretch"
+                         SelectionMode="Single" IsTabStop="False">
+                    <ListBox.ItemContainerStyle>
+                        <Style TargetType="ListBoxItem">
+                            <Setter Property="Padding" Value="0"/>
+                            <Setter Property="Margin" Value="0"/>
+                            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="ListBoxItem">
+                                        <ContentPresenter/>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                    </ListBox.ItemContainerStyle>
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <Grid>
+                                <Grid.Style>
+                                    <Style TargetType="Grid">
+                                        <Setter Property="Background" Value="Transparent"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsCurrentLine}" Value="True">
+                                                <Setter Property="Background" Value="#FFFFCC"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Grid.Style>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="45"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="{Binding LineNumber}"
+                                           Foreground="#999" FontFamily="Consolas" FontSize="12"
+                                           TextAlignment="Right" Padding="0,0,6,0"
+                                           Background="#F0F0F0"/>
+                                <TextBlock Grid.Column="1" Text="{Binding Text}"
+                                           FontFamily="Consolas" FontSize="12" Padding="4,0,0,0">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Foreground" Value="Black"/>
+                                            <Setter Property="FontWeight" Value="Normal"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsCurrentLine}" Value="True">
+                                                    <Setter Property="FontWeight" Value="Bold"/>
+                                                    <Setter Property="Foreground" Value="#333"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </Grid>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+                </Grid>
             </Border>
 
             <Grid Grid.Row="2" Margin="0,2,0,0">

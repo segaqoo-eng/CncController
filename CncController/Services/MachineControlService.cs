@@ -43,6 +43,9 @@ namespace CncController.Services
         private int _consecutiveFailCount = 0;
         private const int MaxConsecutiveFailsBeforeDisconnect = 3;
 
+        // [2026-03-04] 重置連線失敗計數（供 RETRY 按鈕呼叫）
+        public void ResetFailCount() => _consecutiveFailCount = 0;
+
         // [核心] 用來記錄最後一次狀態，用於本地端的快速防呆判斷
         private MachineStatusData _lastCachedStatus;
 
@@ -495,6 +498,38 @@ namespace CncController.Services
             catch (Exception ex)
             {
                 AlarmService.Instance.AddLog("API", $"SetSpindleOverride failed: {ex.Message}");
+                return false;
+            }
+        }
+
+        // [2026-03-04] 新增 SetBlockDeleteAsync：切換 Block Delete 開關
+        public async Task<bool> SetBlockDeleteAsync(bool value)
+        {
+            try
+            {
+                var response = await _pollingClient.PostAsJsonAsync(
+                    $"{_serverUrl}/v2/program/block_delete", new { value });
+                return response.IsSuccessStatusCode;
+            }
+            catch (Exception ex)
+            {
+                AlarmService.Instance.AddLog("API", $"SetBlockDelete failed: {ex.Message}");
+                return false;
+            }
+        }
+
+        // [2026-03-04] 新增 SetOptionalStopAsync：切換 Optional Stop (M01) 開關
+        public async Task<bool> SetOptionalStopAsync(bool value)
+        {
+            try
+            {
+                var response = await _pollingClient.PostAsJsonAsync(
+                    $"{_serverUrl}/v2/program/optional_stop", new { value });
+                return response.IsSuccessStatusCode;
+            }
+            catch (Exception ex)
+            {
+                AlarmService.Instance.AddLog("API", $"SetOptionalStop failed: {ex.Message}");
                 return false;
             }
         }

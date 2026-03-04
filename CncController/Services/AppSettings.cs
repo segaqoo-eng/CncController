@@ -17,6 +17,10 @@ namespace CncController.Services
         /// <summary>後端伺服器 URL（含 port）</summary>
         public string ServerUrl { get; private set; } = "http://192.168.0.137:5000";
 
+        // [2026-03-04] UI 全域縮放比例（1.0=預設，1.2=放大 20%，範圍 0.5~2.0）
+        /// <summary>UI 全域縮放比例（1.0=預設，1.2=放大 20%）</summary>
+        public double UiScale { get; private set; } = 1.0;
+
         private readonly JsonSerializerOptions _jsonOpts = new() { WriteIndented = true };
 
         private AppSettings()
@@ -38,6 +42,12 @@ namespace CncController.Services
                         if (!string.IsNullOrWhiteSpace(url))
                             ServerUrl = url.TrimEnd('/');
                     }
+                    // [2026-03-04] 讀取 UiScale（範圍 0.5~2.0，超出則忽略）
+                    if (doc.RootElement.TryGetProperty("UiScale", out var scaleProp))
+                    {
+                        double s = scaleProp.GetDouble();
+                        if (s >= 0.5 && s <= 2.0) UiScale = s;
+                    }
                 }
                 else
                 {
@@ -56,7 +66,8 @@ namespace CncController.Services
         {
             try
             {
-                var data = new { ServerUrl };
+                // [2026-03-04] Save 時包含 UiScale
+                var data = new { ServerUrl, UiScale };
                 string json = JsonSerializer.Serialize(data, _jsonOpts);
                 File.WriteAllText(FileName, json);
             }
@@ -72,6 +83,17 @@ namespace CncController.Services
             if (!string.IsNullOrWhiteSpace(newUrl))
             {
                 ServerUrl = newUrl.TrimEnd('/');
+                Save();
+            }
+        }
+
+        // [2026-03-04] 更新 UiScale 並持久化（範圍 0.5~2.0，需重啟生效）
+        /// <summary>更新 UI 縮放比例並持久化（需重啟生效）</summary>
+        public void UpdateUiScale(double newScale)
+        {
+            if (newScale >= 0.5 && newScale <= 2.0)
+            {
+                UiScale = newScale;
                 Save();
             }
         }

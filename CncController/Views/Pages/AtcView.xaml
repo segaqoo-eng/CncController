@@ -118,11 +118,17 @@
                                        FontSize="11" FontWeight="Bold" Margin="0,0,0,8"
                                        HorizontalAlignment="Center"/>
 
-                            <!-- 程式刀具列表（預留，目前為空白佔位） -->
+                            <!-- [2026-03-04] LOAD TOOLS 按鈕：解析 G-Code 自動列出程式刀具 -->
+                            <Button Content="LOAD TOOLS" Style="{StaticResource AtcBtnStyle}"
+                                    Command="{Binding LoadProgramToolsCommand}"
+                                    Background="#445588" HorizontalAlignment="Stretch"
+                                    FontSize="12" Padding="8,6" Margin="0,0,0,6"/>
+
+                            <!-- [2026-03-04] 程式刀具列表（加粗 14px Consolas） -->
                             <ListBox ItemsSource="{Binding ProgramTools}"
                                      Background="#2D2D2D" Foreground="White"
                                      BorderThickness="0" MinHeight="160"
-                                     FontSize="12" FontFamily="Consolas"/>
+                                     FontSize="14" FontWeight="Bold" FontFamily="Consolas"/>
                         </StackPanel>
                     </Border>
 

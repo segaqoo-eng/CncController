@@ -326,9 +326,10 @@ namespace CncController.Services
                 string axisHalName = $"joint.{i}";
 
                 // [2026-02-24] 修正：從 Mappings 動態取得 EtherCAT Slave Index，不再寫死 X→0, Y→2, Z→3
-                //              支援任意軸（A/B/C）與任意 Slave 對應
+                // [2026-03-04] 修正：改用 LogicalName 匹配軸名（ChannelIndex 未設定，全部為 0，會導致 Joint 1+ 找不到映射）
                 string axName = axis.AxisID.ToUpper();
-                var axisMapping = config.Mappings.FirstOrDefault(m => m.Type == MapType.Axis && m.ChannelIndex == i);
+                var axisMapping = config.Mappings.FirstOrDefault(m =>
+                    m.Type == MapType.Axis && m.LogicalName == axis.AxisID);
                 int sIdx;
                 if (axisMapping != null)
                 {
@@ -338,6 +339,7 @@ namespace CncController.Services
                 {
                     // 無映射時回退為 Joint Index（向後相容）
                     sIdx = axis.Index;
+                    AlarmService.Instance.AddLog("WARN", $"No axis mapping found for {axis.AxisID}, fallback to slave index {sIdx}");
                 }
 
                 string sliceName = $"slice_{axis.AxisID}";

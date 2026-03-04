@@ -18,6 +18,51 @@
         </Style>
 
         <Style x:Key="FunctionBtnStyle" TargetType="Button" BasedOn="{StaticResource CycleBtnStyle}"/>
+
+        <!-- [2026-03-04] 關鍵操作色彩分層：CYCLE START 深綠漸層 -->
+        <Style x:Key="StartBtnStyle" TargetType="Button" BasedOn="{StaticResource CycleBtnStyle}">
+            <Setter Property="Background">
+                <Setter.Value>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                        <GradientStop Color="#4CAF50" Offset="0"/>
+                        <GradientStop Color="#2E7D32" Offset="1"/>
+                    </LinearGradientBrush>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="BorderBrush" Value="#1B5E20"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+        </Style>
+
+        <!-- [2026-03-04] STOP 深紅漸層 -->
+        <Style x:Key="StopBtnStyle" TargetType="Button" BasedOn="{StaticResource CycleBtnStyle}">
+            <Setter Property="Background">
+                <Setter.Value>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                        <GradientStop Color="#EF5350" Offset="0"/>
+                        <GradientStop Color="#C62828" Offset="1"/>
+                    </LinearGradientBrush>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="BorderBrush" Value="#B71C1C"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+        </Style>
+
+        <!-- [2026-03-04] FEED HOLD 橙色漸層 -->
+        <Style x:Key="HoldBtnStyle" TargetType="Button" BasedOn="{StaticResource CycleBtnStyle}">
+            <Setter Property="Background">
+                <Setter.Value>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                        <GradientStop Color="#FFA726" Offset="0"/>
+                        <GradientStop Color="#E65100" Offset="1"/>
+                    </LinearGradientBrush>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="BorderBrush" Value="#BF360C"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+        </Style>
     </UserControl.Resources>
 
     <Border Background="#252526" BorderBrush="#444" BorderThickness="1" CornerRadius="0" Padding="5">
@@ -29,10 +74,11 @@
             </Grid.RowDefinitions>
 
             <UniformGrid Grid.Row="0" Columns="2" Rows="5">
-                <Button Content="CYCLE START" Command="{Binding CycleStartCommand}" Style="{StaticResource CycleBtnStyle}"/>
-                <Button Content="STOP" Command="{Binding StopCommand}" Style="{StaticResource CycleBtnStyle}"/>
+                <!-- [2026-03-04] 關鍵操作色彩分層：綠=啟動、紅=停止、橙=暫停 -->
+                <Button Content="CYCLE START" Command="{Binding CycleStartCommand}" Style="{StaticResource StartBtnStyle}"/>
+                <Button Content="STOP" Command="{Binding StopCommand}" Style="{StaticResource StopBtnStyle}"/>
                 <Button Content="RELOAD PGM" Command="{Binding ReloadCommand}" Style="{StaticResource CycleBtnStyle}"/>
-                <Button Content="FEED HOLD" Command="{Binding FeedHoldCommand}" Style="{StaticResource CycleBtnStyle}"/>
+                <Button Content="FEED HOLD" Command="{Binding FeedHoldCommand}" Style="{StaticResource HoldBtnStyle}"/>
                 <!-- [2026-02-23] CLEAR PGM 改為 GO TO HOME，連結 HomeAllCommand（全軸回原點） -->
                 <Button Content="GO TO HOME" Command="{Binding HomeAllCommand}" Style="{StaticResource CycleBtnStyle}"/>
                 <!-- [2026-02-24] SINGLE BLOCK 綁定 ToggleSingleBlockCommand，IsSingleBlock=true 時背景變藍 -->
@@ -61,7 +107,19 @@
                         </Style>
                     </Button.Style>
                 </Button>
-                <Button Content="BLOCK DELETE" Style="{StaticResource FunctionBtnStyle}"/>
+                <!-- [2026-03-04] BLOCK DELETE 綁定 ToggleBlockDeleteCommand，IsBlockDelete=true 時背景變藍 -->
+                <Button Content="BLOCK DELETE" Command="{Binding ToggleBlockDeleteCommand}">
+                    <Button.Style>
+                        <Style TargetType="Button" BasedOn="{StaticResource CycleBtnStyle}">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsBlockDelete}" Value="True">
+                                    <Setter Property="Background" Value="#007ACC"/>
+                                    <Setter Property="BorderBrush" Value="#005A9E"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                </Button>
                 <!-- [2026-02-23] 新增 MIST 按鈕連結 ToggleMistCommand，IsMistOn=true 時背景變藍 -->
                 <Button Content="MIST" Command="{Binding ToggleMistCommand}">
                     <Button.Style>
@@ -75,7 +133,19 @@
                         </Style>
                     </Button.Style>
                 </Button>
-                <Button Content="M01 BREAK" Style="{StaticResource FunctionBtnStyle}"/>
+                <!-- [2026-03-04] M01 BREAK 綁定 ToggleOptionalStopCommand，IsOptionalStop=true 時背景變藍 -->
+                <Button Content="M01 BREAK" Command="{Binding ToggleOptionalStopCommand}">
+                    <Button.Style>
+                        <Style TargetType="Button" BasedOn="{StaticResource CycleBtnStyle}">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsOptionalStop}" Value="True">
+                                    <Setter Property="Background" Value="#007ACC"/>
+                                    <Setter Property="BorderBrush" Value="#005A9E"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                </Button>
             </UniformGrid>
 
             <Separator Grid.Row="1" Background="#444" Margin="0,5"/>

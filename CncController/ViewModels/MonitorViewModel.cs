@@ -1,10 +1,11 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using System;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Threading.Tasks;
 using Microsoft.Win32;
+using CncController.Models;
 using CncController.Services;
 
 namespace CncController.ViewModels
@@ -13,7 +14,10 @@ namespace CncController.ViewModels
     {
         // G-Code 預覽文字
         [ObservableProperty]
-        private string _gCodeText = "; No Program Loaded";
+        private string _gCodeText = "";
+
+        // [2026-03-04] 空狀態標記（GCodeLines 為空時顯示提示）
+        [ObservableProperty] private bool _isGCodeEmpty = true;
 
         // 目前載入的檔名 (用於顯示與記錄)
         [ObservableProperty]
@@ -26,9 +30,73 @@ namespace CncController.ViewModels
         // MDI 歷史紀錄 (最近 20 筆，最新在最前)
         public ObservableCollection<string> MdiHistory { get; } = new();
 
+        // [2026-03-04] G-Code 逐行集合（供 MonitorView ItemsControl 行號高亮使用）
+        public ObservableCollection<GCodeLineItem> GCodeLines { get; } = new();
+
+        // [2026-03-04] MachineStatus 參考（從 MainViewModel 傳入，用於追蹤 CurrentLine）
+        private MachineStatus _machineStatus;
+        public MachineStatus MachineStatus
+        {
+            get => _machineStatus;
+            set
+            {
+                if (_machineStatus != null)
+                    _machineStatus.PropertyChanged -= OnMachineStatusChanged;
+                _machineStatus = value;
+                if (_machineStatus != null)
+                    _machineStatus.PropertyChanged += OnMachineStatusChanged;
+            }
+        }
+
+        // [2026-03-04] 記錄上一次高亮的行號，避免每次輪詢都重掃
+        private int _lastHighlightedLine = -1;
+
         public MonitorViewModel()
         {
             // 初始化邏輯
+        }
+
+        // [2026-03-04] GCodeText 變更時同步解析為 GCodeLines 集合
+        partial void OnGCodeTextChanged(string value)
+        {
+            GCodeLines.Clear();
+            _lastHighlightedLine = -1;
+
+            if (string.IsNullOrEmpty(value))
+            {
+                IsGCodeEmpty = true;
+                return;
+            }
+
+            var lines = value.Split('\n');
+            for (int i = 0; i < lines.Length; i++)
+            {
+                GCodeLines.Add(new GCodeLineItem
+                {
+                    LineNumber = i + 1,
+                    Text = lines[i].TrimEnd('\r')
+                });
+            }
+            IsGCodeEmpty = false;
+        }
+
+        // [2026-03-04] 當 MachineStatus.CurrentLine 變化時更新高亮行
+        private void OnMachineStatusChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName != nameof(Models.MachineStatus.CurrentLine)) return;
+
+            int newLine = _machineStatus?.CurrentLine ?? 0;
+            if (newLine == _lastHighlightedLine) return;
+
+            // 清除舊行高亮
+            if (_lastHighlightedLine > 0 && _lastHighlightedLine <= GCodeLines.Count)
+                GCodeLines[_lastHighlightedLine - 1].IsCurrentLine = false;
+
+            // 設定新行高亮
+            if (newLine > 0 && newLine <= GCodeLines.Count)
+                GCodeLines[newLine - 1].IsCurrentLine = true;
+
+            _lastHighlightedLine = newLine;
         }
 
         // =========================================================

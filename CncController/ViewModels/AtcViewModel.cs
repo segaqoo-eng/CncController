@@ -7,6 +7,7 @@ using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 using CncController.Models;
 using CncController.Services;
+using CncController.Helpers;
 
 namespace CncController.ViewModels
 {
@@ -33,8 +34,11 @@ namespace CncController.ViewModels
         // [2026-03-03] REMARK 顯示
         [ObservableProperty] private string _remarkText = "";
 
-        // [2026-03-03] 程式刀具列表（ProgramTools 模式，預留）
+        // [2026-03-03] 程式刀具列表（ProgramTools 模式）
         public ObservableCollection<string> ProgramTools { get; } = new();
+
+        // [2026-03-04] MonitorVM 參考（從 MainViewModel 傳入，用於讀取 GCodeText）
+        public MonitorViewModel MonitorVM { get; set; }
 
         // =====================================================================
         // 左面板 Commands（MANUAL ATC 模式）
@@ -186,6 +190,22 @@ namespace CncController.ViewModels
             AlarmService.Instance.AddLog("INFO", $"ATC MDI: {MdiInput}");
             await MachineControlService.Instance.SendMdiCommandAsync(MdiInput.Trim());
             MdiInput = "";
+        }
+
+        // [2026-03-04] 載入程式刀具：解析 MonitorVM.GCodeText 取得所有 T 號
+        [RelayCommand]
+        private void LoadProgramTools()
+        {
+            ProgramTools.Clear();
+            if (MonitorVM == null || string.IsNullOrWhiteSpace(MonitorVM.GCodeText))
+            {
+                AlarmService.Instance.AddLog("WARN", "ATC: 無 G-Code 程式可解析");
+                return;
+            }
+            var tools = GCodeParser.ExtractToolNumbers(MonitorVM.GCodeText);
+            foreach (var t in tools)
+                ProgramTools.Add($"T{t}");
+            AlarmService.Instance.AddLog("INFO", $"ATC: 載入 {tools.Count} 把程式刀具");
         }
 
         // [2026-03-03] 模式切換（ManualAtc / ProgramTools）

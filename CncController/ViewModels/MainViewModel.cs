@@ -52,6 +52,10 @@ namespace CncController.ViewModels
         // [2026-03-04] 新增 ProbingVM：探測循環分頁長駐 ViewModel
         public ProbingViewModel ProbingVM { get; } = new ProbingViewModel();
 
+        // [2026-03-04] UI 全域縮放：設計畫布尺寸 = 1920/1080 ÷ UiScale
+        public double CanvasWidth => 1920.0 / AppSettings.Instance.UiScale;
+        public double CanvasHeight => 1080.0 / AppSettings.Instance.UiScale;
+
         // ==============================================================================
         // 1. 屬性定義
         // ==============================================================================
@@ -117,6 +121,16 @@ namespace CncController.ViewModels
         // [2026-02-24] 新增 IsSingleBlock：Single Block 模式（每次 Cycle Start 僅執行一行 G-Code）
         [ObservableProperty]
         private bool _isSingleBlock;
+
+        // [2026-03-04] 新增 Block Delete / Optional Stop 開關
+        [ObservableProperty] private bool _isBlockDelete;
+        [ObservableProperty] private bool _isOptionalStop;
+
+        // [2026-03-04] 啟動連線等待：寬限期內不報紅燈
+        [ObservableProperty] private bool _isStartingUp = true;
+        [ObservableProperty] private bool _showRetryButton;
+        private DateTime _appStartTime;
+        private const int StartupGraceSeconds = 15;
 
         // [2026-02-24] 動態軸數支援：旋轉軸是否啟用（由 MachineConfig 決定，DRO/JOG/Offsets 依此顯示/隱藏）
         [ObservableProperty] private bool _isAxisAEnabled;
@@ -212,8 +226,24 @@ namespace CncController.ViewModels
 
         public MainViewModel()
         {
+            // [2026-03-04] 記錄啟動時間，供寬限期計算
+            _appStartTime = DateTime.Now;
+
+            // [2026-03-04] 啟動寬限期結束後自動關閉 IsStartingUp
+            _ = Task.Run(async () =>
+            {
+                await Task.Delay(TimeSpan.FromSeconds(StartupGraceSeconds));
+                System.Windows.Application.Current.Dispatcher.Invoke(() =>
+                {
+                    if (IsStartingUp) IsStartingUp = false;
+                });
+            });
+
             // ★★★ [關鍵修改] 初始化時使用長駐的 MonitorVM ★★★
             CurrentViewModel = MonitorVM;
+
+            // [2026-03-04] 將 Status 傳遞給 MonitorVM，讓行號高亮可追蹤 CurrentLine
+            MonitorVM.MachineStatus = Status;
 
             // [2026-02-24] 將 Status 傳遞給 OffsetsVM，讓 Offsets 右欄可綁定即時座標
             OffsetsVM.MachineStatus = Status;
@@ -223,6 +253,8 @@ namespace CncController.ViewModels
 
             // [2026-03-03] 將 Status 傳遞給 AtcVM，讓 ATC 頁可綁定即時刀具號
             AtcVM.MachineStatus = Status;
+            // [2026-03-04] 將 MonitorVM 傳遞給 AtcVM，讓 PROGRAM TOOLS 可讀取 G-Code
+            AtcVM.MonitorVM = MonitorVM;
 
             // [2026-03-04] 將 Status 傳遞給 ProbingVM，讓探測頁可綁定即時座標
             ProbingVM.MachineStatus = Status;
@@ -353,6 +385,11 @@ namespace CncController.ViewModels
                 SystemStatusColor = Colors.Red;
                 IsSystemReady = false;
                 AlarmService.Instance.AddLog("ERR", $"AutoValidateHardware exception: {ex.Message}");
+            }
+            finally
+            {
+                // [2026-03-04] 硬體掃描完成後才結束啟動階段（不再由連線成功提前關閉）
+                IsStartingUp = false;
             }
         }
 
@@ -604,6 +641,13 @@ namespace CncController.ViewModels
             if (!string.IsNullOrEmpty(data.Task_Mode))
                 Status.TaskMode = data.Task_Mode;
 
+            // [2026-03-04] 同步 Block Delete / Optional Stop / Current Line
+            IsBlockDelete = data.Block_Delete;
+            Status.IsBlockDelete = data.Block_Delete;
+            IsOptionalStop = data.Optional_Stop;
+            Status.IsOptionalStop = data.Optional_Stop;
+            Status.CurrentLine = data.Current_Line;
+
             // 更新 InterpState 供計時器判斷
             Status.InterpState = data.Interp_State;
 
@@ -616,6 +660,7 @@ namespace CncController.ViewModels
         }
 
         // [修改] 跑馬燈與狀態顯示邏輯 (修正連線判斷與時間控制)
+        // [2026-03-04] 加入啟動寬限期 + RETRY 按鈕可見性邏輯
         private void UpdateHeaderStatus()
         {
             var alarms = AlarmService.Instance.ActiveAlarms;
@@ -642,28 +687,51 @@ namespace CncController.ViewModels
                     SystemStatus = $"{_marqueeIndex + 1}/{alarms.Count} {currentLog.DisplayMessage}";
                     SystemStatusColor = currentLog.Type == LogType.Error ? Colors.Red : Colors.Orange;
                 }
+                ShowRetryButton = false;
                 return;
             }
 
             // =========================================================
-            // 2. 優先級次高：連線狀態檢查 (解決斷線時顯示 Power Off 的問題)
+            // 2. [2026-03-04] 啟動寬限期：整個啟動階段顯示黃色等待
+            //    IsStartingUp 由 AutoValidateHardware 完成或 15s 計時器關閉
+            // =========================================================
+            if (IsStartingUp)
+            {
+                if (_connectionState == MachineControlService.ConnectionState.Connected)
+                    SystemStatus = "Scanning Hardware...";
+                else
+                    SystemStatus = "Connecting to Server...";
+                SystemStatusColor = Colors.Yellow;
+                ShowRetryButton = false;
+                return;
+            }
+
+            // =========================================================
+            // 3. 連線狀態檢查 (解決斷線時顯示 Power Off 的問題)
             // =========================================================
             if (_connectionState == MachineControlService.ConnectionState.Disconnected)
             {
                 SystemStatus = "Disconnected from Server";
                 SystemStatusColor = Colors.Red;
+                ShowRetryButton = true;
                 return;
             }
 
             if (_connectionState == MachineControlService.ConnectionState.ServerOnly)
             {
-                SystemStatus = "Backend Connected (LinuxCNC Offline)";
+                SystemStatus = "Backend OK — LinuxCNC Offline";
                 SystemStatusColor = Colors.Orange;
+                ShowRetryButton = true;
                 return;
             }
 
             // =========================================================
-            // 3. 正常狀態：顯示機台邏輯 (Power / Estop / Ready)
+            // 4. 連線成功後正常狀態：隱藏 RETRY
+            // =========================================================
+            ShowRetryButton = false;
+
+            // =========================================================
+            // 5. 正常狀態：顯示機台邏輯 (Power / Estop / Ready)
             // =========================================================
             if (IsEstop)
             {
@@ -702,7 +770,11 @@ namespace CncController.ViewModels
 
                 case "Offsets": CurrentViewModel = OffsetsVM; break; // [2026-02-23] 新增 Offsets Tab 導航
                 case "Tool": CurrentViewModel = ToolTableVM; break; // [2026-03-03] 新增 TOOL Tab 導航
-                case "Atc": CurrentViewModel = AtcVM; break; // [2026-03-03] 新增 ATC Tab 導航
+                // [2026-03-04] ATC Tab 導航：自動載入程式刀具列表
+                case "Atc":
+                    CurrentViewModel = AtcVM;
+                    AtcVM.LoadProgramToolsCommand.Execute(null);
+                    break;
                 case "Probing": CurrentViewModel = ProbingVM; break; // [2026-03-04] 新增 PROBING Tab 導航
             }
         }
@@ -735,6 +807,31 @@ namespace CncController.ViewModels
             }
 
             await MachineControlService.Instance.ResetMachineAsync();
+        }
+
+        // [2026-03-04] RETRY 連線：重置失敗計數 + 重新進入寬限期 5 秒
+        [RelayCommand]
+        private async Task RetryConnection()
+        {
+            MachineControlService.Instance.ResetFailCount();
+            IsStartingUp = true;
+            ShowRetryButton = false;
+            SystemStatus = "Reconnecting...";
+            SystemStatusColor = Colors.Yellow;
+            AlarmService.Instance.AddLog("INFO", "User triggered RETRY connection");
+            await Task.Delay(5000);
+            IsStartingUp = false;
+        }
+
+        // [2026-03-04] RE-SCAN 硬體：重新執行硬體掃描與驗證
+        [RelayCommand]
+        private async Task RescanHardware()
+        {
+            SystemStatus = "Re-scanning Hardware...";
+            SystemStatusColor = Colors.Yellow;
+            IsSystemReady = false;
+            AlarmService.Instance.AddLog("INFO", "User triggered RE-SCAN hardware");
+            await AutoValidateHardware();
         }
 
         // [修改] 急停切換邏輯
@@ -849,6 +946,28 @@ namespace CncController.ViewModels
         {
             IsSingleBlock = !IsSingleBlock;
             AlarmService.Instance.AddLog("INFO", $"Single Block: {(IsSingleBlock ? "ON" : "OFF")}");
+        }
+
+        // [2026-03-04] 新增 ToggleBlockDelete：切換 Block Delete 模式
+        [RelayCommand]
+        private async Task ToggleBlockDelete()
+        {
+            bool newVal = !IsBlockDelete;
+            IsBlockDelete = newVal;
+            Status.IsBlockDelete = newVal;
+            AlarmService.Instance.AddLog("INFO", $"Block Delete: {(newVal ? "ON" : "OFF")}");
+            await MachineControlService.Instance.SetBlockDeleteAsync(newVal);
+        }
+
+        // [2026-03-04] 新增 ToggleOptionalStop：切換 Optional Stop (M01) 模式
+        [RelayCommand]
+        private async Task ToggleOptionalStop()
+        {
+            bool newVal = !IsOptionalStop;
+            IsOptionalStop = newVal;
+            Status.IsOptionalStop = newVal;
+            AlarmService.Instance.AddLog("INFO", $"Optional Stop (M01): {(newVal ? "ON" : "OFF")}");
+            await MachineControlService.Instance.SetOptionalStopAsync(newVal);
         }
 
         // [2026-02-24] 新增 AdjustFeedOverride：增減進給率覆蓋百分比（delta = +10 或 -10）

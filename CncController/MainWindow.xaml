@@ -48,7 +48,8 @@
     </Window.Resources>
 
     <Viewbox Stretch="Uniform">
-        <Grid Width="1920" Height="1080">
+        <!-- [2026-03-04] UI 全域縮放：設計尺寸 = 1920/1080 ÷ UiScale，Viewbox 自動等比縮放 -->
+        <Grid Width="{Binding CanvasWidth}" Height="{Binding CanvasHeight}">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="30"/>
@@ -62,18 +63,46 @@
                 <ColumnDefinition Width="250"/>
             </Grid.ColumnDefinitions>
 
+            <!-- [2026-03-04] 紅色警告列：加入 RE-SCAN 按鈕 -->
             <Border Grid.Row="0" Grid.ColumnSpan="2" Background="#D80000" Padding="5">
+                <!-- [2026-03-04] 啟動階段隱藏紅色列：需 IsSystemReady=False 且 IsStartingUp=False 才顯示 -->
                 <Border.Style>
                     <Style TargetType="Border">
                         <Setter Property="Visibility" Value="Collapsed"/>
                         <Style.Triggers>
-                            <DataTrigger Binding="{Binding IsSystemReady}" Value="False">
+                            <MultiDataTrigger>
+                                <MultiDataTrigger.Conditions>
+                                    <Condition Binding="{Binding IsSystemReady}" Value="False"/>
+                                    <Condition Binding="{Binding IsStartingUp}" Value="False"/>
+                                </MultiDataTrigger.Conditions>
                                 <Setter Property="Visibility" Value="Visible"/>
-                            </DataTrigger>
+                            </MultiDataTrigger>
                         </Style.Triggers>
                     </Style>
                 </Border.Style>
-                <TextBlock Text="{Binding SystemStatus}" Foreground="White" FontWeight="Bold" HorizontalAlignment="Center" FontSize="18"/>
+                <DockPanel>
+                    <Button DockPanel.Dock="Right" Content="RE-SCAN" Margin="10,0,0,0"
+                            Command="{Binding RescanHardwareCommand}"
+                            Background="#FF8C00" Foreground="White" FontWeight="Bold"
+                            Padding="15,3" FontSize="14" VerticalAlignment="Center" Cursor="Hand">
+                        <Button.Style>
+                            <Style TargetType="Button">
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="Button">
+                                            <Border Background="{TemplateBinding Background}"
+                                                    CornerRadius="3" Padding="{TemplateBinding Padding}">
+                                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            </Border>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </Button.Style>
+                    </Button>
+                    <TextBlock Text="{Binding SystemStatus}" Foreground="White" FontWeight="Bold"
+                               HorizontalAlignment="Center" FontSize="18" VerticalAlignment="Center"/>
+                </DockPanel>
             </Border>
 
             <layouts:HeaderBar Grid.Row="1" Grid.ColumnSpan="2"/>

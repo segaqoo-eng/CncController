@@ -36,15 +36,37 @@
                     </Border.Effect>
                 </Border>
 
-                <TextBlock Text="{Binding SystemStatus}" 
-                           Foreground="{DynamicResource Brush.Text.Primary}" 
-                           FontWeight="Bold" 
+                <TextBlock Text="{Binding SystemStatus}"
+                           Foreground="{DynamicResource Brush.Text.Primary}"
+                           FontWeight="Bold"
                            FontSize="16"
                            VerticalAlignment="Center">
                     <TextBlock.Effect>
                         <DropShadowEffect Color="{Binding SystemStatusColor}" BlurRadius="5" ShadowDepth="0" Opacity="0.5"/>
                     </TextBlock.Effect>
                 </TextBlock>
+
+                <!-- [2026-03-04] RETRY 按鈕：斷線時顯示 -->
+                <Button Content="RETRY" Command="{Binding RetryConnectionCommand}"
+                        Visibility="{Binding ShowRetryButton, Converter={StaticResource BoolToVis}}"
+                        Background="#007ACC" Foreground="White" FontWeight="Bold"
+                        Padding="12,4" Margin="10,0,0,0" FontSize="12"
+                        VerticalAlignment="Center" Cursor="Hand">
+                    <Button.Style>
+                        <Style TargetType="Button">
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border Background="{TemplateBinding Background}"
+                                                CornerRadius="3" Padding="{TemplateBinding Padding}">
+                                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                    </Button.Style>
+                </Button>
             </StackPanel>
 
             <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">

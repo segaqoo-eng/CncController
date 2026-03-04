@@ -85,5 +85,12 @@ namespace CncController.Models
 
         // [2026-02-24] 新增任務模式（供 Offsets 右下角 MAN/AUTO/MDI 按鈕高亮）
         [ObservableProperty] private string _taskMode = "MANUAL";
+
+        // [2026-03-04] 新增 Block Delete / Optional Stop 開關狀態
+        [ObservableProperty] private bool _isBlockDelete;
+        [ObservableProperty] private bool _isOptionalStop;
+
+        // [2026-03-04] 新增 Current Line：目前執行的 G-Code 行號（motion_line）
+        [ObservableProperty] private int _currentLine;
     }
 }

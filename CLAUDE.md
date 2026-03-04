@@ -114,6 +114,8 @@ DispatcherTimer (500ms) → MachineControlService.GetStatusAsync()
 | **ViewModel** | `ViewModels/ProbingViewModel.cs` | 探測循環（Outside Corners 9 宮格 + 參數/結果） |
 | **Model** | `Models/MachineModels.cs` | MachineConfig、AxisSetting、DiscoveredSlave 等 |
 | **Model** | `Models/MachineStatus.cs` | 機台即時狀態（Observable） |
+| **Model** | `Models/GCodeLineItem.cs` | G-Code 逐行模型（行號 + 高亮標記） |
+| **Helper** | `Helpers/GCodeParser.cs` | G-Code 刀具號解析器（ATC PROGRAM TOOLS） |
 | **Resource** | `Resources/Languages/Lang.zh-TW.xaml` | 全 UI 文字（繁體中文） |
 | **Resource** | `Resources/Themes/Theme.Dark.xaml` | 深色主題 |
 
@@ -149,6 +151,8 @@ DispatcherTimer (500ms) → MachineControlService.GetStatusAsync()
 | GET | `/v2/tool/table` | 讀取刀具表（cnc_stat.tool_table + tool.tbl 註解） |
 | POST | `/v2/tool/save` | 寫入刀具表（tool.tbl + load_tool_table()） |
 | POST | `/v2/probe/run` | 探測循環（edge/outside_corner/center + G38.2） |
+| POST | `/v2/program/block_delete` | 切換 Block Delete 開關 |
+| POST | `/v2/program/optional_stop` | 切換 Optional Stop (M01) 開關 |
 
 ---
 
@@ -210,6 +214,9 @@ DispatcherTimer (500ms) → MachineControlService.GetStatusAsync()
   - PROBE HELP（7 張圖片循環瀏覽 PREV/NEXT）
   - 左面板上中下三段佈局（WORK OFFSETS / PROBING PARAMETERS / 結果）對齊 PB 版
   - 白底黑字輸入框 + 標籤靠右 + 工控大字體
+- Block Delete / M01 Break（toggle 開關 + 後端 set_block_delete / set_optional_stop + DataTrigger 藍色高亮）
+- G-Code 行號高亮（ItemsControl 逐行顯示 + 行號 + 黃底高亮執行中行 + VirtualizingStackPanel）
+- ATC PROGRAM TOOLS（GCodeParser 解析 T 號 + LOAD TOOLS 按鈕 + 自動載入 + 去重排序）
 
 ### ❌ 尚未實作
 
@@ -217,25 +224,20 @@ DispatcherTimer (500ms) → MachineControlService.GetStatusAsync()
 |------|------|
 | Probing Tool Setter | TOOL SETTER 分頁（目前 disabled）|
 | Probing Rotary Axis | ROTARY AXIS 分頁（目前 disabled）|
-| ATC PROGRAM TOOLS | ATC 頁 PROGRAM TOOLS 列表目前為預留空白 |
 | Conversational 對話式加工 | 無 Facing/Holes/Pattern 產生器 |
-| Block Delete / M01 | 按鈕存在但無 Command 綁定 |
 
 ### ⚠️ 需加強
 
 | 功能 | 待改善 |
 |------|--------|
 | 3D 視圖 | 無刀具路徑模擬 |
-| G-Code 預覽 | 無行號高亮/執行中行追蹤 |
 | Tool Info | ✅ 已綁定即時資料 + ✅ 完整刀具表管理（TOOL Tab） |
 | Rapid Override | SliderControl 第三列暫靜態 100% |
 
 ### 📋 開發優先順序
 
-1. **Block Delete / M01** — 連接按鈕至後端
-2. **G-Code 行號高亮** — 執行中行追蹤
-3. **ATC PROGRAM TOOLS** — 解析 G-Code 自動列出程式刀具
-4. **Probing Tool Setter / Rotary Axis** — 擴展分頁
+1. **Probing Tool Setter / Rotary Axis** — 擴展分頁
+2. **Conversational 對話式加工** — Facing/Holes/Pattern 產生器
 
 ---
 
@@ -373,4 +375,8 @@ DispatcherTimer (500ms) → MachineControlService.GetStatusAsync()
 | **Probing Edge Angle** | 6 個 RelayCommand（AngleX+/X-/Y+/Y-/XY-F/XY-B）+ `_probe_edge_angle()`（沿邊 2 點 atan2 計算角度）+ SET ROTATION WCO（G10 L2 R） + EDGE WIDTH hint |
 | **Probing Calibrate** | CalOnXyTurret/CalXEdge/CalXBore + ProbeCalReset + `_probe_calibrate()` + 校正欄位（OffsetX/Y/Diameter/CalibrationWidth）+ 校正環視覺化 |
 | **ProbeResult 擴展** | 新增 Angle / EdgeWidth 欄位（後端 → 前端） |
-| **版本號** | `2026.03.04_PROBING_ALL` |
+| **Block Delete / M01** | MainViewModel ToggleBlockDelete/ToggleOptionalStop + MachineControlService SetBlockDeleteAsync/SetOptionalStopAsync + CycleControl 按鈕 DataTrigger 藍色高亮 |
+| **後端 Block Delete** | /v2/status 新增 Block_Delete/Optional_Stop/Current_Line + POST /v2/program/block_delete + /v2/program/optional_stop |
+| **G-Code 行號高亮** | MonitorViewModel GCodeLines（ObservableCollection<GCodeLineItem>）+ MachineStatus.CurrentLine 訂閱 + MonitorView ItemsControl 逐行（行號+黃底高亮+VirtualizingStackPanel） |
+| **ATC PROGRAM TOOLS** | GCodeParser.ExtractToolNumbers（Regex T\d+ 去重排序）+ AtcViewModel LoadProgramTools + Navigate "Atc" 自動載入 + LOAD TOOLS 按鈕 |
+| **版本號** | `2026.03.04_BLOCKDEL_HIGHLIGHT_ATC` |

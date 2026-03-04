@@ -54,6 +54,11 @@ namespace CncController.Models
 
         // [2026-02-24] 新增任務模式（MANUAL/AUTO/MDI，供 Offsets 右下角模式按鈕高亮）
         public string Task_Mode { get; set; }
+
+        // [2026-03-04] 新增 Block Delete / Optional Stop / Current Line
+        public bool Block_Delete { get; set; }
+        public bool Optional_Stop { get; set; }
+        public int Current_Line { get; set; }
     }
 
     // ==========================================

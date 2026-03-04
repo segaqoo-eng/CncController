@@ -644,6 +644,20 @@ def v2_status():
         # [2026-02-24] 新增任務模式（供 Offsets 右下角 MAN/AUTO/MDI 按鈕高亮）
         task_mode_str = {1: "MANUAL", 2: "AUTO", 3: "MDI"}.get(cnc_stat.task_mode, "UNKNOWN")
 
+        # [2026-03-04] 新增 Block Delete / Optional Stop / Current Line
+        block_delete = False
+        optional_stop = False
+        current_line = 0
+        try:
+            block_delete = bool(cnc_stat.block_delete)
+        except: pass
+        try:
+            optional_stop = bool(cnc_stat.optional_stop)
+        except: pass
+        try:
+            current_line = int(cnc_stat.motion_line)
+        except: pass
+
         return success_response({
             "Connected": True,
             "Task_State": t_state,
@@ -664,7 +678,10 @@ def v2_status():
             "Homed": homed_dict,
             "G92_Offset": g92_dict,
             "Tool_Offset_XYZ": tool_offset_dict,
-            "Task_Mode": task_mode_str
+            "Task_Mode": task_mode_str,
+            "Block_Delete": block_delete,
+            "Optional_Stop": optional_stop,
+            "Current_Line": current_line
         })
 
     except Exception as e:
@@ -1024,6 +1041,33 @@ def v2_program_step():
         return success_response("Stepped")
     except Exception as e:
         return error_response(f"Step Fail: {e}")
+
+# [2026-03-04] 新增 Block Delete / Optional Stop 切換端點
+@app.route('/v2/program/block_delete', methods=['POST'])
+def v2_block_delete():
+    """切換 Block Delete 開關"""
+    if not ensure_cnc_connections(): return error_response("No connection")
+    try:
+        data = request.get_json(silent=True) or {}
+        value = bool(data.get('value', False))
+        cnc_cmd.set_block_delete(value)
+        app_log('CMD', f'Block Delete: {value}')
+        return success_response({"block_delete": value})
+    except Exception as e:
+        return error_response(f"Block Delete Fail: {e}")
+
+@app.route('/v2/program/optional_stop', methods=['POST'])
+def v2_optional_stop():
+    """切換 Optional Stop (M01) 開關"""
+    if not ensure_cnc_connections(): return error_response("No connection")
+    try:
+        data = request.get_json(silent=True) or {}
+        value = bool(data.get('value', False))
+        cnc_cmd.set_optional_stop(value)
+        app_log('CMD', f'Optional Stop: {value}')
+        return success_response({"optional_stop": value})
+    except Exception as e:
+        return error_response(f"Optional Stop Fail: {e}")
 
 # [2026-03-03] 新增 /v2/tool/table 端點：讀取 LinuxCNC 刀具表
 @app.route('/v2/tool/table', methods=['GET'])

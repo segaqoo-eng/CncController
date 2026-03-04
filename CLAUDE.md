@@ -111,6 +111,7 @@ DispatcherTimer (500ms) → MachineControlService.GetStatusAsync()
 | **ViewModel** | `ViewModels/IoMonitorViewModel.cs` | 即時 IO 監控、CiA 402 狀態解析 |
 | **ViewModel** | `ViewModels/ToolTableViewModel.cs` | 刀具表 CRUD、LOAD/UNLOAD/M6G43/TOUCH OFF |
 | **ViewModel** | `ViewModels/AtcViewModel.cs` | ATC 自動刀庫（MANUAL ATC + ATC AUTOMATIC） |
+| **ViewModel** | `ViewModels/ProbingViewModel.cs` | 探測循環（Outside Corners 9 宮格 + 參數/結果） |
 | **Model** | `Models/MachineModels.cs` | MachineConfig、AxisSetting、DiscoveredSlave 等 |
 | **Model** | `Models/MachineStatus.cs` | 機台即時狀態（Observable） |
 | **Resource** | `Resources/Languages/Lang.zh-TW.xaml` | 全 UI 文字（繁體中文） |
@@ -147,6 +148,7 @@ DispatcherTimer (500ms) → MachineControlService.GetStatusAsync()
 | POST | `/api/files/upload` | 上傳 G-Code 檔案 |
 | GET | `/v2/tool/table` | 讀取刀具表（cnc_stat.tool_table + tool.tbl 註解） |
 | POST | `/v2/tool/save` | 寫入刀具表（tool.tbl + load_tool_table()） |
+| POST | `/v2/probe/run` | 探測循環（edge/outside_corner/center + G38.2） |
 
 ---
 
@@ -199,12 +201,22 @@ DispatcherTimer (500ms) → MachineControlService.GetStatusAsync()
 - Tool Table 刀具表管理（DataGrid CRUD + LOAD/UNLOAD/M6G43/TOUCH OFF + 後端 /v2/tool/table & /v2/tool/save）
 - ATC 自動刀庫頁面（MANUAL ATC 8 按鈕 + ATC AUTOMATIC 5 按鈕 + 雙模式切換 + ATC_Back.png 背景）
 - MAN/AUTO/MDI 模式切換按鈕移至 JogPanel（全頁面可用）
+- Probing 探測循環（8 分頁完整實作 + PROBE HELP 圖片瀏覽 + 後端 /v2/probe/run + HAL probe-input）
+  - Outside/Inside Corners 九宮格（9 按鈕 WPF 向量繪圖）
+  - Boss & Pocket（DIAM + X/Y 偏移輸入 + boss/pocket 兩種模式）
+  - Ridge & Valley（HINT + X/Y 偏移輸入 + ridge/valley 兩種模式）
+  - Edge Angle 3×3 九宮格 + SET ROTATION WCO + EDGE WIDTH
+  - Calibrate（Ring/Square Inside/Outside + CAL ON AVG/X/Y ERROR）
+  - PROBE HELP（7 張圖片循環瀏覽 PREV/NEXT）
+  - 左面板上中下三段佈局（WORK OFFSETS / PROBING PARAMETERS / 結果）對齊 PB 版
+  - 白底黑字輸入框 + 標籤靠右 + 工控大字體
 
 ### ❌ 尚未實作
 
 | 功能 | 說明 |
 |------|------|
-| Probing 探測循環 | Outside/Inside Corners、Boss/Pocket、Ridge/Valley、Edge Angle、Calibrate |
+| Probing Tool Setter | TOOL SETTER 分頁（目前 disabled）|
+| Probing Rotary Axis | ROTARY AXIS 分頁（目前 disabled）|
 | ATC PROGRAM TOOLS | ATC 頁 PROGRAM TOOLS 列表目前為預留空白 |
 | Conversational 對話式加工 | 無 Facing/Holes/Pattern 產生器 |
 | Block Delete / M01 | 按鈕存在但無 Command 綁定 |
@@ -220,10 +232,10 @@ DispatcherTimer (500ms) → MachineControlService.GetStatusAsync()
 
 ### 📋 開發優先順序
 
-1. **Probing 探測循環** — 工程師常用差異化功能
-2. **Block Delete / M01** — 連接按鈕至後端
-3. **G-Code 行號高亮** — 執行中行追蹤
-4. **ATC PROGRAM TOOLS** — 解析 G-Code 自動列出程式刀具
+1. **Block Delete / M01** — 連接按鈕至後端
+2. **G-Code 行號高亮** — 執行中行追蹤
+3. **ATC PROGRAM TOOLS** — 解析 G-Code 自動列出程式刀具
+4. **Probing Tool Setter / Rotary Axis** — 擴展分頁
 
 ---
 
@@ -245,6 +257,24 @@ DispatcherTimer (500ms) → MachineControlService.GetStatusAsync()
 ---
 
 ## 每日工作紀錄
+
+### 2026-03-04
+
+| 項目 | 說明 |
+|------|------|
+| **PROBING 探測循環（完整 8 分頁）** | ProbingViewModel + ProbingView：Outside/Inside Corners 九宮格 + Boss & Pocket + Ridge & Valley + Edge Angle + Calibrate + PROBE HELP |
+| **Outside/Inside Corners** | 3×3 九宮格 WPF 向量繪圖（紫球+綠十字+箭頭+灰方塊），9 個探測按鈕 |
+| **Boss & Pocket** | DIAM + X/Y 偏移輸入框 + boss（外→內探測）/ pocket（內→外探測）雙模式 |
+| **Ridge & Valley** | HINT + X/Y 偏移輸入 + ridge（脊）/ valley（谷）雙模式 |
+| **Edge Angle** | 3×3 九宮格 + SET ROTATION WCO 按鈕 + EDGE WIDTH 輸入 + atan2 角度計算 |
+| **Calibrate** | Ring/Square Inside/Outside（2×2 視覺按鈕）+ CAL ON AVG XY/X/Y ERROR（3 按鈕）+ CALIBRATION WIDTH X/Y |
+| **PROBE HELP** | 7 張圖片（Image(1)~(7).png）循環瀏覽 + PREV/NEXT 按鈕 |
+| **左面板佈局（對齊 PB 版）** | 上中下三段：WORK OFFSETS（G54~G59.3 + PROBE POSITION ONLY）/ PROBING PARAMETERS（5 行標籤靠右+白底輸入框）/ 4 按鈕+4×3 結果 |
+| **工控大字體** | WCS 16px / 參數標籤 14px / 輸入框 16px / 結果值 16px / 按鈕 14px / 子頁籤 14px |
+| **後端 /v2/probe/run** | edge / outside_corner / center / boss / pocket / ridge / valley / edge_angle / calibrate 9 種探測類型 |
+| **ProbeResult + ProbeParameters 模型** | Angle / EdgeWidth / WidthX / WidthY / Diameter / OffsetX / OffsetY / EdgeWidth |
+| **HAL probe-input** | ConfigurationService 自動接線 `motion.probe-input` |
+| **版本號** | `2026.03.04_PROBING` |
 
 ### 2026-02-23
 
@@ -324,3 +354,23 @@ DispatcherTimer (500ms) → MachineControlService.GetStatusAsync()
 | **JogPanel 寬度修正** | 180→250，避免 X+/X- 按鈕被裁切 |
 | **ConfigurationService 修正** | HAL：isServo && !isPulseGen 條件；INI：新增 OFFSET_COLUMNS 動態軸欄位 |
 | **版本號** | `2026.03.03_TOOL_ATC` |
+
+### 2026-03-04
+
+| 項目 | 說明 |
+|------|------|
+| **Probing 探測循環（Outside Corners）** | ProbingViewModel + ProbingView：9 宮格按鈕（edge/outside_corner/center）+ WPF 向量繪圖（紫球+綠十字+箭頭+灰方塊）+ 左面板 7 參數 + 結果 + MDI |
+| **ProbeResult / ProbeParameters 模型** | MachineModels.cs 新增探測結果（Tripped/X/Y/Z/Error）+ 探測參數（TraverseSpeed~ExtraDepth） |
+| **MachineControlService.RunProbeAsync** | 獨立 30s timeout HttpClient，POST /v2/probe/run |
+| **後端 /v2/probe/run 端點** | _probe_edge（單軸邊緣）+ _probe_outside_corner（雙軸外角）+ _probe_center（4 邊中心）+ G38.2 探測 |
+| **ProbingView 佈局** | 4 列 4 欄：子頁籤（8 個，僅 OUTSIDE CORNERS 啟用）+ WCS 選擇（G54~G57）+ Porbing_BACK.png 底圖 + 垂直 Tab（TOUCH PROBE/TOOL SETTER） |
+| **HAL probe-input** | ConfigurationService：probe-in 訊號自動追加 motion.probe-input 接線 |
+| **Probing Inside Corners** | ProbingViewModel 新增 9 個 InsideCorner RelayCommand + ProbingView INSIDE CORNERS 分頁啟用 + 9 宮格 WPF 向量繪圖（牆壁+口袋+探針內部）+ DataTrigger 切換 Outside/Inside |
+| **後端 Inside Corner 探測** | server.py 新增 `_probe_inside_corner()`（方向反轉：NW→X-,Y+）+ inside_edge 路由映射（N→S, S→N, E→W, W→E）|
+| **Probing Boss & Pocket** | ProbingViewModel 新增 6 個 RelayCommand（BossX/BossY/BossXY + PocketX/PocketY/PocketXY）+ ProbingView BOSS AND POCKET 分頁啟用 + 3×2 WPF 向量繪圖 + Hint 結果面板 |
+| **後端 Boss/Pocket 探測** | server.py `_probe_boss(axes)` 支援 X/Y/XY 軸選擇 + `_probe_center(axes)` 同步支援 + 6 種 route（boss_x/y/xy + pocket_x/y/xy） |
+| **Probing Ridge & Valley** | 6 個 RelayCommand（RidgeX/Y/XY + ValleyX/Y/XY）+ 3×2 向量繪圖 + DIST hint；後端 ridge_x/y/xy 複用 _probe_boss，valley 複用 _probe_center |
+| **Probing Edge Angle** | 6 個 RelayCommand（AngleX+/X-/Y+/Y-/XY-F/XY-B）+ `_probe_edge_angle()`（沿邊 2 點 atan2 計算角度）+ SET ROTATION WCO（G10 L2 R） + EDGE WIDTH hint |
+| **Probing Calibrate** | CalOnXyTurret/CalXEdge/CalXBore + ProbeCalReset + `_probe_calibrate()` + 校正欄位（OffsetX/Y/Diameter/CalibrationWidth）+ 校正環視覺化 |
+| **ProbeResult 擴展** | 新增 Angle / EdgeWidth 欄位（後端 → 前端） |
+| **版本號** | `2026.03.04_PROBING_ALL` |

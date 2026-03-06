@@ -563,6 +563,23 @@ namespace CncController.Services
             }
         }
 
+        // [2026-03-05] 通用 HAL Signal 設定：呼叫 /v2/hal/setp 設定 HAL 信號值
+        public async Task<bool> HalSetSignalAsync(string signal, double value)
+        {
+            try
+            {
+                var response = await _pollingClient.PostAsJsonAsync(
+                    $"{_serverUrl}/v2/hal/setp",
+                    new { signal, value });
+                return response.IsSuccessStatusCode;
+            }
+            catch (Exception ex)
+            {
+                AlarmService.Instance.AddLog("API", $"HAL setp Exception: {ex.Message}");
+                return false;
+            }
+        }
+
         // [2026-02-24] 新增 SetTaskModeAsync：切換任務模式（MANUAL/AUTO/MDI）
         public async Task<bool> SetTaskModeAsync(string mode)
         {
@@ -650,16 +667,20 @@ namespace CncController.Services
 
         // [2026-03-04] 新增 RunProbeAsync：執行探測循環（POST /v2/probe/run）
         // 獨立使用 30s timeout HttpClient，因探測涉及多段移動
+        // [2026-03-06] 新增 wcs/probePositionOnly 參數：後端直接寫入 WCS，避免時序衝突
         public async Task<ProbeResult> RunProbeAsync(
-            string probeType, string direction, ProbeParameters parameters)
+            string probeType, string direction, ProbeParameters parameters,
+            string wcs = "", bool probePositionOnly = false)
         {
             try
             {
-                using var probeClient = new HttpClient { Timeout = TimeSpan.FromSeconds(30) };
+                // [2026-03-05] timeout 30s→120s：探測涉及多段慢速移動，30s 不夠
+                using var probeClient = new HttpClient { Timeout = TimeSpan.FromSeconds(120) };
                 var payload = new
                 {
                     probe_type = probeType,
                     direction = direction,
+                    probe_tool = parameters.ProbeToolNumber,  // [2026-03-06] 探針刀號（自動 G43 + 半徑補正）
                     traverse_speed = parameters.TraverseSpeed,
                     search_speed = parameters.SearchSpeed,
                     max_xy_distance = parameters.MaxXYDistance,
@@ -670,7 +691,9 @@ namespace CncController.Services
                     diameter = parameters.Diameter,   // [2026-03-04] Boss/Pocket 近似直徑
                     offset_x = parameters.OffsetX,    // [2026-03-04] 特徵中心近似偏移
                     offset_y = parameters.OffsetY,
-                    edge_width = parameters.EdgeWidth  // [2026-03-04] Edge Angle 邊緣寬度
+                    edge_width = parameters.EdgeWidth,  // [2026-03-04] Edge Angle 邊緣寬度
+                    wcs = wcs,                          // [2026-03-06] 目標座標系（G54~G59.3）
+                    probe_position_only = probePositionOnly  // [2026-03-06] 僅顯示結果
                 };
                 var response = await probeClient.PostAsJsonAsync(
                     $"{_serverUrl}/v2/probe/run", payload);

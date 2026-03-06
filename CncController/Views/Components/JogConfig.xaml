@@ -1,40 +1,91 @@
-﻿<UserControl x:Class="CncController.Views.Components.JogConfig"
+<!-- [2026-03-05] 重寫 JogConfig：對齊 PB 版 D_5（JOG 標籤 + JOG 速度 Slider + FEEDRATE/SPINDLE 排版） -->
+<UserControl x:Class="CncController.Views.Components.JogConfig"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-             mc:Ignorable="d" 
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             mc:Ignorable="d"
              d:DesignHeight="200" d:DesignWidth="300">
 
     <StackPanel Margin="5">
-        <UniformGrid Columns="4" Margin="0,0,0,15">
-            <RadioButton Content="Cont." GroupName="JogMode" Style="{StaticResource NavBtnStyle}" IsChecked="True"
+        <!-- Row 0: JOG 模式選擇（JOG + 0.1 / 0.01 / 0.001） -->
+        <UniformGrid Columns="4" Margin="0,0,0,10">
+            <!-- [2026-03-05] Cont. → JOG（藍色標籤），增量值改為 0.1/0.01/0.001 -->
+            <RadioButton Content="JOG" GroupName="JogMode" Style="{StaticResource NavBtnStyle}" IsChecked="True"
                          Command="{Binding SetJogModeCommand}" CommandParameter="0"/>
-
-            <RadioButton Content="10.0" GroupName="JogMode" Style="{StaticResource NavBtnStyle}"
-                         Command="{Binding SetJogModeCommand}" CommandParameter="10.0"/>
-
-            <RadioButton Content="1.0" GroupName="JogMode" Style="{StaticResource NavBtnStyle}"
-                         Command="{Binding SetJogModeCommand}" CommandParameter="1.0"/>
 
             <RadioButton Content="0.1" GroupName="JogMode" Style="{StaticResource NavBtnStyle}"
                          Command="{Binding SetJogModeCommand}" CommandParameter="0.1"/>
+
+            <RadioButton Content="0.01" GroupName="JogMode" Style="{StaticResource NavBtnStyle}"
+                         Command="{Binding SetJogModeCommand}" CommandParameter="0.01"/>
+
+            <RadioButton Content="0.001" GroupName="JogMode" Style="{StaticResource NavBtnStyle}"
+                         Command="{Binding SetJogModeCommand}" CommandParameter="0.001"/>
         </UniformGrid>
 
-        <DockPanel Margin="0,5">
-            <TextBlock Text="Feedrate" Foreground="#DDD" VerticalAlignment="Center" FontSize="12"/>
-            <TextBox Text="{Binding JogFeedrate}" Width="80" HorizontalAlignment="Right" Background="White" Padding="3" FontWeight="Bold" BorderThickness="0"/>
-        </DockPanel>
+        <!-- Row 1: JOG 速度 Slider + 百分比顯示 -->
+        <Grid Margin="0,5">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="55"/>
+            </Grid.ColumnDefinitions>
+            <Slider Grid.Column="0" Minimum="0" Maximum="100" Value="{Binding JogSpeedPercent, Mode=TwoWay}"
+                    TickFrequency="10" Height="25" VerticalAlignment="Center" Foreground="#007ACC"/>
+            <Border Grid.Column="1" Background="#333" Margin="3,0,0,0" CornerRadius="2">
+                <TextBlock Text="{Binding JogSpeedPercent, StringFormat={}{0:F0}%}"
+                           Foreground="White" FontWeight="Bold" FontSize="12"
+                           VerticalAlignment="Center" HorizontalAlignment="Center"/>
+            </Border>
+        </Grid>
 
-        <DockPanel Margin="0,5">
-            <TextBlock Text="Spindle" Foreground="#DDD" VerticalAlignment="Center" FontSize="12"/>
-            <TextBox Text="300" Width="80" HorizontalAlignment="Right" Background="White" Padding="3" FontWeight="Bold" BorderThickness="0"/>
-        </DockPanel>
+        <!-- Row 2: FEEDRATE MM/M -->
+        <Grid Margin="0,8">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="80"/>
+            </Grid.ColumnDefinitions>
+            <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                <TextBlock Text="{Binding Status.Feedrate, StringFormat=F1}" Foreground="#DDD" FontSize="12" FontWeight="Bold" Margin="0,0,5,0"/>
+                <TextBlock Text="FEEDRATE MM/M" Foreground="#AAA" FontSize="12" VerticalAlignment="Center"/>
+            </StackPanel>
+            <TextBox Grid.Column="1" Text="{Binding JogFeedrate}" HorizontalAlignment="Right"
+                     Background="White" Padding="3" FontWeight="Bold" BorderThickness="0"
+                     FontSize="14" HorizontalContentAlignment="Center"/>
+        </Grid>
 
-        <UniformGrid Columns="3" Margin="0,20,0,0">
-            <Button Content="REV" Height="40" FontSize="12" Margin="2" Background="#444" Foreground="White"/>
-            <Button Content="STOP" Height="40" FontSize="12" Margin="2" Background="#D80000" Foreground="White"/>
-            <Button Content="FWD" Height="40" FontSize="12" Margin="2" Background="#444" Foreground="White"/>
+        <!-- Row 3: SPINDLE RPM -->
+        <Grid Margin="0,5">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="80"/>
+            </Grid.ColumnDefinitions>
+            <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                <TextBlock Text="{Binding Status.SpindleSpeed, StringFormat=F0}" Foreground="#DDD" FontSize="12" FontWeight="Bold" Margin="0,0,5,0"/>
+                <TextBlock Text="SPINDLE RPM" Foreground="#AAA" FontSize="12" VerticalAlignment="Center"/>
+            </StackPanel>
+            <TextBox Grid.Column="1" Text="{Binding JogSpindleRpm}" HorizontalAlignment="Right"
+                     Background="White" Padding="3" FontWeight="Bold" BorderThickness="0"
+                     FontSize="14" HorizontalContentAlignment="Center"/>
+        </Grid>
+
+        <!-- Row 4: REV / STOP / FWD 按鈕 -->
+        <UniformGrid Columns="3" Margin="0,15,0,0">
+            <!-- [2026-03-05] 改用 BaseBtnStyle 對齊 PB 版 -->
+            <Button Content="REV" Height="40" FontSize="12" Margin="2" Style="{StaticResource BaseBtnStyle}"
+                    Command="{Binding SpindleRevCommand}"/>
+            <Button Content="STOP" Height="40" FontSize="12" Margin="2"
+                    Command="{Binding SpindleStopCommand}">
+                <Button.Style>
+                    <Style TargetType="Button" BasedOn="{StaticResource BaseBtnStyle}">
+                        <Setter Property="Background" Value="#D80000"/>
+                        <Setter Property="BorderBrush" Value="#B71C1C"/>
+                        <Setter Property="Foreground" Value="White"/>
+                    </Style>
+                </Button.Style>
+            </Button>
+            <Button Content="FWD" Height="40" FontSize="12" Margin="2" Style="{StaticResource BaseBtnStyle}"
+                    Command="{Binding SpindleFwdCommand}"/>
         </UniformGrid>
     </StackPanel>
 </UserControl>

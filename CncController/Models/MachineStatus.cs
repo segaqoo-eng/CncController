@@ -92,5 +92,11 @@ namespace CncController.Models
 
         // [2026-03-04] 新增 Current Line：目前執行的 G-Code 行號（motion_line）
         [ObservableProperty] private int _currentLine;
+
+        // [2026-03-05] 新增 Spindle Load：主軸負載百分比，對齊 PB 版 D_4
+        [ObservableProperty] private double _spindleLoad;
+
+        // [2026-03-06] 新增 Probe Input：探針輸入訊號即時狀態（供 ProbingView 指示燈）
+        [ObservableProperty] private bool _isProbeInput;
     }
 }

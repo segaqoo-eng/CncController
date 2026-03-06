@@ -4,6 +4,7 @@
         xmlns:vm="clr-namespace:CncController.ViewModels"
         xmlns:pages="clr-namespace:CncController.Views.Pages"
         xmlns:layouts="clr-namespace:CncController.Views.Layouts"
+        xmlns:views="clr-namespace:CncController.Views"
         Title="CncController" Height="1080" Width="1920"
         WindowStyle="None" WindowState="Maximized"
         Background="{DynamicResource Brush.WindowBackground}">
@@ -12,8 +13,9 @@
         <vm:MainViewModel/>
     </Window.DataContext>
 
+    <!-- [2026-03-06] 快捷鍵：ESC=全機停止 F1=電源 F2=急停 -->
     <Window.InputBindings>
-        <KeyBinding Key="Esc" Command="{Binding ClearAlarmsCommand}"/>
+        <KeyBinding Key="Esc" Command="{Binding EmergencyAbortCommand}"/>
 
         <KeyBinding Key="F1" Command="{Binding TogglePowerCommand}"/>
         <KeyBinding Key="F2" Command="{Binding ToggleEstopCommand}"/>
@@ -107,7 +109,8 @@
 
             <layouts:HeaderBar Grid.Row="1" Grid.ColumnSpan="2"/>
 
-            <ContentControl Grid.Row="2" Grid.Column="0" Content="{Binding CurrentViewModel}"/>
+            <!-- [2026-03-06] 使用 CachedContentControl 快取 View，避免每次切換都重建 XAML 樹 -->
+            <views:CachedContentControl Grid.Row="2" Grid.Column="0" Content="{Binding CurrentViewModel}"/>
             <layouts:JogPanel Grid.Row="2" Grid.Column="1"/>
 
             <UniformGrid Grid.Row="3" Grid.ColumnSpan="2" Rows="1" Background="{DynamicResource Brush.PanelBackground}">

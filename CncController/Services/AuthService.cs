@@ -36,7 +36,11 @@ namespace CncController.Services
 
         private AuthService()
         {
-            _currentUser = new User { Username = "Operator", Role = UserRole.Operator };
+            // [2026-03-05] 模擬模式自動登入最高權限，免打密碼
+            if (ConfigurationService.IsProbeSimulation)
+                _currentUser = new User { Username = "Developer", Role = UserRole.Developer };
+            else
+                _currentUser = new User { Username = "Operator", Role = UserRole.Operator };
             LoadOrCreatePasswordConfig();
         }
 

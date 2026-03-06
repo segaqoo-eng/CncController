@@ -17,5 +17,12 @@ namespace CncController.Views.Pages
             if (DataContext is ViewModels.ProbingViewModel vm)
                 vm.SwitchProbeModeCommand.Execute("TouchProbe");
         }
+
+        // [2026-03-05] TOOL SETTER 垂直 Tab 點擊（模式切換）
+        private void ToolSetterTab_Click(object sender, MouseButtonEventArgs e)
+        {
+            if (DataContext is ViewModels.ProbingViewModel vm)
+                vm.SwitchProbeModeCommand.Execute("ToolSetter");
+        }
     }
 }

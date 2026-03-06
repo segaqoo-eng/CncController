@@ -1,0 +1,166 @@
+<!-- [2026-03-06] ATC Axis Settings View - Carousel rotation servo configuration (Umbrella ATC) -->
+<UserControl x:Class="CncController.Views.Pages.AtcAxisSettingsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d"
+             d:DesignHeight="500" d:DesignWidth="600">
+
+    <UserControl.Resources>
+        <Style x:Key="DarkTextBox" TargetType="TextBox">
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="Foreground" Value="Black"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Width" Value="120"/>
+            <Setter Property="Height" Value="30"/>
+            <Setter Property="TextAlignment" Value="Center"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="BorderBrush" Value="#555"/>
+        </Style>
+        <Style x:Key="ParamLabel" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="HorizontalAlignment" Value="Right"/>
+            <Setter Property="Margin" Value="0,0,10,0"/>
+        </Style>
+        <Style x:Key="UnitLabel" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="Gray"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Margin" Value="8,0,0,0"/>
+        </Style>
+    </UserControl.Resources>
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto" Background="#1E1E1E">
+        <StackPanel Margin="20">
+
+            <!-- [2026-03-06] CAROUSEL ROTATION SERVO -->
+            <GroupBox BorderBrush="#555" BorderThickness="1" Margin="0,0,0,10" Padding="15,10">
+                <GroupBox.Header>
+                    <TextBlock Text="CAROUSEL ROTATION SERVO" Foreground="#5E70FF" FontWeight="Bold" FontSize="14"/>
+                </GroupBox.Header>
+                <Grid Margin="0,5">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="180"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Text="EtherCAT Slave:" Style="{StaticResource ParamLabel}"/>
+                    <ComboBox Grid.Column="1" Width="260" FontSize="14" Height="30" Foreground="Black"
+                              ItemsSource="{Binding AvailableSlaves}"
+                              SelectedItem="{Binding SelectedCarouselSlave}"
+                              DisplayMemberPath="Name"/>
+                </Grid>
+            </GroupBox>
+
+            <!-- [2026-03-06] MECHANICAL PARAMETERS -->
+            <GroupBox BorderBrush="#555" BorderThickness="1" Margin="0,0,0,10" Padding="15,10">
+                <GroupBox.Header>
+                    <TextBlock Text="MECHANICAL PARAMETERS" Foreground="#5E70FF" FontWeight="Bold" FontSize="14"/>
+                </GroupBox.Header>
+                <StackPanel>
+                    <Grid Margin="0,5">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="180"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="Pulse / Rev:" Style="{StaticResource ParamLabel}"/>
+                        <StackPanel Grid.Column="1" Orientation="Horizontal">
+                            <TextBox Style="{StaticResource DarkTextBox}"
+                                     Text="{Binding CarouselPulsePerRev, UpdateSourceTrigger=PropertyChanged}"/>
+                            <TextBlock Text="pulse" Style="{StaticResource UnitLabel}"/>
+                        </StackPanel>
+                    </Grid>
+                    <Grid Margin="0,5">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="180"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="Pitch:" Style="{StaticResource ParamLabel}"/>
+                        <StackPanel Grid.Column="1" Orientation="Horizontal">
+                            <TextBox Style="{StaticResource DarkTextBox}"
+                                     Text="{Binding CarouselPitch, UpdateSourceTrigger=PropertyChanged}"/>
+                            <TextBlock Text="deg/rev" Style="{StaticResource UnitLabel}"/>
+                        </StackPanel>
+                    </Grid>
+                </StackPanel>
+            </GroupBox>
+
+            <!-- [2026-03-06] MOTION PARAMETERS -->
+            <GroupBox BorderBrush="#555" BorderThickness="1" Margin="0,0,0,10" Padding="15,10">
+                <GroupBox.Header>
+                    <TextBlock Text="MOTION PARAMETERS" Foreground="#5E70FF" FontWeight="Bold" FontSize="14"/>
+                </GroupBox.Header>
+                <StackPanel>
+                    <Grid Margin="0,5">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="180"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="Max Velocity:" Style="{StaticResource ParamLabel}"/>
+                        <StackPanel Grid.Column="1" Orientation="Horizontal">
+                            <TextBox Style="{StaticResource DarkTextBox}"
+                                     Text="{Binding CarouselMaxVel, UpdateSourceTrigger=PropertyChanged}"/>
+                            <TextBlock Text="deg/s" Style="{StaticResource UnitLabel}"/>
+                        </StackPanel>
+                    </Grid>
+                    <Grid Margin="0,5">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="180"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="Max Acceleration:" Style="{StaticResource ParamLabel}"/>
+                        <StackPanel Grid.Column="1" Orientation="Horizontal">
+                            <TextBox Style="{StaticResource DarkTextBox}"
+                                     Text="{Binding CarouselMaxAccel, UpdateSourceTrigger=PropertyChanged}"/>
+                            <TextBlock Text="deg/s&#178;" Style="{StaticResource UnitLabel}"/>
+                        </StackPanel>
+                    </Grid>
+                </StackPanel>
+            </GroupBox>
+
+            <!-- [2026-03-06] INFO -->
+            <GroupBox BorderBrush="#555" BorderThickness="1" Margin="0,0,0,10" Padding="15,10">
+                <GroupBox.Header>
+                    <TextBlock Text="INFO" Foreground="#5E70FF" FontWeight="Bold" FontSize="14"/>
+                </GroupBox.Header>
+                <StackPanel>
+                    <TextBlock FontSize="14" Foreground="#CCC" Margin="0,4">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Visibility" Value="Visible"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding SelectedCarouselSlave}" Value="{x:Null}">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                        <TextBlock.Text>
+                            <MultiBinding StringFormat="Selected: Slave #{0}  (Vendor: {1}, Product: {2})">
+                                <Binding Path="SelectedCarouselSlave.Index"/>
+                                <Binding Path="SelectedCarouselSlave.VendorId"/>
+                                <Binding Path="SelectedCarouselSlave.ProductCode"/>
+                            </MultiBinding>
+                        </TextBlock.Text>
+                    </TextBlock>
+                    <TextBlock Text="No slave selected" FontSize="14" Foreground="#888" Margin="0,4">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding SelectedCarouselSlave}" Value="{x:Null}">
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                </StackPanel>
+            </GroupBox>
+
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

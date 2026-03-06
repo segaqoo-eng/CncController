@@ -22,15 +22,21 @@ namespace CncController.ViewModels
         // ★★★ [新增] IO 監控 ViewModel ★★★
         public IoMonitorViewModel IoMonitorVM { get; } = new();
 
+        // [2026-03-06] ATC 設定 3 個子 ViewModel
+        public AtcBasicSettingsViewModel AtcBasicVM { get; } = new();
+        public AtcAxisSettingsViewModel AtcAxisVM { get; } = new();
+        public AtcIoSettingsViewModel AtcIoVM { get; } = new();
+
+        // [2026-03-06] 主軸設定 ViewModel
+        public SpindleSettingsViewModel SpindleVM { get; } = new();
+
         // =========================================================
         // ★★★ [新增] IO 映射集合 (綁定到 DataGrid) ★★★
         // =========================================================
         public ObservableCollection<IoMapItem> InMaps { get; } = new();
         public ObservableCollection<IoMapItem> OutMaps { get; } = new();
 
-        // ★★★ [新增] 過濾後的下拉選單選項 ★★★
-        public ObservableCollection<DiscoveredSlave> AvailableInputSlaves { get; } = new();
-        public ObservableCollection<DiscoveredSlave> AvailableOutputSlaves { get; } = new();
+        // [2026-03-05] 移除 AvailableInputSlaves / AvailableOutputSlaves（改為純列表模式，不再需要下拉選單）
 
         [ObservableProperty]
         private string _deployStatus = "Ready";
@@ -61,8 +67,7 @@ namespace CncController.ViewModels
 
         public SettingsViewModel()
         {
-            // 1. 初始化 IO 映射預設值
-            InitializeIoMaps();
+            // [2026-03-05] 移除 InitializeIoMaps()（掃描前不顯示任何列，由 RebuildIoMapsFromScan 動態生成）
 
             // 2. 內部連動：當 HardwareVM 的 Slaves 變動時（手動 Scan Bus），更新所有下拉選單
             HardwareVM.Slaves.CollectionChanged += (s, e) =>
@@ -70,8 +75,20 @@ namespace CncController.ViewModels
                 // [2026-02-24] AXIS MAPPING 下拉
                 MappingVM.UpdateSlaves(HardwareVM.Slaves);
 
-                // [2026-02-24] IN MAP / OUT MAP 下拉（重建 IO 設備篩選清單）
-                RebuildIoSlaveDropdowns(HardwareVM.Slaves);
+                // [2026-03-05] IN MAP / OUT MAP 動態重建（從掃描結果直接生成列表）
+                RebuildIoMapsFromScan(HardwareVM.Slaves);
+
+                // [2026-03-06] ATC 軸/IO 下拉更新
+                AtcAxisVM.UpdateSlaves(HardwareVM.Slaves);
+                AtcIoVM.UpdateSlaves(HardwareVM.Slaves);
+                SpindleVM.UpdateSlaves(HardwareVM.Slaves);
+            };
+
+            // [2026-03-06] ATC 類型即時連動：BASIC 切換類型 → IO 頁顯示對應 DO/DI
+            AtcBasicVM.PropertyChanged += (s, e) =>
+            {
+                if (e.PropertyName == nameof(AtcBasicVM.SelectedAtcType))
+                    AtcIoVM.CurrentAtcType = AtcBasicVM.SelectedAtcType;
             };
 
             // [2026-02-24] 訂閱機台類型變更事件：即時連動 AxisParameters + DRO/JOG/Offsets
@@ -95,6 +112,16 @@ namespace CncController.ViewModels
                     {
                         OnHardwareValidationCompleted(mainVM.LastValidatedSlaves, mainVM.LastValidatedConfig);
                     }
+                    else
+                    {
+                        // [2026-03-05] 後端未上線時，從本地存檔載入設定（讓畫面不空白）
+                        _ = LoadFromLocalConfigAsync();
+                    }
+                }
+                else
+                {
+                    // [2026-03-05] MainViewModel 尚未初始化，嘗試讀本地存檔
+                    _ = LoadFromLocalConfigAsync();
                 }
             }
             catch (Exception ex)
@@ -103,33 +130,183 @@ namespace CncController.ViewModels
             }
         }
 
-        // [新增] 初始化 IO 映射表格 (預設各 4 組)
-        private void InitializeIoMaps()
+        // [2026-03-05] 後端未上線時，從本地 MachineConfig.json 載入已儲存的設定
+        private async Task LoadFromLocalConfigAsync()
+        {
+            try
+            {
+                var config = await ConfigurationService.Instance.LoadConfigAsync();
+
+                // 判斷是否有資料，沒有則不載入（畫面維持空白）
+                if (config.Axes == null || config.Axes.Count == 0)
+                    return;
+
+                System.Windows.Application.Current.Dispatcher.Invoke(() =>
+                {
+                    // 1. 同步機台類型
+                    MachineConfigVM.SelectedMachineType = config.MachineType;
+
+                    // 2. 填充 AXIS PARAMETERS
+                    AxisVM.Axes.Clear();
+                    for (int i = 0; i < config.Axes.Count; i++)
+                    {
+                        config.Axes[i].Index = i;
+                        AxisVM.Axes.Add(config.Axes[i]);
+                    }
+
+                    // 3. 填充 AXIS MAPPING（從存檔的 Mappings 還原列，無 slaves 下拉選項）
+                    MappingVM.LoadMapping(config, new List<DiscoveredSlave>());
+
+                    // 4. 填充 IN MAP / OUT MAP（從存檔的 Mappings 重建，用 placeholder Slave）
+                    RebuildIoMapsFromConfig(config);
+
+                    // [2026-03-06] 載入 ATC 設定
+                    AtcBasicVM.LoadFrom(config.Atc);
+                    AtcIoVM.CurrentAtcType = config.Atc.Type;
+
+                    // [2026-03-06] 載入主軸設定
+                    SpindleVM.LoadFrom(config.Spindle, new List<DiscoveredSlave>());
+
+                    AlarmService.Instance.AddLog("INFO", "Loaded settings from local config (backend offline)");
+                });
+            }
+            catch (Exception ex)
+            {
+                AlarmService.Instance.AddLog("WARN", $"LoadFromLocalConfig failed: {ex.Message}");
+            }
+        }
+
+        // [2026-03-05] 從本地存檔重建 IO Maps（後端未上線，用存檔中的 VID/PID/Index 建立 placeholder Slave）
+        private void RebuildIoMapsFromConfig(MachineConfig config)
         {
             InMaps.Clear();
             OutMaps.Clear();
 
-            // 這裡未來可以改為讀取設定檔的變數
-            int defaultInCount = 4;
-            int defaultOutCount = 4;
+            int inIdx = 0, outIdx = 0;
 
-            for (int i = 0; i < defaultInCount; i++)
+            // 按 PhysicalIndex 排序
+            foreach (var mapping in config.Mappings.Where(m => m.Type == MapType.Input).OrderBy(m => m.PhysicalIndex))
             {
-                InMaps.Add(new IoMapItem
+                var placeholderSlave = new DiscoveredSlave
                 {
-                    Index = i,
-                    LogicalName = $"Input_Group_{i}"
-                });
+                    Index = mapping.PhysicalIndex,
+                    Name = mapping.PhysicalAddress ?? $"Slave {mapping.PhysicalIndex}",
+                    VendorId = mapping.ExpectedVendorId ?? "",
+                    ProductCode = mapping.ExpectedProductCode ?? "",
+                    Category = mapping.DeviceCategory ?? ""
+                };
+
+                var item = new IoMapItem
+                {
+                    Index = inIdx++,
+                    LogicalName = mapping.LogicalName ?? $"Input_{mapping.PhysicalIndex}",
+                    IsEnabled = true
+                };
+                item.SelectedSlave = placeholderSlave;
+
+                // 還原 Pin 設定
+                if (mapping.Pins != null)
+                {
+                    foreach (var savedPin in mapping.Pins)
+                    {
+                        var existingPin = item.PinSettings.FirstOrDefault(p => p.PinIndex == savedPin.Index);
+                        if (existingPin != null)
+                        {
+                            existingPin.FunctionName = savedPin.Function;
+                            existingPin.IsInverted = savedPin.IsInverted;
+                        }
+                    }
+                }
+
+                InMaps.Add(item);
             }
 
-            for (int i = 0; i < defaultOutCount; i++)
+            foreach (var mapping in config.Mappings.Where(m => m.Type == MapType.Output).OrderBy(m => m.PhysicalIndex))
             {
-                OutMaps.Add(new IoMapItem
+                var placeholderSlave = new DiscoveredSlave
                 {
-                    Index = i,
-                    LogicalName = $"Output_Group_{i}"
-                });
+                    Index = mapping.PhysicalIndex,
+                    Name = mapping.PhysicalAddress ?? $"Slave {mapping.PhysicalIndex}",
+                    VendorId = mapping.ExpectedVendorId ?? "",
+                    ProductCode = mapping.ExpectedProductCode ?? "",
+                    Category = mapping.DeviceCategory ?? ""
+                };
+
+                var item = new IoMapItem
+                {
+                    Index = outIdx++,
+                    LogicalName = mapping.LogicalName ?? $"Output_{mapping.PhysicalIndex}",
+                    IsEnabled = true
+                };
+                item.SelectedSlave = placeholderSlave;
+
+                if (mapping.Pins != null)
+                {
+                    foreach (var savedPin in mapping.Pins)
+                    {
+                        var existingPin = item.PinSettings.FirstOrDefault(p => p.PinIndex == savedPin.Index);
+                        if (existingPin != null)
+                        {
+                            existingPin.FunctionName = savedPin.Function;
+                            existingPin.IsInverted = savedPin.IsInverted;
+                        }
+                    }
+                }
+
+                OutMaps.Add(item);
             }
+
+            SelectedInMapIndex = InMaps.Count > 0 ? 0 : -1;
+            SelectedOutMapIndex = OutMaps.Count > 0 ? 0 : -1;
+        }
+
+        // [2026-03-05] 動態生成 IO 列表（取代固定 4 列的 InitializeIoMaps）
+        private void RebuildIoMapsFromScan(IEnumerable<DiscoveredSlave> slaves)
+        {
+            InMaps.Clear();
+            OutMaps.Clear();
+
+            // 按站號排序
+            var sorted = slaves.OrderBy(s => s.Index).ToList();
+            int inIdx = 0, outIdx = 0;
+
+            foreach (var slave in sorted)
+            {
+                bool isInput = slave.Category == DeviceCategory.DigIn
+                            || slave.Category == DeviceCategory.DiDo
+                            || (slave.ProductCode != null && slave.ProductCode.Contains("902"));
+                bool isOutput = slave.Category == DeviceCategory.DigOut
+                             || slave.Category == DeviceCategory.DiDo
+                             || (slave.ProductCode != null && slave.ProductCode.Contains("902"));
+
+                if (isInput)
+                {
+                    var item = new IoMapItem
+                    {
+                        Index = inIdx++,
+                        LogicalName = $"Input_{slave.Index}",
+                        IsEnabled = true
+                    };
+                    item.SelectedSlave = slave; // 觸發 OnSelectedSlaveChanged → InitializePins
+                    InMaps.Add(item);
+                }
+
+                if (isOutput)
+                {
+                    var item = new IoMapItem
+                    {
+                        Index = outIdx++,
+                        LogicalName = $"Output_{slave.Index}",
+                        IsEnabled = true
+                    };
+                    item.SelectedSlave = slave;
+                    OutMaps.Add(item);
+                }
+            }
+
+            // 自動選取第一個
+            SelectedInMapIndex = InMaps.Count > 0 ? 0 : -1;
+            SelectedOutMapIndex = OutMaps.Count > 0 ? 0 : -1;
         }
 
         // [2026-02-24] 機台類型下拉選單變更 handler
@@ -238,53 +415,61 @@ namespace CncController.ViewModels
             // [2026-02-24] Step 3.5: 同步 IO Monitor 卡片過濾（依軸映射）
             IoMonitorVM.UpdateAxisMapping(MappingVM.AxisMaps);
 
-            // Step 4: 過濾設備到 IO 下拉選單
-            RebuildIoSlaveDropdowns(slaves);
+            // [2026-03-05] Step 4: 動態生成 IO 列表（自動填充 SelectedSlave + InitializePins）
+            RebuildIoMapsFromScan(slaves);
+
+            // [2026-03-06] Step 4.5: 載入 ATC 設定
+            AtcBasicVM.LoadFrom(config.Atc);
+            AtcAxisVM.UpdateSlaves(slaves);
+            AtcAxisVM.LoadFrom(config.Atc, slaves);
+            AtcIoVM.UpdateSlaves(slaves);
+            AtcIoVM.LoadFrom(config.Atc, slaves);
+            AtcIoVM.CurrentAtcType = config.Atc.Type;
+
+            // [2026-03-06] Step 4.6: 載入主軸設定
+            SpindleVM.LoadFrom(config.Spindle, slaves);
 
             // Step 5: 初始化驗證 (如果已經有 Config)
             if (config.Mappings.Count > 0)
             {
                 VerifyHardware(config, slaves);
             }
-            // Step 6: 載入已儲存的 IO 映射 (從 Config 還原到 UI)
-            foreach (var mapping in config.Mappings)
+
+            // [2026-03-05] Step 6: 載入已儲存的 IO Pin 設定（用 PhysicalIndex 匹配，不需重設 SelectedSlave）
+            foreach (var mapping in config.Mappings.Where(m => m.Type == MapType.Input))
             {
-                IoMapItem targetRow = null;
-                if (mapping.Type == MapType.Input)
-                    targetRow = InMaps.FirstOrDefault(x => x.Index == mapping.ChannelIndex);
-                else if (mapping.Type == MapType.Output)
-                    targetRow = OutMaps.FirstOrDefault(x => x.Index == mapping.ChannelIndex);
-
-                if (targetRow != null)
+                var targetRow = InMaps.FirstOrDefault(x =>
+                    x.SelectedSlave?.Index == mapping.PhysicalIndex);
+                if (targetRow != null && mapping.Pins != null && mapping.Pins.Count > 0)
                 {
-                    // 1. 先設定 Slave，這會觸發 OnSelectedSlaveChanged 並執行 InitializePins
-                    targetRow.SelectedSlave = slaves.FirstOrDefault(s =>
-                        s.VendorId == mapping.ExpectedVendorId &&
-                        s.ProductCode == mapping.ExpectedProductCode &&
-                        s.Index == mapping.PhysicalIndex);
-
-                    // 2. ★ 關鍵：現在 PinSettings 已經產生了，把存檔裡的詳細設定填回去 ★
-                    if (mapping.Pins != null && mapping.Pins.Count > 0)
+                    foreach (var savedPin in mapping.Pins)
                     {
-                        // 這裡不直接 Clear，而是更新現有的 Pin 物件屬性
-                        foreach (var savedPin in mapping.Pins)
+                        var existingPin = targetRow.PinSettings.FirstOrDefault(p => p.PinIndex == savedPin.Index);
+                        if (existingPin != null)
                         {
-                            var existingPin = targetRow.PinSettings.FirstOrDefault(p => p.PinIndex == savedPin.Index);
-                            if (existingPin != null)
-                            {
-                                existingPin.FunctionName = savedPin.Function;
-                                existingPin.IsInverted = savedPin.IsInverted;
-                            }
+                            existingPin.FunctionName = savedPin.Function;
+                            existingPin.IsInverted = savedPin.IsInverted;
                         }
                     }
                 }
             }
-
-            // [2026-03-04] Step 7: 自動選取第一個有設備的 IN MAP / OUT MAP 列
-            SelectedInMapIndex = InMaps.ToList().FindIndex(m =>
-                m.SelectedSlave != null && m.SelectedSlave.Name != "--- None ---");
-            SelectedOutMapIndex = OutMaps.ToList().FindIndex(m =>
-                m.SelectedSlave != null && m.SelectedSlave.Name != "--- None ---");
+            foreach (var mapping in config.Mappings.Where(m => m.Type == MapType.Output))
+            {
+                var targetRow = OutMaps.FirstOrDefault(x =>
+                    x.SelectedSlave?.Index == mapping.PhysicalIndex);
+                if (targetRow != null && mapping.Pins != null && mapping.Pins.Count > 0)
+                {
+                    foreach (var savedPin in mapping.Pins)
+                    {
+                        var existingPin = targetRow.PinSettings.FirstOrDefault(p => p.PinIndex == savedPin.Index);
+                        if (existingPin != null)
+                        {
+                            existingPin.FunctionName = savedPin.Function;
+                            existingPin.IsInverted = savedPin.IsInverted;
+                        }
+                    }
+                }
+            }
         }
 
         // [新增] 驗證邏輯封裝
@@ -337,45 +522,7 @@ namespace CncController.ViewModels
             }
         }
 
-        // [2026-02-24] 重建 IN MAP / OUT MAP 的 IO Slave 下拉選單
-        // 共用於 Initialize（開機載入）及手動 Scan Bus
-        private void RebuildIoSlaveDropdowns(IEnumerable<DiscoveredSlave> slaves)
-        {
-            AvailableInputSlaves.Clear();
-            AvailableOutputSlaves.Clear();
-
-            var noneSlave = new DiscoveredSlave
-            {
-                Name = "--- None ---",
-                VendorId = "",
-                ProductCode = "",
-                Category = ""
-            };
-
-            AvailableInputSlaves.Add(noneSlave);
-            AvailableOutputSlaves.Add(noneSlave);
-
-            foreach (var slave in slaves)
-            {
-                System.Diagnostics.Debug.WriteLine($"[Scan] Slave #{slave.Index} ({slave.Name}): Category='{slave.Category}', ProductCode='{slave.ProductCode}'");
-
-                // 輸入裝置：DigIn / DiDo / 台達 902
-                if (slave.Category == DeviceCategory.DigIn ||
-                    slave.Category == DeviceCategory.DiDo ||
-                    (slave.ProductCode != null && slave.ProductCode.Contains("902")))
-                {
-                    AvailableInputSlaves.Add(slave);
-                }
-
-                // 輸出裝置：DigOut / DiDo / 台達 902
-                if (slave.Category == DeviceCategory.DigOut ||
-                    slave.Category == DeviceCategory.DiDo ||
-                    (slave.ProductCode != null && slave.ProductCode.Contains("902")))
-                {
-                    AvailableOutputSlaves.Add(slave);
-                }
-            }
-        }
+        // [2026-03-05] 移除 RebuildIoSlaveDropdowns()（改為 RebuildIoMapsFromScan 動態生成列表）
 
         [RelayCommand]
         private async Task GenerateAndDeploy()
@@ -410,7 +557,9 @@ namespace CncController.ViewModels
                             // [關鍵] 儲存時，將目前的 VID/PID 寫入 Config，作為未來的驗證標準
                             ExpectedVendorId = mapItem.SelectedSlave.VendorId,
                             ExpectedProductCode = mapItem.SelectedSlave.ProductCode,
-                            Type = MapType.Axis
+                            Type = MapType.Axis,
+                            // [2026-03-05] 儲存掃描結果的設備類別
+                            DeviceCategory = mapItem.SelectedSlave.Category ?? ""
                         });
                     }
                 }
@@ -419,11 +568,11 @@ namespace CncController.ViewModels
                 // 這裡我們需要定義 HardwareMapping 結構是否支援 IO，或者使用新的清單
                 // 假設 HardwareMapping 通用，我們可以用 MappingType 區分
 
-                // 儲存 IN MAP
-                foreach (var inItem in inMapsSnapshot)
+                // [2026-03-05] 儲存 IN MAP（僅儲存已啟用的模組）
+                foreach (var inItem in inMapsSnapshot.Where(m => m.IsEnabled))
                 {
                     // 檢查是否有選擇設備
-                    if (inItem.SelectedSlave != null && inItem.SelectedSlave.Name != "--- None ---")
+                    if (inItem.SelectedSlave != null)
                     {
                         // 步驟 1: 先建立物件並指派給變數 'mapping'
                         var mapping = new HardwareMapping
@@ -434,7 +583,9 @@ namespace CncController.ViewModels
                             ExpectedVendorId = inItem.SelectedSlave.VendorId,
                             ExpectedProductCode = inItem.SelectedSlave.ProductCode,
                             Type = MapType.Input,
-                            ChannelIndex = inItem.Index
+                            ChannelIndex = inItem.Index,
+                            // [2026-03-05] 儲存掃描結果的設備類別
+                            DeviceCategory = inItem.SelectedSlave.Category ?? ""
                         };
 
                         // 步驟 2: 現在 'mapping' 變數存在了，可以把 Pin 設定加進去
@@ -454,11 +605,11 @@ namespace CncController.ViewModels
                     }
                 }
 
-                // 儲存 OUT MAP
-                foreach (var outItem in outMapsSnapshot)
+                // [2026-03-05] 儲存 OUT MAP（僅儲存已啟用的模組）
+                foreach (var outItem in outMapsSnapshot.Where(m => m.IsEnabled))
                 {
                     // 檢查是否選擇了有效設備
-                    if (outItem.SelectedSlave != null && outItem.SelectedSlave.Name != "--- None ---")
+                    if (outItem.SelectedSlave != null)
                     {
                         // 1. 先建立物件並指派給變數 'mapping'
                         var mapping = new HardwareMapping
@@ -469,7 +620,9 @@ namespace CncController.ViewModels
                             ExpectedVendorId = outItem.SelectedSlave.VendorId,
                             ExpectedProductCode = outItem.SelectedSlave.ProductCode,
                             Type = MapType.Output, // 設定為輸出類型
-                            ChannelIndex = outItem.Index
+                            ChannelIndex = outItem.Index,
+                            // [2026-03-05] 儲存掃描結果的設備類別
+                            DeviceCategory = outItem.SelectedSlave.Category ?? ""
                         };
 
                         // 2. 複製 Pin 設定 (輸出點也可以設定反轉，例如 Active Low)
@@ -488,6 +641,12 @@ namespace CncController.ViewModels
                         config.Mappings.Add(mapping);
                     }
                 }
+
+                // [2026-03-06] 儲存 ATC 設定
+                AtcBasicVM.SaveTo(config.Atc);
+                AtcAxisVM.SaveTo(config.Atc);
+                AtcIoVM.SaveTo(config.Atc);
+                    SpindleVM.SaveTo(config.Spindle);
 
                 // 1. 存檔並觸發重啟
                 await ConfigurationService.Instance.SaveConfigAsync(config);

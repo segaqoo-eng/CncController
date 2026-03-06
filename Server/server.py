@@ -428,7 +428,9 @@ def update_config():
             'ethercat-conf.xml': data_lower.get('xmlcontent'),
             '3axis.hal': data_lower.get('halcontent'),
             '3axis.ini': data_lower.get('inicontent'),
-            'probe_basic_postgui.hal': data_lower.get('postguicontent')
+            'probe_basic_postgui.hal': data_lower.get('postguicontent'),
+            # [2026-03-05] 探針模擬 HAL（前端 IsProbeSimulation=true 時才傳送）
+            'sim_probe.hal': data_lower.get('simprobehalcontent')
         }
         
         updated = []
@@ -644,6 +646,12 @@ def v2_status():
         # [2026-02-24] 新增任務模式（供 Offsets 右下角 MAN/AUTO/MDI 按鈕高亮）
         task_mode_str = {1: "MANUAL", 2: "AUTO", 3: "MDI"}.get(cnc_stat.task_mode, "UNKNOWN")
 
+        # [2026-03-06] 新增 Probe_Input：探針輸入訊號即時狀態（motion.probe-input）
+        probe_input = False
+        try:
+            probe_input = bool(cnc_stat.probe_val)
+        except: pass
+
         # [2026-03-04] 新增 Block Delete / Optional Stop / Current Line
         block_delete = False
         optional_stop = False
@@ -679,6 +687,7 @@ def v2_status():
             "G92_Offset": g92_dict,
             "Tool_Offset_XYZ": tool_offset_dict,
             "Task_Mode": task_mode_str,
+            "Probe_Input": probe_input,
             "Block_Delete": block_delete,
             "Optional_Stop": optional_stop,
             "Current_Line": current_line
@@ -1242,9 +1251,28 @@ def v2_tool_save():
 # ==============================================================================
 
 def _probe_send_mdi_and_wait(command, timeout=10):
-    """[2026-03-04] 共用 MDI 執行輔助：送出指令並等待完成"""
+    """[2026-03-04] 共用 MDI 執行輔助：送出指令並等待完成
+    [2026-03-05] 新增：回傳 error 字串（None=成功），檢查 LinuxCNC 錯誤與執行狀態
+    [2026-03-06] 改為非阻塞輪詢：避免 wait_complete() 長時間阻塞導致 status 輪詢斷線"""
     cnc_cmd.mdi(command)
-    cnc_cmd.wait_complete(timeout)
+    # 非阻塞輪詢：每 0.1s 檢查一次 interp 狀態，直到 IDLE 或超時
+    import time
+    deadline = time.time() + timeout
+    while time.time() < deadline:
+        time.sleep(0.1)
+        cnc_stat.poll()
+        # 先檢查 error
+        with error_lock:
+            if cached_errors:
+                last_err = cached_errors[-1].get('Text', '')
+                if 'probe' in last_err.lower() or 'tripped' in last_err.lower() or 'aborting' in last_err.lower():
+                    return last_err
+        if cnc_stat.state == linuxcnc.RCS_ERROR if linuxcnc else False:
+            return f"LinuxCNC RCS_ERROR after: {command}"
+        # IDLE = 指令執行完畢
+        if cnc_stat.interp_state == linuxcnc.INTERP_IDLE:
+            return None
+    return f"Timeout ({timeout}s) waiting for: {command}"
 
 def _probe_get_result():
     """[2026-03-04] 讀取探測結果：probed_position + probe_tripped"""
@@ -1259,10 +1287,11 @@ def _probe_get_result():
     }
 
 def _probe_edge(direction, search_speed, max_xy_dist, max_z_dist,
-                xy_clearance, z_clearance, extra_depth):
+                xy_clearance, z_clearance, extra_depth, probe_radius=0):
     """[2026-03-04] 單軸邊緣探測
     方向對應：N→Y-  S→Y+  E→X-  W→X+
     流程：Z 下降 → G38.2 探測 → 讀取位置 → 退回 → Z 恢復
+    [2026-03-06] 新增 probe_radius：探針球半徑補正（probed_position ± R）
     """
     # 方向映射
     axis_map = {
@@ -1279,9 +1308,24 @@ def _probe_edge(direction, search_speed, max_xy_dist, max_z_dist,
     z_drop = -(abs(extra_depth) + abs(z_clearance))
 
     # 1. Z 下降
-    _probe_send_mdi_and_wait(f"G91 G0 Z{z_drop:.4f}")
+    err = _probe_send_mdi_and_wait(f"G91 G0 Z{z_drop:.4f}")
+    if err:
+        _probe_send_mdi_and_wait("G90")
+        return {'tripped': False, 'x': 0, 'y': 0, 'z': 0, 'error': f'Z drop failed: {err}'}
+    # [2026-03-06] 檢查 probe 訊號：若已觸發則拒絕 G38.2（避免 "Probe is already tripped" 錯誤）
+    cnc_stat.poll()
+    if bool(getattr(cnc_stat, 'probe_val', 0)):
+        _probe_send_mdi_and_wait(f"G91 G0 Z{-z_drop:.4f}")
+        _probe_send_mdi_and_wait("G90")
+        return {'tripped': False, 'x': 0, 'y': 0, 'z': 0,
+                'error': f'Probe input is already HIGH before G38.2 ({direction}). Check probe wiring or clear obstruction.'}
     # 2. G38.2 探測
-    _probe_send_mdi_and_wait(f"G91 G38.2 {axis}{dist:.4f} F{search_speed:.1f}", timeout=30)
+    # [2026-03-06] timeout 30→60s：手動模擬需要更多時間等待使用者按 SIM TRIGGER
+    err = _probe_send_mdi_and_wait(f"G91 G38.2 {axis}{dist:.4f} F{search_speed:.1f}", timeout=60)
+    if err:
+        _probe_send_mdi_and_wait(f"G91 G0 Z{-z_drop:.4f}")
+        _probe_send_mdi_and_wait("G90")
+        return {'tripped': False, 'x': 0, 'y': 0, 'z': 0, 'error': err}
     result = _probe_get_result()
     if not result['tripped']:
         # 未觸發 → 安全退回
@@ -1290,6 +1334,16 @@ def _probe_edge(direction, search_speed, max_xy_dist, max_z_dist,
         _probe_send_mdi_and_wait("G90")
         return {'tripped': False, 'x': 0, 'y': 0, 'z': 0,
                 'error': f'Probe not tripped ({direction})'}
+
+    # [2026-03-06] 探針半徑補正：球心座標 → 工件表面座標
+    # 探測方向 dist>0 時探針碰到前方表面，表面 = ball_center + R
+    # 探測方向 dist<0 時探針碰到後方表面，表面 = ball_center - R
+    if probe_radius > 0:
+        sign = 1 if dist > 0 else -1
+        if axis == 'X':
+            result['x'] += sign * probe_radius
+        else:
+            result['y'] += sign * probe_radius
 
     # 3. 退回 xy_clearance
     _probe_send_mdi_and_wait(f"G91 G0 {axis}{-retract:.4f}")
@@ -1301,10 +1355,11 @@ def _probe_edge(direction, search_speed, max_xy_dist, max_z_dist,
     return result
 
 def _probe_outside_corner(direction, search_speed, max_xy_dist, max_z_dist,
-                          xy_clearance, z_clearance, extra_depth):
+                          xy_clearance, z_clearance, extra_depth, probe_radius=0):
     """[2026-03-04] 雙軸外角探測
     方向對應：NW→X+,Y-  NE→X-,Y-  SW→X+,Y+  SE→X-,Y+
     流程：先探第一軸 → 回起點 → 探第二軸 → 組合結果
+    [2026-03-06] 新增 probe_radius：傳遞至 _probe_edge 做半徑補正
     """
     corner_map = {
         'NW': ('W', 'N'),  # X+, Y-
@@ -1324,7 +1379,7 @@ def _probe_outside_corner(direction, search_speed, max_xy_dist, max_z_dist,
 
     # 第一軸探測
     r1 = _probe_edge(dir1, search_speed, max_xy_dist, max_z_dist,
-                     xy_clearance, z_clearance, extra_depth)
+                     xy_clearance, z_clearance, extra_depth, probe_radius)
     if not r1['tripped']:
         return r1
 
@@ -1333,7 +1388,7 @@ def _probe_outside_corner(direction, search_speed, max_xy_dist, max_z_dist,
 
     # 第二軸探測
     r2 = _probe_edge(dir2, search_speed, max_xy_dist, max_z_dist,
-                     xy_clearance, z_clearance, extra_depth)
+                     xy_clearance, z_clearance, extra_depth, probe_radius)
     if not r2['tripped']:
         return r2
 
@@ -1354,10 +1409,11 @@ def _probe_outside_corner(direction, search_speed, max_xy_dist, max_z_dist,
 # Inside SW: → 向左牆(X-)探 + 向前牆(Y-)探
 # Inside SE: → 向右牆(X+)探 + 向前牆(Y-)探
 def _probe_inside_corner(direction, search_speed, max_xy_dist, max_z_dist,
-                         xy_clearance, z_clearance, extra_depth):
+                         xy_clearance, z_clearance, extra_depth, probe_radius=0):
     """[2026-03-04] 雙軸內角探測
     方向對應（與 outside_corner 相反）：NW→X-,Y+  NE→X+,Y+  SW→X-,Y-  SE→X+,Y-
     流程：先探第一軸 → 回起點 → 探第二軸 → 組合結果
+    [2026-03-06] 新增 probe_radius：傳遞至 _probe_edge 做半徑補正
     """
     inside_map = {
         'NW': ('E', 'S'),  # X-(E), Y+(S)
@@ -1377,7 +1433,7 @@ def _probe_inside_corner(direction, search_speed, max_xy_dist, max_z_dist,
 
     # 第一軸探測（X 方向）
     r1 = _probe_edge(dir1, search_speed, max_xy_dist, max_z_dist,
-                     xy_clearance, z_clearance, extra_depth)
+                     xy_clearance, z_clearance, extra_depth, probe_radius)
     if not r1['tripped']:
         return r1
 
@@ -1386,7 +1442,7 @@ def _probe_inside_corner(direction, search_speed, max_xy_dist, max_z_dist,
 
     # 第二軸探測（Y 方向）
     r2 = _probe_edge(dir2, search_speed, max_xy_dist, max_z_dist,
-                     xy_clearance, z_clearance, extra_depth)
+                     xy_clearance, z_clearance, extra_depth, probe_radius)
     if not r2['tripped']:
         return r2
 
@@ -1402,9 +1458,10 @@ def _probe_inside_corner(direction, search_speed, max_xy_dist, max_z_dist,
     }
 
 def _probe_center(search_speed, max_xy_dist, max_z_dist,
-                  xy_clearance, z_clearance, extra_depth, axes='XY'):
+                  xy_clearance, z_clearance, extra_depth, axes='XY', probe_radius=0):
     """[2026-03-04] 中心/口袋探測（從內向外探壁）
     axes: 'X'=僅 X 兩壁, 'Y'=僅 Y 兩壁, 'XY'=全部 4 壁
+    [2026-03-06] 新增 probe_radius：傳遞至 _probe_edge；中心點 R 自動抵消，寬度 ±2R 為真實壁距
     """
     cnc_stat.poll()
     start_x = cnc_stat.actual_position[0]
@@ -1420,7 +1477,7 @@ def _probe_center(search_speed, max_xy_dist, max_z_dist,
     if axes in ('X', 'XY'):
         # X+ 方向（W→探右）
         r_xp = _probe_edge('W', search_speed, max_xy_dist, max_z_dist,
-                           xy_clearance, z_clearance, extra_depth)
+                           xy_clearance, z_clearance, extra_depth, probe_radius)
         if not r_xp['tripped']:
             return r_xp
         if first_z is None:
@@ -1429,7 +1486,7 @@ def _probe_center(search_speed, max_xy_dist, max_z_dist,
 
         # X- 方向（E→探左）
         r_xn = _probe_edge('E', search_speed, max_xy_dist, max_z_dist,
-                           xy_clearance, z_clearance, extra_depth)
+                           xy_clearance, z_clearance, extra_depth, probe_radius)
         if not r_xn['tripped']:
             return r_xn
         _probe_send_mdi_and_wait(f"G90 G0 X{start_x:.4f} Y{start_y:.4f}")
@@ -1440,7 +1497,7 @@ def _probe_center(search_speed, max_xy_dist, max_z_dist,
     if axes in ('Y', 'XY'):
         # Y+ 方向（S→探上）
         r_yp = _probe_edge('S', search_speed, max_xy_dist, max_z_dist,
-                           xy_clearance, z_clearance, extra_depth)
+                           xy_clearance, z_clearance, extra_depth, probe_radius)
         if not r_yp['tripped']:
             return r_yp
         if first_z is None:
@@ -1449,7 +1506,7 @@ def _probe_center(search_speed, max_xy_dist, max_z_dist,
 
         # Y- 方向（N→探下）
         r_yn = _probe_edge('N', search_speed, max_xy_dist, max_z_dist,
-                           xy_clearance, z_clearance, extra_depth)
+                           xy_clearance, z_clearance, extra_depth, probe_radius)
         if not r_yn['tripped']:
             return r_yn
         _probe_send_mdi_and_wait(f"G90 G0 X{start_x:.4f} Y{start_y:.4f}")
@@ -1468,11 +1525,12 @@ def _probe_center(search_speed, max_xy_dist, max_z_dist,
 
 # [2026-03-04] Boss 凸台探測：從外部向內探測，支援 X/Y/XY 軸選擇
 def _probe_boss(search_speed, max_xy_dist, max_z_dist,
-                xy_clearance, z_clearance, extra_depth, axes='XY', diameter=0):
+                xy_clearance, z_clearance, extra_depth, axes='XY', diameter=0, probe_radius=0):
     """Boss 凸台探測
     探針起始於凸台上方中心附近，依序向指定面外移 → Z 下降 → 向內探測 → 退回
     axes: 'X'=僅 X 兩側, 'Y'=僅 Y 兩側, 'XY'=全部 4 面
     diameter: 近似直徑（>0 時用 diameter/2+xy_clearance 作外移距離）
+    [2026-03-06] 新增 probe_radius：探針球半徑補正（中心點 R 抵消，寬度 ±2R）
     """
     cnc_stat.poll()
     start_x = cnc_stat.actual_position[0]
@@ -1516,6 +1574,13 @@ def _probe_boss(search_speed, max_xy_dist, max_z_dist,
             _probe_send_mdi_and_wait(f"G90 G0 X{start_x:.4f} Y{start_y:.4f}")
             return {'tripped': False, 'x': 0, 'y': 0, 'z': 0,
                     'error': f'Boss probe not tripped ({label})'}
+        # [2026-03-06] 探針半徑補正：probe_dist<0 → 向負方向探測，表面在 ball-R；反之 ball+R
+        if probe_radius > 0:
+            sign = 1 if probe_dist > 0 else -1
+            if axis == 'X':
+                r['x'] += sign * probe_radius
+            else:
+                r['y'] += sign * probe_radius
         touch_points[label] = r
         # 4. 退回 xy_clearance
         retract = xy_clearance if move_out > 0 else -xy_clearance
@@ -1549,11 +1614,12 @@ def _probe_boss(search_speed, max_xy_dist, max_z_dist,
 
 # [2026-03-04] Edge Angle：沿邊緣探 2 點計算角度
 def _probe_edge_angle(edge, search_speed, max_xy_dist, max_z_dist,
-                      xy_clearance, z_clearance, extra_depth, edge_width=0):
+                      xy_clearance, z_clearance, extra_depth, edge_width=0, probe_radius=0):
     """[2026-03-04] Edge Angle 邊角角度探測（3×3 九宮格對齊 PB 版）
     edge: 'NW'/'N'/'NE'/'W'/'CENTER'/'E'/'SW'/'S'/'SE'
     edge_width: 使用者輸入的邊緣寬度（>0 時用作探測間距）
     在邊緣上探 2 點，計算邊緣相對機台軸的角度（度）
+    [2026-03-06] 新增 probe_radius：傳遞至 _probe_edge/_probe_center
     """
     import math
     cnc_stat.poll()
@@ -1581,7 +1647,7 @@ def _probe_edge_angle(edge, search_speed, max_xy_dist, max_z_dist,
     # [2026-03-04] CENTER：4 邊各探 1 點，計算中心（不測角度）
     if edge == 'CENTER':
         result = _probe_center(search_speed, max_xy_dist, max_z_dist,
-                               xy_clearance, z_clearance, extra_depth, 'XY')
+                               xy_clearance, z_clearance, extra_depth, 'XY', probe_radius)
         result['angle'] = 0
         result['edge_width'] = 0
         return result
@@ -1593,7 +1659,7 @@ def _probe_edge_angle(edge, search_speed, max_xy_dist, max_z_dist,
 
     # 第 1 點探測
     r1 = _probe_edge(cfg['probe_dir'], search_speed, max_xy_dist, max_z_dist,
-                     xy_clearance, z_clearance, extra_depth)
+                     xy_clearance, z_clearance, extra_depth, probe_radius)
     if not r1['tripped']:
         return r1
     _probe_send_mdi_and_wait(f"G90 G0 X{start_x:.4f} Y{start_y:.4f}")
@@ -1604,7 +1670,7 @@ def _probe_edge_angle(edge, search_speed, max_xy_dist, max_z_dist,
 
     # 第 2 點探測
     r2 = _probe_edge(cfg['probe_dir'], search_speed, max_xy_dist, max_z_dist,
-                     xy_clearance, z_clearance, extra_depth)
+                     xy_clearance, z_clearance, extra_depth, probe_radius)
     if not r2['tripped']:
         # 回到起點
         _probe_send_mdi_and_wait(f"G90 G0 X{start_x:.4f} Y{start_y:.4f}")
@@ -1639,7 +1705,7 @@ def _probe_edge_angle(edge, search_speed, max_xy_dist, max_z_dist,
 
 # [2026-03-04] Calibrate 校正：在已知直徑環/邊上探測，計算探針偏移
 def _probe_calibrate(cal_type, search_speed, max_xy_dist, max_z_dist,
-                     xy_clearance, z_clearance, extra_depth, cal_width=0):
+                     xy_clearance, z_clearance, extra_depth, cal_width=0, probe_radius=0):
     """Probe Calibrate 校正探測
     cal_type: 'xy_turret' / 'x_edge' / 'x_bore'
     cal_width: 校正環已知直徑/寬度
@@ -1648,22 +1714,22 @@ def _probe_calibrate(cal_type, search_speed, max_xy_dist, max_z_dist,
     if cal_type in ('ring_inside', 'xy_turret', 'x_bore'):
         # 環孔內探 / XY Turret / X Bore：在已知環內探 4 面（center）
         result = _probe_center(search_speed, max_xy_dist, max_z_dist,
-                               xy_clearance, z_clearance, extra_depth, 'XY')
+                               xy_clearance, z_clearance, extra_depth, 'XY', probe_radius)
         return result
     elif cal_type in ('ring_outside',):
         # 環外探：在已知環外面探（boss XY）
         result = _probe_boss(search_speed, max_xy_dist, max_z_dist,
-                             xy_clearance, z_clearance, extra_depth, 'XY', cal_width)
+                             xy_clearance, z_clearance, extra_depth, 'XY', cal_width, probe_radius)
         return result
     elif cal_type in ('square_inside',):
         # 方孔內探：在已知方孔內探 4 壁（center）
         result = _probe_center(search_speed, max_xy_dist, max_z_dist,
-                               xy_clearance, z_clearance, extra_depth, 'XY')
+                               xy_clearance, z_clearance, extra_depth, 'XY', probe_radius)
         return result
     elif cal_type in ('square_outside',):
         # 方外探：在已知方塊外面探（boss XY）
         result = _probe_boss(search_speed, max_xy_dist, max_z_dist,
-                             xy_clearance, z_clearance, extra_depth, 'XY', cal_width)
+                             xy_clearance, z_clearance, extra_depth, 'XY', cal_width, probe_radius)
         return result
     elif cal_type in ('avg_xy', 'x_error', 'y_error'):
         # 誤差計算：探 4 面，依 cal_type 選取 X/Y/AVG 誤差
@@ -1671,11 +1737,11 @@ def _probe_calibrate(cal_type, search_speed, max_xy_dist, max_z_dist,
         if cal_type == 'x_error': axes = 'X'
         elif cal_type == 'y_error': axes = 'Y'
         result = _probe_center(search_speed, max_xy_dist, max_z_dist,
-                               xy_clearance, z_clearance, extra_depth, axes)
+                               xy_clearance, z_clearance, extra_depth, axes, probe_radius)
         return result
     elif cal_type == 'x_edge':
         result = _probe_center(search_speed, max_xy_dist, max_z_dist,
-                               xy_clearance, z_clearance, extra_depth, 'X')
+                               xy_clearance, z_clearance, extra_depth, 'X', probe_radius)
         return result
     else:
         return {'tripped': False, 'x': 0, 'y': 0, 'z': 0,
@@ -1707,32 +1773,50 @@ def v2_probe_run():
         # [2026-03-04] Boss/Pocket 特徵中心相對當前位置的近似偏移
         offset_x = float(data.get('offset_x', 0))
         offset_y = float(data.get('offset_y', 0))
+        # [2026-03-06] 探針刀號（用於自動 G43 + 讀取探針直徑做半徑補正）
+        probe_tool = int(data.get('probe_tool', 0))
 
         # 切換 MDI 模式
         if cnc_stat.task_mode != linuxcnc.MODE_MDI:
             cnc_cmd.mode(linuxcnc.MODE_MDI)
             cnc_cmd.wait_complete()
 
+        # [2026-03-06] 自動啟用探針刀長補正（G43），確保 G10 L20 寫入 WCS 時自動扣除刀長
+        probe_radius = 0.0
+        if probe_tool > 0:
+            g43_err = _probe_send_mdi_and_wait(f"G43 H{probe_tool}", timeout=5)
+            if g43_err:
+                return error_response(f"G43 H{probe_tool} failed: {g43_err}")
+            # [2026-03-06] 從刀具表讀取探針直徑 → 半徑（用於 XY 探測補正）
+            try:
+                cnc_stat.poll()
+                if probe_tool < len(cnc_stat.tool_table):
+                    probe_diameter = float(cnc_stat.tool_table[probe_tool].diameter)
+                    probe_radius = abs(probe_diameter) / 2.0
+                    app_log('CMD', f'Probe tool #{probe_tool}: diameter={probe_diameter:.4f} radius={probe_radius:.4f}')
+            except Exception as e:
+                app_log('WARN', f'Failed to read probe tool diameter: {e}')
+
         result = None
         if probe_type == 'edge':
             result = _probe_edge(direction, search_speed, max_xy_dist, max_z_dist,
-                                 xy_clearance, z_clearance, extra_depth)
+                                 xy_clearance, z_clearance, extra_depth, probe_radius)
         elif probe_type == 'outside_corner':
             result = _probe_outside_corner(direction, search_speed, max_xy_dist, max_z_dist,
-                                           xy_clearance, z_clearance, extra_depth)
+                                           xy_clearance, z_clearance, extra_depth, probe_radius)
         # [2026-03-04] Inside Corners 支援
         elif probe_type == 'inside_corner':
             result = _probe_inside_corner(direction, search_speed, max_xy_dist, max_z_dist,
-                                          xy_clearance, z_clearance, extra_depth)
+                                          xy_clearance, z_clearance, extra_depth, probe_radius)
         elif probe_type == 'inside_edge':
             # 內角邊緣：方向反轉（探針在內側向牆壁探測）
             inside_edge_map = {'N': 'S', 'S': 'N', 'E': 'W', 'W': 'E'}
             mapped_dir = inside_edge_map.get(direction, direction)
             result = _probe_edge(mapped_dir, search_speed, max_xy_dist, max_z_dist,
-                                 xy_clearance, z_clearance, extra_depth)
+                                 xy_clearance, z_clearance, extra_depth, probe_radius)
         elif probe_type == 'center':
             result = _probe_center(search_speed, max_xy_dist, max_z_dist,
-                                   xy_clearance, z_clearance, extra_depth)
+                                   xy_clearance, z_clearance, extra_depth, 'XY', probe_radius)
         # [2026-03-04] Boss 凸台：從外部向內探測（X/Y/XY）
         elif probe_type in ('boss_x', 'boss_y', 'boss_xy', 'boss'):
             axes = 'XY'
@@ -1743,7 +1827,7 @@ def v2_probe_run():
                 _probe_send_mdi_and_wait(f"G91 G0 X{offset_x:.4f} Y{offset_y:.4f}")
                 _probe_send_mdi_and_wait("G90")
             result = _probe_boss(search_speed, max_xy_dist, max_z_dist,
-                                 xy_clearance, z_clearance, extra_depth, axes, diameter)
+                                 xy_clearance, z_clearance, extra_depth, axes, diameter, probe_radius)
         # [2026-03-04] Pocket 口袋：從內部向外探壁（X/Y/XY）
         elif probe_type in ('pocket_x', 'pocket_y', 'pocket_xy', 'pocket'):
             axes = 'XY'
@@ -1754,7 +1838,7 @@ def v2_probe_run():
                 _probe_send_mdi_and_wait(f"G91 G0 X{offset_x:.4f} Y{offset_y:.4f}")
                 _probe_send_mdi_and_wait("G90")
             result = _probe_center(search_speed, max_xy_dist, max_z_dist,
-                                   xy_clearance, z_clearance, extra_depth, axes)
+                                   xy_clearance, z_clearance, extra_depth, axes, probe_radius)
         # [2026-03-04] Ridge 脊：從外部向內探（同 Boss）
         elif probe_type in ('ridge_x', 'ridge_y', 'ridge_xy'):
             axes = 'XY'
@@ -1765,7 +1849,7 @@ def v2_probe_run():
                 _probe_send_mdi_and_wait(f"G91 G0 X{offset_x:.4f} Y{offset_y:.4f}")
                 _probe_send_mdi_and_wait("G90")
             result = _probe_boss(search_speed, max_xy_dist, max_z_dist,
-                                 xy_clearance, z_clearance, extra_depth, axes, diameter)
+                                 xy_clearance, z_clearance, extra_depth, axes, diameter, probe_radius)
         # [2026-03-04] Valley 谷：從內部向外探（同 Pocket/Center）
         elif probe_type in ('valley_x', 'valley_y', 'valley_xy'):
             axes = 'XY'
@@ -1776,12 +1860,12 @@ def v2_probe_run():
                 _probe_send_mdi_and_wait(f"G91 G0 X{offset_x:.4f} Y{offset_y:.4f}")
                 _probe_send_mdi_and_wait("G90")
             result = _probe_center(search_speed, max_xy_dist, max_z_dist,
-                                   xy_clearance, z_clearance, extra_depth, axes)
+                                   xy_clearance, z_clearance, extra_depth, axes, probe_radius)
         # [2026-03-04] Edge Angle 邊角角度
         elif probe_type == 'edge_angle':
             edge_w = float(data.get('edge_width', 0))
             result = _probe_edge_angle(direction, search_speed, max_xy_dist, max_z_dist,
-                                       xy_clearance, z_clearance, extra_depth, edge_w)
+                                       xy_clearance, z_clearance, extra_depth, edge_w, probe_radius)
         # [2026-03-04] Calibrate 校正（對齊 PB 版：ring/square inside/outside + avg/x/y error）
         elif probe_type in ('cal_ring_inside', 'cal_ring_outside',
                             'cal_square_inside', 'cal_square_outside',
@@ -1790,7 +1874,7 @@ def v2_probe_run():
             cal_type = probe_type.replace('cal_', '')
             cal_width = float(data.get('calibration_width', 0))
             result = _probe_calibrate(cal_type, search_speed, max_xy_dist, max_z_dist,
-                                      xy_clearance, z_clearance, extra_depth, cal_width)
+                                      xy_clearance, z_clearance, extra_depth, cal_width, probe_radius)
         else:
             return error_response(f"Invalid probe_type: {probe_type}", 400)
 
@@ -1800,6 +1884,21 @@ def v2_probe_run():
         else:
             app_log('CMD', f'Probe {probe_type}/{direction}: '
                     f'X={result["x"]:.4f} Y={result["y"]:.4f} Z={result["z"]:.4f}')
+
+        # [2026-03-06] 探測成功且非僅顯示模式 → 後端直接寫入 WCS（避免前端另送 MDI 時序衝突）
+        wcs = data.get('wcs', '')
+        probe_only = bool(data.get('probe_position_only', False))
+        if result.get('tripped') and not error_msg and wcs and not probe_only:
+            wcs_map = {'G54':1,'G55':2,'G56':3,'G57':4,'G58':5,'G59':6,
+                       'G59.1':7,'G59.2':8,'G59.3':9}
+            p_idx = wcs_map.get(wcs, 0)
+            if p_idx > 0:
+                g10_cmd = f"G10 L20 P{p_idx} X{result['x']:.4f} Y{result['y']:.4f} Z{result['z']:.4f}"
+                wcs_err = _probe_send_mdi_and_wait(g10_cmd, timeout=5)
+                if wcs_err:
+                    app_log('WARN', f'Probe WCS write failed: {wcs_err}')
+                else:
+                    app_log('CMD', f'Probe → {wcs}: {g10_cmd}')
 
         return success_response({
             'Tripped': result.get('tripped', False),
@@ -1817,9 +1916,44 @@ def v2_probe_run():
         return error_response(f"Probe Fail: {e}")
 
 
+# ==============================================================================
+# [2026-03-05] 通用 HAL Pin 設定端點
+# 前端用於動態設定 HAL 參數（如探針模擬觸發位置）
+# ==============================================================================
+@app.route('/v2/hal/setp', methods=['POST'])
+def v2_hal_setp():
+    """[2026-03-05] 通用 halcmd setp：設定 HAL signal 值"""
+    try:
+        data = request.json or {}
+        signal_name = data.get('signal', '').strip()
+        value = data.get('value')
+
+        if not signal_name or value is None:
+            return error_response("Missing 'signal' or 'value'", 400)
+
+        # [2026-03-06] 安全檢查：允許 sim-probe- 和 probe-in（手動模擬觸發）
+        allowed_prefixes = ('sim-probe-', 'probe-in')
+        if not any(signal_name.startswith(p) for p in allowed_prefixes):
+            return error_response(f"Signal '{signal_name}' not allowed", 403)
+
+        result = subprocess.run(
+            ['halcmd', 'sets', signal_name, str(value)],
+            capture_output=True, text=True, timeout=5
+        )
+
+        if result.returncode != 0:
+            return error_response(f"halcmd failed: {result.stderr.strip()}", 500)
+
+        app_log('CMD', f'HAL setp: {signal_name} = {value}')
+        return success_response({'signal': signal_name, 'value': value})
+    except Exception as e:
+        return error_response(f"HAL setp failed: {e}")
+
+
 if __name__ == '__main__':
     print("[INIT] Server starting...", flush=True)
     start_linuxcnc_process()
     port = SETTINGS['PORT']
     print(f"[START] Server running on port {port}")
-    app.run(host='0.0.0.0', port=port, debug=False, use_reloader=False)
+    # [2026-03-05] threaded=True：允許多請求並行，避免探測阻塞 status 輪詢
+    app.run(host='0.0.0.0', port=port, debug=False, use_reloader=False, threaded=True)

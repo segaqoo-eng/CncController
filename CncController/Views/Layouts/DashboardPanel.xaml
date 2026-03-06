@@ -7,10 +7,11 @@
             BorderBrush="{DynamicResource Brush.Border}" BorderThickness="0,1,0,0" Padding="2">
         <Grid>
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="220"/>
-                <ColumnDefinition Width="180"/>
-                <ColumnDefinition Width="550"/>
-                <ColumnDefinition Width="400"/>
+                <!-- [2026-03-05] 欄寬對齊 PB 版 D_1~D_5 比例 -->
+                <ColumnDefinition Width="350"/>
+                <ColumnDefinition Width="250"/>
+                <ColumnDefinition Width="490"/>
+                <ColumnDefinition Width="430"/>
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
             <comp:CycleControl Grid.Column="0" Margin="2"/>

@@ -93,6 +93,14 @@ namespace CncController.ViewModels
         // === JOG 設定 ===
         [ObservableProperty] private double _jogFeedrate = 1500.0;
         [ObservableProperty] private double _jogStepDistance = 0;
+        // [2026-03-05] JOG 速度百分比（0~100%），對齊 PB 版 D_5
+        [ObservableProperty] private double _jogSpeedPercent = 100.0;
+        // [2026-03-05] JOG 主軸轉速 RPM，對齊 PB 版 D_5
+        [ObservableProperty] private double _jogSpindleRpm = 300.0;
+
+        // [2026-03-05] Override 靜態值（V/R 暫無後端連動），對齊 PB 版 D_4
+        [ObservableProperty] private double _velocityOverride = 100.0;
+        [ObservableProperty] private double _rapidOverride = 100.0;
         private readonly HashSet<int> _activeJogAxes = new();
 
         private readonly DispatcherTimer _timer;
@@ -641,6 +649,9 @@ namespace CncController.ViewModels
             if (!string.IsNullOrEmpty(data.Task_Mode))
                 Status.TaskMode = data.Task_Mode;
 
+            // [2026-03-06] 同步 Probe Input 訊號狀態（供 ProbingView 指示燈）
+            Status.IsProbeInput = data.Probe_Input;
+
             // [2026-03-04] 同步 Block Delete / Optional Stop / Current Line
             IsBlockDelete = data.Block_Delete;
             Status.IsBlockDelete = data.Block_Delete;
@@ -988,6 +999,68 @@ namespace CncController.ViewModels
             await MachineControlService.Instance.SetSpindleOverrideAsync(newValue);
         }
 
+        // [2026-03-05] ClearProgram：清除已載入的 G-Code，對齊 PB 版 D_1
+        [RelayCommand]
+        private async Task ClearProgram()
+        {
+            // TODO: 清除已載入的 G-Code
+            _loadedFileName = null;
+            AlarmService.Instance.AddLog("INFO", "Program cleared");
+            await Task.CompletedTask;
+        }
+
+        // [2026-03-05] 重置 Feed Override 為 100%，對齊 PB 版 D_4
+        [RelayCommand]
+        private async Task ResetFeedOverride()
+        {
+            await MachineControlService.Instance.SetFeedOverrideAsync(100);
+        }
+
+        // [2026-03-05] 重置 Spindle Override 為 100%，對齊 PB 版 D_4
+        [RelayCommand]
+        private async Task ResetSpindleOverride()
+        {
+            await MachineControlService.Instance.SetSpindleOverrideAsync(100);
+        }
+
+        // [2026-03-05] 重置 Velocity Override 為 100%（暫靜態），對齊 PB 版 D_4
+        [RelayCommand]
+        private void ResetVelocityOverride()
+        {
+            VelocityOverride = 100.0;
+        }
+
+        // [2026-03-05] 重置 Rapid Override 為 100%（暫靜態），對齊 PB 版 D_4
+        [RelayCommand]
+        private void ResetRapidOverride()
+        {
+            RapidOverride = 100.0;
+        }
+
+        // [2026-03-05] 主軸正轉（FWD），對齊 PB 版 D_5
+        [RelayCommand]
+        private async Task SpindleFwd()
+        {
+            if (!CanExecuteMotion()) return;
+            await MachineControlService.Instance.SendMdiCommandAsync($"M3 S{JogSpindleRpm}");
+        }
+
+        // [2026-03-05] 主軸反轉（REV），對齊 PB 版 D_5
+        [RelayCommand]
+        private async Task SpindleRev()
+        {
+            if (!CanExecuteMotion()) return;
+            await MachineControlService.Instance.SendMdiCommandAsync($"M4 S{JogSpindleRpm}");
+        }
+
+        // [2026-03-05] 主軸停止（STOP），對齊 PB 版 D_5
+        [RelayCommand]
+        private async Task SpindleStop()
+        {
+            if (!CanExecuteMotion()) return;
+            await MachineControlService.Instance.SendMdiCommandAsync("M5");
+        }
+
         // [新增] Reload 指令 (重載當前檔案)
         [RelayCommand]
         private async Task ReloadCommand()
@@ -1081,7 +1154,17 @@ namespace CncController.ViewModels
             AlarmService.Instance.AddLog("INFO", $"MachineType changed: {machineType} → axes={string.Join(",", enabledAxes)}");
         }
 
-        // [新增] 清除警報指令 (綁定給 ESC)
+        // [2026-03-06] ESC = 全機停止（abort）：不分狀態，直接送 cnc_cmd.abort() + 清除警報
+        [RelayCommand]
+        private async Task EmergencyAbort()
+        {
+            AlarmService.Instance.AddLog("WARN", "ESC 全機停止");
+            await MachineControlService.Instance.StopAsync();
+            AlarmService.Instance.ClearActiveAlarms();
+            UpdateHeaderStatus();
+        }
+
+        // [新增] 清除警報指令
         [RelayCommand]
         private void ClearAlarms()
         {

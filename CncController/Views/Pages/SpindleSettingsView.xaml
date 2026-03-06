@@ -1,0 +1,189 @@
+<!-- [2026-03-06] Spindle Settings View -->
+<UserControl x:Class="CncController.Views.Pages.SpindleSettingsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d"
+             d:DesignHeight="500" d:DesignWidth="600">
+
+    <UserControl.Resources>
+        <Style x:Key="ParamLabel" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="HorizontalAlignment" Value="Right"/>
+            <Setter Property="Margin" Value="0,0,10,0"/>
+        </Style>
+        <Style x:Key="ParamTextBox" TargetType="TextBox">
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="Foreground" Value="Black"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Width" Value="120"/>
+            <Setter Property="Height" Value="30"/>
+            <Setter Property="TextAlignment" Value="Center"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="BorderBrush" Value="#555"/>
+        </Style>
+        <Style x:Key="UnitLabel" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="Gray"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Margin" Value="8,0,0,0"/>
+        </Style>
+        <Style x:Key="SectionHeader" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="#5E70FF"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="FontSize" Value="14"/>
+        </Style>
+        <Style x:Key="SettingsGroupBox" TargetType="GroupBox">
+            <Setter Property="BorderBrush" Value="#555"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Margin" Value="0,0,0,10"/>
+            <Setter Property="Padding" Value="15,10"/>
+        </Style>
+    </UserControl.Resources>
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto" Background="#1E1E1E">
+        <StackPanel Margin="20">
+
+            <!-- [2026-03-06] SPINDLE SERVO -->
+            <GroupBox Style="{StaticResource SettingsGroupBox}">
+                <GroupBox.Header>
+                    <TextBlock Text="SPINDLE SERVO" Style="{StaticResource SectionHeader}"/>
+                </GroupBox.Header>
+                <StackPanel>
+                    <Grid Margin="0,5">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="180"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="EtherCAT Slave:" Style="{StaticResource ParamLabel}"/>
+                        <ComboBox Grid.Column="1" Width="260" FontSize="14" Height="30" Foreground="Black"
+                                  ItemsSource="{Binding AvailableSlaves}"
+                                  SelectedItem="{Binding SelectedSpindleSlave}"
+                                  DisplayMemberPath="Name"/>
+                    </Grid>
+                    <Grid Margin="0,5">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="180"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="Encoder PPR:" Style="{StaticResource ParamLabel}"/>
+                        <StackPanel Grid.Column="1" Orientation="Horizontal">
+                            <TextBox Style="{StaticResource ParamTextBox}"
+                                     Text="{Binding EncoderPPR, UpdateSourceTrigger=PropertyChanged}"/>
+                            <TextBlock Text="pulse/rev" Style="{StaticResource UnitLabel}"/>
+                        </StackPanel>
+                    </Grid>
+                </StackPanel>
+            </GroupBox>
+
+            <!-- [2026-03-06] SPEED PARAMETERS -->
+            <GroupBox Style="{StaticResource SettingsGroupBox}">
+                <GroupBox.Header>
+                    <TextBlock Text="SPEED PARAMETERS" Style="{StaticResource SectionHeader}"/>
+                </GroupBox.Header>
+                <StackPanel>
+                    <Grid Margin="0,5">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="180"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="Max RPM:" Style="{StaticResource ParamLabel}"/>
+                        <StackPanel Grid.Column="1" Orientation="Horizontal">
+                            <TextBox Style="{StaticResource ParamTextBox}"
+                                     Text="{Binding MaxRPM, UpdateSourceTrigger=PropertyChanged}"/>
+                            <TextBlock Text="RPM" Style="{StaticResource UnitLabel}"/>
+                        </StackPanel>
+                    </Grid>
+                    <Grid Margin="0,5">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="180"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="Max Acceleration:" Style="{StaticResource ParamLabel}"/>
+                        <StackPanel Grid.Column="1" Orientation="Horizontal">
+                            <TextBox Style="{StaticResource ParamTextBox}"
+                                     Text="{Binding MaxAccel, UpdateSourceTrigger=PropertyChanged}"/>
+                            <TextBlock Text="RPM/s" Style="{StaticResource UnitLabel}"/>
+                        </StackPanel>
+                    </Grid>
+                </StackPanel>
+            </GroupBox>
+
+            <!-- [2026-03-06] RIGID TAPPING / ORIENT -->
+            <GroupBox Style="{StaticResource SettingsGroupBox}">
+                <GroupBox.Header>
+                    <TextBlock Text="RIGID TAPPING / ORIENT" Style="{StaticResource SectionHeader}"/>
+                </GroupBox.Header>
+                <StackPanel>
+                    <Grid Margin="0,5">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="180"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="Rigid Tapping:" Style="{StaticResource ParamLabel}"/>
+                        <CheckBox Grid.Column="1" IsChecked="{Binding RigidTappingEnabled}"
+                                  Content="Enable G33.1" Foreground="White" FontSize="14"
+                                  VerticalAlignment="Center"/>
+                    </Grid>
+                    <Grid Margin="0,5">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="180"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="M19 Orient Angle:" Style="{StaticResource ParamLabel}"/>
+                        <StackPanel Grid.Column="1" Orientation="Horizontal">
+                            <TextBox Style="{StaticResource ParamTextBox}"
+                                     Text="{Binding OrientAngle, UpdateSourceTrigger=PropertyChanged}"/>
+                            <TextBlock Text="deg" Style="{StaticResource UnitLabel}"/>
+                        </StackPanel>
+                    </Grid>
+                </StackPanel>
+            </GroupBox>
+
+            <!-- [2026-03-06] INFO -->
+            <GroupBox Style="{StaticResource SettingsGroupBox}">
+                <GroupBox.Header>
+                    <TextBlock Text="INFO" Style="{StaticResource SectionHeader}"/>
+                </GroupBox.Header>
+                <StackPanel>
+                    <TextBlock FontSize="14" Foreground="#CCC" Margin="0,4">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Visibility" Value="Visible"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding SelectedSpindleSlave}" Value="{x:Null}">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                        <TextBlock.Text>
+                            <MultiBinding StringFormat="Selected: Slave #{0}  (Vendor: {1}, Product: {2})">
+                                <Binding Path="SelectedSpindleSlave.Index"/>
+                                <Binding Path="SelectedSpindleSlave.VendorId"/>
+                                <Binding Path="SelectedSpindleSlave.ProductCode"/>
+                            </MultiBinding>
+                        </TextBlock.Text>
+                    </TextBlock>
+                    <TextBlock Text="No slave selected" FontSize="14" Foreground="#888" Margin="0,4">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding SelectedSpindleSlave}" Value="{x:Null}">
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                </StackPanel>
+            </GroupBox>
+
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

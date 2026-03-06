@@ -55,6 +55,8 @@ namespace CncController.Models
         // [2026-02-24] 新增任務模式（MANUAL/AUTO/MDI，供 Offsets 右下角模式按鈕高亮）
         public string Task_Mode { get; set; }
 
+        // [2026-03-06] 新增 Probe_Input：探針輸入訊號即時狀態
+        public bool Probe_Input { get; set; }
         // [2026-03-04] 新增 Block Delete / Optional Stop / Current Line
         public bool Block_Delete { get; set; }
         public bool Optional_Stop { get; set; }
@@ -70,6 +72,7 @@ namespace CncController.Models
     public static class DeviceCategory
     {
         public const string Servo = "Servo";
+        public const string PulseGen = "PulseGen";  // [2026-03-05] 新增：台達 5621 脈波產生器
         public const string DiDo = "DI+DO";   // 對應 Python
         public const string DigIn = "DigIn";
         public const string DigOut = "DigOut";
@@ -107,6 +110,19 @@ namespace CncController.Models
     // 4. 設定檔結構
     // ==========================================
 
+    // [2026-03-05] 新增 SlaveDeviceType：統一設備類型判斷（取代散落的字串比對）
+    public enum SlaveDeviceType
+    {
+        Servo,          // CiA 402 伺服驅動器（匯川/台達 6080 等）— 閉環：真實編碼器回授
+        PulseGenerator, // 脈波產生器（台達 5621）— 有 CiA 402 但無 6060/6061 PDO，編碼器數值 = 命令座標（開環）
+        IoModule,       // IO 模組（台達 R2-EC0902）— DI+DO 混合 IO，Free Run
+        DigitalInput,   // [2026-03-05] 純數位輸入模組
+        DigitalOutput,  // [2026-03-05] 純數位輸出模組
+        Mpg,            // [2026-03-05] 手輪 (Manual Pulse Generator)
+        Coupler,        // [2026-03-05] 匯流排耦合器（跳過 PDO）
+        Unknown         // 未識別設備
+    }
+
     // [2026-02-24] 新增 MachineType：CNC 機台類型定義（3/4/5/6 軸可配置）
     //   三軸 VMC：XYZ（最基礎立式加工中心）
     //   四軸：XYZ + A（第四軸分度盤）
@@ -123,6 +139,90 @@ namespace CncController.Models
         SixAxis             // XYZABC
     }
 
+    // [2026-03-06] 新增 AtcType：刀庫類型定義
+    public enum AtcType
+    {
+        None,       // 無刀庫（手動換刀）
+        Turret,     // 排刀式（Rack，固定刀座，主軸移動取刀）
+        Umbrella,   // 斗笠式（Carousel，旋轉刀盤 + 升降機構）
+        SideMount   // 刀臂式（保留，暫不實作）
+    }
+
+    // [2026-03-06] 新增 AtcConfig：刀庫設定
+
+    // [2026-03-06] 主軸伺服設定（剛性攻牙 / M19 定向）
+    public class SpindleConfig
+    {
+        public int SlaveIndex { get; set; } = -1;          // EtherCAT Slave 站號
+        public int EncoderPPR { get; set; } = 4096;        // 編碼器脈衝/圈
+        public double MaxRPM { get; set; } = 8000;         // 最大轉速
+        public double MaxAccel { get; set; } = 2000;       // 最大加速度 RPM/s
+        public double OrientAngle { get; set; } = 0.0;     // M19 定向角度 (deg)
+        public bool RigidTappingEnabled { get; set; } = true; // 啟用剛性攻牙 G33.1
+    }
+
+    public class AtcConfig
+    {
+        public AtcType Type { get; set; } = AtcType.None;
+        public int ToolCount { get; set; } = 12;
+
+        // EtherCAT Servo（斗笠旋轉伺服，進階選項）
+        public int CarouselSlaveIndex { get; set; } = -1;
+        public double CarouselMaxVel { get; set; } = 90.0;
+        public double CarouselMaxAccel { get; set; } = 360.0;
+        public int CarouselPulsePerRev { get; set; } = 10000;   // [2026-03-06] 編碼器脈衝/圈
+        public double CarouselPitch { get; set; } = 360.0;     // [2026-03-06] 每圈行程（旋轉軸=360度）
+
+        // IO DO（對應 M64/M65 P-word）
+        public int IoSlaveIndex { get; set; } = -1;
+        public int DoCarouselOut { get; set; } = 0;
+        public int DoCarouselHome { get; set; } = 1;
+        public int DoDrawbar { get; set; } = 2;
+        public int DoAirBlow { get; set; } = 3;
+        public int DoMotorFwd { get; set; } = 4;
+        public int DoMotorRev { get; set; } = 5;
+
+        // IO DI（對應 M66 P-word）
+        public int DiCarouselHome { get; set; } = 0;
+        public int DiCarouselOut { get; set; } = 1;
+        public int DiDrawbarClamp { get; set; } = 2;
+        public int DiDrawbarUnclamp { get; set; } = 3;
+        public int DiRotationIndex { get; set; } = 4;
+
+        // 時序（ms）
+        public int ClampDwell { get; set; } = 1000;
+        public int UnclampDwell { get; set; } = 1000;
+        public int AirBlowDwell { get; set; } = 300;
+        public int SensorTimeout { get; set; } = 5000;
+
+        // 安全位置（機台座標）
+        public double ZToolChangeHeight { get; set; } = -3.9;
+        public double ZClearanceHeight { get; set; } = 0.0;
+
+        // Rack 參數
+        public double RackTraverseSpeed { get; set; } = 3000;
+        public double RackPocket1X { get; set; } = 0.0;
+        public double RackPocket1Y { get; set; } = 0.0;
+        public double RackPocket2X { get; set; } = 0.0;
+        public double RackPocket2Y { get; set; } = 0.0;
+        public double RackClearanceX { get; set; } = 0.0;
+        public double RackClearanceY { get; set; } = 0.0;
+    }
+
+    // [2026-03-06] 新增 AtcSlotInfo：刀位狀態資訊（供 UI 刀盤視覺化綁定）
+    public partial class AtcSlotInfo : ObservableObject
+    {
+        [ObservableProperty] private int _slotNumber;      // 刀位號 1~N
+        [ObservableProperty] private int _toolNumber;      // 刀具號（0=空位）
+        public bool HasTool => ToolNumber > 0;
+
+        // [2026-03-06] 當 ToolNumber 改變時通知 HasTool
+        partial void OnToolNumberChanged(int value)
+        {
+            OnPropertyChanged(nameof(HasTool));
+        }
+    }
+
     public class MachineConfig
     {
         public int MasterIndex { get; set; } = 0;
@@ -131,6 +231,10 @@ namespace CncController.Models
         public List<AxisSetting> Axes { get; set; } = new();
         public List<IoSetting> IoMappings { get; set; } = new();
         public List<HardwareMapping> Mappings { get; set; } = new();
+        // [2026-03-06] 新增 ATC 刀庫設定
+        public AtcConfig Atc { get; set; } = new();
+        // [2026-03-06] 主軸伺服設定
+        public SpindleConfig Spindle { get; set; } = new();
 
         // [2026-02-24] 依 MachineType 取得啟用軸列表
         public List<string> GetEnabledAxes()
@@ -155,12 +259,14 @@ namespace CncController.Models
         public string ExpectedVendorId { get; set; }
         public string ExpectedProductCode { get; set; }
         // 類型標記： "Axis" (軸), "Input" (輸入), "Output" (輸出)
-        
+
         public MapType Type { get; set; } = MapType.Axis;
         // 通道索引：紀錄這是第幾組 (例如 Input 0, Input 1)
         public int ChannelIndex { get; set; }
         // ★★★ [新增] 儲存 32 個 Pin 的設定 ★★★
         public List<PinConfig> Pins { get; set; } = new();
+        // [2026-03-05] 儲存掃描結果的設備類別（優先用於 ClassifyDevice，避免重算）
+        public string DeviceCategory { get; set; } = "";
     }
 
     // ==========================================
@@ -238,12 +344,22 @@ namespace CncController.Models
         [ObservableProperty]
         private DiscoveredSlave _selectedSlave;
 
-        // ★★★ [關鍵修正] 當下拉選單改變時的處理邏輯 ★★★
+        // [2026-03-05] 新增：啟用勾選（預設 true）
+        [ObservableProperty]
+        private bool _isEnabled = true;
+
+        // [2026-03-05] 新增：顯示名稱（站號 + 設備名 + 類型）
+        public string DisplayName => SelectedSlave != null
+            ? $"#{SelectedSlave.Index}: {SelectedSlave.Name} ({SelectedSlave.Category})"
+            : LogicalName;
+
+        // [2026-03-05] 改為純列表模式，移除 "--- None ---" 判斷
         partial void OnSelectedSlaveChanged(DiscoveredSlave value)
         {
-            if (value == null || value.Name == "--- None ---")
+            if (value == null)
             {
                 PinSettings.Clear();
+                OnPropertyChanged(nameof(DisplayName));
                 return;
             }
 
@@ -252,6 +368,7 @@ namespace CncController.Models
 
             // 呼叫初始化邏輯
             InitializePins(targetCount);
+            OnPropertyChanged(nameof(DisplayName));
         }
 
         public ObservableCollection<IoPinSetting> PinSettings { get; } = new();
@@ -347,6 +464,8 @@ namespace CncController.Models
     // [2026-03-04] 探測參數（前端 ProbingViewModel → 後端 /v2/probe/run）
     public class ProbeParameters
     {
+        // [2026-03-06] 探針刀號（後端自動 G43 + 讀取直徑做半徑補正）
+        public int ProbeToolNumber { get; set; } = 0;
         public double TraverseSpeed { get; set; } = 300.0;
         public double SearchSpeed { get; set; } = 50.0;
         public double MaxXYDistance { get; set; } = 20.0;

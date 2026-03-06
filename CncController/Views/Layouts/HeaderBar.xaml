@@ -71,10 +71,17 @@
 
             <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
 
-                <TextBlock Text="{DynamicResource Str.Title}" 
-                           Foreground="{DynamicResource Brush.Text.Primary}" 
+                <!-- [2026-03-06] 快捷鍵提示 -->
+                <TextBlock Foreground="#888" FontSize="11" VerticalAlignment="Center" Margin="0,0,20,0">
+                    <Run Text="ESC" FontWeight="Bold" Foreground="#CCC"/><Run Text=" 停止  "/>
+                    <Run Text="F1" FontWeight="Bold" Foreground="#CCC"/><Run Text=" 電源  "/>
+                    <Run Text="F2" FontWeight="Bold" Foreground="#CCC"/><Run Text=" 急停"/>
+                </TextBlock>
+
+                <TextBlock Text="{DynamicResource Str.Title}"
+                           Foreground="{DynamicResource Brush.Text.Primary}"
                            Opacity="0.5"
-                           VerticalAlignment="Center" 
+                           VerticalAlignment="Center"
                            Margin="0,0,20,0"/>
 
                 <TextBlock Text="{Binding ServerVersionDisplay, StringFormat='Ver: {0}'}" 

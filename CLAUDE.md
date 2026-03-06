@@ -1,7 +1,11 @@
-# CLAUDE.md
+﻿# CLAUDE.md
 
 本檔案提供 Claude Code 在此專案中的開發指引。
 
+
+---
+
+See @memory.md for current bugs, progress, and decisions.
 ---
 
 ## 角色定義
@@ -217,12 +221,20 @@ DispatcherTimer (500ms) → MachineControlService.GetStatusAsync()
 - Block Delete / M01 Break（toggle 開關 + 後端 set_block_delete / set_optional_stop + DataTrigger 藍色高亮）
 - G-Code 行號高亮（ItemsControl 逐行顯示 + 行號 + 黃底高亮執行中行 + VirtualizingStackPanel）
 - ATC PROGRAM TOOLS（GCodeParser 解析 T 號 + LOAD TOOLS 按鈕 + 自動載入 + 去重排序）
+- ATC 設定三分頁（ATC BASIC/ATC AXIS/ATC IO + AtcType 三種刀庫 + 伺服/IO/時序/排刀參數 + 即時連動）
+- SPINDLE 設定分頁（EtherCAT Slave + 剛性攻牙 G33.1 + M19 定向 + EncoderPPR/MaxRPM）
+- CachedContentControl 主分頁快取（消除切換延遲）
+- Dashboard 底部五大區塊對齊 PB 版（D_1~D_5 欄寬/按鈕/控件全面對齊）
+  - CycleControl：CLEAR PGM + 按鈕加大 45px
+  - SliderControl：4 條 Slider（V/F/S/R）+ Spindle Load + 重置按鈕
+  - JogConfig：JOG 標籤 + JOG 速度 Slider + FEEDRATE MM/M + SPINDLE RPM + REV/STOP/FWD
+  - 主軸正反轉控制（SpindleFwd/Rev/Stop → M3/M4/M5）
 
 ### ❌ 尚未實作
 
 | 功能 | 說明 |
 |------|------|
-| Probing Tool Setter | TOOL SETTER 分頁（目前 disabled）|
+| Probing Tool Setter | TOOL SETTER 分頁（基本 UI + 參數面板已完成，待實機測試）|
 | Probing Rotary Axis | ROTARY AXIS 分頁（目前 disabled）|
 | Conversational 對話式加工 | 無 Facing/Holes/Pattern 產生器 |
 
@@ -232,7 +244,7 @@ DispatcherTimer (500ms) → MachineControlService.GetStatusAsync()
 |------|--------|
 | 3D 視圖 | 無刀具路徑模擬 |
 | Tool Info | ✅ 已綁定即時資料 + ✅ 完整刀具表管理（TOOL Tab） |
-| Rapid Override | SliderControl 第三列暫靜態 100% |
+| Velocity / Rapid Override | V/R Slider 暫靜態（無後端連動），F/S 已連通 |
 
 ### 📋 開發優先順序
 
@@ -357,6 +369,28 @@ DispatcherTimer (500ms) → MachineControlService.GetStatusAsync()
 | **ConfigurationService 修正** | HAL：isServo && !isPulseGen 條件；INI：新增 OFFSET_COLUMNS 動態軸欄位 |
 | **版本號** | `2026.03.03_TOOL_ATC` |
 
+### 2026-03-05
+
+| 項目 | 說明 |
+|------|------|
+| **Dashboard 底部對齊 PB 版（D_1~D_5）** | DashboardPanel 欄寬 350\|250\|490\|430\|*；CycleControl / SliderControl / JogConfig 全面重寫 |
+| **DashboardPanel 欄寬** | 220\|180\|550\|400\|* → 350\|250\|490\|430\|*（ToolInfo 截斷問題一併解決） |
+| **CycleControl 對齊 D_1** | GO TO HOME → CLEAR PGM（ClearProgramCommand）；按鈕高度 38→45px；DesignWidth 220→350 |
+| **SliderControl 完全重寫 D_4** | Spindle Load 顯示 + 4 條 Slider（Velocity/Feed/Spindle/Rapid Override 0~200%）+ V/F/S/R 100% 重置按鈕；ProgressBar 改為 Slider 可拖拉 |
+| **JogConfig 對齊 D_5** | Cont.→JOG 標籤；增量值 10.0/1.0/0.1→0.1/0.01/0.001；新增 JOG 速度 Slider 0~100%；FEEDRATE MM/M + SPINDLE RPM 左右分欄；REV/STOP/FWD 改用 BaseBtnStyle |
+| **主軸控制** | SpindleFwd（M3）/ SpindleRev（M4）/ SpindleStop（M5）+ JogSpindleRpm 參數 |
+| **MainViewModel 新增** | ClearProgramCommand、ResetFeedOverride/SpindleOverride/VelocityOverride/RapidOverride、SpindleFwd/Rev/Stop、JogSpeedPercent、JogSpindleRpm、VelocityOverride、RapidOverride |
+| **MachineStatus 新增** | SpindleLoad（主軸負載百分比） |
+| **版本號** | `2026.03.05_DASHBOARD_PB` |
+| **TOOL SETTER 分頁** | ProbingView 新增 TOOL SETTER 垂直 Tab + TOOL_BACK.png 背景切換 + 兩欄參數面板（6 模式按鈕）|
+| **探針模擬 comp→near** | sim_probe.hal 改用 `near` 組件（`\|pos-target\|<=0.05` 觸發），comp 的 `>=` 比較向負方向立刻觸發 |
+| **探針模擬自包含** | GenerateSimProbeHal(MachineConfig) 動態解析位置訊號名稱 + loadrt/addf/wiring 全部自包含 |
+| **模擬 probe-in 衝突修正** | GenerateHal 模擬模式 skip `net probe-in` 整條接線，避免 OUT pin 衝突 |
+| **後端 threaded** | `app.run(threaded=True)` 探測不再阻塞 status 輪詢 |
+| **Probe timeout 延長** | 前端 RunProbeAsync HTTP timeout 30s→120s |
+| **Probe 錯誤傳播** | 後端 `_probe_send_mdi_and_wait` 回傳 LinuxCNC 錯誤；`_probe_edge` 傳播真實錯誤到前端 |
+| **Probe DEBUG log** | 前端 ExecuteProbe 記錄探測參數+結果到 HISTORY DEBUG |
+
 ### 2026-03-04
 
 | 項目 | 說明 |
@@ -380,3 +414,19 @@ DispatcherTimer (500ms) → MachineControlService.GetStatusAsync()
 | **G-Code 行號高亮** | MonitorViewModel GCodeLines（ObservableCollection<GCodeLineItem>）+ MachineStatus.CurrentLine 訂閱 + MonitorView ItemsControl 逐行（行號+黃底高亮+VirtualizingStackPanel） |
 | **ATC PROGRAM TOOLS** | GCodeParser.ExtractToolNumbers（Regex T\d+ 去重排序）+ AtcViewModel LoadProgramTools + Navigate "Atc" 自動載入 + LOAD TOOLS 按鈕 |
 | **版本號** | `2026.03.04_BLOCKDEL_HIGHLIGHT_ATC` |
+
+### 2026-03-06
+
+| 項目 | 說明 |
+|------|------|
+| **探針已觸發修正** | 後端 `_probe_edge()` 執行 G38.2 前先 `cnc_stat.poll()` + 檢查 `probe_val`，避免 "Probe is already tripped" 錯誤 |
+| **Probe Input 即時狀態** | 後端 `/v2/status` 新增 `Probe_Input`（讀取 `cnc_stat.probe_val`）；前端 `MachineStatus.IsProbeInput` + 狀態輪詢映射 |
+| **探針模擬改手動觸發** | 移除自動位置觸發（near/or2），改為手動按鈕 `sets probe-in 0/1`；`GenerateSimProbeHal()` 簡化為 `net probe-in motion.probe-input` + `sets probe-in 0` |
+| **SIM TRIGGER 按鈕** | ProbingView 新增 PROBE INPUT LED 指示燈（綠/灰）+ SIM TRIGGER/SIM RELEASE 按鈕；ProbingViewModel `ToggleProbeInput()` 透過 `/v2/hal/setp` 切換 |
+| **後端非阻塞探測** | `_probe_send_mdi_and_wait()` 從 `wait_complete()` 改為非阻塞輪詢（sleep 0.1s + poll interp_state），解決 Flask 單線程阻塞造成斷線 |
+| **WCS 寫入移至後端** | 探測成功後 G10 L20 直接在 `v2_probe_run()` 內執行，解決前端分離 HTTP 請求造成 "MDI running" 時序錯誤 |
+| **探針參數持久化** | `SaveProbeSettings()` / `LoadProbeSettings()` 儲存至 `probe_settings.json`（TOUCH PROBE + TOOL SETTER 全部參數） |
+| **探測頁面全繁中翻譯** | TOUCH PROBE + TOOL SETTER 所有標籤翻譯為繁體中文 + 單位標註（mm/min、mm）；含結果欄位、子分頁名稱、按鈕文字 |
+| **字體加大** | ParamLbl/ResultLbl 14→16、ParamTxt 高度 30→34、狀態文字 11→15+Bold、TOOL SETTER 按鈕 12→14 |
+| **G38.2 timeout 延長** | 後端探測超時 30s→60s（手動模擬需更多時間） |
+| **版本號** | `2026.03.06_PROBE_MANUAL_SIM` |

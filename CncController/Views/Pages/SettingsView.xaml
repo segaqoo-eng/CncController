@@ -8,6 +8,7 @@
              xmlns:sys="clr-namespace:System;assembly=mscorlib"
              xmlns:views="clr-namespace:CncController.Views"
              xmlns:comp="clr-namespace:CncController.Views.Components"
+             xmlns:pages="clr-namespace:CncController.Views.Pages"
              mc:Ignorable="d" d:DesignHeight="900" d:DesignWidth="1400">
 
     <Grid Background="#1E1E1E">
@@ -357,8 +358,9 @@
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="*"/>
                         </Grid.RowDefinitions>
-                        <TextBlock Text="1. Select Input Module" Foreground="#5E70FF" FontWeight="Bold" Margin="0,0,0,5"/>
-                        <!-- [2026-03-04] SelectedIndex 綁定 VM，自動選取第一個有設備的列 -->
+                        <!-- [2026-03-05] 改為純列表模式（掃描結果自動填入，不可選設備） -->
+                        <!-- [2026-03-05] 移除步驟編號（純列表不需引導） -->
+                        <TextBlock Text="Input Modules" Foreground="#5E70FF" FontWeight="Bold" Margin="0,0,0,5"/>
                         <DataGrid x:Name="InMapGrid"
                                   ItemsSource="{Binding InMaps}"
                                   AutoGenerateColumns="False"
@@ -367,20 +369,24 @@
                                   CanUserAddRows="False" RowHeight="40"
                                   SelectionMode="Single"
                                   SelectedIndex="{Binding SelectedInMapIndex, Mode=TwoWay}"
-                                  CellStyle="{StaticResource CenterCellStyle}" 
+                                  CellStyle="{StaticResource CenterCellStyle}"
                                   ColumnHeaderStyle="{StaticResource CenterHeaderStyle}">
                             <DataGrid.Columns>
-                                <DataGridTextColumn Header="#" Binding="{Binding Index}" IsReadOnly="True" Width="40"/>
-                                <DataGridTemplateColumn Header="Physical Device" Width="*">
+                                <!-- [2026-03-05] 啟用勾選 -->
+                                <DataGridTemplateColumn Header="&#x2713;" Width="40">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
-                                            <ComboBox ItemsSource="{Binding DataContext.AvailableInputSlaves, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                                      DisplayMemberPath="DisplayName"
-                                                      SelectedValue="{Binding SelectedSlave, UpdateSourceTrigger=PropertyChanged}"
-                                                      Margin="2" Foreground="Black" BorderThickness="0"/>
+                                            <CheckBox IsChecked="{Binding IsEnabled, UpdateSourceTrigger=PropertyChanged}"
+                                                      HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
+                                <!-- [2026-03-05] 站號 -->
+                                <DataGridTextColumn Header="#" Binding="{Binding SelectedSlave.Index}"
+                                                    IsReadOnly="True" Width="40"/>
+                                <!-- [2026-03-05] 設備名稱（純文字） -->
+                                <DataGridTextColumn Header="Device" Binding="{Binding DisplayName}"
+                                                    IsReadOnly="True" Width="*"/>
                             </DataGrid.Columns>
                         </DataGrid>
                     </Grid>
@@ -394,8 +400,9 @@
                         </Grid.RowDefinitions>
 
                         <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,5">
-                            <TextBlock Text="2. Pin Configuration for: " Foreground="#5E70FF" FontWeight="Bold"/>
-                            <TextBlock Text="{Binding ElementName=InMapGrid, Path=SelectedItem.SelectedSlave.Name}" Foreground="White" FontWeight="Bold" Margin="5,0,0,0"/>
+                            <!-- [2026-03-05] 移除步驟編號，改用 DisplayName -->
+                            <TextBlock Text="Pin Configuration for: " Foreground="#5E70FF" FontWeight="Bold"/>
+                            <TextBlock Text="{Binding ElementName=InMapGrid, Path=SelectedItem.DisplayName}" Foreground="White" FontWeight="Bold" Margin="5,0,0,0"/>
                         </StackPanel>
 
                         <DataGrid Grid.Row="1" 
@@ -463,8 +470,9 @@
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="*"/>
                         </Grid.RowDefinitions>
-                        <TextBlock Text="1. Select Output Module" Foreground="#5E70FF" FontWeight="Bold" Margin="0,0,0,5"/>
-                        <!-- [2026-03-04] SelectedIndex 綁定 VM，自動選取第一個有設備的列 -->
+                        <!-- [2026-03-05] 改為純列表模式（掃描結果自動填入，不可選設備） -->
+                        <!-- [2026-03-05] 移除步驟編號（純列表不需引導） -->
+                        <TextBlock Text="Output Modules" Foreground="#5E70FF" FontWeight="Bold" Margin="0,0,0,5"/>
                         <DataGrid x:Name="OutMapGrid"
                                   ItemsSource="{Binding OutMaps}"
                                   AutoGenerateColumns="False"
@@ -473,20 +481,24 @@
                                   CanUserAddRows="False" RowHeight="40"
                                   SelectionMode="Single"
                                   SelectedIndex="{Binding SelectedOutMapIndex, Mode=TwoWay}"
-                                  CellStyle="{StaticResource CenterCellStyle}" 
+                                  CellStyle="{StaticResource CenterCellStyle}"
                                   ColumnHeaderStyle="{StaticResource CenterHeaderStyle}">
                             <DataGrid.Columns>
-                                <DataGridTextColumn Header="#" Binding="{Binding Index}" IsReadOnly="True" Width="40"/>
-                                <DataGridTemplateColumn Header="Physical Device" Width="*">
+                                <!-- [2026-03-05] 啟用勾選 -->
+                                <DataGridTemplateColumn Header="&#x2713;" Width="40">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
-                                            <ComboBox ItemsSource="{Binding DataContext.AvailableOutputSlaves, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                                      DisplayMemberPath="DisplayName"
-                                                      SelectedValue="{Binding SelectedSlave, UpdateSourceTrigger=PropertyChanged}"
-                                                      Margin="2" Foreground="Black" BorderThickness="0"/>
+                                            <CheckBox IsChecked="{Binding IsEnabled, UpdateSourceTrigger=PropertyChanged}"
+                                                      HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
+                                <!-- [2026-03-05] 站號 -->
+                                <DataGridTextColumn Header="#" Binding="{Binding SelectedSlave.Index}"
+                                                    IsReadOnly="True" Width="40"/>
+                                <!-- [2026-03-05] 設備名稱（純文字） -->
+                                <DataGridTextColumn Header="Device" Binding="{Binding DisplayName}"
+                                                    IsReadOnly="True" Width="*"/>
                             </DataGrid.Columns>
                         </DataGrid>
                     </Grid>
@@ -500,8 +512,9 @@
                         </Grid.RowDefinitions>
 
                         <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,5">
-                            <TextBlock Text="2. Pin Configuration for: " Foreground="#5E70FF" FontWeight="Bold"/>
-                            <TextBlock Text="{Binding ElementName=OutMapGrid, Path=SelectedItem.SelectedSlave.Name}" Foreground="White" FontWeight="Bold" Margin="5,0,0,0"/>
+                            <!-- [2026-03-05] 移除步驟編號，改用 DisplayName -->
+                            <TextBlock Text="Pin Configuration for: " Foreground="#5E70FF" FontWeight="Bold"/>
+                            <TextBlock Text="{Binding ElementName=OutMapGrid, Path=SelectedItem.DisplayName}" Foreground="White" FontWeight="Bold" Margin="5,0,0,0"/>
                         </StackPanel>
 
                         <DataGrid Grid.Row="1" 
@@ -554,6 +567,26 @@
                         </TextBlock>
                     </Grid>
                 </Grid>
+            </TabItem>
+
+            <!-- [2026-03-06] 主軸設定 -->
+            <TabItem Header="SPINDLE" DataContext="{Binding SpindleVM}">
+                <pages:SpindleSettingsView/>
+            </TabItem>
+
+            <!-- [2026-03-06] ATC 基本設定 -->
+            <TabItem Header="ATC BASIC" DataContext="{Binding AtcBasicVM}">
+                <pages:AtcBasicSettingsView/>
+            </TabItem>
+
+            <!-- [2026-03-06] ATC 軸設定（僅 Umbrella 有意義，但 Tab 永遠顯示） -->
+            <TabItem Header="ATC AXIS" DataContext="{Binding AtcAxisVM}">
+                <pages:AtcAxisSettingsView/>
+            </TabItem>
+
+            <!-- [2026-03-06] ATC IO 設定 -->
+            <TabItem Header="ATC IO" DataContext="{Binding AtcIoVM}">
+                <pages:AtcIoSettingsView/>
             </TabItem>
         </TabControl>
     </Grid>

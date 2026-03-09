@@ -10,6 +10,9 @@ namespace CncController.ViewModels
         // [2026-03-06] 刀庫類型（預設斗笠式，與 AtcViewModel.ACTIVE_ATC_TYPE 一致）
         [ObservableProperty] private AtcType _selectedAtcType = AtcType.Umbrella;
 
+        // [2026-03-09] 刀盤控制模式（Servo 伺服定位 / IO 馬達+感測器）
+        [ObservableProperty] private CarouselControlMode _controlMode = CarouselControlMode.Servo;
+
         // [2026-03-06] 刀具數量
         [ObservableProperty] private int _toolCount = 12;
 
@@ -35,12 +38,19 @@ namespace CncController.ViewModels
         // [2026-03-06] ComboBox 可選刀庫類型
         public AtcType[] AvailableAtcTypes => new[] { AtcType.None, AtcType.Turret, AtcType.Umbrella };
 
+        // [2026-03-09] ComboBox 可選刀盤控制模式
+        public CarouselControlMode[] AvailableControlModes => new[] { CarouselControlMode.Servo, CarouselControlMode.IO };
+
         // [2026-03-06] 計算屬性：依刀庫類型控制 UI 區塊可見性
         public bool IsUmbrella => SelectedAtcType == AtcType.Umbrella;  // [2026-03-06]
         public bool IsTurret => SelectedAtcType == AtcType.Turret;      // [2026-03-06]
         public bool IsNone => SelectedAtcType == AtcType.None;          // [2026-03-06]
         public bool ShowTimingParams => IsUmbrella || IsTurret;         // [2026-03-06] 斗笠/排刀都需要時序
         public bool ShowRackParams => IsTurret;                         // [2026-03-06] 僅排刀式顯示 Rack 參數
+        // [2026-03-09] 斗笠式才顯示控制模式選擇
+        public bool ShowControlMode => IsUmbrella;
+        public bool IsServoMode => ControlMode == CarouselControlMode.Servo;   // [2026-03-09]
+        public bool IsIoMode => ControlMode == CarouselControlMode.IO;         // [2026-03-09]
 
         // [2026-03-06] 刀庫類型變更時通知所有計算屬性
         partial void OnSelectedAtcTypeChanged(AtcType value)
@@ -50,12 +60,21 @@ namespace CncController.ViewModels
             OnPropertyChanged(nameof(IsNone));
             OnPropertyChanged(nameof(ShowTimingParams));
             OnPropertyChanged(nameof(ShowRackParams));
+            OnPropertyChanged(nameof(ShowControlMode));
+        }
+
+        // [2026-03-09] 控制模式變更時通知計算屬性
+        partial void OnControlModeChanged(CarouselControlMode value)
+        {
+            OnPropertyChanged(nameof(IsServoMode));
+            OnPropertyChanged(nameof(IsIoMode));
         }
 
         // [2026-03-06] 從 AtcConfig 載入所有參數
         public void LoadFrom(AtcConfig config)
         {
             SelectedAtcType = config.Type;
+            ControlMode = config.ControlMode; // [2026-03-09]
             ToolCount = config.ToolCount;
             ZToolChangeHeight = config.ZToolChangeHeight;
             ZClearanceHeight = config.ZClearanceHeight;
@@ -76,6 +95,7 @@ namespace CncController.ViewModels
         public void SaveTo(AtcConfig config)
         {
             config.Type = SelectedAtcType;
+            config.ControlMode = ControlMode; // [2026-03-09]
             config.ToolCount = ToolCount;
             config.ZToolChangeHeight = ZToolChangeHeight;
             config.ZClearanceHeight = ZClearanceHeight;

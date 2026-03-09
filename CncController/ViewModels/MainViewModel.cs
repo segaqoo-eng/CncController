@@ -662,6 +662,9 @@ namespace CncController.ViewModels
             // 更新 InterpState 供計時器判斷
             Status.InterpState = data.Interp_State;
 
+            // [2026-03-09] 同步主軸 Encoder 角度（供 HeaderBar 即時顯示）
+            Status.SpindlePosition = data.Spindle_Position;
+
             // [2026-02-23] 新增：將後端回傳的 Active_WCS 同步至 MachineStatus 與 OffsetsVM，保持 DRO 快選列高亮一致
             if (!string.IsNullOrEmpty(data.Active_WCS))
             {

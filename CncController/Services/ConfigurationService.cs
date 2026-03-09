@@ -155,6 +155,17 @@ namespace CncController.Services
             sb.AppendLine($"POCKETS = {config.Atc.ToolCount}");
             sb.AppendLine($"Z_TOOL_CHANGE_HEIGHT = {config.Atc.ZToolChangeHeight}");
             sb.AppendLine($"Z_TOOL_CLEARANCE_HEIGHT = {config.Atc.ZClearanceHeight}");
+            // [2026-03-09] 刀盤控制模式：SERVO=伺服定角度 / IO=馬達+感測器計數
+            sb.AppendLine($"CONTROL_MODE = {(config.Atc.ControlMode == CarouselControlMode.Servo ? "SERVO" : "IO")}");
+            // [2026-03-09] Carousel Servo 參數（供 HAL 參考）
+            if (config.Atc.ControlMode == CarouselControlMode.Servo && config.Atc.CarouselSlaveIndex >= 0)
+            {
+                sb.AppendLine($"CAROUSEL_SLAVE_INDEX = {config.Atc.CarouselSlaveIndex}");
+                sb.AppendLine($"CAROUSEL_MAX_VEL = {config.Atc.CarouselMaxVel}");
+                sb.AppendLine($"CAROUSEL_MAX_ACCEL = {config.Atc.CarouselMaxAccel}");
+                sb.AppendLine($"CAROUSEL_PPR = {config.Atc.CarouselPulsePerRev}");
+                sb.AppendLine($"CAROUSEL_PITCH = {config.Atc.CarouselPitch}");
+            }
             if (config.Atc.Type == AtcType.Turret)
             {
                 // Rack 專用參數（寫入 INI 供 NGC 讀取）
@@ -204,6 +215,8 @@ namespace CncController.Services
             sb.AppendLine("SERVO_PERIOD = 1000000");
             // [2026-03-09] NUM_DIO：ATC 用 M64/M65/M66 需要足夠的 digital IO pin（預設僅 4 個）
             sb.AppendLine("NUM_DIO = 32");
+            // [2026-03-09] NUM_AIO：Servo 模式刀盤用 M68 E0 Q[angle] 傳遞角度值
+            sb.AppendLine("NUM_AIO = 4");
             sb.AppendLine();
 
             sb.AppendLine("[TASK]");
@@ -245,6 +258,9 @@ namespace CncController.Services
             sb.AppendLine();
 
             sb.AppendLine("[SPINDLE]");
+            // [2026-03-09] 主軸 EtherCAT Slave 站號（供後端讀取 encoder feedback）
+            sb.AppendLine($"SLAVE_INDEX = {config.Spindle.SlaveIndex}");
+            sb.AppendLine($"ENCODER_PPR = {config.Spindle.EncoderPPR}");
             sb.AppendLine("PGAIN_V = 0");
             sb.AppendLine("IGAIN_V = 0.01");
             sb.AppendLine("DGAIN_V = 0");
@@ -337,8 +353,27 @@ namespace CncController.Services
             sb.AppendLine();
             sb.AppendLine("loadrt [KINS]KINEMATICS");
             // [2026-03-09] num_dio=32：讓 motion module 建立 32 個 digital IO pin（供 ATC M64/M65/M66 使用）
-            sb.AppendLine("loadrt [EMCMOT]EMCMOT servo_period_nsec=[EMCMOT]SERVO_PERIOD num_joints=[KINS]JOINTS num_dio=[EMCMOT]NUM_DIO");
-            sb.AppendLine($"loadrt cia402 count={axesCount}");
+            // [2026-03-09] num_aio：Servo 模式刀盤用 analog output 傳角度
+            sb.AppendLine("loadrt [EMCMOT]EMCMOT servo_period_nsec=[EMCMOT]SERVO_PERIOD num_joints=[KINS]JOINTS num_dio=[EMCMOT]NUM_DIO num_aio=[EMCMOT]NUM_AIO");
+            // [2026-03-09] Carousel Servo + Spindle Servo 需要額外 cia402 實例
+            int cia402Count = axesCount;
+            int carouselCia402Idx = -1;
+            int spindleCia402Idx = -1;
+            bool hasCarouselServo_pre = config.Atc.Type == AtcType.Umbrella
+                                      && config.Atc.ControlMode == CarouselControlMode.Servo
+                                      && config.Atc.CarouselSlaveIndex >= 0;
+            bool hasSpindleServo = config.Spindle.SlaveIndex >= 0;
+            if (hasSpindleServo)
+            {
+                spindleCia402Idx = cia402Count;
+                cia402Count++;
+            }
+            if (hasCarouselServo_pre)
+            {
+                carouselCia402Idx = cia402Count;
+                cia402Count++;
+            }
+            sb.AppendLine($"loadrt cia402 count={cia402Count}");
 
             var sliceNames = string.Join(",", config.Axes.Select(a => $"slice_{a.AxisID}"));
             var personalities = string.Join(",", Enumerable.Repeat("32", axesCount));
@@ -355,6 +390,21 @@ namespace CncController.Services
 
             if (totalNotCount > 0) sb.AppendLine($"loadrt not count={totalNotCount}");
 
+            // [2026-03-09] Spindle Servo：載入 scale（RPM↔RPS 轉換）+ near（at-speed 判斷）
+            if (hasSpindleServo)
+            {
+                sb.AppendLine("loadrt scale count=2");  // scale.0=速度cmd RPM→RPS, scale.1=速度fb RPS→RPM
+                sb.AppendLine("loadrt near");            // at-speed 判斷
+            }
+            // [2026-03-09] Carousel Servo 模式：載入 limit3（加減速限制）
+            bool hasCarouselServo = config.Atc.Type == AtcType.Umbrella
+                                  && config.Atc.ControlMode == CarouselControlMode.Servo
+                                  && config.Atc.CarouselSlaveIndex >= 0;
+            if (hasCarouselServo)
+            {
+                sb.AppendLine("loadrt limit3 count=1");
+            }
+
             sb.AppendLine("loadusr -W lcec_conf ethercat-conf.xml");
             sb.AppendLine("loadrt lcec");
             sb.AppendLine();
@@ -362,6 +412,10 @@ namespace CncController.Services
             sb.AppendLine("addf lcec.read-all servo-thread");
             foreach (var axis in config.Axes) sb.AppendLine($"addf slice_{axis.AxisID} servo-thread");
             for (int i = 0; i < axesCount; i++) sb.AppendLine($"addf cia402.{i}.read-all servo-thread");
+            // [2026-03-09] Spindle cia402 read
+            if (hasSpindleServo) sb.AppendLine($"addf cia402.{spindleCia402Idx}.read-all servo-thread");
+            // [2026-03-09] Carousel cia402 read
+            if (hasCarouselServo_pre) sb.AppendLine($"addf cia402.{carouselCia402Idx}.read-all servo-thread");
 
             if (totalNotCount > 0)
             {
@@ -370,7 +424,23 @@ namespace CncController.Services
 
             sb.AppendLine("addf motion-command-handler servo-thread");
             sb.AppendLine("addf motion-controller servo-thread");
+            // [2026-03-09] Spindle scale + near（在 motion 之後）
+            if (hasSpindleServo)
+            {
+                sb.AppendLine("addf scale.0 servo-thread");
+                sb.AppendLine("addf scale.1 servo-thread");
+                sb.AppendLine("addf near.0 servo-thread");
+            }
+            // [2026-03-09] Carousel limit3（在 motion 之後、cia402 write 之前）
+            if (hasCarouselServo)
+            {
+                sb.AppendLine("addf limit3.0 servo-thread");
+            }
             for (int i = 0; i < axesCount; i++) sb.AppendLine($"addf cia402.{i}.write-all servo-thread");
+            // [2026-03-09] Spindle cia402 write
+            if (hasSpindleServo) sb.AppendLine($"addf cia402.{spindleCia402Idx}.write-all servo-thread");
+            // [2026-03-09] Carousel cia402 write
+            if (hasCarouselServo_pre) sb.AppendLine($"addf cia402.{carouselCia402Idx}.write-all servo-thread");
             sb.AppendLine("addf lcec.write-all servo-thread");
             sb.AppendLine();
 
@@ -517,12 +587,112 @@ namespace CncController.Services
             }
 
             // =========================================================
+            // [2026-03-09] A2. Carousel Servo（Analog Output → limit3 → PID → EtherCAT）
+            // =========================================================
+            if (hasCarouselServo)
+            {
+                int cSlave = config.Atc.CarouselSlaveIndex;
+                int cIdx = carouselCia402Idx; // cia402 instance index
+                double cMaxVel = config.Atc.CarouselMaxVel;
+                double cMaxAccel = config.Atc.CarouselMaxAccel;
+                int cPPR = config.Atc.CarouselPulsePerRev;
+                double cPitch = config.Atc.CarouselPitch > 0 ? config.Atc.CarouselPitch : 360.0;
+                double cScale = (double)cPPR / cPitch;
+
+                sb.AppendLine($"# --- Carousel Servo (Slave {cSlave}, cia402.{cIdx}, SERVO mode) ---");
+                sb.AppendLine($"# SCALE = PPR/PITCH = {cPPR}/{cPitch} = {cScale:F4} pulses/deg");
+                sb.AppendLine();
+
+                // cia402 接線（EtherCAT ↔ cia402 driver）
+                sb.AppendLine($"net carousel-enable   motion.motion-enabled       => cia402.{cIdx}.enable");
+                sb.AppendLine($"net carousel-control  cia402.{cIdx}.controlword   => lcec.0.{cSlave}.control_word_J{cSlave}");
+                sb.AppendLine($"net carousel-status   lcec.0.{cSlave}.status_word_J{cSlave} => cia402.{cIdx}.statusword");
+                sb.AppendLine($"setp cia402.{cIdx}.csp-mode 1");
+                sb.AppendLine($"setp lcec.0.{cSlave}.modes_of_operation_J{cSlave} 8");
+                sb.AppendLine($"setp cia402.{cIdx}.pos-scale {cScale:F4}");
+                sb.AppendLine();
+
+                // limit3：加減速限制器
+                sb.AppendLine($"setp limit3.0.maxv  {cMaxVel}");
+                sb.AppendLine($"setp limit3.0.maxa  {cMaxAccel}");
+                sb.AppendLine();
+
+                // 信號鏈路：analog-out-00 → limit3(加減速) → cia402 → EtherCAT servo
+                sb.AppendLine("# Signal chain: M68 E0 Q[angle] → limit3 → cia402 → EtherCAT");
+                sb.AppendLine("net carousel-angle-raw   motion.analog-out-00      => limit3.0.in");
+                sb.AppendLine($"net carousel-angle-cmd  limit3.0.out              => cia402.{cIdx}.pos-cmd");
+                sb.AppendLine($"net carousel-drv-target cia402.{cIdx}.drv-target-position => lcec.0.{cSlave}.target_position_J{cSlave}");
+                sb.AppendLine();
+
+                // 位置回授：EtherCAT → cia402 → 閉環
+                sb.AppendLine($"net carousel-pos-fb     lcec.0.{cSlave}.position_actual_value_J{cSlave} => cia402.{cIdx}.drv-actual-position");
+                sb.AppendLine($"net carousel-pos-fb-enc cia402.{cIdx}.pos-fb");
+                sb.AppendLine();
+            }
+
+            // =========================================================
+            // [2026-03-09] A3. Spindle Servo（CiA 402 CSV 速度模式 + encoder 回讀）
+            // =========================================================
+            if (hasSpindleServo)
+            {
+                int sSlave = config.Spindle.SlaveIndex;
+                int sIdx = spindleCia402Idx;
+                int sPPR = config.Spindle.EncoderPPR;
+                double sMaxRPM = config.Spindle.MaxRPM;
+
+                sb.AppendLine($"# --- Spindle Servo (Slave {sSlave}, cia402.{sIdx}, CSV velocity mode) ---");
+                sb.AppendLine();
+
+                // [2026-03-09] cia402 接線（EtherCAT ↔ cia402 driver）
+                sb.AppendLine($"net spindle-enable spindle.0.on            => cia402.{sIdx}.enable");
+                sb.AppendLine($"net spindle-ctrl   cia402.{sIdx}.controlword => lcec.0.{sSlave}.control_word_J{sSlave}");
+                sb.AppendLine($"net spindle-stat   lcec.0.{sSlave}.status_word_J{sSlave} => cia402.{sIdx}.statusword");
+                // [2026-03-09] CSV 模式 (Cyclic Synchronous Velocity)：csp-mode=0, modes_of_operation=9
+                sb.AppendLine($"setp cia402.{sIdx}.csp-mode 0");
+                sb.AppendLine($"setp lcec.0.{sSlave}.modes_of_operation_J{sSlave} 9");
+                sb.AppendLine($"setp cia402.{sIdx}.pos-scale {sPPR}");
+                sb.AppendLine();
+
+                // [2026-03-09] 速度命令：spindle.0.speed-out (RPM) → scale.0 (÷60→RPS) → cia402 vel-cmd
+                sb.AppendLine("# Speed command: RPM → RPS → cia402 → EtherCAT");
+                sb.AppendLine($"setp scale.0.gain {1.0 / 60.0:F6}");  // RPM → RPS
+                sb.AppendLine("net spindle-rpm-cmd   spindle.0.speed-out     => scale.0.in");
+                sb.AppendLine($"net spindle-rps-cmd  scale.0.out             => cia402.{sIdx}.vel-cmd");
+                sb.AppendLine($"net spindle-drv-vel   cia402.{sIdx}.drv-target-velocity => lcec.0.{sSlave}.target_velocity_J{sSlave}");
+                sb.AppendLine();
+
+                // [2026-03-09] 位置回授：EtherCAT → cia402 → spindle.0.revs（encoder 累計圈數）
+                sb.AppendLine("# Position feedback: EtherCAT → cia402 → spindle.0.revs");
+                sb.AppendLine($"net spindle-pos-raw   lcec.0.{sSlave}.position_actual_value_J{sSlave} => cia402.{sIdx}.drv-actual-position");
+                sb.AppendLine($"net spindle-revs      cia402.{sIdx}.pos-fb    => spindle.0.revs");
+                sb.AppendLine();
+
+                // [2026-03-09] 速度回授：cia402 vel-fb (RPS) → scale.1 (×60→RPM) → spindle.0.speed-in
+                sb.AppendLine("# Speed feedback: cia402 vel-fb (RPS) → RPM → spindle.0.speed-in");
+                sb.AppendLine("setp scale.1.gain 60.0");  // RPS → RPM
+                sb.AppendLine($"net spindle-rps-fb    cia402.{sIdx}.vel-fb    => scale.1.in");
+                sb.AppendLine("net spindle-rpm-fb    scale.1.out             => spindle.0.speed-in");
+                sb.AppendLine();
+
+                // [2026-03-09] at-speed 判斷：|commanded - actual| < tolerance → spindle.0.at-speed
+                sb.AppendLine("# At-speed detection");
+                double tolerance = sMaxRPM * 0.02;  // 2% 容差
+                sb.AppendLine($"setp near.0.difference {tolerance:F1}");
+                sb.AppendLine("net spindle-rpm-cmd   => near.0.in1");
+                sb.AppendLine("net spindle-rpm-fb    => near.0.in2");
+                sb.AppendLine("net spindle-at-speed  near.0.out => spindle.0.at-speed");
+                sb.AppendLine();
+            }
+
+            // =========================================================
             // ★★★ B. 標準系統訊號來源 (Standard Signals) ★★★
             // =========================================================
             sb.AppendLine("# === STANDARD SIGNALS (Source) ===");
             sb.AppendLine("net coolant-flood iocontrol.0.coolant-flood");
             sb.AppendLine("net coolant-mist  iocontrol.0.coolant-mist");
-            sb.AppendLine("net spindle-on    spindle.0.on");
+            // [2026-03-09] 主軸布林訊號（spindle-on 在 Servo 模式已由 cia402 enable 使用）
+            if (!hasSpindleServo)
+                sb.AppendLine("net spindle-on    spindle.0.on");
             sb.AppendLine("net spindle-cw    spindle.0.forward");
             sb.AppendLine("net spindle-ccw   spindle.0.reverse");
             sb.AppendLine("net spindle-brake spindle.0.brake");
@@ -544,13 +714,21 @@ namespace CncController.Services
                 atcReservedDo.Add(config.Atc.DoCarouselHome);
                 atcReservedDo.Add(config.Atc.DoDrawbar);
                 atcReservedDo.Add(config.Atc.DoAirBlow);
-                atcReservedDo.Add(config.Atc.DoMotorFwd);
-                atcReservedDo.Add(config.Atc.DoMotorRev);
+                // [2026-03-09] Motor FWD/REV 僅 IO 模式佔用
+                if (config.Atc.ControlMode == CarouselControlMode.IO)
+                {
+                    atcReservedDo.Add(config.Atc.DoMotorFwd);
+                    atcReservedDo.Add(config.Atc.DoMotorRev);
+                }
                 atcReservedDi.Add(config.Atc.DiCarouselHome);
                 atcReservedDi.Add(config.Atc.DiCarouselOut);
                 atcReservedDi.Add(config.Atc.DiDrawbarClamp);
                 atcReservedDi.Add(config.Atc.DiDrawbarUnclamp);
-                atcReservedDi.Add(config.Atc.DiRotationIndex);
+                // [2026-03-09] RotationIndex 僅 IO 模式佔用
+                if (config.Atc.ControlMode == CarouselControlMode.IO)
+                {
+                    atcReservedDi.Add(config.Atc.DiRotationIndex);
+                }
             }
 
             // 處理 INPUT
@@ -654,23 +832,32 @@ namespace CncController.Services
                     foreach (var pin in map.Pins.Where(p => IsRealFunction(p.Function)))
                         generalDiPins.Add(pin.Index);
 
-                var doMappings = new (int PWord, string Name)[]
+                // [2026-03-09] 依控制模式動態組合 DO/DI 映射表
+                var doMappings = new List<(int PWord, string Name)>
                 {
                     (config.Atc.DoCarouselOut, "carousel-out"),
                     (config.Atc.DoCarouselHome, "carousel-home"),
                     (config.Atc.DoDrawbar, "drawbar"),
                     (config.Atc.DoAirBlow, "air-blow"),
-                    (config.Atc.DoMotorFwd, "motor-fwd"),
-                    (config.Atc.DoMotorRev, "motor-rev"),
                 };
-                var diMappings = new (int PWord, string Name)[]
+                // [2026-03-09] Motor FWD/REV 僅 IO 模式輸出
+                if (config.Atc.ControlMode == CarouselControlMode.IO)
+                {
+                    doMappings.Add((config.Atc.DoMotorFwd, "motor-fwd"));
+                    doMappings.Add((config.Atc.DoMotorRev, "motor-rev"));
+                }
+                var diMappings = new List<(int PWord, string Name)>
                 {
                     (config.Atc.DiCarouselHome, "carousel-home-in"),
                     (config.Atc.DiCarouselOut, "carousel-out-in"),
                     (config.Atc.DiDrawbarClamp, "drawbar-clamp-in"),
                     (config.Atc.DiDrawbarUnclamp, "drawbar-unclamp-in"),
-                    (config.Atc.DiRotationIndex, "rotation-index-in"),
                 };
+                // [2026-03-09] RotationIndex 僅 IO 模式輸出
+                if (config.Atc.ControlMode == CarouselControlMode.IO)
+                {
+                    diMappings.Add((config.Atc.DiRotationIndex, "rotation-index-in"));
+                }
 
                 // [2026-03-09] 衝突檢查：ATC DO/DI 是否與 GENERAL IO 用到相同 pin
                 var conflicts = new List<string>();
@@ -729,6 +916,12 @@ namespace CncController.Services
             int maxSlaveIndex = 0;
             if (config.Mappings.Any())
                 maxSlaveIndex = config.Mappings.Max(m => m.PhysicalIndex);
+            // [2026-03-09] Spindle/Carousel 伺服可能在 Mappings 之外，需納入 maxSlaveIndex 計算
+            if (config.Spindle.SlaveIndex >= 0)
+                maxSlaveIndex = Math.Max(maxSlaveIndex, config.Spindle.SlaveIndex);
+            if (config.Atc.Type == AtcType.Umbrella && config.Atc.ControlMode == CarouselControlMode.Servo
+                && config.Atc.CarouselSlaveIndex >= 0)
+                maxSlaveIndex = Math.Max(maxSlaveIndex, config.Atc.CarouselSlaveIndex);
             if (maxSlaveIndex < 1) maxSlaveIndex = 1;
 
             for (int i = 0; i <= maxSlaveIndex; i++)
@@ -757,6 +950,7 @@ namespace CncController.Services
                         case SlaveDeviceType.PulseGenerator:
                         {
                             bool isPulseGen = deviceType == SlaveDeviceType.PulseGenerator;
+                            bool isSpindleSlave = (config.Spindle.SlaveIndex == i && config.Spindle.SlaveIndex >= 0);
                             sb.AppendLine($"    <slave idx=\"{i}\" type=\"generic\" vid=\"{mainMap.ExpectedVendorId}\" pid=\"{mainMap.ExpectedProductCode}\" configPdos=\"true\">");
                             sb.AppendLine("      <dcConf assignActivate=\"0x300\" sync0Cycle=\"*1\" sync0Shift=\"0\"/>");
 
@@ -765,6 +959,9 @@ namespace CncController.Services
                             sb.AppendLine("        <pdo idx=\"1600\">");
                             sb.AppendLine($"          <pdoEntry idx=\"6040\" subIdx=\"00\" bitLen=\"16\" halPin=\"control_word_J{i}\" halType=\"u32\"/>");
                             sb.AppendLine($"          <pdoEntry idx=\"607a\" subIdx=\"00\" bitLen=\"32\" halPin=\"target_position_J{i}\" halType=\"s32\"/>");
+                            // [2026-03-09] 主軸伺服需要 target_velocity PDO（CSV 速度模式）
+                            if (isSpindleSlave)
+                                sb.AppendLine($"          <pdoEntry idx=\"60ff\" subIdx=\"00\" bitLen=\"32\" halPin=\"target_velocity_J{i}\" halType=\"s32\"/>");
                             if (!isPulseGen)
                                 sb.AppendLine($"          <pdoEntry idx=\"6060\" subIdx=\"00\" bitLen=\"8\" halPin=\"modes_of_operation_J{i}\" halType=\"s32\"/>");
                             sb.AppendLine("        </pdo>");
@@ -872,6 +1069,72 @@ namespace CncController.Services
                         }
                     }
                 }
+                else if (config.Atc.Type == AtcType.Umbrella
+                         && config.Atc.ControlMode == CarouselControlMode.Servo
+                         && config.Atc.CarouselSlaveIndex == i)
+                {
+                    // [2026-03-09] Carousel Servo：CiA 402 位置模式（不在 Mappings 中的獨立伺服）
+                    // 從 DiscoveredSlaves 或硬掃結果取 VID/PID
+                    string cVid = "000001dd"; // 預設台達
+                    string cPid = "00005500";
+                    // 嘗試從已存在的 mapping 找到 VID/PID（可能掃描時有紀錄）
+                    var cMap = config.Mappings.FirstOrDefault(m => m.PhysicalIndex == i);
+                    if (cMap != null)
+                    {
+                        cVid = cMap.ExpectedVendorId ?? cVid;
+                        cPid = cMap.ExpectedProductCode ?? cPid;
+                    }
+                    sb.AppendLine($"    <slave idx=\"{i}\" type=\"generic\" vid=\"{cVid}\" pid=\"{cPid}\" configPdos=\"true\">");
+                    sb.AppendLine("      <dcConf assignActivate=\"0x300\" sync0Cycle=\"*1\" sync0Shift=\"0\"/>");
+                    sb.AppendLine("      <syncManager idx=\"2\" dir=\"out\">");
+                    sb.AppendLine("        <pdo idx=\"1600\">");
+                    sb.AppendLine($"          <pdoEntry idx=\"6040\" subIdx=\"00\" bitLen=\"16\" halPin=\"control_word_J{i}\" halType=\"u32\"/>");
+                    sb.AppendLine($"          <pdoEntry idx=\"607a\" subIdx=\"00\" bitLen=\"32\" halPin=\"target_position_J{i}\" halType=\"s32\"/>");
+                    sb.AppendLine($"          <pdoEntry idx=\"6060\" subIdx=\"00\" bitLen=\"8\" halPin=\"modes_of_operation_J{i}\" halType=\"s32\"/>");
+                    sb.AppendLine("        </pdo>");
+                    sb.AppendLine("      </syncManager>");
+                    sb.AppendLine("      <syncManager idx=\"3\" dir=\"in\">");
+                    sb.AppendLine("        <pdo idx=\"1a00\">");
+                    sb.AppendLine($"          <pdoEntry idx=\"6041\" subIdx=\"00\" bitLen=\"16\" halPin=\"status_word_J{i}\" halType=\"u32\"/>");
+                    sb.AppendLine($"          <pdoEntry idx=\"6064\" subIdx=\"00\" bitLen=\"32\" halPin=\"position_actual_value_J{i}\" halType=\"s32\"/>");
+                    sb.AppendLine($"          <pdoEntry idx=\"6061\" subIdx=\"00\" bitLen=\"8\" halPin=\"modes_of_operation_display_J{i}\" halType=\"s32\"/>");
+                    sb.AppendLine($"          <pdoEntry idx=\"60fd\" subIdx=\"00\" bitLen=\"32\" halPin=\"digital_inputs_J{i}\" halType=\"u32\"/>");
+                    sb.AppendLine("        </pdo>");
+                    sb.AppendLine("      </syncManager>");
+                    sb.AppendLine("    </slave>");
+                }
+                else if (config.Spindle.SlaveIndex == i && config.Spindle.SlaveIndex >= 0)
+                {
+                    // [2026-03-09] Spindle Servo：CiA 402 CSV 速度模式（含 target_velocity PDO）
+                    string sVid = "000001dd"; // 預設台達
+                    string sPid = "00005500";
+                    var sMap = config.Mappings.FirstOrDefault(m => m.PhysicalIndex == i);
+                    if (sMap != null)
+                    {
+                        sVid = sMap.ExpectedVendorId ?? sVid;
+                        sPid = sMap.ExpectedProductCode ?? sPid;
+                    }
+                    sb.AppendLine($"    <slave idx=\"{i}\" type=\"generic\" vid=\"{sVid}\" pid=\"{sPid}\" configPdos=\"true\">");
+                    sb.AppendLine("      <dcConf assignActivate=\"0x300\" sync0Cycle=\"*1\" sync0Shift=\"0\"/>");
+                    sb.AppendLine("      <syncManager idx=\"2\" dir=\"out\">");
+                    sb.AppendLine("        <pdo idx=\"1600\">");
+                    sb.AppendLine($"          <pdoEntry idx=\"6040\" subIdx=\"00\" bitLen=\"16\" halPin=\"control_word_J{i}\" halType=\"u32\"/>");
+                    sb.AppendLine($"          <pdoEntry idx=\"607a\" subIdx=\"00\" bitLen=\"32\" halPin=\"target_position_J{i}\" halType=\"s32\"/>");
+                    // [2026-03-09] target_velocity (0x60FF) — CSV 速度模式必要
+                    sb.AppendLine($"          <pdoEntry idx=\"60ff\" subIdx=\"00\" bitLen=\"32\" halPin=\"target_velocity_J{i}\" halType=\"s32\"/>");
+                    sb.AppendLine($"          <pdoEntry idx=\"6060\" subIdx=\"00\" bitLen=\"8\" halPin=\"modes_of_operation_J{i}\" halType=\"s32\"/>");
+                    sb.AppendLine("        </pdo>");
+                    sb.AppendLine("      </syncManager>");
+                    sb.AppendLine("      <syncManager idx=\"3\" dir=\"in\">");
+                    sb.AppendLine("        <pdo idx=\"1a00\">");
+                    sb.AppendLine($"          <pdoEntry idx=\"6041\" subIdx=\"00\" bitLen=\"16\" halPin=\"status_word_J{i}\" halType=\"u32\"/>");
+                    sb.AppendLine($"          <pdoEntry idx=\"6064\" subIdx=\"00\" bitLen=\"32\" halPin=\"position_actual_value_J{i}\" halType=\"s32\"/>");
+                    sb.AppendLine($"          <pdoEntry idx=\"6061\" subIdx=\"00\" bitLen=\"8\" halPin=\"modes_of_operation_display_J{i}\" halType=\"s32\"/>");
+                    sb.AppendLine($"          <pdoEntry idx=\"60fd\" subIdx=\"00\" bitLen=\"32\" halPin=\"digital_inputs_J{i}\" halType=\"u32\"/>");
+                    sb.AppendLine("        </pdo>");
+                    sb.AppendLine("      </syncManager>");
+                    sb.AppendLine("    </slave>");
+                }
                 else
                 {
                     // Empty Slave
@@ -904,6 +1167,17 @@ namespace CncController.Services
             // --- m13.ngc（刀庫歸零/初始化）---
             ngcFiles["m13.ngc"] = GenerateM13Ngc(widgetName, pockets);
 
+            // [2026-03-09] --- m10.ngc（旋轉到目標刀位，依控制模式分流）---
+            if (config.Atc.Type == AtcType.Umbrella)
+                ngcFiles["m10.ngc"] = GenerateM10Carousel(config);
+
+            // [2026-03-09] --- m11.ngc / m12.ngc（正轉/反轉一格，依控制模式分流）---
+            if (config.Atc.Type == AtcType.Umbrella)
+            {
+                ngcFiles["m11.ngc"] = GenerateM11Carousel(config);
+                ngcFiles["m12.ngc"] = GenerateM12Carousel(config);
+            }
+
             // --- m21.ngc（存刀：spindle → rack/carousel）---
             if (config.Atc.Type == AtcType.Turret)
                 ngcFiles["m21.ngc"] = GenerateM21Rack();
@@ -915,6 +1189,23 @@ namespace CncController.Services
                 ngcFiles["m22.ngc"] = GenerateM22Rack();
             else
                 ngcFiles["m22.ngc"] = GenerateM22Carousel();
+
+            // [2026-03-09] --- extendatc.ngc / retractatc.ngc（刀盤伸出/收回）---
+            if (config.Atc.Type == AtcType.Umbrella)
+            {
+                ngcFiles["extendatc.ngc"] = GenerateExtendAtcNgc(config);
+                ngcFiles["retractatc.ngc"] = GenerateRetractAtcNgc(config);
+            }
+
+            // [2026-03-09] --- move_head_above_carousel.ngc / move_tool_to_carousel_height.ngc ---
+            if (config.Atc.Type == AtcType.Umbrella)
+            {
+                ngcFiles["move_head_above_carousel.ngc"] = GenerateMoveHeadAboveCarouselNgc();
+                ngcFiles["move_tool_to_carousel_height.ngc"] = GenerateMoveToolToCarouselHeightNgc();
+            }
+
+            // [2026-03-09] --- program_coolant.ngc（換刀後恢復冷卻）---
+            ngcFiles["program_coolant.ngc"] = GenerateProgramCoolantNgc();
 
             return ngcFiles;
         }
@@ -1318,6 +1609,335 @@ G0 G53 Z[#<atc_z_tool_clearance_height>]
 o<retractatc> call
 
 o<m22> endsub
+
+M2
+";
+        }
+
+        // [2026-03-09] --- m10.ngc Carousel 版（旋轉到目標刀位，依控制模式分流）---
+        private string GenerateM10Carousel(MachineConfig config)
+        {
+            bool isServo = config.Atc.ControlMode == CarouselControlMode.Servo;
+            int pockets = config.Atc.ToolCount;
+            int doMotorFwd = config.Atc.DoMotorFwd;
+            int doMotorRev = config.Atc.DoMotorRev;
+            int diRotationIndex = config.Atc.DiRotationIndex;
+            int sensorTimeout = config.Atc.SensorTimeout / 1000; // ms → s
+
+            if (isServo)
+            {
+                // Servo 模式：計算角度，用 M68 E0 Q[angle] 透過 analog-out → limit3 → PID → 伺服
+                return $@"(Generated by CncController — {DateTime.Now:yyyy-MM-dd HH:mm:ss})
+(M10 — Rotate carousel to pocket P, SERVO mode via analog output)
+o<m10> sub
+
+#<target_pocket> = #<p>
+#<pockets> = {pockets}
+o100 if [EXISTS[#<_ini[atc]pockets>]]
+    #<pockets> = #<_ini[atc]pockets>
+o100 endif
+
+#<angle> = [[#<target_pocket> - 1] * [360.0 / #<pockets>]]
+
+(PRINT, M10 SERVO: rotate to pocket #<target_pocket> angle #<angle>)
+M68 E0 Q[#<angle>]
+G4 P0.5
+
+#3990 = #<target_pocket>
+
+o<m10> endsub [1]
+
+M2
+";
+            }
+            else
+            {
+                // IO 模式：馬達正轉 + RotationIndex 計數到位
+                return $@"(Generated by CncController — {DateTime.Now:yyyy-MM-dd HH:mm:ss})
+(M10 — Rotate carousel to pocket P, IO mode)
+o<m10> sub
+
+#<target_pocket> = #<p>
+#<pockets> = {pockets}
+o100 if [EXISTS[#<_ini[atc]pockets>]]
+    #<pockets> = #<_ini[atc]pockets>
+o100 endif
+
+#<current_pocket> = #3990
+o110 if [#<current_pocket> EQ #<target_pocket>]
+    (PRINT, M10 IO: already at pocket #<target_pocket>)
+    o<m10> endsub [1]
+    M2
+o110 endif
+
+; Calculate shortest rotation direction
+#<fwd_steps> = [[#<target_pocket> - #<current_pocket> + #<pockets>] MOD #<pockets>]
+#<rev_steps> = [[#<current_pocket> - #<target_pocket> + #<pockets>] MOD #<pockets>]
+
+o120 if [#<fwd_steps> LE #<rev_steps>]
+    ; Forward rotation
+    #<steps> = #<fwd_steps>
+    #<count> = 0
+    o130 while [#<count> LT #<steps>]
+        M64 P{doMotorFwd}
+        M66 P{diRotationIndex} L1 Q{sensorTimeout}
+        o131 if [#5399 EQ -1]
+            M65 P{doMotorFwd}
+            (abort, Failed to get rotation index - FWD timeout)
+        o131 endif
+        M65 P{doMotorFwd}
+        G4 P0.1
+        #<count> = [#<count> + 1]
+    o130 endwhile
+o120 else
+    ; Reverse rotation
+    #<steps> = #<rev_steps>
+    #<count> = 0
+    o140 while [#<count> LT #<steps>]
+        M64 P{doMotorRev}
+        M66 P{diRotationIndex} L1 Q{sensorTimeout}
+        o141 if [#5399 EQ -1]
+            M65 P{doMotorRev}
+            (abort, Failed to get rotation index - REV timeout)
+        o141 endif
+        M65 P{doMotorRev}
+        G4 P0.1
+        #<count> = [#<count> + 1]
+    o140 endwhile
+o120 endif
+
+#3990 = #<target_pocket>
+(PRINT, M10 IO: arrived at pocket #<target_pocket>)
+
+o<m10> endsub [1]
+
+M2
+";
+            }
+        }
+
+        // [2026-03-09] --- m11.ngc Carousel 版（正轉一格）---
+        private string GenerateM11Carousel(MachineConfig config)
+        {
+            bool isServo = config.Atc.ControlMode == CarouselControlMode.Servo;
+            int pockets = config.Atc.ToolCount;
+
+            if (isServo)
+            {
+                return $@"(Generated by CncController — {DateTime.Now:yyyy-MM-dd HH:mm:ss})
+(M11 — Forward one pocket, SERVO mode via analog output)
+o<m11> sub
+
+#<pockets> = {pockets}
+o100 if [EXISTS[#<_ini[atc]pockets>]]
+    #<pockets> = #<_ini[atc]pockets>
+o100 endif
+
+#3990 = [[#3990 MOD #<pockets>] + 1]
+#<angle> = [[#3990 - 1] * [360.0 / #<pockets>]]
+
+(PRINT, M11 SERVO FWD: pocket #3990 angle #<angle>)
+M68 E0 Q[#<angle>]
+G4 P0.5
+
+o<m11> endsub [1]
+
+M2
+";
+            }
+            else
+            {
+                int doMotorFwd = config.Atc.DoMotorFwd;
+                int diRotationIndex = config.Atc.DiRotationIndex;
+                int sensorTimeout = config.Atc.SensorTimeout / 1000;
+                return $@"(Generated by CncController — {DateTime.Now:yyyy-MM-dd HH:mm:ss})
+(M11 — Forward one pocket, IO mode)
+o<m11> sub
+
+#<pockets> = {pockets}
+o100 if [EXISTS[#<_ini[atc]pockets>]]
+    #<pockets> = #<_ini[atc]pockets>
+o100 endif
+
+M64 P{doMotorFwd}
+M66 P{diRotationIndex} L1 Q{sensorTimeout}
+o110 if [#5399 EQ -1]
+    M65 P{doMotorFwd}
+    (abort, Failed to get rotation index - FWD timeout)
+o110 endif
+M65 P{doMotorFwd}
+
+#3990 = [[#3990 MOD #<pockets>] + 1]
+
+o<m11> endsub [1]
+
+M2
+";
+            }
+        }
+
+        // [2026-03-09] --- m12.ngc Carousel 版（反轉一格）---
+        private string GenerateM12Carousel(MachineConfig config)
+        {
+            bool isServo = config.Atc.ControlMode == CarouselControlMode.Servo;
+            int pockets = config.Atc.ToolCount;
+
+            if (isServo)
+            {
+                return $@"(Generated by CncController — {DateTime.Now:yyyy-MM-dd HH:mm:ss})
+(M12 — Reverse one pocket, SERVO mode via analog output)
+o<m12> sub
+
+#<pockets> = {pockets}
+o100 if [EXISTS[#<_ini[atc]pockets>]]
+    #<pockets> = #<_ini[atc]pockets>
+o100 endif
+
+#3990 = [[[#3990 - 2 + #<pockets>] MOD #<pockets>] + 1]
+#<angle> = [[#3990 - 1] * [360.0 / #<pockets>]]
+
+(PRINT, M12 SERVO REV: pocket #3990 angle #<angle>)
+M68 E0 Q[#<angle>]
+G4 P0.5
+
+o<m12> endsub [1]
+
+M2
+";
+            }
+            else
+            {
+                int doMotorRev = config.Atc.DoMotorRev;
+                int diRotationIndex = config.Atc.DiRotationIndex;
+                int sensorTimeout = config.Atc.SensorTimeout / 1000;
+                return $@"(Generated by CncController — {DateTime.Now:yyyy-MM-dd HH:mm:ss})
+(M12 — Reverse one pocket, IO mode)
+o<m12> sub
+
+#<pockets> = {pockets}
+o100 if [EXISTS[#<_ini[atc]pockets>]]
+    #<pockets> = #<_ini[atc]pockets>
+o100 endif
+
+M64 P{doMotorRev}
+M66 P{diRotationIndex} L1 Q{sensorTimeout}
+o110 if [#5399 EQ -1]
+    M65 P{doMotorRev}
+    (abort, Failed to get rotation index - REV timeout)
+o110 endif
+M65 P{doMotorRev}
+
+#3990 = [[[#3990 - 2 + #<pockets>] MOD #<pockets>] + 1]
+
+o<m12> endsub [1]
+
+M2
+";
+            }
+        }
+
+        // [2026-03-09] --- extendatc.ngc（刀盤伸出）---
+        private string GenerateExtendAtcNgc(MachineConfig config)
+        {
+            int doCarouselOut = config.Atc.DoCarouselOut;
+            int doCarouselHome = config.Atc.DoCarouselHome;
+            int diCarouselOut = config.Atc.DiCarouselOut;
+            int sensorTimeout = config.Atc.SensorTimeout / 1000;
+
+            return $@"(Generated by CncController — {DateTime.Now:yyyy-MM-dd HH:mm:ss})
+(extendatc — Extend carousel out)
+o<extendatc> sub
+
+M65 P{doCarouselHome}
+M64 P{doCarouselOut}
+M66 P{diCarouselOut} L3 Q{sensorTimeout}
+o100 if [#5399 EQ -1]
+    M65 P{doCarouselOut}
+    (abort, Carousel extend timeout - sensor not triggered)
+o100 endif
+
+o<extendatc> endsub [1]
+
+M2
+";
+        }
+
+        // [2026-03-09] --- retractatc.ngc（刀盤收回）---
+        private string GenerateRetractAtcNgc(MachineConfig config)
+        {
+            int doCarouselOut = config.Atc.DoCarouselOut;
+            int doCarouselHome = config.Atc.DoCarouselHome;
+            int diCarouselHome = config.Atc.DiCarouselHome;
+            int sensorTimeout = config.Atc.SensorTimeout / 1000;
+
+            return $@"(Generated by CncController — {DateTime.Now:yyyy-MM-dd HH:mm:ss})
+(retractatc — Retract carousel in)
+o<retractatc> sub
+
+M65 P{doCarouselOut}
+M64 P{doCarouselHome}
+M66 P{diCarouselHome} L3 Q{sensorTimeout}
+o100 if [#5399 EQ -1]
+    M65 P{doCarouselHome}
+    (abort, Carousel retract timeout - sensor not triggered)
+o100 endif
+
+o<retractatc> endsub [1]
+
+M2
+";
+        }
+
+        // [2026-03-09] --- move_head_above_carousel.ngc ---
+        private string GenerateMoveHeadAboveCarouselNgc()
+        {
+            return $@"(Generated by CncController — {DateTime.Now:yyyy-MM-dd HH:mm:ss})
+(move_head_above_carousel — Z to clearance height)
+o<move_head_above_carousel> sub
+
+#<z_clearance> = #3982
+o100 if [EXISTS[#<_ini[atc]z_tool_clearance_height>]]
+    #<z_clearance> = #<_ini[atc]z_tool_clearance_height>
+o100 endif
+
+G90
+G0 G53 Z[#<z_clearance>]
+
+o<move_head_above_carousel> endsub [1]
+
+M2
+";
+        }
+
+        // [2026-03-09] --- move_tool_to_carousel_height.ngc ---
+        private string GenerateMoveToolToCarouselHeightNgc()
+        {
+            return $@"(Generated by CncController — {DateTime.Now:yyyy-MM-dd HH:mm:ss})
+(move_tool_to_carousel_height — Z to tool change height)
+o<move_tool_to_carousel_height> sub
+
+#<z_change> = #3981
+o100 if [EXISTS[#<_ini[atc]z_tool_change_height>]]
+    #<z_change> = #<_ini[atc]z_tool_change_height>
+o100 endif
+
+G90
+G1 G53 F500 Z[#<z_change>]
+
+o<move_tool_to_carousel_height> endsub [1]
+
+M2
+";
+        }
+
+        // [2026-03-09] --- program_coolant.ngc（換刀後恢復冷卻）---
+        private string GenerateProgramCoolantNgc()
+        {
+            return $@"(Generated by CncController — {DateTime.Now:yyyy-MM-dd HH:mm:ss})
+(program_coolant — restore coolant state after tool change)
+o<program_coolant> sub
+(placeholder — add coolant restore logic if needed)
+o<program_coolant> endsub [1]
 
 M2
 ";

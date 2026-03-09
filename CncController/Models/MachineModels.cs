@@ -61,6 +61,9 @@ namespace CncController.Models
         public bool Block_Delete { get; set; }
         public bool Optional_Stop { get; set; }
         public int Current_Line { get; set; }
+
+        // [2026-03-09] 新增主軸 Encoder 角度（0~360°，從 spindle.0.revs 換算）
+        public double Spindle_Position { get; set; }
     }
 
     // ==========================================
@@ -148,7 +151,12 @@ namespace CncController.Models
         SideMount   // 刀臂式（保留，暫不實作）
     }
 
-    // [2026-03-06] 新增 AtcConfig：刀庫設定
+    // [2026-03-09] 新增 CarouselControlMode：刀盤控制模式（Servo 伺服定位 / IO 馬達+感測器計數）
+    public enum CarouselControlMode
+    {
+        Servo,  // 伺服定角度：EtherCAT 伺服直接旋轉到目標角度，不需 RotationIndex
+        IO      // IO 感測器：普通馬達正反轉 + RotationIndex 感測器計數到位
+    }
 
     // [2026-03-06] 主軸伺服設定（剛性攻牙 / M19 定向）
     public class SpindleConfig
@@ -165,6 +173,9 @@ namespace CncController.Models
     {
         public AtcType Type { get; set; } = AtcType.None;
         public int ToolCount { get; set; } = 12;
+
+        // [2026-03-09] 刀盤控制模式（Servo=伺服定位 / IO=馬達+感測器）
+        public CarouselControlMode ControlMode { get; set; } = CarouselControlMode.Servo;
 
         // EtherCAT Servo（斗笠旋轉伺服，進階選項）
         public int CarouselSlaveIndex { get; set; } = -1;
@@ -207,6 +218,19 @@ namespace CncController.Models
         public double RackPocket2Y { get; set; } = 0.0;
         public double RackClearanceX { get; set; } = 0.0;
         public double RackClearanceY { get; set; } = 0.0;
+    }
+
+    // [2026-03-09] ATC 即時狀態（從後端 /v2/atc/status 回傳）
+    public class AtcStatus
+    {
+        public int Pockets { get; set; }
+        public int CurrentPocket { get; set; }
+        public double CarouselAngle { get; set; } // [2026-03-09] Servo encoder 真實角度
+        public int ToolInSpindle { get; set; }
+        public string ControlMode { get; set; } = "SERVO"; // [2026-03-09] SERVO / IO
+        public Dictionary<string, bool> DO { get; set; } = new();
+        public Dictionary<string, bool> DI { get; set; } = new();
+        public Dictionary<string, int> SlotTools { get; set; } = new();
     }
 
     // [2026-03-06] 新增 AtcSlotInfo：刀位狀態資訊（供 UI 刀盤視覺化綁定）

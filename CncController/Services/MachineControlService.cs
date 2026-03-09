@@ -720,6 +720,77 @@ namespace CncController.Services
             }
         }
 
+        // =====================================================================
+        // [2026-03-09] ATC 刀庫控制方法
+        // =====================================================================
+
+        // [2026-03-09] 讀取 ATC 即時狀態（IO + 刀位表 + 目前刀位）
+        public async Task<AtcStatus> GetAtcStatusAsync()
+        {
+            try
+            {
+                var response = await _pollingClient.GetAsync($"{_serverUrl}/v2/atc/status");
+                if (response.IsSuccessStatusCode)
+                {
+                    var result = await response.Content.ReadFromJsonAsync<ApiResponse<AtcStatus>>(_jsonOptions);
+                    if (result?.Status == "Success") return result.Data;
+                }
+            }
+            catch (Exception ex) { AlarmService.Instance.AddLog("API", $"GetAtcStatus failed: {ex.Message}"); }
+            return null;
+        }
+
+        // [2026-03-09] ATC 通用 POST 命令（回傳 bool）
+        private async Task<bool> SendAtcCommandAsync(string endpoint)
+        {
+            try
+            {
+                var response = await _pollingClient.PostAsJsonAsync($"{_serverUrl}/v2/atc/{endpoint}", new { });
+                if (!response.IsSuccessStatusCode) return false;
+                var result = await response.Content.ReadFromJsonAsync<ApiResponse<object>>(_jsonOptions);
+                return result?.Status == "Success";
+            }
+            catch (Exception ex) { AlarmService.Instance.AddLog("API", $"ATC {endpoint} failed: {ex.Message}"); return false; }
+        }
+
+        // [2026-03-09] ATC POST 命令帶 payload
+        private async Task<bool> SendAtcCommandAsync(string endpoint, object payload)
+        {
+            try
+            {
+                var response = await _pollingClient.PostAsJsonAsync($"{_serverUrl}/v2/atc/{endpoint}", payload);
+                if (!response.IsSuccessStatusCode) return false;
+                var result = await response.Content.ReadFromJsonAsync<ApiResponse<object>>(_jsonOptions);
+                return result?.Status == "Success";
+            }
+            catch (Exception ex) { AlarmService.Instance.AddLog("API", $"ATC {endpoint} failed: {ex.Message}"); return false; }
+        }
+
+        // [2026-03-09] 旋轉刀盤到指定刀位
+        public Task<bool> AtcRotateAsync(int pocket) => SendAtcCommandAsync("rotate", new { pocket });
+        // [2026-03-09] 刀盤正轉一格
+        public Task<bool> AtcFwdAsync() => SendAtcCommandAsync("fwd");
+        // [2026-03-09] 刀盤反轉一格
+        public Task<bool> AtcRevAsync() => SendAtcCommandAsync("rev");
+        // [2026-03-09] 夾刀
+        public Task<bool> AtcClampAsync() => SendAtcCommandAsync("clamp");
+        // [2026-03-09] 鬆刀
+        public Task<bool> AtcUnclampAsync() => SendAtcCommandAsync("unclamp");
+        // [2026-03-09] 伸出刀盤
+        public Task<bool> AtcExtendAsync() => SendAtcCommandAsync("extend");
+        // [2026-03-09] 收回刀盤
+        public Task<bool> AtcRetractAsync() => SendAtcCommandAsync("retract");
+        // [2026-03-09] 刀庫歸零
+        public Task<bool> AtcRefAsync() => SendAtcCommandAsync("ref");
+        // [2026-03-09] Z 至淨空高度
+        public Task<bool> AtcHeadUpAsync() => SendAtcCommandAsync("head_up");
+        // [2026-03-09] Z 至換刀高度
+        public Task<bool> AtcHeadDownAsync() => SendAtcCommandAsync("head_down");
+        // [2026-03-09] 主軸定向
+        public Task<bool> AtcOrientAsync() => SendAtcCommandAsync("orient");
+        // [2026-03-09] 設定刀位對應
+        public Task<bool> AtcSetSlotAsync(int slot, int toolNumber) => SendAtcCommandAsync("slot", new { slot, tool_number = toolNumber });
+
         // 輕量 DTO（僅供 GetOffsetsAsync 使用）
         private class OffsetsData
         {

@@ -96,6 +96,12 @@ namespace CncController.Models
         // [2026-03-05] 新增 Spindle Load：主軸負載百分比，對齊 PB 版 D_4
         [ObservableProperty] private double _spindleLoad;
 
+        // [2026-03-09] 主軸 Encoder 角度（0~360°，從 spindle.0.revs 換算）
+        [ObservableProperty] private double _spindlePosition;
+
+        // [2026-03-09] 刀庫 Encoder 角度（斗笠式旋轉軸回授，從 ATC status 更新）
+        [ObservableProperty] private double _carouselPosition;
+
         // [2026-03-06] 新增 Probe Input：探針輸入訊號即時狀態（供 ProbingView 指示燈）
         [ObservableProperty] private bool _isProbeInput;
     }

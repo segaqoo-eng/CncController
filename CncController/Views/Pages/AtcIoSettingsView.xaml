@@ -91,8 +91,6 @@
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
                             </Grid.RowDefinitions>
 
                             <TextBlock Grid.Row="0" Grid.Column="0" Text="DO Carousel Out:" Style="{StaticResource IoLabel}" Margin="0,4,10,4"/>
@@ -102,13 +100,28 @@
                             <TextBlock Grid.Row="1" Grid.Column="0" Text="DO Carousel Home:" Style="{StaticResource IoLabel}" Margin="0,4,10,4"/>
                             <ComboBox  Grid.Row="1" Grid.Column="1" Style="{StaticResource PinCombo}"
                                        ItemsSource="{Binding AvailablePins}" SelectedItem="{Binding DoCarouselHome}"/>
+                        </Grid>
+                    </StackPanel>
 
-                            <TextBlock Grid.Row="2" Grid.Column="0" Text="DO Motor FWD:" Style="{StaticResource IoLabel}" Margin="0,4,10,4"/>
-                            <ComboBox  Grid.Row="2" Grid.Column="1" Style="{StaticResource PinCombo}"
+                    <!-- [2026-03-09] Motor DO pins (visible only in IO control mode) -->
+                    <StackPanel Visibility="{Binding ShowMotorIo, Converter={StaticResource BoolToVis}}">
+                        <TextBlock Text="-- Motor (IO Mode) --" Style="{StaticResource SectionHeader}"/>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+
+                            <TextBlock Grid.Row="0" Grid.Column="0" Text="DO Motor FWD:" Style="{StaticResource IoLabel}" Margin="0,4,10,4"/>
+                            <ComboBox  Grid.Row="0" Grid.Column="1" Style="{StaticResource PinCombo}"
                                        ItemsSource="{Binding AvailablePins}" SelectedItem="{Binding DoMotorFwd}"/>
 
-                            <TextBlock Grid.Row="3" Grid.Column="0" Text="DO Motor REV:" Style="{StaticResource IoLabel}" Margin="0,4,10,4"/>
-                            <ComboBox  Grid.Row="3" Grid.Column="1" Style="{StaticResource PinCombo}"
+                            <TextBlock Grid.Row="1" Grid.Column="0" Text="DO Motor REV:" Style="{StaticResource IoLabel}" Margin="0,4,10,4"/>
+                            <ComboBox  Grid.Row="1" Grid.Column="1" Style="{StaticResource PinCombo}"
                                        ItemsSource="{Binding AvailablePins}" SelectedItem="{Binding DoMotorRev}"/>
                         </Grid>
                     </StackPanel>
@@ -154,7 +167,6 @@
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
                             </Grid.RowDefinitions>
 
                             <TextBlock Grid.Row="0" Grid.Column="0" Text="DI Carousel Home:" Style="{StaticResource IoLabel}" Margin="0,4,10,4"/>
@@ -164,9 +176,19 @@
                             <TextBlock Grid.Row="1" Grid.Column="0" Text="DI Carousel Out:" Style="{StaticResource IoLabel}" Margin="0,4,10,4"/>
                             <ComboBox  Grid.Row="1" Grid.Column="1" Style="{StaticResource PinCombo}"
                                        ItemsSource="{Binding AvailablePins}" SelectedItem="{Binding DiCarouselOut}"/>
+                        </Grid>
+                    </StackPanel>
 
-                            <TextBlock Grid.Row="2" Grid.Column="0" Text="DI Rotation Index:" Style="{StaticResource IoLabel}" Margin="0,4,10,4"/>
-                            <ComboBox  Grid.Row="2" Grid.Column="1" Style="{StaticResource PinCombo}"
+                    <!-- [2026-03-09] Rotation Index DI (visible only in IO control mode) -->
+                    <StackPanel Visibility="{Binding ShowMotorIo, Converter={StaticResource BoolToVis}}">
+                        <TextBlock Text="-- Rotation Index (IO Mode) --" Style="{StaticResource SectionHeader}"/>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="DI Rotation Index:" Style="{StaticResource IoLabel}" Margin="0,4,10,4"/>
+                            <ComboBox  Grid.Column="1" Style="{StaticResource PinCombo}"
                                        ItemsSource="{Binding AvailablePins}" SelectedItem="{Binding DiRotationIndex}"/>
                         </Grid>
                     </StackPanel>

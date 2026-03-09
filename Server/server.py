@@ -562,9 +562,34 @@ def v2_status():
         except: pass
         
         spindle_speed = 0.0
-        try: 
+        spindle_position = 0.0
+        try:
             if hasattr(cnc_stat, 'spindle') and len(cnc_stat.spindle) > 0:
                  spindle_speed = abs(cnc_stat.spindle[0]['speed'])
+        except: pass
+        # [2026-03-09] 主軸 encoder：嘗試多種來源讀取實際角度
+        try:
+            sp_slave = _ini_value('SPINDLE', 'SLAVE_INDEX')
+            sp_ppr = int(_ini_value('SPINDLE', 'ENCODER_PPR') or 4096)
+            sp_found = False
+            # 方法1：EtherCAT slave position_actual_value（CiA 402 伺服主軸）
+            if not sp_found and sp_slave is not None and int(sp_slave) >= 0:
+                sp_idx = int(sp_slave)
+                sp_raw = _read_hal_pin(f'lcec.0.{sp_idx}.position_actual_value_J{sp_idx}')
+                if sp_raw is not None:
+                    spindle_position = round(float(sp_raw) / sp_ppr * 360.0 % 360.0, 2)
+                    sp_found = True
+            # 方法2：spindle.0.revs（LinuxCNC 內部主軸累積圈數）
+            if not sp_found:
+                sp_revs = _read_hal_pin('spindle.0.revs')
+                if sp_revs is not None and float(sp_revs) != 0:
+                    spindle_position = round(float(sp_revs) * 360.0 % 360.0, 2)
+                    sp_found = True
+            # 方法3：spindle encoder feedback（若 HAL 有 spindle-pos-fb 訊號）
+            if not sp_found:
+                sp_fb = _read_hal_pin('spindle.0.pos-fb')
+                if sp_fb is not None and float(sp_fb) != 0:
+                    spindle_position = round(float(sp_fb) % 360.0, 2)
         except: pass
 
         filename = "No File"
@@ -688,6 +713,7 @@ def v2_status():
             "DTG": dtg_dict,
             "Feedrate": feed,
             "Spindle_Speed": spindle_speed,
+            "Spindle_Position": spindle_position,
             "Feed_Override": feed_override,
             "Spindle_Override": spindle_override,
             "File": filename,
@@ -1961,6 +1987,376 @@ def v2_hal_setp():
         return success_response({'signal': signal_name, 'value': value})
     except Exception as e:
         return error_response(f"HAL setp failed: {e}")
+
+
+# ==============================================================================
+# [2026-03-09] ATC 刀庫控制端點
+# ==============================================================================
+
+def _ini_value(section, key):
+    """[2026-03-09] 從 INI 讀取指定 section/key 的值"""
+    try:
+        ini = configparser.ConfigParser()
+        ini.read(LINUXCNC_INI_PATH, encoding='utf-8')
+        return ini.get(section, key, fallback=None)
+    except Exception:
+        return None
+
+
+def _read_hal_pin(pin_name):
+    """[2026-03-09] 讀取單一 HAL pin 值（透過 halcmd getp）"""
+    try:
+        res = subprocess.run(
+            ['halcmd', 'getp', pin_name],
+            capture_output=True, text=True, timeout=0.3
+        )
+        if res.returncode == 0:
+            val = res.stdout.strip()
+            if val.upper() in ('TRUE', '1'):
+                return True
+            elif val.upper() in ('FALSE', '0'):
+                return False
+            try:
+                return float(val)
+            except ValueError:
+                return val
+    except Exception:
+        pass
+    return None
+
+def _read_hal_pins_batch(pin_names):
+    """[2026-03-09] 批次讀取多個 HAL pin（單次 halcmd show pin motion.digital 減少 subprocess 開銷）"""
+    result = {}
+    try:
+        res = subprocess.run(
+            ['halcmd', '-s', 'show', 'pin', 'motion.digital'],
+            capture_output=True, text=True, timeout=0.5
+        )
+        if res.returncode == 0:
+            for line in res.stdout.splitlines():
+                for pin_name in pin_names:
+                    if pin_name in line:
+                        parts = line.split()
+                        # halcmd -s format: owner type dir value name
+                        for i, p in enumerate(parts):
+                            if pin_name in p:
+                                val_str = parts[i - 1] if i > 0 else '0'
+                                result[pin_name] = val_str.upper() in ('TRUE', '1')
+                                break
+    except Exception:
+        pass
+    return result
+
+def _read_var_params(param_ids):
+    """[2026-03-09] 從 .var 檔讀取指定參數（#id → value）"""
+    params = {}
+    try:
+        param_file = "linuxcnc.var"
+        try:
+            with open(LINUXCNC_INI_PATH, 'r', encoding='utf-8', errors='ignore') as f:
+                for line in f:
+                    if line.strip().upper().startswith("PARAMETER_FILE"):
+                        raw = line.split('=')[1].strip().split('#')[0].strip()
+                        if raw:
+                            param_file = raw
+                        break
+        except:
+            pass
+        var_path = os.path.join(CONFIG_DIR, param_file)
+        if os.path.exists(var_path):
+            with open(var_path, 'r', encoding='utf-8', errors='ignore') as f:
+                for line in f:
+                    parts = line.strip().split()
+                    if len(parts) >= 2:
+                        try:
+                            pid = int(parts[0])
+                            if pid in param_ids:
+                                params[pid] = float(parts[1])
+                        except ValueError:
+                            pass
+    except Exception:
+        pass
+    return params
+
+@app.route('/v2/atc/status', methods=['GET'])
+def v2_atc_status():
+    """[2026-03-09] 讀取 ATC 刀庫即時狀態（IO sensor + 刀位表 + 目前刀位）"""
+    if not ensure_cnc_connections():
+        return error_response("Not connected")
+    try:
+        cnc_stat.poll()
+
+        # [2026-03-09] 讀取 ATC 相關 INI 參數（POCKETS + CONTROL_MODE）
+        pockets = 12
+        control_mode = 'SERVO'  # [2026-03-09] 預設伺服模式
+        try:
+            with open(LINUXCNC_INI_PATH, 'r', encoding='utf-8', errors='ignore') as f:
+                in_atc = False
+                for line in f:
+                    stripped = line.strip()
+                    if stripped.startswith('['):
+                        in_atc = stripped.upper() == '[ATC]'
+                    elif in_atc and stripped.upper().startswith('POCKETS'):
+                        pockets = int(stripped.split('=')[1].strip())
+                    elif in_atc and stripped.upper().startswith('CONTROL_MODE'):
+                        control_mode = stripped.split('=')[1].strip().upper()
+        except:
+            pass
+
+        # 讀取 digital IO pin 狀態（批次）
+        do_pins = [f'motion.digital-out-{i:02d}' for i in range(32)]
+        di_pins = [f'motion.digital-in-{i:02d}' for i in range(32)]
+        all_pins = do_pins + di_pins
+        pin_states = _read_hal_pins_batch(all_pins)
+
+        # 整理 DO/DI 為 dict
+        do_states = {}
+        di_states = {}
+        for i in range(32):
+            do_name = f'motion.digital-out-{i:02d}'
+            di_name = f'motion.digital-in-{i:02d}'
+            if do_name in pin_states:
+                do_states[i] = pin_states[do_name]
+            if di_name in pin_states:
+                di_states[i] = pin_states[di_name]
+
+        # 讀取刀位表（#4001~#4024 存放各 pocket 的刀具號）
+        slot_param_ids = set(range(4001, 4001 + pockets))
+        # #3990 = current pocket number
+        slot_param_ids.add(3990)
+        slot_params = _read_var_params(slot_param_ids)
+
+        current_pocket = int(slot_params.get(3990, 0))
+        slot_tools = {}
+        for i in range(1, pockets + 1):
+            slot_tools[i] = int(slot_params.get(4000 + i, 0))
+
+        # [2026-03-09] Carousel Servo encoder 回讀（真實角度）
+        carousel_angle = 0.0
+        try:
+            c_slave = _ini_value('ATC', 'CAROUSEL_SLAVE_INDEX')
+            if c_slave is not None and int(c_slave) >= 0:
+                c_idx = int(c_slave)
+                c_ppr = int(_ini_value('ATC', 'CAROUSEL_PPR') or 10000)
+                c_raw = _read_hal_pin(f'lcec.0.{c_idx}.position_actual_value_J{c_idx}')
+                if c_raw is not None:
+                    carousel_angle = round(float(c_raw) / c_ppr * 360.0 % 360.0, 2)
+        except:
+            pass
+
+        data = {
+            'Pockets': pockets,
+            'CurrentPocket': current_pocket,
+            'CarouselAngle': carousel_angle,
+            'ToolInSpindle': getattr(cnc_stat, 'tool_in_spindle', 0),
+            'ControlMode': control_mode,  # [2026-03-09] SERVO / IO
+            'DO': do_states,
+            'DI': di_states,
+            'SlotTools': slot_tools,
+        }
+        return success_response(data)
+    except Exception as e:
+        return error_response(f"ATC status failed: {e}")
+
+
+def _atc_send_mdi(command, timeout=15):
+    """[2026-03-09] ATC 專用 MDI 送出（切 MDI 模式 → 送指令 → 非阻塞等待）"""
+    cnc_stat.poll()
+    if cnc_stat.task_state != linuxcnc.STATE_ON:
+        return "Machine is OFF"
+    if cnc_stat.task_mode != linuxcnc.MODE_MDI:
+        cnc_cmd.mode(linuxcnc.MODE_MDI)
+        cnc_cmd.wait_complete()
+    return _probe_send_mdi_and_wait(command, timeout=timeout)
+
+
+@app.route('/v2/atc/rotate', methods=['POST'])
+def v2_atc_rotate():
+    """[2026-03-09] 旋轉刀盤到指定刀位（M10 P{pocket}）"""
+    if not ensure_cnc_connections():
+        return error_response("Not connected")
+    try:
+        data = request.json or {}
+        pocket = data.get('pocket', 1)
+        err = _atc_send_mdi(f"M10 P{pocket}")
+        if err:
+            return error_response(f"ATC rotate failed: {err}")
+        app_log('CMD', f'ATC rotate to pocket {pocket}')
+        return success_response({'pocket': pocket})
+    except Exception as e:
+        return error_response(f"ATC rotate failed: {e}")
+
+
+@app.route('/v2/atc/fwd', methods=['POST'])
+def v2_atc_fwd():
+    """[2026-03-09] 刀盤正轉一格（M11）"""
+    if not ensure_cnc_connections():
+        return error_response("Not connected")
+    try:
+        err = _atc_send_mdi("M11")
+        if err:
+            return error_response(f"ATC fwd failed: {err}")
+        app_log('CMD', 'ATC forward one pocket')
+        return success_response({})
+    except Exception as e:
+        return error_response(f"ATC fwd failed: {e}")
+
+
+@app.route('/v2/atc/rev', methods=['POST'])
+def v2_atc_rev():
+    """[2026-03-09] 刀盤反轉一格（M12）"""
+    if not ensure_cnc_connections():
+        return error_response("Not connected")
+    try:
+        err = _atc_send_mdi("M12")
+        if err:
+            return error_response(f"ATC rev failed: {err}")
+        app_log('CMD', 'ATC reverse one pocket')
+        return success_response({})
+    except Exception as e:
+        return error_response(f"ATC rev failed: {e}")
+
+
+@app.route('/v2/atc/clamp', methods=['POST'])
+def v2_atc_clamp():
+    """[2026-03-09] 夾刀（M25）"""
+    if not ensure_cnc_connections():
+        return error_response("Not connected")
+    try:
+        err = _atc_send_mdi("M25")
+        if err:
+            return error_response(f"ATC clamp failed: {err}")
+        app_log('CMD', 'ATC clamp tool')
+        return success_response({})
+    except Exception as e:
+        return error_response(f"ATC clamp failed: {e}")
+
+
+@app.route('/v2/atc/unclamp', methods=['POST'])
+def v2_atc_unclamp():
+    """[2026-03-09] 鬆刀（M24）"""
+    if not ensure_cnc_connections():
+        return error_response("Not connected")
+    try:
+        err = _atc_send_mdi("M24")
+        if err:
+            return error_response(f"ATC unclamp failed: {err}")
+        app_log('CMD', 'ATC unclamp tool')
+        return success_response({})
+    except Exception as e:
+        return error_response(f"ATC unclamp failed: {e}")
+
+
+@app.route('/v2/atc/extend', methods=['POST'])
+def v2_atc_extend():
+    """[2026-03-09] 伸出刀盤（o<extendatc> call）"""
+    if not ensure_cnc_connections():
+        return error_response("Not connected")
+    try:
+        err = _atc_send_mdi("o<extendatc> call")
+        if err:
+            return error_response(f"ATC extend failed: {err}")
+        app_log('CMD', 'ATC extend carousel')
+        return success_response({})
+    except Exception as e:
+        return error_response(f"ATC extend failed: {e}")
+
+
+@app.route('/v2/atc/retract', methods=['POST'])
+def v2_atc_retract():
+    """[2026-03-09] 收回刀盤（o<retractatc> call）"""
+    if not ensure_cnc_connections():
+        return error_response("Not connected")
+    try:
+        err = _atc_send_mdi("o<retractatc> call")
+        if err:
+            return error_response(f"ATC retract failed: {err}")
+        app_log('CMD', 'ATC retract carousel')
+        return success_response({})
+    except Exception as e:
+        return error_response(f"ATC retract failed: {e}")
+
+
+@app.route('/v2/atc/ref', methods=['POST'])
+def v2_atc_ref():
+    """[2026-03-09] 刀庫歸零（M13）"""
+    if not ensure_cnc_connections():
+        return error_response("Not connected")
+    try:
+        err = _atc_send_mdi("M13", timeout=30)
+        if err:
+            return error_response(f"ATC ref failed: {err}")
+        app_log('CMD', 'ATC reference carousel')
+        return success_response({})
+    except Exception as e:
+        return error_response(f"ATC ref failed: {e}")
+
+
+@app.route('/v2/atc/head_up', methods=['POST'])
+def v2_atc_head_up():
+    """[2026-03-09] Z 移至淨空高度（o<move_head_above_carousel> call）"""
+    if not ensure_cnc_connections():
+        return error_response("Not connected")
+    try:
+        err = _atc_send_mdi("o<move_head_above_carousel> call")
+        if err:
+            return error_response(f"ATC head_up failed: {err}")
+        app_log('CMD', 'ATC move head above carousel')
+        return success_response({})
+    except Exception as e:
+        return error_response(f"ATC head_up failed: {e}")
+
+
+@app.route('/v2/atc/head_down', methods=['POST'])
+def v2_atc_head_down():
+    """[2026-03-09] Z 移至換刀高度（o<move_tool_to_carousel_height> call）"""
+    if not ensure_cnc_connections():
+        return error_response("Not connected")
+    try:
+        err = _atc_send_mdi("o<move_tool_to_carousel_height> call")
+        if err:
+            return error_response(f"ATC head_down failed: {err}")
+        app_log('CMD', 'ATC move tool to carousel height')
+        return success_response({})
+    except Exception as e:
+        return error_response(f"ATC head_down failed: {e}")
+
+
+@app.route('/v2/atc/orient', methods=['POST'])
+def v2_atc_orient():
+    """[2026-03-09] 主軸定向（M19）"""
+    if not ensure_cnc_connections():
+        return error_response("Not connected")
+    try:
+        err = _atc_send_mdi("M19")
+        if err:
+            return error_response(f"ATC orient failed: {err}")
+        app_log('CMD', 'ATC orient spindle')
+        return success_response({})
+    except Exception as e:
+        return error_response(f"ATC orient failed: {e}")
+
+
+@app.route('/v2/atc/slot', methods=['POST'])
+def v2_atc_slot():
+    """[2026-03-09] 設定刀位對應表（寫 #4001~#4024 持久化變數）"""
+    if not ensure_cnc_connections():
+        return error_response("Not connected")
+    try:
+        data = request.json or {}
+        slot = int(data.get('slot', 0))
+        tool_num = int(data.get('tool_number', 0))
+        if slot < 1 or slot > 24:
+            return error_response("Invalid slot (1~24)")
+
+        param_id = 4000 + slot
+        err = _atc_send_mdi(f"#{param_id}={tool_num}")
+        if err:
+            return error_response(f"ATC slot set failed: {err}")
+        app_log('CMD', f'ATC slot {slot} = T{tool_num}')
+        return success_response({'slot': slot, 'tool_number': tool_num})
+    except Exception as e:
+        return error_response(f"ATC slot set failed: {e}")
 
 
 if __name__ == '__main__':

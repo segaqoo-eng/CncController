@@ -120,6 +120,7 @@ namespace CncController.Views.Controls
         #endregion
 
         private double _lastAnimatedAngle = 0;
+        private bool _isFirstAngleSet = true; // [2026-03-09] 首次設定角度不動畫，直接跳轉
 
         public CarouselControl()
         {
@@ -132,6 +133,16 @@ namespace CncController.Views.Controls
         // [2026-03-06] 平滑旋轉動畫（EaseOut, 0.5s）
         private void AnimateToAngle(double targetAngle)
         {
+            // [2026-03-09] 首次切換到 ATC 頁面時直接跳轉，不播放動畫
+            if (_isFirstAngleSet)
+            {
+                _isFirstAngleSet = false;
+                _lastAnimatedAngle = targetAngle;
+                CarouselRotation.BeginAnimation(RotateTransform.AngleProperty, null);
+                CarouselRotation.Angle = targetAngle;
+                return;
+            }
+
             var animation = new DoubleAnimation
             {
                 From = _lastAnimatedAngle,

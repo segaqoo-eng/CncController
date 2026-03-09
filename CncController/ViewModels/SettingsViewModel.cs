@@ -84,11 +84,14 @@ namespace CncController.ViewModels
                 SpindleVM.UpdateSlaves(HardwareVM.Slaves);
             };
 
-            // [2026-03-06] ATC 類型即時連動：BASIC 切換類型 → IO 頁顯示對應 DO/DI
+            // [2026-03-06] ATC 類型即時連動：BASIC 切換類型/控制模式 → IO 頁顯示對應 DO/DI
             AtcBasicVM.PropertyChanged += (s, e) =>
             {
                 if (e.PropertyName == nameof(AtcBasicVM.SelectedAtcType))
                     AtcIoVM.CurrentAtcType = AtcBasicVM.SelectedAtcType;
+                // [2026-03-09] 控制模式連動：Servo/IO 切換時同步到 IO 設定頁
+                if (e.PropertyName == nameof(AtcBasicVM.ControlMode))
+                    AtcIoVM.CurrentControlMode = AtcBasicVM.ControlMode;
             };
 
             // [2026-02-24] 訂閱機台類型變更事件：即時連動 AxisParameters + DRO/JOG/Offsets
@@ -163,6 +166,7 @@ namespace CncController.ViewModels
                     // [2026-03-06] 載入 ATC 設定
                     AtcBasicVM.LoadFrom(config.Atc);
                     AtcIoVM.CurrentAtcType = config.Atc.Type;
+                    AtcIoVM.CurrentControlMode = config.Atc.ControlMode; // [2026-03-09]
 
                     // [2026-03-06] 載入主軸設定
                     SpindleVM.LoadFrom(config.Spindle, new List<DiscoveredSlave>());
@@ -425,6 +429,7 @@ namespace CncController.ViewModels
             AtcIoVM.UpdateSlaves(slaves);
             AtcIoVM.LoadFrom(config.Atc, slaves);
             AtcIoVM.CurrentAtcType = config.Atc.Type;
+            AtcIoVM.CurrentControlMode = config.Atc.ControlMode; // [2026-03-09]
 
             // [2026-03-06] Step 4.6: 載入主軸設定
             SpindleVM.LoadFrom(config.Spindle, slaves);

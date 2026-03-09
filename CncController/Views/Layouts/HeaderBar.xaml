@@ -72,6 +72,25 @@
 
             <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
 
+                <!-- [2026-03-09] 主軸 / 刀庫 Encoder 即時顯示 -->
+                <Border Background="#1A1A2E" CornerRadius="3" Padding="8,2" Margin="0,0,15,0" VerticalAlignment="Center">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Foreground="#888" FontSize="{DynamicResource FontSize.Body}" VerticalAlignment="Center">
+                            <Run Text="SPINDLE" FontWeight="Bold" Foreground="#4EC9B0"/>
+                        </TextBlock>
+                        <TextBlock Text="{Binding Status.SpindlePosition, StringFormat={}{0:F1}°}"
+                                   Foreground="#4EC9B0" FontWeight="Bold" FontFamily="Consolas"
+                                   FontSize="{DynamicResource FontSize.Body}" VerticalAlignment="Center" Margin="6,0,0,0"/>
+                        <TextBlock Text="|" Foreground="#444" Margin="10,0,10,0" VerticalAlignment="Center"/>
+                        <TextBlock Foreground="#888" FontSize="{DynamicResource FontSize.Body}" VerticalAlignment="Center">
+                            <Run Text="CAROUSEL" FontWeight="Bold" Foreground="#DCDCAA"/>
+                        </TextBlock>
+                        <TextBlock Text="{Binding Status.CarouselPosition, StringFormat={}{0:F1}°}"
+                                   Foreground="#DCDCAA" FontWeight="Bold" FontFamily="Consolas"
+                                   FontSize="{DynamicResource FontSize.Body}" VerticalAlignment="Center" Margin="6,0,0,0"/>
+                    </StackPanel>
+                </Border>
+
                 <!-- [2026-03-06] 快捷鍵提示 -->
                 <TextBlock Foreground="#888" FontSize="{DynamicResource FontSize.Body}" VerticalAlignment="Center" Margin="0,0,20,0">
                     <Run Text="ESC" FontWeight="Bold" Foreground="#CCC"/><Run Text=" 停止  "/>

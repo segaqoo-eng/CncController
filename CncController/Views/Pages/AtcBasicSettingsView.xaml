@@ -68,6 +68,18 @@
                                   ItemsSource="{Binding AvailableAtcTypes}"
                                   SelectedItem="{Binding SelectedAtcType}"/>
                     </Grid>
+                    <!-- [2026-03-09] Carousel Control Mode（僅斗笠式顯示） -->
+                    <Grid Margin="0,5"
+                          Visibility="{Binding ShowControlMode, Converter={StaticResource BoolToVis}}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="180"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="Control Mode:" Style="{StaticResource ParamLabel}"/>
+                        <ComboBox Grid.Column="1" FontSize="{DynamicResource FontSize.Medium}" Height="30" Foreground="Black"
+                                  ItemsSource="{Binding AvailableControlModes}"
+                                  SelectedItem="{Binding ControlMode}"/>
+                    </Grid>
                     <!-- [2026-03-06] Tool Count -->
                     <Grid Margin="0,5">
                         <Grid.ColumnDefinitions>

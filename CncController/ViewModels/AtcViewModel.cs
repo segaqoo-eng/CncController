@@ -64,6 +64,13 @@ namespace CncController.ViewModels
             InitializeSlots(); // [2026-03-06]
         }
 
+        // [2026-03-09] CarouselAngle 變化時同步至 MachineStatus（供 HeaderBar 即時顯示）
+        partial void OnCarouselAngleChanged(double value)
+        {
+            if (MachineStatus != null)
+                MachineStatus.CarouselPosition = value;
+        }
+
         // [2026-03-06] 初始化刀位表（預設 12 位，部分有刀）
         private void InitializeSlots()
         {
@@ -98,28 +105,28 @@ namespace CncController.ViewModels
             await MachineControlService.Instance.SendMdiCommandAsync("M64 P0");
         }
 
-        // [2026-03-03] CLAMP TOOL：M64 P1 夾緊刀具
+        // [2026-03-09] CLAMP TOOL：夾刀（透過專用 API → M25）
         [RelayCommand]
         private async Task ClampTool()
         {
-            AlarmService.Instance.AddLog("INFO", "ATC: CLAMP TOOL (M64 P1)");
-            await MachineControlService.Instance.SendMdiCommandAsync("M64 P1");
+            AlarmService.Instance.AddLog("INFO", "ATC: CLAMP TOOL");
+            await MachineControlService.Instance.AtcClampAsync();
         }
 
-        // [2026-03-03] RELEASE TOOL：M65 P1 鬆開刀具
+        // [2026-03-09] RELEASE TOOL：鬆刀（透過專用 API → M24）
         [RelayCommand]
         private async Task ReleaseTool()
         {
-            AlarmService.Instance.AddLog("INFO", "ATC: RELEASE TOOL (M65 P1)");
-            await MachineControlService.Instance.SendMdiCommandAsync("M65 P1");
+            AlarmService.Instance.AddLog("INFO", "ATC: RELEASE TOOL");
+            await MachineControlService.Instance.AtcUnclampAsync();
         }
 
-        // [2026-03-03] ORIENT SPINDLE：M19 主軸定向
+        // [2026-03-09] ORIENT SPINDLE：主軸定向（透過專用 API → M19）
         [RelayCommand]
         private async Task OrientSpindle()
         {
-            AlarmService.Instance.AddLog("INFO", "ATC: ORIENT SPINDLE (M19)");
-            await MachineControlService.Instance.SendMdiCommandAsync("M19");
+            AlarmService.Instance.AddLog("INFO", "ATC: ORIENT SPINDLE");
+            await MachineControlService.Instance.AtcOrientAsync();
         }
 
         // [2026-03-03] UNLOCK SPINDLE：M5 解除主軸定向
@@ -130,7 +137,7 @@ namespace CncController.ViewModels
             await MachineControlService.Instance.SendMdiCommandAsync("M5");
         }
 
-        // [2026-03-03] HEAD UP：G91 G0 Z10 G90（Z 上升 10mm）
+        // [2026-03-09] HEAD UP：Z 上升 10mm（方向鍵上）
         [RelayCommand]
         private async Task HeadUp()
         {
@@ -138,7 +145,7 @@ namespace CncController.ViewModels
             await MachineControlService.Instance.SendMdiCommandAsync("G91 G0 Z10 G90");
         }
 
-        // [2026-03-03] HEAD DOWN：G91 G0 Z-10 G90（Z 下降 10mm）
+        // [2026-03-09] HEAD DOWN：Z 下降 10mm（方向鍵下）
         [RelayCommand]
         private async Task HeadDown()
         {
@@ -258,79 +265,134 @@ namespace CncController.ViewModels
         // [2026-03-06] Carousel（斗笠式刀庫）專用命令
         // =====================================================================
 
-        // [2026-03-06] ATC REV：刀盤逆時針旋轉一格
+        // [2026-03-09] ATC REV：刀盤逆時針旋轉一格（透過專用 API）
         [RelayCommand]
         private async Task AtcRev()
         {
-            AlarmService.Instance.AddLog("INFO", "ATC: REV (M12)"); // [2026-03-06]
-            // [2026-03-06] 先觸發本地動畫（不等 MDI 回傳），再送後端命令
-            int toolCount = SlotInfos.Count > 0 ? SlotInfos.Count : 12;
-            CarouselAngle -= 360.0 / toolCount;
-            CurrentPocket = CurrentPocket > 1 ? CurrentPocket - 1 : toolCount;
-            await MachineControlService.Instance.SendMdiCommandAsync("M12");
+            AlarmService.Instance.AddLog("INFO", "ATC: REV");
+            // [2026-03-09] 先送指令，成功後才更新角度（避免指令失敗但動畫已動）
+            var result = await MachineControlService.Instance.AtcRevAsync();
+            if (result)
+            {
+                int toolCount = SlotInfos.Count > 0 ? SlotInfos.Count : 12;
+                CarouselAngle -= 360.0 / toolCount;
+                CurrentPocket = CurrentPocket > 1 ? CurrentPocket - 1 : toolCount;
+            }
+            await RefreshAtcStatus();
         }
 
-        // [2026-03-06] ATC FWD：刀盤順時針旋轉一格
+        // [2026-03-09] ATC FWD：刀盤順時針旋轉一格（透過專用 API）
         [RelayCommand]
         private async Task AtcFwd()
         {
-            AlarmService.Instance.AddLog("INFO", "ATC: FWD (M11)"); // [2026-03-06]
-            // [2026-03-06] 先觸發本地動畫（不等 MDI 回傳），再送後端命令
-            int toolCount = SlotInfos.Count > 0 ? SlotInfos.Count : 12;
-            CarouselAngle += 360.0 / toolCount;
-            CurrentPocket = CurrentPocket < toolCount ? CurrentPocket + 1 : 1;
-            await MachineControlService.Instance.SendMdiCommandAsync("M11");
+            AlarmService.Instance.AddLog("INFO", "ATC: FWD");
+            // [2026-03-09] 先送指令，成功後才更新角度（避免指令失敗但動畫已動）
+            var result = await MachineControlService.Instance.AtcFwdAsync();
+            if (result)
+            {
+                int toolCount = SlotInfos.Count > 0 ? SlotInfos.Count : 12;
+                CarouselAngle += 360.0 / toolCount;
+                CurrentPocket = CurrentPocket < toolCount ? CurrentPocket + 1 : 1;
+            }
+            await RefreshAtcStatus();
         }
 
-        // [2026-03-06] RETRACT ATC：收回刀盤
+        // [2026-03-09] RETRACT ATC：收回刀盤
         [RelayCommand]
         private async Task RetractAtc()
         {
-            AlarmService.Instance.AddLog("INFO", "ATC: RETRACT (o<retractatc> call)"); // [2026-03-06]
-            await MachineControlService.Instance.SendMdiCommandAsync("o<retractatc> call"); // [2026-03-06]
+            AlarmService.Instance.AddLog("INFO", "ATC: RETRACT");
+            await MachineControlService.Instance.AtcRetractAsync();
+            await RefreshAtcStatus();
         }
 
-        // [2026-03-06] EXTEND ATC：伸出刀盤
+        // [2026-03-09] EXTEND ATC：伸出刀盤
         [RelayCommand]
         private async Task ExtendAtc()
         {
-            AlarmService.Instance.AddLog("INFO", "ATC: EXTEND (o<extendatc> call)"); // [2026-03-06]
-            await MachineControlService.Instance.SendMdiCommandAsync("o<extendatc> call"); // [2026-03-06]
+            AlarmService.Instance.AddLog("INFO", "ATC: EXTEND");
+            await MachineControlService.Instance.AtcExtendAsync();
+            await RefreshAtcStatus();
         }
 
-        // [2026-03-06] MOVE HEAD ABOVE CAROUSEL：Z 至淨空高度
+        // [2026-03-09] MOVE HEAD ABOVE CAROUSEL：Z 至淨空高度
         [RelayCommand]
         private async Task MoveHeadAboveCarousel()
         {
-            AlarmService.Instance.AddLog("INFO", "ATC: MOVE HEAD ABOVE CAROUSEL"); // [2026-03-06]
-            await MachineControlService.Instance.SendMdiCommandAsync("o<move_head_above_carousel> call"); // [2026-03-06]
+            AlarmService.Instance.AddLog("INFO", "ATC: MOVE HEAD ABOVE CAROUSEL");
+            await MachineControlService.Instance.AtcHeadUpAsync();
         }
 
-        // [2026-03-06] MOVE TOOL TO CAROUSEL HEIGHT：Z 至換刀高度
+        // [2026-03-09] MOVE TOOL TO CAROUSEL HEIGHT：Z 至換刀高度
         [RelayCommand]
         private async Task MoveToolToCarouselHeight()
         {
-            AlarmService.Instance.AddLog("INFO", "ATC: MOVE TOOL TO CAROUSEL HEIGHT"); // [2026-03-06]
-            await MachineControlService.Instance.SendMdiCommandAsync("o<move_tool_to_carousel_height> call"); // [2026-03-06]
+            AlarmService.Instance.AddLog("INFO", "ATC: MOVE TOOL TO CAROUSEL HEIGHT");
+            await MachineControlService.Instance.AtcHeadDownAsync();
         }
 
-        // [2026-03-06] REF CAROUSEL：刀庫歸零
+        // [2026-03-09] REF CAROUSEL：刀庫歸零
         [RelayCommand]
         private async Task RefCarousel()
         {
-            AlarmService.Instance.AddLog("INFO", "ATC: REF CAROUSEL (M13)"); // [2026-03-06]
-            await MachineControlService.Instance.SendMdiCommandAsync("M13"); // [2026-03-06]
-            IsReferenced = true; // [2026-03-06]
-            CurrentPocket = 1; // [2026-03-06]
-            AtcStatusText = "POCKET: 1"; // [2026-03-06]
+            AlarmService.Instance.AddLog("INFO", "ATC: REF CAROUSEL");
+            bool ok = await MachineControlService.Instance.AtcRefAsync();
+            if (ok)
+            {
+                IsReferenced = true;
+                await RefreshAtcStatus();
+            }
+            else
+            {
+                AlarmService.Instance.AddLog("ERROR", "ATC: REF CAROUSEL 失敗");
+            }
         }
 
-        // [2026-03-06] ELECTRONIC TOOL SETTER
+        // [2026-03-09] ELECTRONIC TOOL SETTER
         [RelayCommand]
         private async Task ElectronicToolSetter()
         {
-            AlarmService.Instance.AddLog("INFO", "ATC: ELECTRONIC TOOL SETTER"); // [2026-03-06]
-            await MachineControlService.Instance.SendMdiCommandAsync("o<tool_touch_off> call"); // [2026-03-06]
+            AlarmService.Instance.AddLog("INFO", "ATC: ELECTRONIC TOOL SETTER");
+            await MachineControlService.Instance.SendMdiCommandAsync("o<tool_touch_off> call");
+        }
+
+        // =====================================================================
+        // [2026-03-09] 即時狀態刷新（從後端讀取真實 IO + 刀位表）
+        // =====================================================================
+        public async Task RefreshAtcStatus()
+        {
+            var status = await MachineControlService.Instance.GetAtcStatusAsync();
+            if (status == null) return;
+
+            // [2026-03-09] 更新刀位號 + 角度
+            if (status.CurrentPocket > 0)
+            {
+                CurrentPocket = status.CurrentPocket;
+                AtcStatusText = $"POCKET: {status.CurrentPocket}";
+            }
+            // [2026-03-09] Servo 模式：用 encoder 真實角度；IO 模式：用 pocket 計算角度
+            if (status.ControlMode == "SERVO" && status.CarouselAngle != 0)
+            {
+                CarouselAngle = status.CarouselAngle;
+            }
+            else if (status.CurrentPocket > 0)
+            {
+                int toolCount = SlotInfos.Count > 0 ? SlotInfos.Count : status.Pockets;
+                if (toolCount > 0)
+                    CarouselAngle = (status.CurrentPocket - 1) * (360.0 / toolCount);
+            }
+
+            // [2026-03-09] 更新刀位表（SlotTools: {slot: toolNum}）
+            if (status.SlotTools != null)
+            {
+                foreach (var kvp in status.SlotTools)
+                {
+                    if (int.TryParse(kvp.Key, out int slot) && slot >= 1 && slot <= SlotInfos.Count)
+                    {
+                        SlotInfos[slot - 1].ToolNumber = kvp.Value;
+                    }
+                }
+            }
         }
     }
 }

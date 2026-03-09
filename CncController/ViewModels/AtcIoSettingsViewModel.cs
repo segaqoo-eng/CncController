@@ -54,10 +54,20 @@ namespace CncController.ViewModels
         [ObservableProperty]
         [NotifyPropertyChangedFor(nameof(ShowCarouselIo))]
         [NotifyPropertyChangedFor(nameof(ShowDrawbarIo))]
+        [NotifyPropertyChangedFor(nameof(ShowMotorIo))]
         private AtcType _currentAtcType = AtcType.None;
 
-        // [2026-03-06] 斗笠式專用 IO（CarouselOut/CarouselHome/MotorFwd/MotorRev/RotationIndex）
+        // [2026-03-09] 當前刀盤控制模式（Servo/IO，切換時通知計算屬性）
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(ShowCarouselIo))]
+        [NotifyPropertyChangedFor(nameof(ShowMotorIo))]
+        private CarouselControlMode _currentControlMode = CarouselControlMode.Servo;
+
+        // [2026-03-06] 斗笠式專用 IO（CarouselOut/CarouselHome — 兩種模式都需要）
         public bool ShowCarouselIo => CurrentAtcType == AtcType.Umbrella;
+
+        // [2026-03-09] 馬達+感測器 IO（MotorFwd/MotorRev/RotationIndex — 僅 IO 模式需要）
+        public bool ShowMotorIo => CurrentAtcType == AtcType.Umbrella && CurrentControlMode == CarouselControlMode.IO;
 
         // [2026-03-06] 拉刀桿 IO（斗笠 + 排刀共用）
         public bool ShowDrawbarIo => CurrentAtcType == AtcType.Umbrella || CurrentAtcType == AtcType.Turret;
@@ -98,8 +108,9 @@ namespace CncController.ViewModels
             DiDrawbarUnclamp = config.DiDrawbarUnclamp;
             DiRotationIndex = config.DiRotationIndex;
 
-            // 刀庫類型
+            // 刀庫類型 + 控制模式
             CurrentAtcType = config.Type;
+            CurrentControlMode = config.ControlMode; // [2026-03-09]
         }
 
         // [2026-03-06] 將設定寫回 AtcConfig

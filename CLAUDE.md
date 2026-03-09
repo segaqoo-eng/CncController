@@ -458,6 +458,18 @@ DispatcherTimer (500ms) → MachineControlService.GetStatusAsync()
 | **全域字體統一重構** | Theme.Dark.xaml 統一變數系統（FontFamily.Default/Mono + FontSize 7 級 + Brush）；26 個 XAML 頁面全面替換 hardcoded 值為 DynamicResource |
 | **ComboBox 顯示站號** | ATC AXIS/SPINDLE/ATC IO 設定頁 ComboBox 改用 `DisplayName`（`#站號: 名稱 (VendorId)`） |
 | **CarouselControl / SpindleToolControl** | 新增 code-behind（轉盤視覺化 + 主軸刀具顯示） |
+| **CarouselControlMode 雙模式** | `Servo`（EtherCAT 伺服定角度）/ `IO`（馬達+感測器計數），AtcConfig.ControlMode 參數切換 |
+| **Carousel Servo HAL 接線** | `M68 E0 Q[angle]` → `limit3`（加減速）→ `cia402` → EtherCAT；獨立 cia402 實例 + XML CiA 402 entry |
+| **Spindle EtherCAT CiA 402 HAL** | 主軸伺服 CSV 速度模式：`spindle.0.speed-out (RPM)` → `scale (÷60)` → `cia402.vel-cmd (RPS)` → EtherCAT；encoder 回讀 → `spindle.0.revs`；`near` at-speed 偵測 |
+| **Spindle XML target_velocity** | 主軸 slave 增加 `target_velocity` (0x60FF) PDO entry（CSV 模式必要） |
+| **INI 新增參數** | `[SPINDLE]` SLAVE_INDEX/ENCODER_PPR、`[ATC]` CAROUSEL_SLAVE_INDEX/CONTROL_MODE |
+| **HeaderBar encoder 顯示** | 上方工具列新增 SPINDLE/CAROUSEL 即時角度（綠/黃色 Consolas 字體） |
+| **NGC 巨集 M10/M11/M12** | Servo 模式用 `M68 E0 Q[angle]`、IO 模式用 `M64/M65 + M66 WAIT` 馬達+感測器 |
+| **server.py encoder 讀取** | `_ini_value()` helper + 多來源主軸 encoder（EtherCAT → spindle.0.revs → spindle.0.pos-fb）+ carousel encoder 回讀 |
+| **ATC FWD/REV 失敗不動畫** | 命令成功後才更新 CarouselAngle，失敗不變動 |
+| **ATC 頁面首次不動畫** | 切換到 ATC 頁面時首次設定角度直接跳轉，不播放從 0° 的旋轉動畫 |
+| **ATC IO 設定頁分區** | Motor FWD/REV + RotationIndex 僅 IO 模式顯示；Carousel Out/Home 兩種模式都顯示 |
+| **移除殘留 carousel-pid** | 清除 `addf carousel-pid.do-pid-calcs`（PID 已改用 cia402） |
 | **版本號** | `2026.03.09_ATC_PHASE2_FONT` |
 
 ### 2026-03-06

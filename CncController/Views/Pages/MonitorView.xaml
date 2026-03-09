@@ -7,7 +7,8 @@
              xmlns:vm="clr-namespace:CncController.ViewModels"
              mc:Ignorable="d"
              d:DesignHeight="600" d:DesignWidth="1000"
-             d:DataContext="{d:DesignInstance vm:MonitorViewModel, IsDesignTimeCreatable=True}">
+             d:DataContext="{d:DesignInstance vm:MonitorViewModel, IsDesignTimeCreatable=True}"
+             FontFamily="{DynamicResource FontFamily.Default}">
 
     <Grid>
         <Grid.ColumnDefinitions>
@@ -27,12 +28,12 @@
             <Border Grid.Row="0" Background="#444" CornerRadius="2,2,0,0">
                 <DockPanel Margin="10,0,5,0">
                     <TextBlock DockPanel.Dock="Left" Text="G-CODE" Foreground="White"
-                               VerticalAlignment="Center" FontWeight="Bold" FontSize="12"/>
+                               VerticalAlignment="Center" FontWeight="Bold" FontSize="{DynamicResource FontSize.Body}"/>
                     <Button DockPanel.Dock="Right" Content="LOAD" Command="{Binding LoadLocalFileCommand}"
                             Style="{StaticResource BaseBtnStyle}" Padding="12,2" Margin="4,2"
-                            FontSize="11" VerticalAlignment="Center"/>
+                            FontSize="{DynamicResource FontSize.Body}" VerticalAlignment="Center"/>
                     <!-- [2026-03-04] 已載入檔名顯示（無檔案時隱藏） -->
-                    <TextBlock Text="{Binding CurrentFileName}" Foreground="#AAA" FontSize="11"
+                    <TextBlock Text="{Binding CurrentFileName}" Foreground="#AAA" FontSize="{DynamicResource FontSize.Body}"
                                VerticalAlignment="Center" Margin="8,0,0,0" TextTrimming="CharacterEllipsis"/>
                 </DockPanel>
             </Border>
@@ -43,9 +44,9 @@
                 <!-- [2026-03-04] 空狀態提示：無程式載入時居中顯示 -->
                 <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center"
                             Visibility="{Binding IsGCodeEmpty, Converter={StaticResource BoolToVis}}">
-                    <TextBlock Text="NO PROGRAM LOADED" Foreground="#BBB" FontSize="16"
+                    <TextBlock Text="NO PROGRAM LOADED" Foreground="#BBB" FontSize="{DynamicResource FontSize.Large}"
                                FontWeight="Bold" HorizontalAlignment="Center" Margin="0,0,0,8"/>
-                    <TextBlock Text="Click LOAD to open a G-Code file" Foreground="#CCC" FontSize="12"
+                    <TextBlock Text="Click LOAD to open a G-Code file" Foreground="#CCC" FontSize="{DynamicResource FontSize.Body}"
                                HorizontalAlignment="Center"/>
                 </StackPanel>
                 <ListBox x:Name="GCodeListBox" ItemsSource="{Binding GCodeLines}"
@@ -87,11 +88,11 @@
                                     <ColumnDefinition Width="*"/>
                                 </Grid.ColumnDefinitions>
                                 <TextBlock Grid.Column="0" Text="{Binding LineNumber}"
-                                           Foreground="#999" FontFamily="Consolas" FontSize="12"
+                                           Foreground="#999" FontFamily="{DynamicResource FontFamily.Mono}" FontSize="{DynamicResource FontSize.Body}"
                                            TextAlignment="Right" Padding="0,0,6,0"
                                            Background="#F0F0F0"/>
                                 <TextBlock Grid.Column="1" Text="{Binding Text}"
-                                           FontFamily="Consolas" FontSize="12" Padding="4,0,0,0">
+                                           FontFamily="{DynamicResource FontFamily.Mono}" FontSize="{DynamicResource FontSize.Body}" Padding="4,0,0,0">
                                     <TextBlock.Style>
                                         <Style TargetType="TextBlock">
                                             <Setter Property="Foreground" Value="Black"/>
@@ -121,7 +122,7 @@
                           Text="{Binding MdiInput, UpdateSourceTrigger=PropertyChanged}"
                           ItemsSource="{Binding MdiHistory}"
                           VerticalContentAlignment="Center" Padding="5"
-                          Background="White" FontFamily="Consolas">
+                          Background="White" FontFamily="{DynamicResource FontFamily.Mono}">
                     <ComboBox.InputBindings>
                         <KeyBinding Key="Return" Command="{Binding SendMdiCommand}"/>
                     </ComboBox.InputBindings>

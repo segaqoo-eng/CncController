@@ -1,0 +1,309 @@
+<!-- [2026-03-06] CNC 主軸 + 刀具向量圖示控件（金屬感 2D 漸層） -->
+<UserControl x:Class="CncController.Views.Controls.SpindleToolControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:CncController.Views.Controls"
+             Width="160" Height="280"
+             Background="Transparent"
+             FontFamily="{DynamicResource FontFamily.Default}">
+
+    <UserControl.Resources>
+        <!-- ===== 金屬漸層筆刷 ===== -->
+
+        <!-- 主軸殼體：深灰圓柱金屬光澤（左暗→中亮→右暗） -->
+        <LinearGradientBrush x:Key="SpindleBodyBrush" StartPoint="0,0.5" EndPoint="1,0.5">
+            <GradientStop Color="#2A2A2A" Offset="0.0"/>
+            <GradientStop Color="#4A4A4A" Offset="0.15"/>
+            <GradientStop Color="#707070" Offset="0.4"/>
+            <GradientStop Color="#888888" Offset="0.5"/>
+            <GradientStop Color="#707070" Offset="0.6"/>
+            <GradientStop Color="#4A4A4A" Offset="0.85"/>
+            <GradientStop Color="#2A2A2A" Offset="1.0"/>
+        </LinearGradientBrush>
+
+        <!-- 法蘭盤：稍深金屬 -->
+        <LinearGradientBrush x:Key="FlangeBrush" StartPoint="0,0.5" EndPoint="1,0.5">
+            <GradientStop Color="#222222" Offset="0.0"/>
+            <GradientStop Color="#3C3C3C" Offset="0.15"/>
+            <GradientStop Color="#585858" Offset="0.4"/>
+            <GradientStop Color="#6A6A6A" Offset="0.5"/>
+            <GradientStop Color="#585858" Offset="0.6"/>
+            <GradientStop Color="#3C3C3C" Offset="0.85"/>
+            <GradientStop Color="#222222" Offset="1.0"/>
+        </LinearGradientBrush>
+
+        <!-- 錐形刀柄座 -->
+        <LinearGradientBrush x:Key="TaperBrush" StartPoint="0,0.5" EndPoint="1,0.5">
+            <GradientStop Color="#303030" Offset="0.0"/>
+            <GradientStop Color="#505050" Offset="0.2"/>
+            <GradientStop Color="#787878" Offset="0.45"/>
+            <GradientStop Color="#8A8A8A" Offset="0.5"/>
+            <GradientStop Color="#787878" Offset="0.55"/>
+            <GradientStop Color="#505050" Offset="0.8"/>
+            <GradientStop Color="#303030" Offset="1.0"/>
+        </LinearGradientBrush>
+
+        <!-- 刀柄（Pull Stud）：亮銀 -->
+        <LinearGradientBrush x:Key="PullStudBrush" StartPoint="0,0.5" EndPoint="1,0.5">
+            <GradientStop Color="#606060" Offset="0.0"/>
+            <GradientStop Color="#A0A0A0" Offset="0.3"/>
+            <GradientStop Color="#D0D0D0" Offset="0.5"/>
+            <GradientStop Color="#A0A0A0" Offset="0.7"/>
+            <GradientStop Color="#606060" Offset="1.0"/>
+        </LinearGradientBrush>
+
+        <!-- 刀身：鋼灰 -->
+        <LinearGradientBrush x:Key="ToolShankBrush" StartPoint="0,0.5" EndPoint="1,0.5">
+            <GradientStop Color="#404040" Offset="0.0"/>
+            <GradientStop Color="#6E6E6E" Offset="0.2"/>
+            <GradientStop Color="#9A9A9A" Offset="0.45"/>
+            <GradientStop Color="#AAAAAA" Offset="0.5"/>
+            <GradientStop Color="#9A9A9A" Offset="0.55"/>
+            <GradientStop Color="#6E6E6E" Offset="0.8"/>
+            <GradientStop Color="#404040" Offset="1.0"/>
+        </LinearGradientBrush>
+
+        <!-- 刀刃：亮銀高光 -->
+        <LinearGradientBrush x:Key="CuttingEdgeBrush" StartPoint="0,0.5" EndPoint="1,0.5">
+            <GradientStop Color="#707070" Offset="0.0"/>
+            <GradientStop Color="#B8B8B8" Offset="0.25"/>
+            <GradientStop Color="#E0E0E0" Offset="0.5"/>
+            <GradientStop Color="#B8B8B8" Offset="0.75"/>
+            <GradientStop Color="#707070" Offset="1.0"/>
+        </LinearGradientBrush>
+
+        <!-- 主軸頂部高光線 -->
+        <LinearGradientBrush x:Key="HighlightLineBrush" StartPoint="0,0" EndPoint="0,1">
+            <GradientStop Color="#60FFFFFF" Offset="0.0"/>
+            <GradientStop Color="#00FFFFFF" Offset="1.0"/>
+        </LinearGradientBrush>
+
+        <!-- [2026-03-06] 整數非零轉 Visibility 轉換器 -->
+        <local:NonZeroToVisibilityConverter x:Key="NonZeroToVisConverter"/>
+    </UserControl.Resources>
+
+    <Canvas>
+        <!-- ============================================ -->
+        <!-- 文字標籤（上方） -->
+        <!-- ============================================ -->
+        <TextBlock x:Name="LabelText"
+                   Canvas.Left="0" Canvas.Top="0"
+                   Width="160" TextAlignment="Center"
+                   FontSize="{DynamicResource FontSize.Body}" FontWeight="Bold"
+                   Foreground="White">
+            <TextBlock.Style>
+                <Style TargetType="TextBlock">
+                    <Setter Property="Text" Value="{Binding ToolLabel, RelativeSource={RelativeSource AncestorType=local:SpindleToolControl}}"/>
+                    <Style.Triggers>
+                        <!-- [2026-03-06] 當 ToolLabel 為空時，依 ToolNumber 自動生成文字 -->
+                        <DataTrigger Binding="{Binding ToolLabel, RelativeSource={RelativeSource AncestorType=local:SpindleToolControl}}" Value="">
+                            <Setter Property="Text" Value="NO TOOL LOADED"/>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </TextBlock.Style>
+        </TextBlock>
+
+        <!-- ============================================ -->
+        <!-- 主軸本體（上部圓柱殼體） Y=24 起 -->
+        <!-- ============================================ -->
+
+        <!-- 主軸殼體（大圓柱） -->
+        <Rectangle Canvas.Left="35" Canvas.Top="24"
+                   Width="90" Height="70"
+                   RadiusX="3" RadiusY="3"
+                   Fill="{StaticResource SpindleBodyBrush}"
+                   Stroke="#1A1A1A" StrokeThickness="0.8"/>
+
+        <!-- 殼體頂部高光帶 -->
+        <Rectangle Canvas.Left="36" Canvas.Top="25"
+                   Width="88" Height="6"
+                   RadiusX="2" RadiusY="2"
+                   Fill="{StaticResource HighlightLineBrush}"
+                   IsHitTestVisible="False"/>
+
+        <!-- 殼體中間細線裝飾（分隔溝槽） -->
+        <Line Canvas.Left="38" Canvas.Top="54"
+              X2="84" Y2="0"
+              Stroke="#1E1E1E" StrokeThickness="1.2"/>
+        <Line Canvas.Left="38" Canvas.Top="56"
+              X2="84" Y2="0"
+              Stroke="#555555" StrokeThickness="0.5"/>
+
+        <!-- 殼體底部裝飾線 -->
+        <Line Canvas.Left="38" Canvas.Top="68"
+              X2="84" Y2="0"
+              Stroke="#1E1E1E" StrokeThickness="1"/>
+        <Line Canvas.Left="38" Canvas.Top="69.5"
+              X2="84" Y2="0"
+              Stroke="#555555" StrokeThickness="0.5"/>
+
+        <!-- ============================================ -->
+        <!-- 法蘭盤（寬矩形，比主軸稍寬） -->
+        <!-- ============================================ -->
+        <Rectangle Canvas.Left="25" Canvas.Top="94"
+                   Width="110" Height="18"
+                   RadiusX="2" RadiusY="2"
+                   Fill="{StaticResource FlangeBrush}"
+                   Stroke="#1A1A1A" StrokeThickness="0.8"/>
+
+        <!-- 法蘭盤螺栓裝飾（左右各 2 個小圓） -->
+        <Ellipse Canvas.Left="32" Canvas.Top="99" Width="7" Height="7"
+                 Fill="#3A3A3A" Stroke="#555" StrokeThickness="0.5"/>
+        <Ellipse Canvas.Left="46" Canvas.Top="99" Width="7" Height="7"
+                 Fill="#3A3A3A" Stroke="#555" StrokeThickness="0.5"/>
+        <Ellipse Canvas.Left="107" Canvas.Top="99" Width="7" Height="7"
+                 Fill="#3A3A3A" Stroke="#555" StrokeThickness="0.5"/>
+        <Ellipse Canvas.Left="121" Canvas.Top="99" Width="7" Height="7"
+                 Fill="#3A3A3A" Stroke="#555" StrokeThickness="0.5"/>
+
+        <!-- 法蘭盤高光 -->
+        <Rectangle Canvas.Left="26" Canvas.Top="95"
+                   Width="108" Height="3"
+                   RadiusX="1" RadiusY="1"
+                   Fill="{StaticResource HighlightLineBrush}"
+                   IsHitTestVisible="False"/>
+
+        <!-- ============================================ -->
+        <!-- 下部錐形（BT/HSK 刀柄座）：梯形 Path -->
+        <!-- ============================================ -->
+        <Path Fill="{StaticResource TaperBrush}"
+              Stroke="#1A1A1A" StrokeThickness="0.8">
+            <Path.Data>
+                <!-- 梯形：上寬 80（40~120），下寬 36（62~98），高 40 -->
+                <PathGeometry>
+                    <PathFigure StartPoint="40,112" IsClosed="True">
+                        <LineSegment Point="120,112"/>
+                        <LineSegment Point="98,152"/>
+                        <LineSegment Point="62,152"/>
+                    </PathFigure>
+                </PathGeometry>
+            </Path.Data>
+        </Path>
+
+        <!-- 錐形高光線 -->
+        <Path IsHitTestVisible="False">
+            <Path.Data>
+                <PathGeometry>
+                    <PathFigure StartPoint="78,114" IsClosed="False">
+                        <LineSegment Point="79,150"/>
+                    </PathFigure>
+                </PathGeometry>
+            </Path.Data>
+            <Path.Stroke>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                    <GradientStop Color="#40FFFFFF" Offset="0"/>
+                    <GradientStop Color="#10FFFFFF" Offset="1"/>
+                </LinearGradientBrush>
+            </Path.Stroke>
+            <Path.StrokeThickness>1.5</Path.StrokeThickness>
+        </Path>
+
+        <!-- ============================================ -->
+        <!-- 刀具部分（ToolNumber > 0 時顯示） -->
+        <!-- ============================================ -->
+        <!-- [2026-03-06] ToolNumber != 0 時顯示刀具，== 0 時隱藏 -->
+        <Canvas x:Name="ToolGroup"
+                Visibility="{Binding ToolNumber, RelativeSource={RelativeSource AncestorType=local:SpindleToolControl}, Converter={StaticResource NonZeroToVisConverter}}">
+
+            <!-- 刀柄（Pull Stud 端）：窄圓柱 -->
+            <Rectangle Canvas.Left="70" Canvas.Top="152"
+                       Width="20" Height="22"
+                       RadiusX="2" RadiusY="2"
+                       Fill="{StaticResource PullStudBrush}"
+                       Stroke="#2A2A2A" StrokeThickness="0.6"/>
+
+            <!-- Pull Stud 頂部凸緣 -->
+            <Rectangle Canvas.Left="66" Canvas.Top="152"
+                       Width="28" Height="5"
+                       RadiusX="1" RadiusY="1"
+                       Fill="{StaticResource PullStudBrush}"
+                       Stroke="#2A2A2A" StrokeThickness="0.6"/>
+
+            <!-- 刀柄與刀身過渡 -->
+            <Path Fill="{StaticResource ToolShankBrush}"
+                  Stroke="#2A2A2A" StrokeThickness="0.6">
+                <Path.Data>
+                    <PathGeometry>
+                        <PathFigure StartPoint="70,174" IsClosed="True">
+                            <LineSegment Point="90,174"/>
+                            <LineSegment Point="96,180"/>
+                            <LineSegment Point="64,180"/>
+                        </PathFigure>
+                    </PathGeometry>
+                </Path.Data>
+            </Path>
+
+            <!-- 刀身（較粗圓柱） -->
+            <Rectangle Canvas.Left="64" Canvas.Top="180"
+                       Width="32" Height="50"
+                       RadiusX="2" RadiusY="2"
+                       Fill="{StaticResource ToolShankBrush}"
+                       Stroke="#2A2A2A" StrokeThickness="0.6"/>
+
+            <!-- 刀身螺旋刃溝裝飾線 -->
+            <Line Canvas.Left="70" Canvas.Top="185"
+                  X2="14" Y2="42"
+                  Stroke="#3A3A3A" StrokeThickness="1.2" StrokeDashArray="3,2"/>
+            <Line Canvas.Left="86" Canvas.Top="185"
+                  X2="-14" Y2="42"
+                  Stroke="#5A5A5A" StrokeThickness="0.8" StrokeDashArray="3,2"/>
+
+            <!-- 刀身高光 -->
+            <Rectangle Canvas.Left="76" Canvas.Top="182"
+                       Width="4" Height="46"
+                       RadiusX="1" RadiusY="1"
+                       IsHitTestVisible="False">
+                <Rectangle.Fill>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                        <GradientStop Color="#00FFFFFF" Offset="0"/>
+                        <GradientStop Color="#30FFFFFF" Offset="0.5"/>
+                        <GradientStop Color="#00FFFFFF" Offset="1"/>
+                    </LinearGradientBrush>
+                </Rectangle.Fill>
+            </Rectangle>
+
+            <!-- 刀刃部分（底部梯形） -->
+            <Path Fill="{StaticResource CuttingEdgeBrush}"
+                  Stroke="#2A2A2A" StrokeThickness="0.6">
+                <Path.Data>
+                    <PathGeometry>
+                        <!-- 上寬 32（64~96），下寬 12（74~86），高 18 -->
+                        <PathFigure StartPoint="64,230" IsClosed="True">
+                            <LineSegment Point="96,230"/>
+                            <LineSegment Point="86,248"/>
+                            <LineSegment Point="74,248"/>
+                        </PathFigure>
+                    </PathGeometry>
+                </Path.Data>
+            </Path>
+
+            <!-- 刀尖高光 -->
+            <Path IsHitTestVisible="False">
+                <Path.Data>
+                    <PathGeometry>
+                        <PathFigure StartPoint="80,232" IsClosed="False">
+                            <LineSegment Point="80,246"/>
+                        </PathFigure>
+                    </PathGeometry>
+                </Path.Data>
+                <Path.Stroke>
+                    <SolidColorBrush Color="#50FFFFFF"/>
+                </Path.Stroke>
+                <Path.StrokeThickness>1.5</Path.StrokeThickness>
+            </Path>
+        </Canvas>
+
+        <!-- ============================================ -->
+        <!-- 無刀具時顯示文字（ToolNumber == 0 時可見） -->
+        <!-- ============================================ -->
+        <!-- [2026-03-06] 用 NonZeroToVisibilityConverter + Invert 參數：0→Visible, >0→Collapsed -->
+        <TextBlock Canvas.Left="0" Canvas.Top="190"
+                   Width="160" TextAlignment="Center"
+                   FontSize="{DynamicResource FontSize.Body}" FontWeight="SemiBold"
+                   Foreground="#AA888888"
+                   Text="NO TOOL LOADED"
+                   Visibility="{Binding ToolNumber, RelativeSource={RelativeSource AncestorType=local:SpindleToolControl}, Converter={StaticResource NonZeroToVisConverter}, ConverterParameter=Invert}"/>
+
+    </Canvas>
+</UserControl>

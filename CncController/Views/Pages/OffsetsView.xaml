@@ -9,6 +9,7 @@
              xmlns:helpers="clr-namespace:CncController.Helpers"
              mc:Ignorable="d"
              d:DataContext="{d:DesignInstance Type=vm:OffsetsViewModel}"
+             FontFamily="{DynamicResource FontFamily.Default}"
              d:DesignHeight="700" d:DesignWidth="1700">
 
     <UserControl.Resources>
@@ -16,7 +17,7 @@
         <helpers:BindingProxy x:Key="Proxy" Data="{Binding}"/>
         <!-- [2026-03-04] OffsetBtnStyle 改為 BasedOn BaseBtnStyle，移除自訂 Template -->
         <Style x:Key="OffsetBtnStyle" TargetType="Button" BasedOn="{StaticResource BaseBtnStyle}">
-            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="FontSize" Value="{DynamicResource FontSize.Body}"/>
             <Setter Property="Margin" Value="3"/>
             <Setter Property="Padding" Value="8,4"/>
         </Style>
@@ -24,13 +25,13 @@
         <!-- [2026-03-04] WCS 選擇按鈕樣式（大按鈕），BasedOn OffsetBtnStyle -->
         <Style x:Key="WcsBtnStyle" TargetType="Button" BasedOn="{StaticResource OffsetBtnStyle}">
             <Setter Property="Height" Value="36"/>
-            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="FontSize" Value="{DynamicResource FontSize.Body}"/>
             <Setter Property="Margin" Value="4,3"/>
         </Style>
 
         <!-- [2026-03-04] ZERO 按鈕樣式（表格內嵌小按鈕），BasedOn OffsetBtnStyle，保留棕色背景 -->
         <Style x:Key="ZeroBtnStyle" TargetType="Button" BasedOn="{StaticResource OffsetBtnStyle}">
-            <Setter Property="FontSize" Value="9"/>
+            <Setter Property="FontSize" Value="{DynamicResource FontSize.XSmall}"/>
             <Setter Property="Padding" Value="4,2"/>
             <Setter Property="Margin" Value="1"/>
             <Setter Property="Background" Value="#664422"/>
@@ -50,7 +51,7 @@
             <Border Grid.Column="0" Background="#252526" BorderBrush="#444" BorderThickness="1" CornerRadius="4" Margin="0,0,5,0">
                 <DockPanel Margin="8">
                     <TextBlock DockPanel.Dock="Top" Text="WORK OFFSET TABLE" Foreground="#AAAAAA"
-                               FontSize="12" FontWeight="Bold" Margin="0,0,0,6"/>
+                               FontSize="{DynamicResource FontSize.Body}" FontWeight="Bold" Margin="0,0,0,6"/>
 
                     <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Margin="0,8,0,0"
                                 HorizontalAlignment="Left">
@@ -86,7 +87,7 @@
                                 <Setter Property="Background" Value="#333"/>
                                 <Setter Property="Foreground" Value="#AAAAAA"/>
                                 <Setter Property="FontWeight" Value="Bold"/>
-                                <Setter Property="FontSize" Value="11"/>
+                                <Setter Property="FontSize" Value="{DynamicResource FontSize.Body}"/>
                                 <Setter Property="HorizontalContentAlignment" Value="Center"/>
                                 <Setter Property="Padding" Value="4"/>
                             </Style>
@@ -124,7 +125,7 @@
             <Border Grid.Column="1" Background="#252526" BorderBrush="#444" BorderThickness="1" CornerRadius="4" Margin="5,0,0,0">
                 <DockPanel Margin="10">
                     <TextBlock DockPanel.Dock="Top" Text="WORK COORDINATE OFFSETS" Foreground="#AAAAAA"
-                               FontSize="12" FontWeight="Bold" Margin="0,0,0,8"/>
+                               FontSize="{DynamicResource FontSize.Body}" FontWeight="Bold" Margin="0,0,0,8"/>
 
                     <!-- [2026-02-24] WCS 按鈕改為 2 行（對齊 PB 版：Row1=G54-G58，Row2=G59/G59.1-G59.3） -->
                     <StackPanel DockPanel.Dock="Top" Margin="0,0,0,4">
@@ -135,7 +136,7 @@
                                     <Style TargetType="Button" BasedOn="{StaticResource WcsBtnStyle}">
                                         <Style.Triggers>
                                             <DataTrigger Binding="{Binding ActiveOffset}" Value="G54">
-                                                <Setter Property="Background" Value="#007ACC"/>
+                                                <Setter Property="Background" Value="{DynamicResource Brush.Checked}"/>
                                                 <Setter Property="BorderBrush" Value="#005A9E"/>
                                             </DataTrigger>
                                         </Style.Triggers>
@@ -147,7 +148,7 @@
                                     <Style TargetType="Button" BasedOn="{StaticResource WcsBtnStyle}">
                                         <Style.Triggers>
                                             <DataTrigger Binding="{Binding ActiveOffset}" Value="G55">
-                                                <Setter Property="Background" Value="#007ACC"/>
+                                                <Setter Property="Background" Value="{DynamicResource Brush.Checked}"/>
                                                 <Setter Property="BorderBrush" Value="#005A9E"/>
                                             </DataTrigger>
                                         </Style.Triggers>
@@ -159,7 +160,7 @@
                                     <Style TargetType="Button" BasedOn="{StaticResource WcsBtnStyle}">
                                         <Style.Triggers>
                                             <DataTrigger Binding="{Binding ActiveOffset}" Value="G56">
-                                                <Setter Property="Background" Value="#007ACC"/>
+                                                <Setter Property="Background" Value="{DynamicResource Brush.Checked}"/>
                                                 <Setter Property="BorderBrush" Value="#005A9E"/>
                                             </DataTrigger>
                                         </Style.Triggers>
@@ -171,7 +172,7 @@
                                     <Style TargetType="Button" BasedOn="{StaticResource WcsBtnStyle}">
                                         <Style.Triggers>
                                             <DataTrigger Binding="{Binding ActiveOffset}" Value="G57">
-                                                <Setter Property="Background" Value="#007ACC"/>
+                                                <Setter Property="Background" Value="{DynamicResource Brush.Checked}"/>
                                                 <Setter Property="BorderBrush" Value="#005A9E"/>
                                             </DataTrigger>
                                         </Style.Triggers>
@@ -183,7 +184,7 @@
                                     <Style TargetType="Button" BasedOn="{StaticResource WcsBtnStyle}">
                                         <Style.Triggers>
                                             <DataTrigger Binding="{Binding ActiveOffset}" Value="G58">
-                                                <Setter Property="Background" Value="#007ACC"/>
+                                                <Setter Property="Background" Value="{DynamicResource Brush.Checked}"/>
                                                 <Setter Property="BorderBrush" Value="#005A9E"/>
                                             </DataTrigger>
                                         </Style.Triggers>
@@ -198,7 +199,7 @@
                                     <Style TargetType="Button" BasedOn="{StaticResource WcsBtnStyle}">
                                         <Style.Triggers>
                                             <DataTrigger Binding="{Binding ActiveOffset}" Value="G59">
-                                                <Setter Property="Background" Value="#007ACC"/>
+                                                <Setter Property="Background" Value="{DynamicResource Brush.Checked}"/>
                                                 <Setter Property="BorderBrush" Value="#005A9E"/>
                                             </DataTrigger>
                                         </Style.Triggers>
@@ -210,7 +211,7 @@
                                     <Style TargetType="Button" BasedOn="{StaticResource WcsBtnStyle}">
                                         <Style.Triggers>
                                             <DataTrigger Binding="{Binding ActiveOffset}" Value="G59.1">
-                                                <Setter Property="Background" Value="#007ACC"/>
+                                                <Setter Property="Background" Value="{DynamicResource Brush.Checked}"/>
                                                 <Setter Property="BorderBrush" Value="#005A9E"/>
                                             </DataTrigger>
                                         </Style.Triggers>
@@ -222,7 +223,7 @@
                                     <Style TargetType="Button" BasedOn="{StaticResource WcsBtnStyle}">
                                         <Style.Triggers>
                                             <DataTrigger Binding="{Binding ActiveOffset}" Value="G59.2">
-                                                <Setter Property="Background" Value="#007ACC"/>
+                                                <Setter Property="Background" Value="{DynamicResource Brush.Checked}"/>
                                                 <Setter Property="BorderBrush" Value="#005A9E"/>
                                             </DataTrigger>
                                         </Style.Triggers>
@@ -234,7 +235,7 @@
                                     <Style TargetType="Button" BasedOn="{StaticResource WcsBtnStyle}">
                                         <Style.Triggers>
                                             <DataTrigger Binding="{Binding ActiveOffset}" Value="G59.3">
-                                                <Setter Property="Background" Value="#007ACC"/>
+                                                <Setter Property="Background" Value="{DynamicResource Brush.Checked}"/>
                                                 <Setter Property="BorderBrush" Value="#005A9E"/>
                                             </DataTrigger>
                                         </Style.Triggers>
@@ -272,38 +273,38 @@
                         </Grid.RowDefinitions>
 
                         <!-- 表頭 -->
-                        <TextBlock Grid.Row="0" Grid.Column="0" Text="SET TO&#x0a;ZERO" Foreground="#888" FontSize="8" HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center"/>
-                        <TextBlock Grid.Row="0" Grid.Column="1" Text="AXIS" Foreground="#888" FontSize="9" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        <TextBlock Grid.Row="0" Grid.Column="2" Text="WC CURRENT POS" Foreground="#888" FontSize="9" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        <TextBlock Grid.Row="0" Grid.Column="3" Text="MACHINE COORDS" Foreground="#888" FontSize="9" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        <TextBlock Grid.Row="0" Grid.Column="4" Text="WC OFFSET" Foreground="#888" FontSize="9" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        <TextBlock Grid.Row="0" Grid.Column="5" Text="G52/G92 OFFSET" Foreground="#888" FontSize="9" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        <TextBlock Grid.Row="0" Grid.Column="6" Text="TOOL OFFSET" Foreground="#888" FontSize="9" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Row="0" Grid.Column="0" Text="SET TO&#x0a;ZERO" Foreground="#888" FontSize="{DynamicResource FontSize.XSmall}" HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center"/>
+                        <TextBlock Grid.Row="0" Grid.Column="1" Text="AXIS" Foreground="#888" FontSize="{DynamicResource FontSize.XSmall}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Row="0" Grid.Column="2" Text="WC CURRENT POS" Foreground="#888" FontSize="{DynamicResource FontSize.XSmall}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Row="0" Grid.Column="3" Text="MACHINE COORDS" Foreground="#888" FontSize="{DynamicResource FontSize.XSmall}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Row="0" Grid.Column="4" Text="WC OFFSET" Foreground="#888" FontSize="{DynamicResource FontSize.XSmall}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Row="0" Grid.Column="5" Text="G52/G92 OFFSET" Foreground="#888" FontSize="{DynamicResource FontSize.XSmall}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Row="0" Grid.Column="6" Text="TOOL OFFSET" Foreground="#888" FontSize="{DynamicResource FontSize.XSmall}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
 
                         <!-- ===== X 行 ===== -->
                         <Button Grid.Row="1" Grid.Column="0" Content="ZERO" Style="{StaticResource ZeroBtnStyle}"
                                 Command="{Binding SetToZeroAxisCommand}" CommandParameter="X"/>
                         <Border Grid.Row="1" Grid.Column="1" Background="#3A2A2A" Margin="1" CornerRadius="2">
-                            <TextBlock Text="X" Foreground="White" FontWeight="Bold" FontSize="14" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <TextBlock Text="X" Foreground="White" FontWeight="Bold" FontSize="{DynamicResource FontSize.Medium}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <Border Grid.Row="1" Grid.Column="2" Background="#1A2E1A" Margin="1" CornerRadius="2">
-                            <TextBlock Text="{Binding MachineStatus.WorkX, StringFormat={}{0:F4}}" Foreground="#90EE90" FontFamily="Consolas" FontSize="13" FontWeight="Bold"
+                            <TextBlock Text="{Binding MachineStatus.WorkX, StringFormat={}{0:F4}}" Foreground="#90EE90" FontFamily="Consolas" FontSize="{DynamicResource FontSize.Body}" FontWeight="Bold"
                                        HorizontalAlignment="Right" VerticalAlignment="Center" Margin="4,0"/>
                         </Border>
                         <Border Grid.Row="1" Grid.Column="3" Background="#1A1A2E" Margin="1" CornerRadius="2">
-                            <TextBlock Text="{Binding MachineStatus.X, StringFormat={}{0:F4}}" Foreground="#00BFFF" FontFamily="Consolas" FontSize="13" FontWeight="Bold"
+                            <TextBlock Text="{Binding MachineStatus.X, StringFormat={}{0:F4}}" Foreground="#00BFFF" FontFamily="Consolas" FontSize="{DynamicResource FontSize.Body}" FontWeight="Bold"
                                        HorizontalAlignment="Right" VerticalAlignment="Center" Margin="4,0"/>
                         </Border>
                         <Border Grid.Row="1" Grid.Column="4" Background="#2A2A2A" Margin="1" CornerRadius="2">
-                            <TextBlock Text="{Binding SelectedRow.X, StringFormat={}{0:F4}}" Foreground="#AAAAAA" FontFamily="Consolas" FontSize="13" FontWeight="Bold"
+                            <TextBlock Text="{Binding SelectedRow.X, StringFormat={}{0:F4}}" Foreground="#AAAAAA" FontFamily="Consolas" FontSize="{DynamicResource FontSize.Body}" FontWeight="Bold"
                                        HorizontalAlignment="Right" VerticalAlignment="Center" Margin="4,0"/>
                         </Border>
                         <Border Grid.Row="1" Grid.Column="5" Background="#2A2A22" Margin="1" CornerRadius="2">
-                            <TextBlock Text="{Binding MachineStatus.G92X, StringFormat={}{0:F4}}" Foreground="#CCCC88" FontFamily="Consolas" FontSize="13" FontWeight="Bold"
+                            <TextBlock Text="{Binding MachineStatus.G92X, StringFormat={}{0:F4}}" Foreground="#CCCC88" FontFamily="Consolas" FontSize="{DynamicResource FontSize.Body}" FontWeight="Bold"
                                        HorizontalAlignment="Right" VerticalAlignment="Center" Margin="4,0"/>
                         </Border>
                         <Border Grid.Row="1" Grid.Column="6" Background="#2A222A" Margin="1" CornerRadius="2">
-                            <TextBlock Text="{Binding MachineStatus.ToolOffsetX, StringFormat={}{0:F4}}" Foreground="#CC88CC" FontFamily="Consolas" FontSize="13" FontWeight="Bold"
+                            <TextBlock Text="{Binding MachineStatus.ToolOffsetX, StringFormat={}{0:F4}}" Foreground="#CC88CC" FontFamily="Consolas" FontSize="{DynamicResource FontSize.Body}" FontWeight="Bold"
                                        HorizontalAlignment="Right" VerticalAlignment="Center" Margin="4,0"/>
                         </Border>
 
@@ -311,26 +312,26 @@
                         <Button Grid.Row="2" Grid.Column="0" Content="ZERO" Style="{StaticResource ZeroBtnStyle}"
                                 Command="{Binding SetToZeroAxisCommand}" CommandParameter="Y"/>
                         <Border Grid.Row="2" Grid.Column="1" Background="#3A2A2A" Margin="1" CornerRadius="2">
-                            <TextBlock Text="Y" Foreground="White" FontWeight="Bold" FontSize="14" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <TextBlock Text="Y" Foreground="White" FontWeight="Bold" FontSize="{DynamicResource FontSize.Medium}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <Border Grid.Row="2" Grid.Column="2" Background="#1A2E1A" Margin="1" CornerRadius="2">
-                            <TextBlock Text="{Binding MachineStatus.WorkY, StringFormat={}{0:F4}}" Foreground="#90EE90" FontFamily="Consolas" FontSize="13" FontWeight="Bold"
+                            <TextBlock Text="{Binding MachineStatus.WorkY, StringFormat={}{0:F4}}" Foreground="#90EE90" FontFamily="Consolas" FontSize="{DynamicResource FontSize.Body}" FontWeight="Bold"
                                        HorizontalAlignment="Right" VerticalAlignment="Center" Margin="4,0"/>
                         </Border>
                         <Border Grid.Row="2" Grid.Column="3" Background="#1A1A2E" Margin="1" CornerRadius="2">
-                            <TextBlock Text="{Binding MachineStatus.Y, StringFormat={}{0:F4}}" Foreground="#00BFFF" FontFamily="Consolas" FontSize="13" FontWeight="Bold"
+                            <TextBlock Text="{Binding MachineStatus.Y, StringFormat={}{0:F4}}" Foreground="#00BFFF" FontFamily="Consolas" FontSize="{DynamicResource FontSize.Body}" FontWeight="Bold"
                                        HorizontalAlignment="Right" VerticalAlignment="Center" Margin="4,0"/>
                         </Border>
                         <Border Grid.Row="2" Grid.Column="4" Background="#2A2A2A" Margin="1" CornerRadius="2">
-                            <TextBlock Text="{Binding SelectedRow.Y, StringFormat={}{0:F4}}" Foreground="#AAAAAA" FontFamily="Consolas" FontSize="13" FontWeight="Bold"
+                            <TextBlock Text="{Binding SelectedRow.Y, StringFormat={}{0:F4}}" Foreground="#AAAAAA" FontFamily="Consolas" FontSize="{DynamicResource FontSize.Body}" FontWeight="Bold"
                                        HorizontalAlignment="Right" VerticalAlignment="Center" Margin="4,0"/>
                         </Border>
                         <Border Grid.Row="2" Grid.Column="5" Background="#2A2A22" Margin="1" CornerRadius="2">
-                            <TextBlock Text="{Binding MachineStatus.G92Y, StringFormat={}{0:F4}}" Foreground="#CCCC88" FontFamily="Consolas" FontSize="13" FontWeight="Bold"
+                            <TextBlock Text="{Binding MachineStatus.G92Y, StringFormat={}{0:F4}}" Foreground="#CCCC88" FontFamily="Consolas" FontSize="{DynamicResource FontSize.Body}" FontWeight="Bold"
                                        HorizontalAlignment="Right" VerticalAlignment="Center" Margin="4,0"/>
                         </Border>
                         <Border Grid.Row="2" Grid.Column="6" Background="#2A222A" Margin="1" CornerRadius="2">
-                            <TextBlock Text="{Binding MachineStatus.ToolOffsetY, StringFormat={}{0:F4}}" Foreground="#CC88CC" FontFamily="Consolas" FontSize="13" FontWeight="Bold"
+                            <TextBlock Text="{Binding MachineStatus.ToolOffsetY, StringFormat={}{0:F4}}" Foreground="#CC88CC" FontFamily="Consolas" FontSize="{DynamicResource FontSize.Body}" FontWeight="Bold"
                                        HorizontalAlignment="Right" VerticalAlignment="Center" Margin="4,0"/>
                         </Border>
 
@@ -338,26 +339,26 @@
                         <Button Grid.Row="3" Grid.Column="0" Content="ZERO" Style="{StaticResource ZeroBtnStyle}"
                                 Command="{Binding SetToZeroAxisCommand}" CommandParameter="Z"/>
                         <Border Grid.Row="3" Grid.Column="1" Background="#3A2A2A" Margin="1" CornerRadius="2">
-                            <TextBlock Text="Z" Foreground="White" FontWeight="Bold" FontSize="14" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <TextBlock Text="Z" Foreground="White" FontWeight="Bold" FontSize="{DynamicResource FontSize.Medium}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <Border Grid.Row="3" Grid.Column="2" Background="#1A2E1A" Margin="1" CornerRadius="2">
-                            <TextBlock Text="{Binding MachineStatus.WorkZ, StringFormat={}{0:F4}}" Foreground="#90EE90" FontFamily="Consolas" FontSize="13" FontWeight="Bold"
+                            <TextBlock Text="{Binding MachineStatus.WorkZ, StringFormat={}{0:F4}}" Foreground="#90EE90" FontFamily="Consolas" FontSize="{DynamicResource FontSize.Body}" FontWeight="Bold"
                                        HorizontalAlignment="Right" VerticalAlignment="Center" Margin="4,0"/>
                         </Border>
                         <Border Grid.Row="3" Grid.Column="3" Background="#1A1A2E" Margin="1" CornerRadius="2">
-                            <TextBlock Text="{Binding MachineStatus.Z, StringFormat={}{0:F4}}" Foreground="#00BFFF" FontFamily="Consolas" FontSize="13" FontWeight="Bold"
+                            <TextBlock Text="{Binding MachineStatus.Z, StringFormat={}{0:F4}}" Foreground="#00BFFF" FontFamily="Consolas" FontSize="{DynamicResource FontSize.Body}" FontWeight="Bold"
                                        HorizontalAlignment="Right" VerticalAlignment="Center" Margin="4,0"/>
                         </Border>
                         <Border Grid.Row="3" Grid.Column="4" Background="#2A2A2A" Margin="1" CornerRadius="2">
-                            <TextBlock Text="{Binding SelectedRow.Z, StringFormat={}{0:F4}}" Foreground="#AAAAAA" FontFamily="Consolas" FontSize="13" FontWeight="Bold"
+                            <TextBlock Text="{Binding SelectedRow.Z, StringFormat={}{0:F4}}" Foreground="#AAAAAA" FontFamily="Consolas" FontSize="{DynamicResource FontSize.Body}" FontWeight="Bold"
                                        HorizontalAlignment="Right" VerticalAlignment="Center" Margin="4,0"/>
                         </Border>
                         <Border Grid.Row="3" Grid.Column="5" Background="#2A2A22" Margin="1" CornerRadius="2">
-                            <TextBlock Text="{Binding MachineStatus.G92Z, StringFormat={}{0:F4}}" Foreground="#CCCC88" FontFamily="Consolas" FontSize="13" FontWeight="Bold"
+                            <TextBlock Text="{Binding MachineStatus.G92Z, StringFormat={}{0:F4}}" Foreground="#CCCC88" FontFamily="Consolas" FontSize="{DynamicResource FontSize.Body}" FontWeight="Bold"
                                        HorizontalAlignment="Right" VerticalAlignment="Center" Margin="4,0"/>
                         </Border>
                         <Border Grid.Row="3" Grid.Column="6" Background="#2A222A" Margin="1" CornerRadius="2">
-                            <TextBlock Text="{Binding MachineStatus.ToolOffsetZ, StringFormat={}{0:F4}}" Foreground="#CC88CC" FontFamily="Consolas" FontSize="13" FontWeight="Bold"
+                            <TextBlock Text="{Binding MachineStatus.ToolOffsetZ, StringFormat={}{0:F4}}" Foreground="#CC88CC" FontFamily="Consolas" FontSize="{DynamicResource FontSize.Body}" FontWeight="Bold"
                                        HorizontalAlignment="Right" VerticalAlignment="Center" Margin="4,0"/>
                         </Border>
 
@@ -367,31 +368,31 @@
                                 Visibility="{Binding IsAxisAEnabled, Converter={StaticResource BoolToVis}}"/>
                         <Border Grid.Row="4" Grid.Column="1" Background="#3A2A2A" Margin="1" CornerRadius="2" Height="36"
                                 Visibility="{Binding IsAxisAEnabled, Converter={StaticResource BoolToVis}}">
-                            <TextBlock Text="A" Foreground="White" FontWeight="Bold" FontSize="14" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <TextBlock Text="A" Foreground="White" FontWeight="Bold" FontSize="{DynamicResource FontSize.Medium}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <Border Grid.Row="4" Grid.Column="2" Background="#1A2E1A" Margin="1" CornerRadius="2" Height="36"
                                 Visibility="{Binding IsAxisAEnabled, Converter={StaticResource BoolToVis}}">
-                            <TextBlock Text="{Binding MachineStatus.WorkA, StringFormat={}{0:F4}}" Foreground="#90EE90" FontFamily="Consolas" FontSize="13" FontWeight="Bold"
+                            <TextBlock Text="{Binding MachineStatus.WorkA, StringFormat={}{0:F4}}" Foreground="#90EE90" FontFamily="Consolas" FontSize="{DynamicResource FontSize.Body}" FontWeight="Bold"
                                        HorizontalAlignment="Right" VerticalAlignment="Center" Margin="4,0"/>
                         </Border>
                         <Border Grid.Row="4" Grid.Column="3" Background="#1A1A2E" Margin="1" CornerRadius="2" Height="36"
                                 Visibility="{Binding IsAxisAEnabled, Converter={StaticResource BoolToVis}}">
-                            <TextBlock Text="{Binding MachineStatus.A, StringFormat={}{0:F4}}" Foreground="#00BFFF" FontFamily="Consolas" FontSize="13" FontWeight="Bold"
+                            <TextBlock Text="{Binding MachineStatus.A, StringFormat={}{0:F4}}" Foreground="#00BFFF" FontFamily="Consolas" FontSize="{DynamicResource FontSize.Body}" FontWeight="Bold"
                                        HorizontalAlignment="Right" VerticalAlignment="Center" Margin="4,0"/>
                         </Border>
                         <Border Grid.Row="4" Grid.Column="4" Background="#2A2A2A" Margin="1" CornerRadius="2" Height="36"
                                 Visibility="{Binding IsAxisAEnabled, Converter={StaticResource BoolToVis}}">
-                            <TextBlock Text="{Binding SelectedRow.A, StringFormat={}{0:F4}}" Foreground="#AAAAAA" FontFamily="Consolas" FontSize="13" FontWeight="Bold"
+                            <TextBlock Text="{Binding SelectedRow.A, StringFormat={}{0:F4}}" Foreground="#AAAAAA" FontFamily="Consolas" FontSize="{DynamicResource FontSize.Body}" FontWeight="Bold"
                                        HorizontalAlignment="Right" VerticalAlignment="Center" Margin="4,0"/>
                         </Border>
                         <Border Grid.Row="4" Grid.Column="5" Background="#2A2A22" Margin="1" CornerRadius="2" Height="36"
                                 Visibility="{Binding IsAxisAEnabled, Converter={StaticResource BoolToVis}}">
-                            <TextBlock Text="{Binding MachineStatus.G92A, StringFormat={}{0:F4}}" Foreground="#CCCC88" FontFamily="Consolas" FontSize="13" FontWeight="Bold"
+                            <TextBlock Text="{Binding MachineStatus.G92A, StringFormat={}{0:F4}}" Foreground="#CCCC88" FontFamily="Consolas" FontSize="{DynamicResource FontSize.Body}" FontWeight="Bold"
                                        HorizontalAlignment="Right" VerticalAlignment="Center" Margin="4,0"/>
                         </Border>
                         <Border Grid.Row="4" Grid.Column="6" Background="#2A222A" Margin="1" CornerRadius="2" Height="36"
                                 Visibility="{Binding IsAxisAEnabled, Converter={StaticResource BoolToVis}}">
-                            <TextBlock Text="0.0000" Foreground="#CC88CC" FontFamily="Consolas" FontSize="13" FontWeight="Bold"
+                            <TextBlock Text="0.0000" Foreground="#CC88CC" FontFamily="Consolas" FontSize="{DynamicResource FontSize.Body}" FontWeight="Bold"
                                        HorizontalAlignment="Right" VerticalAlignment="Center" Margin="4,0"/>
                         </Border>
 
@@ -401,31 +402,31 @@
                                 Visibility="{Binding IsAxisBEnabled, Converter={StaticResource BoolToVis}}"/>
                         <Border Grid.Row="5" Grid.Column="1" Background="#3A2A2A" Margin="1" CornerRadius="2" Height="36"
                                 Visibility="{Binding IsAxisBEnabled, Converter={StaticResource BoolToVis}}">
-                            <TextBlock Text="B" Foreground="White" FontWeight="Bold" FontSize="14" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <TextBlock Text="B" Foreground="White" FontWeight="Bold" FontSize="{DynamicResource FontSize.Medium}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <Border Grid.Row="5" Grid.Column="2" Background="#1A2E1A" Margin="1" CornerRadius="2" Height="36"
                                 Visibility="{Binding IsAxisBEnabled, Converter={StaticResource BoolToVis}}">
-                            <TextBlock Text="{Binding MachineStatus.WorkB, StringFormat={}{0:F4}}" Foreground="#90EE90" FontFamily="Consolas" FontSize="13" FontWeight="Bold"
+                            <TextBlock Text="{Binding MachineStatus.WorkB, StringFormat={}{0:F4}}" Foreground="#90EE90" FontFamily="Consolas" FontSize="{DynamicResource FontSize.Body}" FontWeight="Bold"
                                        HorizontalAlignment="Right" VerticalAlignment="Center" Margin="4,0"/>
                         </Border>
                         <Border Grid.Row="5" Grid.Column="3" Background="#1A1A2E" Margin="1" CornerRadius="2" Height="36"
                                 Visibility="{Binding IsAxisBEnabled, Converter={StaticResource BoolToVis}}">
-                            <TextBlock Text="{Binding MachineStatus.B, StringFormat={}{0:F4}}" Foreground="#00BFFF" FontFamily="Consolas" FontSize="13" FontWeight="Bold"
+                            <TextBlock Text="{Binding MachineStatus.B, StringFormat={}{0:F4}}" Foreground="#00BFFF" FontFamily="Consolas" FontSize="{DynamicResource FontSize.Body}" FontWeight="Bold"
                                        HorizontalAlignment="Right" VerticalAlignment="Center" Margin="4,0"/>
                         </Border>
                         <Border Grid.Row="5" Grid.Column="4" Background="#2A2A2A" Margin="1" CornerRadius="2" Height="36"
                                 Visibility="{Binding IsAxisBEnabled, Converter={StaticResource BoolToVis}}">
-                            <TextBlock Text="{Binding SelectedRow.B, StringFormat={}{0:F4}}" Foreground="#AAAAAA" FontFamily="Consolas" FontSize="13" FontWeight="Bold"
+                            <TextBlock Text="{Binding SelectedRow.B, StringFormat={}{0:F4}}" Foreground="#AAAAAA" FontFamily="Consolas" FontSize="{DynamicResource FontSize.Body}" FontWeight="Bold"
                                        HorizontalAlignment="Right" VerticalAlignment="Center" Margin="4,0"/>
                         </Border>
                         <Border Grid.Row="5" Grid.Column="5" Background="#2A2A22" Margin="1" CornerRadius="2" Height="36"
                                 Visibility="{Binding IsAxisBEnabled, Converter={StaticResource BoolToVis}}">
-                            <TextBlock Text="{Binding MachineStatus.G92B, StringFormat={}{0:F4}}" Foreground="#CCCC88" FontFamily="Consolas" FontSize="13" FontWeight="Bold"
+                            <TextBlock Text="{Binding MachineStatus.G92B, StringFormat={}{0:F4}}" Foreground="#CCCC88" FontFamily="Consolas" FontSize="{DynamicResource FontSize.Body}" FontWeight="Bold"
                                        HorizontalAlignment="Right" VerticalAlignment="Center" Margin="4,0"/>
                         </Border>
                         <Border Grid.Row="5" Grid.Column="6" Background="#2A222A" Margin="1" CornerRadius="2" Height="36"
                                 Visibility="{Binding IsAxisBEnabled, Converter={StaticResource BoolToVis}}">
-                            <TextBlock Text="0.0000" Foreground="#CC88CC" FontFamily="Consolas" FontSize="13" FontWeight="Bold"
+                            <TextBlock Text="0.0000" Foreground="#CC88CC" FontFamily="Consolas" FontSize="{DynamicResource FontSize.Body}" FontWeight="Bold"
                                        HorizontalAlignment="Right" VerticalAlignment="Center" Margin="4,0"/>
                         </Border>
 
@@ -435,31 +436,31 @@
                                 Visibility="{Binding IsAxisCEnabled, Converter={StaticResource BoolToVis}}"/>
                         <Border Grid.Row="6" Grid.Column="1" Background="#3A2A2A" Margin="1" CornerRadius="2" Height="36"
                                 Visibility="{Binding IsAxisCEnabled, Converter={StaticResource BoolToVis}}">
-                            <TextBlock Text="C" Foreground="White" FontWeight="Bold" FontSize="14" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <TextBlock Text="C" Foreground="White" FontWeight="Bold" FontSize="{DynamicResource FontSize.Medium}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <Border Grid.Row="6" Grid.Column="2" Background="#1A2E1A" Margin="1" CornerRadius="2" Height="36"
                                 Visibility="{Binding IsAxisCEnabled, Converter={StaticResource BoolToVis}}">
-                            <TextBlock Text="{Binding MachineStatus.WorkC, StringFormat={}{0:F4}}" Foreground="#90EE90" FontFamily="Consolas" FontSize="13" FontWeight="Bold"
+                            <TextBlock Text="{Binding MachineStatus.WorkC, StringFormat={}{0:F4}}" Foreground="#90EE90" FontFamily="Consolas" FontSize="{DynamicResource FontSize.Body}" FontWeight="Bold"
                                        HorizontalAlignment="Right" VerticalAlignment="Center" Margin="4,0"/>
                         </Border>
                         <Border Grid.Row="6" Grid.Column="3" Background="#1A1A2E" Margin="1" CornerRadius="2" Height="36"
                                 Visibility="{Binding IsAxisCEnabled, Converter={StaticResource BoolToVis}}">
-                            <TextBlock Text="{Binding MachineStatus.C, StringFormat={}{0:F4}}" Foreground="#00BFFF" FontFamily="Consolas" FontSize="13" FontWeight="Bold"
+                            <TextBlock Text="{Binding MachineStatus.C, StringFormat={}{0:F4}}" Foreground="#00BFFF" FontFamily="Consolas" FontSize="{DynamicResource FontSize.Body}" FontWeight="Bold"
                                        HorizontalAlignment="Right" VerticalAlignment="Center" Margin="4,0"/>
                         </Border>
                         <Border Grid.Row="6" Grid.Column="4" Background="#2A2A2A" Margin="1" CornerRadius="2" Height="36"
                                 Visibility="{Binding IsAxisCEnabled, Converter={StaticResource BoolToVis}}">
-                            <TextBlock Text="{Binding SelectedRow.C, StringFormat={}{0:F4}}" Foreground="#AAAAAA" FontFamily="Consolas" FontSize="13" FontWeight="Bold"
+                            <TextBlock Text="{Binding SelectedRow.C, StringFormat={}{0:F4}}" Foreground="#AAAAAA" FontFamily="Consolas" FontSize="{DynamicResource FontSize.Body}" FontWeight="Bold"
                                        HorizontalAlignment="Right" VerticalAlignment="Center" Margin="4,0"/>
                         </Border>
                         <Border Grid.Row="6" Grid.Column="5" Background="#2A2A22" Margin="1" CornerRadius="2" Height="36"
                                 Visibility="{Binding IsAxisCEnabled, Converter={StaticResource BoolToVis}}">
-                            <TextBlock Text="{Binding MachineStatus.G92C, StringFormat={}{0:F4}}" Foreground="#CCCC88" FontFamily="Consolas" FontSize="13" FontWeight="Bold"
+                            <TextBlock Text="{Binding MachineStatus.G92C, StringFormat={}{0:F4}}" Foreground="#CCCC88" FontFamily="Consolas" FontSize="{DynamicResource FontSize.Body}" FontWeight="Bold"
                                        HorizontalAlignment="Right" VerticalAlignment="Center" Margin="4,0"/>
                         </Border>
                         <Border Grid.Row="6" Grid.Column="6" Background="#2A222A" Margin="1" CornerRadius="2" Height="36"
                                 Visibility="{Binding IsAxisCEnabled, Converter={StaticResource BoolToVis}}">
-                            <TextBlock Text="0.0000" Foreground="#CC88CC" FontFamily="Consolas" FontSize="13" FontWeight="Bold"
+                            <TextBlock Text="0.0000" Foreground="#CC88CC" FontFamily="Consolas" FontSize="{DynamicResource FontSize.Body}" FontWeight="Bold"
                                        HorizontalAlignment="Right" VerticalAlignment="Center" Margin="4,0"/>
                         </Border>
                     </Grid>

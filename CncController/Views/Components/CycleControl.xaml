@@ -6,7 +6,8 @@
              xmlns:vm="clr-namespace:CncController.ViewModels"
              mc:Ignorable="d" 
              d:DataContext="{d:DesignInstance Type=vm:MainViewModel}"
-             d:DesignHeight="350" d:DesignWidth="350">
+             d:DesignHeight="350" d:DesignWidth="350"
+             FontFamily="{DynamicResource FontFamily.Default}">
 
     <UserControl.Resources>
         <!-- [2026-03-04] CycleBtnStyle 改繼承 BaseBtnStyle，移除本地 Template -->
@@ -14,7 +15,7 @@
             <!-- [2026-03-05] 按鈕高度 38→45 對齊 PB 版 D_1 -->
             <Setter Property="Height" Value="45"/>
             <Setter Property="Margin" Value="2,3"/>
-            <Setter Property="FontSize" Value="{DynamicResource BtnFontSize.Small}"/>
+            <Setter Property="FontSize" Value="{DynamicResource FontSize.Body}"/>
             <Setter Property="Padding" Value="{DynamicResource BtnPadding.Small}"/>
         </Style>
 
@@ -88,7 +89,7 @@
                         <Style TargetType="Button" BasedOn="{StaticResource CycleBtnStyle}">
                             <Style.Triggers>
                                 <DataTrigger Binding="{Binding IsSingleBlock}" Value="True">
-                                    <Setter Property="Background" Value="#007ACC"/>
+                                    <Setter Property="Background" Value="{DynamicResource Brush.Checked}"/>
                                     <Setter Property="BorderBrush" Value="#005A9E"/>
                                 </DataTrigger>
                             </Style.Triggers>
@@ -100,7 +101,7 @@
                         <Style TargetType="Button" BasedOn="{StaticResource CycleBtnStyle}">
                             <Style.Triggers>
                                 <DataTrigger Binding="{Binding IsFloodOn}" Value="True">
-                                    <Setter Property="Background" Value="#007ACC"/>
+                                    <Setter Property="Background" Value="{DynamicResource Brush.Checked}"/>
                                     <Setter Property="BorderBrush" Value="#005A9E"/>
                                     <Setter Property="Foreground" Value="White"/>
                                 </DataTrigger>
@@ -114,7 +115,7 @@
                         <Style TargetType="Button" BasedOn="{StaticResource CycleBtnStyle}">
                             <Style.Triggers>
                                 <DataTrigger Binding="{Binding IsBlockDelete}" Value="True">
-                                    <Setter Property="Background" Value="#007ACC"/>
+                                    <Setter Property="Background" Value="{DynamicResource Brush.Checked}"/>
                                     <Setter Property="BorderBrush" Value="#005A9E"/>
                                 </DataTrigger>
                             </Style.Triggers>
@@ -127,7 +128,7 @@
                         <Style TargetType="Button" BasedOn="{StaticResource CycleBtnStyle}">
                             <Style.Triggers>
                                 <DataTrigger Binding="{Binding IsMistOn}" Value="True">
-                                    <Setter Property="Background" Value="#007ACC"/>
+                                    <Setter Property="Background" Value="{DynamicResource Brush.Checked}"/>
                                     <Setter Property="BorderBrush" Value="#005A9E"/>
                                 </DataTrigger>
                             </Style.Triggers>
@@ -140,7 +141,7 @@
                         <Style TargetType="Button" BasedOn="{StaticResource CycleBtnStyle}">
                             <Style.Triggers>
                                 <DataTrigger Binding="{Binding IsOptionalStop}" Value="True">
-                                    <Setter Property="Background" Value="#007ACC"/>
+                                    <Setter Property="Background" Value="{DynamicResource Brush.Checked}"/>
                                     <Setter Property="BorderBrush" Value="#005A9E"/>
                                 </DataTrigger>
                             </Style.Triggers>
@@ -160,7 +161,7 @@
 
                 <!-- [2026-03-04] POWER：保留獨立 Template（綠色動態切換），加 Cursor=Hand -->
                 <Button Grid.Column="0" Command="{Binding TogglePowerCommand}" Margin="2" Content="POWER" Cursor="Hand"
-                        Height="45" FontSize="{DynamicResource BtnFontSize.Small}" FontWeight="Bold" Foreground="White">
+                        Height="45" FontSize="{DynamicResource FontSize.Body}" FontWeight="Bold" Foreground="White">
                     <Button.Style>
                         <Style TargetType="Button">
                             <Setter Property="Template">
@@ -206,13 +207,13 @@
                 </Button>
 
                 <Border Grid.Column="1" Background="#DDDDDD" CornerRadius="3" Margin="2" Height="45" VerticalAlignment="Center">
-                    <TextBlock Text="{Binding CycleTimeDisplay}" Foreground="Black" FontWeight="Bold" FontFamily="Consolas" FontSize="16"
+                    <TextBlock Text="{Binding CycleTimeDisplay}" Foreground="Black" FontWeight="Bold" FontFamily="{DynamicResource FontFamily.Mono}" FontSize="{DynamicResource FontSize.Large}"
                                VerticalAlignment="Center" HorizontalAlignment="Center"/>
                 </Border>
 
                 <!-- [2026-03-04] E-STOP：保留獨立 Template（紅色動態切換），加 Cursor=Hand -->
                 <Button Grid.Column="2" Command="{Binding ToggleEstopCommand}" Margin="2" Content="E-STOP" Cursor="Hand"
-                        Height="45" FontSize="{DynamicResource BtnFontSize.Small}" FontWeight="Bold" Foreground="White">
+                        Height="45" FontSize="{DynamicResource FontSize.Body}" FontWeight="Bold" Foreground="White">
                     <Button.Style>
                         <Style TargetType="Button">
                             <Setter Property="Template">

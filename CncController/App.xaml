@@ -51,8 +51,9 @@
             <!--   尺寸預設 Medium，各頁面可用行內或 DynamicResource 覆寫           -->
             <!-- ================================================================ -->
             <Style x:Key="BaseBtnStyle" TargetType="Button">
+                <Setter Property="FontFamily" Value="{DynamicResource FontFamily.Default}"/>
                 <Setter Property="Foreground" Value="White"/>
-                <Setter Property="FontSize" Value="{DynamicResource BtnFontSize.Medium}"/>
+                <Setter Property="FontSize" Value="{DynamicResource FontSize.Body}"/>
                 <Setter Property="FontWeight" Value="Bold"/>
                 <Setter Property="Padding" Value="{DynamicResource BtnPadding.Medium}"/>
                 <Setter Property="Margin" Value="2"/>
@@ -74,7 +75,7 @@
                             </Border>
                             <ControlTemplate.Triggers>
                                 <Trigger Property="IsMouseOver" Value="True">
-                                    <Setter TargetName="bd" Property="BorderBrush" Value="#0090FF"/>
+                                    <Setter TargetName="bd" Property="BorderBrush" Value="{DynamicResource Brush.Hover.Border}"/>
                                     <Setter TargetName="bd" Property="Background">
                                         <Setter.Value>
                                             <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
@@ -86,7 +87,7 @@
                                     </Setter>
                                 </Trigger>
                                 <Trigger Property="IsPressed" Value="True">
-                                    <Setter TargetName="bd" Property="BorderBrush" Value="#40B0FF"/>
+                                    <Setter TargetName="bd" Property="BorderBrush" Value="{DynamicResource Brush.Pressed.Border}"/>
                                     <Setter TargetName="bd" Property="Background">
                                         <Setter.Value>
                                             <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
@@ -108,8 +109,9 @@
 
             <!-- [2026-03-04] BaseRadioBtnStyle：全域 RadioButton 基底（Tab / WCS 選擇） -->
             <Style x:Key="BaseRadioBtnStyle" TargetType="RadioButton">
+                <Setter Property="FontFamily" Value="{DynamicResource FontFamily.Default}"/>
                 <Setter Property="Foreground" Value="#CCC"/>
-                <Setter Property="FontSize" Value="{DynamicResource BtnFontSize.Medium}"/>
+                <Setter Property="FontSize" Value="{DynamicResource FontSize.Body}"/>
                 <Setter Property="FontWeight" Value="Bold"/>
                 <Setter Property="Padding" Value="{DynamicResource BtnPadding.Medium}"/>
                 <Setter Property="Margin" Value="2,0"/>
@@ -131,7 +133,7 @@
                             </Border>
                             <ControlTemplate.Triggers>
                                 <Trigger Property="IsMouseOver" Value="True">
-                                    <Setter TargetName="bd" Property="BorderBrush" Value="#0090FF"/>
+                                    <Setter TargetName="bd" Property="BorderBrush" Value="{DynamicResource Brush.Hover.Border}"/>
                                     <Setter TargetName="bd" Property="Background">
                                         <Setter.Value>
                                             <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
@@ -167,8 +169,9 @@
 
             <!-- [2026-03-04] NavBtnStyle：底部導航（漸層版） -->
             <Style x:Key="NavBtnStyle" TargetType="RadioButton">
+                <Setter Property="FontFamily" Value="{DynamicResource FontFamily.Default}"/>
                 <Setter Property="Foreground" Value="{DynamicResource Brush.Text.Primary}"/>
-                <Setter Property="FontSize" Value="14"/>
+                <Setter Property="FontSize" Value="{DynamicResource FontSize.Medium}"/>
                 <Setter Property="FontWeight" Value="Bold"/>
                 <Setter Property="Height" Value="50"/>
                 <Setter Property="Margin" Value="1,0"/>

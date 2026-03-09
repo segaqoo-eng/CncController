@@ -5,7 +5,8 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d"
-             d:DesignHeight="700" d:DesignWidth="500">
+             d:DesignHeight="700" d:DesignWidth="500"
+             FontFamily="{DynamicResource FontFamily.Default}">
 
     <!-- [2026-03-06] DataContext is set by parent (AtcIoSettingsViewModel) -->
 
@@ -19,7 +20,7 @@
             <Setter Property="HeaderTemplate">
                 <Setter.Value>
                     <DataTemplate>
-                        <TextBlock Text="{Binding}" FontSize="14" FontWeight="Bold" Foreground="#5E70FF"/>
+                        <TextBlock Text="{Binding}" FontSize="{DynamicResource FontSize.Medium}" FontWeight="Bold" Foreground="#5E70FF"/>
                     </DataTemplate>
                 </Setter.Value>
             </Setter>
@@ -28,7 +29,7 @@
         <!-- [2026-03-06] Label style -->
         <Style x:Key="IoLabel" TargetType="TextBlock">
             <Setter Property="Foreground" Value="White"/>
-            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontSize" Value="{DynamicResource FontSize.Medium}"/>
             <Setter Property="VerticalAlignment" Value="Center"/>
             <Setter Property="Margin" Value="0,4"/>
         </Style>
@@ -40,14 +41,15 @@
             <Setter Property="Margin" Value="0,4"/>
             <Setter Property="VerticalAlignment" Value="Center"/>
             <Setter Property="Foreground" Value="Black"/>
-            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontSize" Value="{DynamicResource FontSize.Medium}"/>
+            <Setter Property="FontFamily" Value="{DynamicResource FontFamily.Default}"/>
             <Setter Property="Height" Value="30"/>
         </Style>
 
         <!-- [2026-03-06] Section header style -->
         <Style x:Key="SectionHeader" TargetType="TextBlock">
             <Setter Property="Foreground" Value="#AAA"/>
-            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="FontSize" Value="{DynamicResource FontSize.Body}"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
             <Setter Property="Margin" Value="0,8,0,4"/>
         </Style>
@@ -70,7 +72,7 @@
                               DisplayMemberPath="Name"
                               Margin="0,4"
                               VerticalAlignment="Center"
-                              FontSize="14" Height="30" Foreground="Black"/>
+                              FontSize="{DynamicResource FontSize.Medium}" Height="30" Foreground="Black"/>
                 </Grid>
             </GroupBox>
 

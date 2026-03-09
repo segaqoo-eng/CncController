@@ -5,6 +5,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              mc:Ignorable="d"
+             FontFamily="{DynamicResource FontFamily.Default}"
              d:DesignHeight="200" d:DesignWidth="300">
 
     <StackPanel Margin="5">
@@ -34,7 +35,7 @@
                     TickFrequency="10" Height="25" VerticalAlignment="Center" Foreground="#007ACC"/>
             <Border Grid.Column="1" Background="#333" Margin="3,0,0,0" CornerRadius="2">
                 <TextBlock Text="{Binding JogSpeedPercent, StringFormat={}{0:F0}%}"
-                           Foreground="White" FontWeight="Bold" FontSize="12"
+                           Foreground="White" FontWeight="Bold" FontSize="{DynamicResource FontSize.Body}"
                            VerticalAlignment="Center" HorizontalAlignment="Center"/>
             </Border>
         </Grid>
@@ -46,12 +47,12 @@
                 <ColumnDefinition Width="80"/>
             </Grid.ColumnDefinitions>
             <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
-                <TextBlock Text="{Binding Status.Feedrate, StringFormat=F1}" Foreground="#DDD" FontSize="12" FontWeight="Bold" Margin="0,0,5,0"/>
-                <TextBlock Text="FEEDRATE MM/M" Foreground="#AAA" FontSize="12" VerticalAlignment="Center"/>
+                <TextBlock Text="{Binding Status.Feedrate, StringFormat=F1}" Foreground="#DDD" FontSize="{DynamicResource FontSize.Body}" FontWeight="Bold" Margin="0,0,5,0"/>
+                <TextBlock Text="FEEDRATE MM/M" Foreground="#AAA" FontSize="{DynamicResource FontSize.Body}" VerticalAlignment="Center"/>
             </StackPanel>
             <TextBox Grid.Column="1" Text="{Binding JogFeedrate}" HorizontalAlignment="Right"
                      Background="White" Padding="3" FontWeight="Bold" BorderThickness="0"
-                     FontSize="14" HorizontalContentAlignment="Center"/>
+                     FontSize="{DynamicResource FontSize.Medium}" HorizontalContentAlignment="Center"/>
         </Grid>
 
         <!-- Row 3: SPINDLE RPM -->
@@ -61,20 +62,20 @@
                 <ColumnDefinition Width="80"/>
             </Grid.ColumnDefinitions>
             <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
-                <TextBlock Text="{Binding Status.SpindleSpeed, StringFormat=F0}" Foreground="#DDD" FontSize="12" FontWeight="Bold" Margin="0,0,5,0"/>
-                <TextBlock Text="SPINDLE RPM" Foreground="#AAA" FontSize="12" VerticalAlignment="Center"/>
+                <TextBlock Text="{Binding Status.SpindleSpeed, StringFormat=F0}" Foreground="#DDD" FontSize="{DynamicResource FontSize.Body}" FontWeight="Bold" Margin="0,0,5,0"/>
+                <TextBlock Text="SPINDLE RPM" Foreground="#AAA" FontSize="{DynamicResource FontSize.Body}" VerticalAlignment="Center"/>
             </StackPanel>
             <TextBox Grid.Column="1" Text="{Binding JogSpindleRpm}" HorizontalAlignment="Right"
                      Background="White" Padding="3" FontWeight="Bold" BorderThickness="0"
-                     FontSize="14" HorizontalContentAlignment="Center"/>
+                     FontSize="{DynamicResource FontSize.Medium}" HorizontalContentAlignment="Center"/>
         </Grid>
 
         <!-- Row 4: REV / STOP / FWD 按鈕 -->
         <UniformGrid Columns="3" Margin="0,15,0,0">
             <!-- [2026-03-05] 改用 BaseBtnStyle 對齊 PB 版 -->
-            <Button Content="REV" Height="40" FontSize="12" Margin="2" Style="{StaticResource BaseBtnStyle}"
+            <Button Content="REV" Height="40" FontSize="{DynamicResource FontSize.Body}" Margin="2" Style="{StaticResource BaseBtnStyle}"
                     Command="{Binding SpindleRevCommand}"/>
-            <Button Content="STOP" Height="40" FontSize="12" Margin="2"
+            <Button Content="STOP" Height="40" FontSize="{DynamicResource FontSize.Body}" Margin="2"
                     Command="{Binding SpindleStopCommand}">
                 <Button.Style>
                     <Style TargetType="Button" BasedOn="{StaticResource BaseBtnStyle}">
@@ -84,7 +85,7 @@
                     </Style>
                 </Button.Style>
             </Button>
-            <Button Content="FWD" Height="40" FontSize="12" Margin="2" Style="{StaticResource BaseBtnStyle}"
+            <Button Content="FWD" Height="40" FontSize="{DynamicResource FontSize.Body}" Margin="2" Style="{StaticResource BaseBtnStyle}"
                     Command="{Binding SpindleFwdCommand}"/>
         </UniformGrid>
     </StackPanel>

@@ -5,7 +5,8 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:vm="clr-namespace:CncController.ViewModels"
              mc:Ignorable="d" 
-             d:DesignHeight="600" d:DesignWidth="1024">
+             d:DesignHeight="600" d:DesignWidth="1024"
+             FontFamily="{DynamicResource FontFamily.Default}">
 
     <UserControl.DataContext>
         <vm:HistoryViewModel/>
@@ -15,7 +16,7 @@
         <!-- [2026-03-04] TabButtonStyle 改繼承 BaseRadioBtnStyle，移除本地 Template -->
         <Style x:Key="TabButtonStyle" TargetType="RadioButton" BasedOn="{StaticResource BaseRadioBtnStyle}">
             <Setter Property="Foreground" Value="White"/>
-            <Setter Property="FontSize" Value="{DynamicResource BtnFontSize.Large}"/>
+            <Setter Property="FontSize" Value="{DynamicResource FontSize.Large}"/>
             <Setter Property="Padding" Value="{DynamicResource BtnPadding.Large}"/>
             <Setter Property="Height" Value="45"/>
             <Setter Property="Width" Value="120"/>
@@ -45,7 +46,7 @@
 
                 <Button DockPanel.Dock="Right" Content="CLEAR ALARMS" Width="160" Height="45" 
                         Background="#333" Foreground="White" BorderBrush="Gray" Margin="0,0,0,5"
-                        FontSize="16" FontWeight="Bold"
+                        FontSize="{DynamicResource FontSize.Large}" FontWeight="Bold"
                         Command="{Binding ClearActiveAlarmsCommand}">
                     <Button.Resources>
                         <Style TargetType="Border">
@@ -58,7 +59,7 @@
 
         <DataGrid Grid.Row="1" ItemsSource="{Binding LogsView}" AutoGenerateColumns="False" 
                   IsReadOnly="True" 
-                  FontSize="18"
+                  FontSize="{DynamicResource FontSize.XLarge}"
                   Background="#1E1E1E" 
                   RowBackground="#1E1E1E"
                   AlternatingRowBackground="#252525"

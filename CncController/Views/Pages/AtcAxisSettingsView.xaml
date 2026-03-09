@@ -5,13 +5,15 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d"
-             d:DesignHeight="500" d:DesignWidth="600">
+             d:DesignHeight="500" d:DesignWidth="600"
+             FontFamily="{DynamicResource FontFamily.Default}">
 
     <UserControl.Resources>
         <Style x:Key="DarkTextBox" TargetType="TextBox">
+            <Setter Property="FontFamily" Value="{DynamicResource FontFamily.Default}"/>
             <Setter Property="Background" Value="White"/>
             <Setter Property="Foreground" Value="Black"/>
-            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontSize" Value="{DynamicResource FontSize.Medium}"/>
             <Setter Property="Width" Value="120"/>
             <Setter Property="Height" Value="30"/>
             <Setter Property="TextAlignment" Value="Center"/>
@@ -21,14 +23,14 @@
         </Style>
         <Style x:Key="ParamLabel" TargetType="TextBlock">
             <Setter Property="Foreground" Value="White"/>
-            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontSize" Value="{DynamicResource FontSize.Medium}"/>
             <Setter Property="VerticalAlignment" Value="Center"/>
             <Setter Property="HorizontalAlignment" Value="Right"/>
             <Setter Property="Margin" Value="0,0,10,0"/>
         </Style>
         <Style x:Key="UnitLabel" TargetType="TextBlock">
             <Setter Property="Foreground" Value="Gray"/>
-            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="FontSize" Value="{DynamicResource FontSize.Body}"/>
             <Setter Property="VerticalAlignment" Value="Center"/>
             <Setter Property="Margin" Value="8,0,0,0"/>
         </Style>
@@ -40,7 +42,7 @@
             <!-- [2026-03-06] CAROUSEL ROTATION SERVO -->
             <GroupBox BorderBrush="#555" BorderThickness="1" Margin="0,0,0,10" Padding="15,10">
                 <GroupBox.Header>
-                    <TextBlock Text="CAROUSEL ROTATION SERVO" Foreground="#5E70FF" FontWeight="Bold" FontSize="14"/>
+                    <TextBlock Text="CAROUSEL ROTATION SERVO" Foreground="#5E70FF" FontWeight="Bold" FontSize="{DynamicResource FontSize.Medium}"/>
                 </GroupBox.Header>
                 <Grid Margin="0,5">
                     <Grid.ColumnDefinitions>
@@ -48,7 +50,7 @@
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
                     <TextBlock Grid.Column="0" Text="EtherCAT Slave:" Style="{StaticResource ParamLabel}"/>
-                    <ComboBox Grid.Column="1" Width="260" FontSize="14" Height="30" Foreground="Black"
+                    <ComboBox Grid.Column="1" Width="260" FontSize="{DynamicResource FontSize.Medium}" Height="30" Foreground="Black"
                               ItemsSource="{Binding AvailableSlaves}"
                               SelectedItem="{Binding SelectedCarouselSlave}"
                               DisplayMemberPath="Name"/>
@@ -58,7 +60,7 @@
             <!-- [2026-03-06] MECHANICAL PARAMETERS -->
             <GroupBox BorderBrush="#555" BorderThickness="1" Margin="0,0,0,10" Padding="15,10">
                 <GroupBox.Header>
-                    <TextBlock Text="MECHANICAL PARAMETERS" Foreground="#5E70FF" FontWeight="Bold" FontSize="14"/>
+                    <TextBlock Text="MECHANICAL PARAMETERS" Foreground="#5E70FF" FontWeight="Bold" FontSize="{DynamicResource FontSize.Medium}"/>
                 </GroupBox.Header>
                 <StackPanel>
                     <Grid Margin="0,5">
@@ -91,7 +93,7 @@
             <!-- [2026-03-06] MOTION PARAMETERS -->
             <GroupBox BorderBrush="#555" BorderThickness="1" Margin="0,0,0,10" Padding="15,10">
                 <GroupBox.Header>
-                    <TextBlock Text="MOTION PARAMETERS" Foreground="#5E70FF" FontWeight="Bold" FontSize="14"/>
+                    <TextBlock Text="MOTION PARAMETERS" Foreground="#5E70FF" FontWeight="Bold" FontSize="{DynamicResource FontSize.Medium}"/>
                 </GroupBox.Header>
                 <StackPanel>
                     <Grid Margin="0,5">
@@ -124,10 +126,10 @@
             <!-- [2026-03-06] INFO -->
             <GroupBox BorderBrush="#555" BorderThickness="1" Margin="0,0,0,10" Padding="15,10">
                 <GroupBox.Header>
-                    <TextBlock Text="INFO" Foreground="#5E70FF" FontWeight="Bold" FontSize="14"/>
+                    <TextBlock Text="INFO" Foreground="#5E70FF" FontWeight="Bold" FontSize="{DynamicResource FontSize.Medium}"/>
                 </GroupBox.Header>
                 <StackPanel>
-                    <TextBlock FontSize="14" Foreground="#CCC" Margin="0,4">
+                    <TextBlock FontSize="{DynamicResource FontSize.Medium}" Foreground="#CCC" Margin="0,4">
                         <TextBlock.Style>
                             <Style TargetType="TextBlock">
                                 <Setter Property="Visibility" Value="Visible"/>
@@ -146,7 +148,7 @@
                             </MultiBinding>
                         </TextBlock.Text>
                     </TextBlock>
-                    <TextBlock Text="No slave selected" FontSize="14" Foreground="#888" Margin="0,4">
+                    <TextBlock Text="No slave selected" FontSize="{DynamicResource FontSize.Medium}" Foreground="#888" Margin="0,4">
                         <TextBlock.Style>
                             <Style TargetType="TextBlock">
                                 <Setter Property="Visibility" Value="Collapsed"/>

@@ -1,14 +1,15 @@
 <!-- [2026-03-05] 完全重寫 SliderControl：對齊 PB 版 D_4（4 條 Slider + Spindle Load + V/F/S/R 重置按鈕） -->
 <UserControl x:Class="CncController.Views.Components.SliderControl"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             FontFamily="{DynamicResource FontFamily.Default}">
 
     <UserControl.Resources>
         <!-- [2026-03-05] 重置按鈕樣式 -->
         <Style x:Key="ResetBtnStyle" TargetType="Button" BasedOn="{StaticResource BaseBtnStyle}">
             <Setter Property="Width" Value="60"/>
             <Setter Property="Height" Value="28"/>
-            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="FontSize" Value="{DynamicResource FontSize.Body}"/>
             <Setter Property="FontWeight" Value="Bold"/>
             <Setter Property="Padding" Value="2"/>
             <Setter Property="Margin" Value="3,0,0,0"/>
@@ -41,11 +42,11 @@
             </Grid.ColumnDefinitions>
             <Border Grid.Column="0" Background="#333" CornerRadius="2" Padding="5,3">
                 <TextBlock Text="{Binding Status.SpindleLoad, StringFormat={}{0:F0} %}"
-                           Foreground="White" FontWeight="Bold" FontSize="14"
+                           Foreground="White" FontWeight="Bold" FontSize="{DynamicResource FontSize.Medium}"
                            HorizontalAlignment="Center" VerticalAlignment="Center"/>
             </Border>
             <Border Grid.Column="1" Background="#555" CornerRadius="2" Margin="3,0,0,0" Padding="5,3">
-                <TextBlock Text="SPINDLE LOAD" Foreground="White" FontWeight="Bold" FontSize="12"
+                <TextBlock Text="SPINDLE LOAD" Foreground="White" FontWeight="Bold" FontSize="{DynamicResource FontSize.Body}"
                            HorizontalAlignment="Center" VerticalAlignment="Center"/>
             </Border>
         </Grid>

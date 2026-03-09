@@ -441,6 +441,19 @@ def update_config():
                     f.write(content.replace('\r\n', '\n'))
                 updated.append(path)
 
+        # [2026-03-09] ATC NGC 巨集：寫入 macros_metric_sim/ 目錄
+        ngc_files = data_lower.get('ngcfiles')
+        if ngc_files and isinstance(ngc_files, dict):
+            macros_dir = os.path.join(CONFIG_DIR, 'macros_metric_sim')
+            if not os.path.exists(macros_dir):
+                os.makedirs(macros_dir)
+            for ngc_name, ngc_content in ngc_files.items():
+                if ngc_content:
+                    ngc_path = os.path.join(macros_dir, ngc_name)
+                    with open(ngc_path, 'w', encoding='utf-8') as f:
+                        f.write(ngc_content.replace('\r\n', '\n'))
+                    updated.append(ngc_path)
+
         dependencies = {
             "tool.tbl": "T1 P1 D10.0 ; Default Tool\n",
             "linuxcnc.var": "",

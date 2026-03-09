@@ -1,0 +1,34 @@
+﻿<!-- [2026-03-06] CNC 斗笠式刀庫圓形刀盤視覺化控件（齒輪外形 + 刀具圖示 + 旋轉動畫） -->
+<UserControl x:Class="CncController.Views.Controls.CarouselControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Width="560" Height="560"
+             FontFamily="{DynamicResource FontFamily.Default}">
+
+    <Grid Background="#2D2D2D">
+        <!-- [2026-03-06] 主繪圖 Canvas（500x500 放大版） -->
+        <Canvas x:Name="MainCanvas" Width="560" Height="560" ClipToBounds="True">
+            <Canvas.RenderTransform>
+                <TransformGroup>
+                    <!-- 旋轉以圓心為中心 -->
+                    <RotateTransform x:Name="CarouselRotation" CenterX="280" CenterY="280" Angle="0"/>
+                </TransformGroup>
+            </Canvas.RenderTransform>
+        </Canvas>
+
+        <!-- 中央文字區（不隨刀盤旋轉） -->
+        <Border HorizontalAlignment="Center" VerticalAlignment="Center"
+                Background="#CC1A1A1A" CornerRadius="8" Padding="12,6"
+                BorderBrush="#555" BorderThickness="1">
+            <Border.Effect>
+                <DropShadowEffect Color="Black" BlurRadius="8" Opacity="0.6" ShadowDepth="0"/>
+            </Border.Effect>
+            <TextBlock x:Name="CenterTextBlock"
+                       Text="UN REFERENCED"
+                       Foreground="#FFDDDDDD"
+                       FontSize="{DynamicResource FontSize.XLarge}" FontWeight="Bold"
+                       HorizontalAlignment="Center" VerticalAlignment="Center"
+                       TextAlignment="Center"/>
+        </Border>
+    </Grid>
+</UserControl>

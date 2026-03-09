@@ -3,7 +3,8 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             mc:Ignorable="d" d:DesignHeight="700" d:DesignWidth="600">
+             mc:Ignorable="d" d:DesignHeight="700" d:DesignWidth="600"
+             FontFamily="{DynamicResource FontFamily.Default}">
 
     <!-- [2026-03-06] ATC Basic Settings tab - AtcBasicSettingsViewModel -->
 
@@ -12,11 +13,11 @@
         <Style x:Key="SectionHeader" TargetType="TextBlock">
             <Setter Property="Foreground" Value="#5E70FF"/>
             <Setter Property="FontWeight" Value="Bold"/>
-            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontSize" Value="{DynamicResource FontSize.Medium}"/>
         </Style>
         <Style x:Key="ParamLabel" TargetType="TextBlock">
             <Setter Property="Foreground" Value="White"/>
-            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontSize" Value="{DynamicResource FontSize.Medium}"/>
             <Setter Property="VerticalAlignment" Value="Center"/>
             <Setter Property="HorizontalAlignment" Value="Right"/>
             <Setter Property="Margin" Value="0,0,10,0"/>
@@ -24,7 +25,7 @@
         <Style x:Key="ParamTextBox" TargetType="TextBox">
             <Setter Property="Background" Value="White"/>
             <Setter Property="Foreground" Value="Black"/>
-            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontSize" Value="{DynamicResource FontSize.Medium}"/>
             <Setter Property="Width" Value="120"/>
             <Setter Property="Height" Value="30"/>
             <Setter Property="TextAlignment" Value="Center"/>
@@ -34,7 +35,7 @@
         </Style>
         <Style x:Key="UnitLabel" TargetType="TextBlock">
             <Setter Property="Foreground" Value="Gray"/>
-            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="FontSize" Value="{DynamicResource FontSize.Body}"/>
             <Setter Property="VerticalAlignment" Value="Center"/>
             <Setter Property="Margin" Value="8,0,0,0"/>
         </Style>
@@ -63,7 +64,7 @@
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
                         <TextBlock Grid.Column="0" Text="ATC Type:" Style="{StaticResource ParamLabel}"/>
-                        <ComboBox Grid.Column="1" FontSize="14" Height="30" Foreground="Black"
+                        <ComboBox Grid.Column="1" FontSize="{DynamicResource FontSize.Medium}" Height="30" Foreground="Black"
                                   ItemsSource="{Binding AvailableAtcTypes}"
                                   SelectedItem="{Binding SelectedAtcType}"/>
                     </Grid>

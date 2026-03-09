@@ -2,14 +2,15 @@
 <!-- [2026-02-24] 調整間距與按鈕高度 — 觸控友好版面（對齊 TOOL_PB.png） -->
 <UserControl x:Class="CncController.Views.Components.ToolInfo"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             FontFamily="{DynamicResource FontFamily.Default}">
 
     <UserControl.Resources>
         <!-- [2026-03-04] ToolBtnStyle 改繼承 BaseBtnStyle，移除本地 Template -->
         <Style x:Key="ToolBtnStyle" TargetType="Button" BasedOn="{StaticResource BaseBtnStyle}">
             <Setter Property="Height" Value="42"/>
             <Setter Property="Margin" Value="3"/>
-            <Setter Property="FontSize" Value="{DynamicResource BtnFontSize.Small}"/>
+            <Setter Property="FontSize" Value="{DynamicResource FontSize.Body}"/>
             <Setter Property="Padding" Value="{DynamicResource BtnPadding.Small}"/>
         </Style>
 
@@ -33,13 +34,13 @@
                 </Grid.ColumnDefinitions>
                 <Border Grid.Column="0" Style="{StaticResource InfoCellStyle}">
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
-                        <TextBlock Text="T" Foreground="Gray" FontSize="14" FontWeight="Bold"
+                        <TextBlock Text="T" Foreground="Gray" FontSize="{DynamicResource FontSize.Medium}" FontWeight="Bold"
                                    VerticalAlignment="Center" Margin="0,0,6,0"/>
                         <!-- [2026-02-24] 刀具號用獨立邊框（模仿 PB 版輸入框風格） -->
                         <Border BorderBrush="#888" BorderThickness="1" CornerRadius="3"
                                 Background="#1A1A1E" Padding="8,2" MinWidth="30">
                             <TextBlock Text="{Binding Status.ToolNumber}" Foreground="White"
-                                       FontWeight="Bold" FontSize="15" FontFamily="Consolas"
+                                       FontWeight="Bold" FontSize="{DynamicResource FontSize.Large}" FontFamily="Consolas"
                                        HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                     </StackPanel>
@@ -47,7 +48,7 @@
                 <Border Grid.Column="1" Style="{StaticResource InfoCellStyle}">
                     <TextBlock Text="M6 G43" Foreground="{DynamicResource Brush.Text.Primary}"
                                VerticalAlignment="Center" HorizontalAlignment="Center"
-                               FontSize="13" FontWeight="Bold"/>
+                               FontSize="{DynamicResource FontSize.Body}" FontWeight="Bold"/>
                 </Border>
             </Grid>
 
@@ -70,7 +71,7 @@
                         </Style>
                     </Border.Style>
                     <TextBlock Text="G43" VerticalAlignment="Center" HorizontalAlignment="Center"
-                               FontWeight="Bold" FontSize="14">
+                               FontWeight="Bold" FontSize="{DynamicResource FontSize.Medium}">
                         <TextBlock.Style>
                             <Style TargetType="TextBlock">
                                 <Setter Property="Foreground" Value="#00BFFF"/>
@@ -96,7 +97,7 @@
                         </Style>
                     </Border.Style>
                     <TextBlock Text="G49" VerticalAlignment="Center" HorizontalAlignment="Center"
-                               FontWeight="Bold" FontSize="14">
+                               FontWeight="Bold" FontSize="{DynamicResource FontSize.Medium}">
                         <TextBlock.Style>
                             <Style TargetType="TextBlock">
                                 <Setter Property="Foreground" Value="Gray"/>
@@ -120,11 +121,11 @@
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
                     <TextBlock Grid.Column="0" Text="LENGTH" Foreground="Gray" VerticalAlignment="Center"
-                               FontSize="12" FontWeight="SemiBold"/>
+                               FontSize="{DynamicResource FontSize.Body}" FontWeight="SemiBold"/>
                     <TextBlock Grid.Column="1" Text="{Binding Status.ToolLength, StringFormat=F4}"
-                               Foreground="White" FontWeight="Bold" FontFamily="Consolas" FontSize="15"
+                               Foreground="White" FontWeight="Bold" FontFamily="Consolas" FontSize="{DynamicResource FontSize.Large}"
                                HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,6,0"/>
-                    <TextBlock Grid.Column="2" Text="MM" Foreground="Gray" VerticalAlignment="Center" FontSize="11"/>
+                    <TextBlock Grid.Column="2" Text="MM" Foreground="Gray" VerticalAlignment="Center" FontSize="{DynamicResource FontSize.Body}"/>
                 </Grid>
             </Border>
 
@@ -137,11 +138,11 @@
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
                     <TextBlock Grid.Column="0" Text="DIAM" Foreground="Gray" VerticalAlignment="Center"
-                               FontSize="12" FontWeight="SemiBold"/>
+                               FontSize="{DynamicResource FontSize.Body}" FontWeight="SemiBold"/>
                     <TextBlock Grid.Column="1" Text="{Binding Status.ToolDiameter, StringFormat=F4}"
-                               Foreground="White" FontWeight="Bold" FontFamily="Consolas" FontSize="15"
+                               Foreground="White" FontWeight="Bold" FontFamily="Consolas" FontSize="{DynamicResource FontSize.Large}"
                                HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,6,0"/>
-                    <TextBlock Grid.Column="2" Text="MM" Foreground="Gray" VerticalAlignment="Center" FontSize="11"/>
+                    <TextBlock Grid.Column="2" Text="MM" Foreground="Gray" VerticalAlignment="Center" FontSize="{DynamicResource FontSize.Body}"/>
                 </Grid>
             </Border>
 

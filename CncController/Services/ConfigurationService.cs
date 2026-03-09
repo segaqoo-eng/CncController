@@ -62,13 +62,18 @@ namespace CncController.Services
                 // [2026-03-05] 探針模擬 HAL：需要 config 判斷位置回饋訊號名稱
                 string simProbeHalContent = IsProbeSimulation ? GenerateSimProbeHal(config) : null;
 
+                // [2026-03-09] ATC NGC 巨集：依 AtcType 動態生成 4 個類型相關檔案
+                var atcNgcFiles = GenerateAtcNgc(config);
+
                 var payload = new
                 {
                     IniContent = iniContent,
                     HalContent = halContent,
                     XmlContent = xmlContent,
                     PostGuiContent = postGuiContent,
-                    SimProbeHalContent = simProbeHalContent
+                    SimProbeHalContent = simProbeHalContent,
+                    // [2026-03-09] NGC 巨集內容（Dictionary<檔名, 內容>）
+                    NgcFiles = atcNgcFiles
                 };
 
                 // 3. 傳送至後端並重啟
@@ -122,7 +127,14 @@ namespace CncController.Services
             sb.AppendLine($"DRO_DISPLAY = {geometry}");
             // [2026-03-03] 依啟用軸動態產生 OFFSET_COLUMNS，告訴 PB UI 表格顯示哪些軸
             sb.AppendLine($"OFFSET_COLUMNS = {coordinates}");
-            sb.AppendLine("ATC_TAB_DISPLAY = 2");
+            // [2026-03-09] ATC_TAB_DISPLAY 依刀庫類型動態切換：None→0, Umbrella→1, Turret→2
+            int atcTabDisplay = config.Atc.Type switch
+            {
+                AtcType.Umbrella => 1,
+                AtcType.Turret => 2,
+                _ => 0
+            };
+            sb.AppendLine($"ATC_TAB_DISPLAY = {atcTabDisplay}");
             sb.AppendLine("USER_BUTTONS_PATH = user_buttons/");
             sb.AppendLine("USER_ATC_BUTTONS_PATH = user_atc_buttons/");
             sb.AppendLine("USER_DROS_PATH = user_dro_display/");
@@ -138,8 +150,22 @@ namespace CncController.Services
             sb.AppendLine("PATH_APPEND = ./python/");
             sb.AppendLine();
 
+            // [2026-03-09] [ATC] 參數化：依 AtcConfig 動態生成
             sb.AppendLine("[ATC]");
-            sb.AppendLine("POCKETS = 12");
+            sb.AppendLine($"POCKETS = {config.Atc.ToolCount}");
+            sb.AppendLine($"Z_TOOL_CHANGE_HEIGHT = {config.Atc.ZToolChangeHeight}");
+            sb.AppendLine($"Z_TOOL_CLEARANCE_HEIGHT = {config.Atc.ZClearanceHeight}");
+            if (config.Atc.Type == AtcType.Turret)
+            {
+                // Rack 專用參數（寫入 INI 供 NGC 讀取）
+                sb.AppendLine($"RACK_TRAVERSE_SPEED = {config.Atc.RackTraverseSpeed}");
+                sb.AppendLine($"RACK_POCKET_1_X = {config.Atc.RackPocket1X}");
+                sb.AppendLine($"RACK_POCKET_1_Y = {config.Atc.RackPocket1Y}");
+                sb.AppendLine($"RACK_POCKET_2_X = {config.Atc.RackPocket2X}");
+                sb.AppendLine($"RACK_POCKET_2_Y = {config.Atc.RackPocket2Y}");
+                sb.AppendLine($"RACK_CLEARANCE_X = {config.Atc.RackClearanceX}");
+                sb.AppendLine($"RACK_CLEARANCE_Y = {config.Atc.RackClearanceY}");
+            }
             sb.AppendLine();
 
             // [2026-03-05] 探針模擬設定（僅模擬模式產出）
@@ -154,17 +180,21 @@ namespace CncController.Services
             sb.AppendLine("RS274NGC_STARTUP_CODE = F10 S300 G21 G17 G40 G49 G54 G64 P0.001 G80 G90 G91.1 G92.1 G94 G97 G98");
             sb.AppendLine("PARAMETER_FILE = vmc_metric.var");
             sb.AppendLine("SUBROUTINE_PATH = macros_metric_sim");
-            sb.AppendLine("REMAP=M6  modalgroup=6 prolog=change_prolog ngc=toolchange epilog=change_epilog");
-            sb.AppendLine("REMAP=M10 modalgroup=6 argspec=P ngc=m10");
-            sb.AppendLine("REMAP=M11 modalgroup=6 argspec=p ngc=m11");
-            sb.AppendLine("REMAP=M12 modalgroup=6 argspec=p ngc=m12");
-            sb.AppendLine("REMAP=M13 modalgroup=6 ngc=m13");
-            sb.AppendLine("REMAP=M21 modalgroup=6 ngc=m21");
-            sb.AppendLine("REMAP=M22 modalgroup=6 ngc=m22");
-            sb.AppendLine("REMAP=M23 modalgroup=6 ngc=m23");
-            sb.AppendLine("REMAP=M24 modalgroup=6 ngc=m24");
-            sb.AppendLine("REMAP=M25 modalgroup=6 ngc=m25");
-            sb.AppendLine("REMAP=M26 modalgroup=6 ngc=m26");
+            // [2026-03-09] REMAP：有刀庫時才啟用 M6/M10~M26 重映射
+            if (config.Atc.Type != AtcType.None)
+            {
+                sb.AppendLine("REMAP=M6  modalgroup=6 prolog=change_prolog ngc=toolchange epilog=change_epilog");
+                sb.AppendLine("REMAP=M10 modalgroup=6 argspec=P ngc=m10");
+                sb.AppendLine("REMAP=M11 modalgroup=6 argspec=p ngc=m11");
+                sb.AppendLine("REMAP=M12 modalgroup=6 argspec=p ngc=m12");
+                sb.AppendLine("REMAP=M13 modalgroup=6 ngc=m13");
+                sb.AppendLine("REMAP=M21 modalgroup=6 ngc=m21");
+                sb.AppendLine("REMAP=M22 modalgroup=6 ngc=m22");
+                sb.AppendLine("REMAP=M23 modalgroup=6 ngc=m23");
+                sb.AppendLine("REMAP=M24 modalgroup=6 ngc=m24");
+                sb.AppendLine("REMAP=M25 modalgroup=6 ngc=m25");
+                sb.AppendLine("REMAP=M26 modalgroup=6 ngc=m26");
+            }
             sb.AppendLine();
 
             sb.AppendLine("[EMCMOT]");
@@ -567,6 +597,47 @@ namespace CncController.Services
                 sb.AppendLine();
             }
 
+            // =========================================================
+            // [2026-03-09] D. ATC IO 接線 (motion.digital-out/in ↔ EtherCAT IO)
+            // =========================================================
+            if (config.Atc.Type != AtcType.None && config.Atc.IoSlaveIndex >= 0)
+            {
+                int ioSlave = config.Atc.IoSlaveIndex;
+                sb.AppendLine("# === ATC IO WIRING ===");
+
+                // Digital Outputs（M64/M65 P-word → lcec DO）
+                var doMappings = new (int PWord, string Name)[]
+                {
+                    (config.Atc.DoCarouselOut, "carousel-out"),
+                    (config.Atc.DoCarouselHome, "carousel-home"),
+                    (config.Atc.DoDrawbar, "drawbar"),
+                    (config.Atc.DoAirBlow, "air-blow"),
+                    (config.Atc.DoMotorFwd, "motor-fwd"),
+                    (config.Atc.DoMotorRev, "motor-rev"),
+                };
+
+                foreach (var (pWord, name) in doMappings)
+                {
+                    sb.AppendLine($"net atc-do-{name} motion.digital-out-{pWord:00} => lcec.0.{ioSlave}.dout-{pWord:00}");
+                }
+
+                // Digital Inputs（lcec DI → motion.digital-in for M66）
+                var diMappings = new (int PWord, string Name)[]
+                {
+                    (config.Atc.DiCarouselHome, "carousel-home-in"),
+                    (config.Atc.DiCarouselOut, "carousel-out-in"),
+                    (config.Atc.DiDrawbarClamp, "drawbar-clamp-in"),
+                    (config.Atc.DiDrawbarUnclamp, "drawbar-unclamp-in"),
+                    (config.Atc.DiRotationIndex, "rotation-index-in"),
+                };
+
+                foreach (var (pWord, name) in diMappings)
+                {
+                    sb.AppendLine($"net atc-di-{name} lcec.0.{ioSlave}.din-{pWord:00} => motion.digital-in-{pWord:00}");
+                }
+                sb.AppendLine();
+            }
+
             sb.AppendLine();
             sb.AppendLine("# --- SAFETY BYPASS (FORCE CONNECTION) ---");
             sb.AppendLine("unlinkp iocontrol.0.emc-enable-in");
@@ -743,6 +814,445 @@ namespace CncController.Services
             sb.AppendLine("  </master>");
             sb.AppendLine("</masters>");
             return sb.ToString();
+        }
+
+        // ========================================================================================
+        // [2026-03-09] 生成 ATC NGC 巨集（依 AtcType 動態生成 4 個類型相關檔案）
+        // 回傳 Dictionary<檔名, 內容>：m21.ngc / m22.ngc / toolchange.ngc / m13.ngc
+        // ========================================================================================
+        private Dictionary<string, string> GenerateAtcNgc(MachineConfig config)
+        {
+            var ngcFiles = new Dictionary<string, string>();
+
+            if (config.Atc.Type == AtcType.None) return ngcFiles;
+
+            // 依 AtcType 選擇 PB Widget 名稱
+            string widgetName = config.Atc.Type == AtcType.Umbrella ? "dynatc" : "rackatc";
+            int pockets = config.Atc.ToolCount;
+
+            // --- toolchange.ngc（M6 主程式）---
+            ngcFiles["toolchange.ngc"] = GenerateToolchangeNgc(config, widgetName, pockets);
+
+            // --- m13.ngc（刀庫歸零/初始化）---
+            ngcFiles["m13.ngc"] = GenerateM13Ngc(widgetName, pockets);
+
+            // --- m21.ngc（存刀：spindle → rack/carousel）---
+            if (config.Atc.Type == AtcType.Turret)
+                ngcFiles["m21.ngc"] = GenerateM21Rack();
+            else
+                ngcFiles["m21.ngc"] = GenerateM21Carousel();
+
+            // --- m22.ngc（取刀：rack/carousel → spindle）---
+            if (config.Atc.Type == AtcType.Turret)
+                ngcFiles["m22.ngc"] = GenerateM22Rack();
+            else
+                ngcFiles["m22.ngc"] = GenerateM22Carousel();
+
+            return ngcFiles;
+        }
+
+        // --- toolchange.ngc ---
+        private string GenerateToolchangeNgc(MachineConfig config, string widgetName, int pockets)
+        {
+            // [2026-03-09] M6 REMAP 主程式：Rack/Carousel 共用邏輯，僅 Widget 名稱不同
+            return $@"(Generated by CncController — {DateTime.Now:yyyy-MM-dd HH:mm:ss})
+o<toolchange> sub
+
+o100 if [#<_task> EQ 0]
+    (DEBUG, Task is null)
+    o<toolchange> return [999]
+o100 endif
+
+#<number_of_pockets> = {pockets}
+o101 if [EXISTS[#<_ini[atc]pockets>]]
+    #<number_of_pockets> = #<_ini[atc]pockets>
+o101 endif
+
+#<atc_z_tool_change_height> = #3981
+#<atc_z_tool_clearance_height> = #3982
+
+#100 = #<selected_tool>
+#110 = #<tool_in_spindle>
+#120 = #<selected_pocket>
+#121 = #<current_pocket>
+
+o110 if [#<selected_tool> EQ #<tool_in_spindle>]
+    (PRINT, Requested tool already in spindle)
+    o<toolchange> endsub [1]
+    M2
+o110 endif
+
+#<next_pocket> = 0
+#<open_pocket> = 0
+#130 = #<number_of_pockets>
+
+o130 do
+    o161 if [#[4000 + #130] EQ #<selected_tool>]
+        #<next_pocket> = #130
+    o161 endif
+    o162 if [#[4000 + #130] EQ 0]
+        #<open_pocket> = #130
+    o162 endif
+    #130 = [#130 - 1]
+o130 while [#130 GT 0]
+
+o140 if [#<next_pocket> EQ 0]
+    (abort, Tool T%d#<selected_tool> not found in rack)
+o140 endif
+
+o150 if [#<tool_in_spindle> GT 0]
+    o151 if [#<open_pocket> EQ 0]
+        (abort, rack is full, cant store tool T#<tool_in_spindle> in rack)
+    o151 endif
+    o<m21> call [#<open_pocket>]
+    (DEBUG, EVAL[vcp.getWidget{{""{widgetName}""}}.store_tool{{#<open_pocket>, #<tool_in_spindle>}}])
+    #140 = #<open_pocket>
+    #[4000 + #140] = #<tool_in_spindle>
+    #3991 = 0
+    M61 Q0
+    G49
+o150 endif
+
+o160 if [#<selected_tool> GT 0]
+    o<m22> call [#<next_pocket>]
+    (DEBUG, EVAL[vcp.getWidget{{""{widgetName}""}}.store_tool{{#<next_pocket>, 0}}])
+    #150 = #<next_pocket>
+    #[4000 + #150] = 0
+    #3991 = #<selected_tool>
+o160 else
+    M25
+o160 endif
+
+M61 Q#<selected_tool>
+
+o170 if [1 EQ 1]
+    G43 H#<selected_tool>
+o170 endif
+
+o<program_coolant> call
+
+o<toolchange> endsub [1]
+
+M2
+";
+        }
+
+        // --- m13.ngc ---
+        private string GenerateM13Ngc(string widgetName, int pockets)
+        {
+            // [2026-03-09] 刀庫歸零/同步：讀取持久變數 #4001~#40xx 並更新 PB Widget
+            return $@"(Generated by CncController — {DateTime.Now:yyyy-MM-dd HH:mm:ss})
+o<m13> sub
+
+(PRINT, o<m13>)
+
+#<number_of_pockets> = {pockets}
+o110 if [EXISTS[#<_ini[atc]pockets>]]
+    #<number_of_pockets> = #<_ini[atc]pockets>
+o110 endif
+
+#1 = 0
+
+o120 while [#1 LT #<number_of_pockets>]
+    #1 = [#1+1]
+    #2 = #[4000+#1]
+    (DEBUG, EVAL[vcp.getWidget{{""{widgetName}""}}.store_tool{{#1, #2}}])
+o120 endwhile
+
+M61 Q#3991 G43 H#3991
+
+(PRINT, o<m13> endsub)
+o<m13> endsub [1]
+
+M2
+";
+        }
+
+        // --- m21.ngc Rack 版（排刀式存刀）---
+        private string GenerateM21Rack()
+        {
+            // [2026-03-09] Rack 版：計算 XY 座標 → 移動主軸 → M19 → 滑入刀座 → M24 鬆刀 → Z 退
+            return $@"(Generated by CncController — {DateTime.Now:yyyy-MM-dd HH:mm:ss})
+o<m21> sub
+
+#<target_pocket> = #1
+
+#<rack_id>                = #3979
+#<rack_traverse_speed>    = #3980
+#<rack_z_load_height>     = #3981
+#<rack_safe_z_height>     = #3982
+#<rack_pocket_1_x>        = #3983
+#<rack_pocket_1_y>        = #3984
+#<rack_pocket_2_x>        = #3985
+#<rack_pocket_2_y>        = #3986
+#<pocket_1_x_clearance>   = #3987
+#<pocket_1_y_clearance>   = #3988
+
+#<dx> = [#<rack_pocket_2_x> - #<rack_pocket_1_x>]
+#<dy> = [#<rack_pocket_2_y> - #<rack_pocket_1_y>]
+#<pocket_index> = [#<target_pocket> - 1]
+#<pocket_x> = [#<rack_pocket_1_x> + #<pocket_index> * #<dx>]
+#<pocket_y> = [#<rack_pocket_1_y> + #<pocket_index> * #<dy>]
+
+#<clearance_x> = #<pocket_x>
+#<clearance_y> = #<pocket_y>
+#<store_axis> = 0
+#<store_sign> = 1
+
+o100 if [#<rack_id> EQ 1]
+    #<clearance_x> = #<pocket_1_x_clearance>
+    #<store_axis> = 1
+    #<store_sign> = -1
+o100 elseif [#<rack_id> EQ 2]
+    #<clearance_x> = #<pocket_1_x_clearance>
+    #<store_axis> = 1
+    #<store_sign> = 1
+o100 elseif [#<rack_id> EQ 3]
+    #<clearance_x> = #<pocket_1_x_clearance>
+    #<store_axis> = 1
+    #<store_sign> = -1
+o100 elseif [#<rack_id> EQ 4]
+    #<clearance_x> = #<pocket_1_x_clearance>
+    #<store_axis> = 1
+    #<store_sign> = 1
+o100 elseif [#<rack_id> EQ 5]
+    #<clearance_y> = #<pocket_1_y_clearance>
+    #<store_axis> = 2
+    #<store_sign> = -1
+o100 elseif [#<rack_id> EQ 6]
+    #<clearance_y> = #<pocket_1_y_clearance>
+    #<store_axis> = 2
+    #<store_sign> = 1
+o100 elseif [#<rack_id> EQ 7]
+    #<clearance_y> = #<pocket_1_y_clearance>
+    #<store_axis> = 2
+    #<store_sign> = -1
+o100 elseif [#<rack_id> EQ 8]
+    #<clearance_y> = #<pocket_1_y_clearance>
+    #<store_axis> = 2
+    #<store_sign> = 1
+o100 else
+    (PRINT, Error: Invalid rack_id!)
+    o<m21> return
+o100 endif
+
+G90
+G0 G53 Z[#<rack_safe_z_height>]
+G0 G53 X[#<clearance_x>] Y[#<clearance_y>]
+G1 G53 F[#<rack_traverse_speed>] Z[#<rack_z_load_height>]
+M19
+G4 P1
+
+o200 if [#<store_axis> EQ 1]
+    G1 G53 F[#<rack_traverse_speed>] X[#<pocket_x>]
+o200 else
+    G1 G53 F[#<rack_traverse_speed>] Y[#<pocket_y>]
+o200 endif
+
+M24
+G0 G53 Z[#<rack_safe_z_height>]
+
+o<m21> endsub
+
+M2
+";
+        }
+
+        // --- m21.ngc Carousel 版（斗笠式存刀）---
+        private string GenerateM21Carousel()
+        {
+            // [2026-03-09] Carousel 版：Z 淨空 → M10 旋轉 → M19 → extendatc → Z 下降 → M24 鬆刀 → Z 退 → retractatc
+            return $@"(Generated by CncController — {DateTime.Now:yyyy-MM-dd HH:mm:ss})
+o<m21> sub
+
+#<target_pocket> = #1
+
+#<atc_z_tool_change_height> = #3981
+#<atc_z_tool_clearance_height> = #3982
+
+o100 if [EXISTS[#<_ini[atc]z_tool_change_height>]]
+    #<atc_z_tool_change_height> = #<_ini[atc]z_tool_change_height>
+o100 endif
+o110 if [EXISTS[#<_ini[atc]z_tool_clearance_height>]]
+    #<atc_z_tool_clearance_height> = #<_ini[atc]z_tool_clearance_height>
+o110 endif
+
+G90
+; 1. Move Z to clearance height
+G0 G53 Z[#<atc_z_tool_clearance_height>]
+
+; 2. Rotate carousel to target pocket
+M10 P[#<target_pocket>]
+
+; 3. Orient spindle
+M19
+G4 P1
+
+; 4. Extend carousel out
+o<extendatc> call
+
+; 5. Lower Z to tool change height
+G1 G53 F500 Z[#<atc_z_tool_change_height>]
+
+; 6. Release tool (unclamp drawbar)
+M24
+G4 P0.5
+
+; 7. Raise Z to clearance height
+G0 G53 Z[#<atc_z_tool_clearance_height>]
+
+; 8. Retract carousel
+o<retractatc> call
+
+o<m21> endsub
+
+M2
+";
+        }
+
+        // --- m22.ngc Rack 版（排刀式取刀）---
+        private string GenerateM22Rack()
+        {
+            // [2026-03-09] Rack 版：移動主軸到 XY → M19 → M24 → Z 下降 → M25 夾刀 → 滑出
+            return $@"(Generated by CncController — {DateTime.Now:yyyy-MM-dd HH:mm:ss})
+o<m22> sub
+
+#<target_pocket> = #1
+
+#<rack_id>                = #3979
+#<rack_traverse_speed>    = #3980
+#<rack_z_load_height>     = #3981
+#<rack_safe_z_height>     = #3982
+#<rack_pocket_1_x>        = #3983
+#<rack_pocket_1_y>        = #3984
+#<rack_pocket_2_x>        = #3985
+#<rack_pocket_2_y>        = #3986
+#<pocket_1_x_clearance>   = #3987
+#<pocket_1_y_clearance>   = #3988
+
+#<dx> = [#<rack_pocket_2_x> - #<rack_pocket_1_x>]
+#<dy> = [#<rack_pocket_2_y> - #<rack_pocket_1_y>]
+#<pocket_index> = [#<target_pocket> - 1]
+#<pocket_x> = [#<rack_pocket_1_x> + #<pocket_index> * #<dx>]
+#<pocket_y> = [#<rack_pocket_1_y> + #<pocket_index> * #<dy>]
+
+#<clearance_x> = #<pocket_x>
+#<clearance_y> = #<pocket_y>
+#<retrieve_axis> = 0
+#<retrieve_sign> = 1
+
+o100 if [#<rack_id> EQ 1]
+    #<clearance_x> = #<pocket_1_x_clearance>
+    #<retrieve_axis> = 1
+    #<retrieve_sign> = 1
+o100 elseif [#<rack_id> EQ 2]
+    #<clearance_x> = #<pocket_1_x_clearance>
+    #<retrieve_axis> = 1
+    #<retrieve_sign> = -1
+o100 elseif [#<rack_id> EQ 3]
+    #<clearance_x> = #<pocket_1_x_clearance>
+    #<retrieve_axis> = 1
+    #<retrieve_sign> = 1
+o100 elseif [#<rack_id> EQ 4]
+    #<clearance_x> = #<pocket_1_x_clearance>
+    #<retrieve_axis> = 1
+    #<retrieve_sign> = -1
+o100 elseif [#<rack_id> EQ 5]
+    #<clearance_y> = #<pocket_1_y_clearance>
+    #<retrieve_axis> = 2
+    #<retrieve_sign> = 1
+o100 elseif [#<rack_id> EQ 6]
+    #<clearance_y> = #<pocket_1_y_clearance>
+    #<retrieve_axis> = 2
+    #<retrieve_sign> = -1
+o100 elseif [#<rack_id> EQ 7]
+    #<clearance_y> = #<pocket_1_y_clearance>
+    #<retrieve_axis> = 2
+    #<retrieve_sign> = 1
+o100 elseif [#<rack_id> EQ 8]
+    #<clearance_y> = #<pocket_1_y_clearance>
+    #<retrieve_axis> = 2
+    #<retrieve_sign> = -1
+o100 else
+    (PRINT, Error: Invalid rack_id!)
+    o<m22> return
+o100 endif
+
+G90
+G0 G53 Z[#<rack_safe_z_height>]
+G0 G53 X[#<pocket_x>] Y[#<pocket_y>]
+M19
+M24
+G1 G53 F[#<rack_traverse_speed>] Z[#<rack_z_load_height>]
+M25
+
+o200 if [#<retrieve_axis> EQ 1]
+    G1 G53 F[#<rack_traverse_speed>] X[#<clearance_x>]
+o200 else
+    G1 G53 F[#<rack_traverse_speed>] Y[#<clearance_y>]
+o200 endif
+
+G0 G53 Z[#<rack_safe_z_height>]
+
+o<m22> endsub
+
+M2
+";
+        }
+
+        // --- m22.ngc Carousel 版（斗笠式取刀）---
+        private string GenerateM22Carousel()
+        {
+            // [2026-03-09] Carousel 版：Z 淨空 → M10 旋轉 → M19 → extendatc → M24 鬆夾 → Z 下降 → M25 夾刀 → Z 退 → retractatc
+            return $@"(Generated by CncController — {DateTime.Now:yyyy-MM-dd HH:mm:ss})
+o<m22> sub
+
+#<target_pocket> = #1
+
+#<atc_z_tool_change_height> = #3981
+#<atc_z_tool_clearance_height> = #3982
+
+o100 if [EXISTS[#<_ini[atc]z_tool_change_height>]]
+    #<atc_z_tool_change_height> = #<_ini[atc]z_tool_change_height>
+o100 endif
+o110 if [EXISTS[#<_ini[atc]z_tool_clearance_height>]]
+    #<atc_z_tool_clearance_height> = #<_ini[atc]z_tool_clearance_height>
+o110 endif
+
+G90
+; 1. Move Z to clearance height
+G0 G53 Z[#<atc_z_tool_clearance_height>]
+
+; 2. Rotate carousel to target pocket
+M10 P[#<target_pocket>]
+
+; 3. Orient spindle
+M19
+G4 P1
+
+; 4. Extend carousel out
+o<extendatc> call
+
+; 5. Unclamp drawbar to receive tool
+M24
+
+; 6. Lower Z to tool change height
+G1 G53 F500 Z[#<atc_z_tool_change_height>]
+
+; 7. Clamp tool in spindle
+M25
+G4 P0.5
+
+; 8. Raise Z to clearance height
+G0 G53 Z[#<atc_z_tool_clearance_height>]
+
+; 9. Retract carousel
+o<retractatc> call
+
+o<m22> endsub
+
+M2
+";
         }
 
         private string GeneratePostGuiHal(MachineConfig config)

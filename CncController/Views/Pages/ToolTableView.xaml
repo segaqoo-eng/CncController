@@ -9,6 +9,7 @@
              xmlns:helpers="clr-namespace:CncController.Helpers"
              mc:Ignorable="d"
              d:DataContext="{d:DesignInstance Type=vm:ToolTableViewModel}"
+             FontFamily="{DynamicResource FontFamily.Default}"
              d:DesignHeight="700" d:DesignWidth="1700">
 
     <UserControl.Resources>
@@ -17,7 +18,7 @@
 
         <!-- [2026-03-04] 通用按鈕 → 繼承全域 BaseBtnStyle（移除本地 Template） -->
         <Style x:Key="ToolBtnStyle" TargetType="Button" BasedOn="{StaticResource BaseBtnStyle}">
-            <Setter Property="FontSize" Value="{DynamicResource BtnFontSize.XSmall}"/>
+            <Setter Property="FontSize" Value="{DynamicResource FontSize.Small}"/>
             <Setter Property="Padding" Value="{DynamicResource BtnPadding.Small}"/>
             <Setter Property="Margin" Value="3"/>
         </Style>
@@ -25,7 +26,7 @@
         <!-- [2026-03-04] 右側面板大按鈕 → 繼承 ToolBtnStyle（間接繼承 BaseBtnStyle） -->
         <Style x:Key="PanelBtnStyle" TargetType="Button" BasedOn="{StaticResource ToolBtnStyle}">
             <Setter Property="Height" Value="38"/>
-            <Setter Property="FontSize" Value="{DynamicResource BtnFontSize.Small}"/>
+            <Setter Property="FontSize" Value="{DynamicResource FontSize.Body}"/>
             <Setter Property="Margin" Value="4,4"/>
             <Setter Property="HorizontalContentAlignment" Value="Center"/>
         </Style>
@@ -50,7 +51,7 @@
                     CornerRadius="4" Margin="0,0,5,0">
                 <DockPanel Margin="8">
                     <TextBlock DockPanel.Dock="Top" Text="TOOL TABLE" Foreground="#AAAAAA"
-                               FontSize="12" FontWeight="Bold" Margin="0,0,0,6"/>
+                               FontSize="{DynamicResource FontSize.Body}" FontWeight="Bold" Margin="0,0,0,6"/>
 
                     <!-- 底部按鈕列 -->
                     <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Margin="0,8,0,0"
@@ -90,7 +91,7 @@
                                 <Setter Property="Background" Value="#333"/>
                                 <Setter Property="Foreground" Value="#AAAAAA"/>
                                 <Setter Property="FontWeight" Value="Bold"/>
-                                <Setter Property="FontSize" Value="10"/>
+                                <Setter Property="FontSize" Value="{DynamicResource FontSize.Small}"/>
                                 <Setter Property="HorizontalContentAlignment" Value="Center"/>
                                 <Setter Property="Padding" Value="4"/>
                             </Style>
@@ -145,10 +146,10 @@
                 <Border DockPanel.Dock="Top" Background="#DD333333" CornerRadius="3" Padding="6,4" Margin="0,0,0,6"
                         BorderBrush="#666" BorderThickness="1">
                     <DockPanel>
-                        <TextBlock DockPanel.Dock="Left" Text="REMARK" Foreground="#CCC" FontSize="11" FontWeight="Bold"
+                        <TextBlock DockPanel.Dock="Left" Text="REMARK" Foreground="#CCC" FontSize="{DynamicResource FontSize.Body}" FontWeight="Bold"
                                    VerticalAlignment="Center" Margin="0,0,8,0"/>
                         <TextBox Text="{Binding SelectedTool.Remark, UpdateSourceTrigger=PropertyChanged}"
-                                 Background="White" Foreground="Black" FontSize="12" FontWeight="Bold" Padding="6,3"
+                                 Background="White" Foreground="Black" FontSize="{DynamicResource FontSize.Body}" FontWeight="Bold" Padding="6,3"
                                  BorderBrush="#888" BorderThickness="1"/>
                     </DockPanel>
                 </Border>
@@ -157,10 +158,10 @@
                 <Border DockPanel.Dock="Bottom" Background="#DD333333" CornerRadius="3" Padding="6,4" Margin="0,6,0,0"
                         BorderBrush="#666" BorderThickness="1">
                     <DockPanel>
-                        <TextBlock DockPanel.Dock="Left" Text="MDI" Foreground="#CCC" FontSize="11" FontWeight="Bold"
+                        <TextBlock DockPanel.Dock="Left" Text="MDI" Foreground="#CCC" FontSize="{DynamicResource FontSize.Body}" FontWeight="Bold"
                                    VerticalAlignment="Center" Margin="0,0,6,0"/>
                         <TextBox Text="{Binding MdiInput, UpdateSourceTrigger=PropertyChanged}"
-                                 Background="White" Foreground="Black" FontSize="12" Padding="6,3"
+                                 Background="White" Foreground="Black" FontSize="{DynamicResource FontSize.Body}" Padding="6,3"
                                  BorderBrush="#888" BorderThickness="1"/>
                     </DockPanel>
                 </Border>
@@ -171,7 +172,7 @@
                         <!-- 咖啡色框：T{n} 刀具號（夾頭處） -->
                         <Border Canvas.Left="370" Canvas.Top="220" Background="White" CornerRadius="3" Padding="10,3"
                                 BorderBrush="#666" BorderThickness="1">
-                            <TextBlock Foreground="Black" FontSize="14" FontWeight="Bold" HorizontalAlignment="Center">
+                            <TextBlock Foreground="Black" FontSize="{DynamicResource FontSize.Medium}" FontWeight="Bold" HorizontalAlignment="Center">
                                 <Run Text="T"/>
                                 <Run Text="{Binding MachineStatus.ToolNumber, Mode=OneWay}"/>
                             </TextBlock>
@@ -179,7 +180,7 @@
 
                         <!-- 紅色框：TOOL LENGTH（垂直箭頭↕旁） -->
                         <StackPanel Canvas.Left="170" Canvas.Top="300" Orientation="Horizontal">
-                            <TextBlock Text="TOOL&#x0a;LENGTH" Foreground="White" FontSize="10" FontWeight="Bold"
+                            <TextBlock Text="TOOL&#x0a;LENGTH" Foreground="White" FontSize="{DynamicResource FontSize.Small}" FontWeight="Bold"
                                        VerticalAlignment="Center" Margin="0,0,4,0" TextAlignment="Right">
                                 <TextBlock.Effect>
                                     <DropShadowEffect ShadowDepth="1" Color="Black" Opacity="0.8" BlurRadius="3"/>
@@ -188,13 +189,13 @@
                             <Border Background="White" CornerRadius="2" Padding="8,4"
                                     BorderBrush="#666" BorderThickness="1">
                                 <TextBlock Text="{Binding MachineStatus.ToolLength, StringFormat={}{0:F4}, Mode=OneWay}"
-                                           Foreground="Black" FontFamily="Consolas" FontSize="14" FontWeight="Bold"/>
+                                           Foreground="Black" FontFamily="Consolas" FontSize="{DynamicResource FontSize.Medium}" FontWeight="Bold"/>
                             </Border>
                         </StackPanel>
 
                         <!-- 綠色框：DIAM（水平箭頭↔旁） -->
                         <StackPanel Canvas.Left="230" Canvas.Top="480" Orientation="Horizontal">
-                            <TextBlock Text="DIAM" Foreground="White" FontSize="10" FontWeight="Bold"
+                            <TextBlock Text="DIAM" Foreground="White" FontSize="{DynamicResource FontSize.Small}" FontWeight="Bold"
                                        VerticalAlignment="Center" Margin="0,0,4,0">
                                 <TextBlock.Effect>
                                     <DropShadowEffect ShadowDepth="1" Color="Black" Opacity="0.8" BlurRadius="3"/>
@@ -203,7 +204,7 @@
                             <Border Background="White" CornerRadius="2" Padding="8,4"
                                     BorderBrush="#666" BorderThickness="1">
                                 <TextBlock Text="{Binding MachineStatus.ToolDiameter, StringFormat={}{0:F4}, Mode=OneWay}"
-                                           Foreground="Black" FontFamily="Consolas" FontSize="14" FontWeight="Bold"/>
+                                           Foreground="Black" FontFamily="Consolas" FontSize="{DynamicResource FontSize.Medium}" FontWeight="Bold"/>
                             </Border>
                         </StackPanel>
                     </Canvas>
@@ -215,7 +216,7 @@
                         <Border Background="#1A5276" CornerRadius="3" Padding="8,5" Margin="0,0,0,6"
                                 BorderBrush="#2980B9" BorderThickness="1">
                             <TextBlock Text="TOOL CHANGE PANEL" Foreground="White"
-                                       FontSize="12" FontWeight="Bold" HorizontalAlignment="Center"/>
+                                       FontSize="{DynamicResource FontSize.Body}" FontWeight="Bold" HorizontalAlignment="Center"/>
                         </Border>
 
                         <!-- [n] LOAD SPINDLE -->
@@ -227,7 +228,7 @@
                             <Border Grid.Column="0" Background="White" CornerRadius="2" Margin="0,0,4,0"
                                     BorderBrush="#666" BorderThickness="1">
                                 <TextBox Text="{Binding ChangeToolNumber, UpdateSourceTrigger=PropertyChanged}"
-                                         Background="Transparent" Foreground="Black" FontSize="14" FontWeight="Bold"
+                                         Background="Transparent" Foreground="Black" FontSize="{DynamicResource FontSize.Medium}" FontWeight="Bold"
                                          TextAlignment="Center" BorderThickness="0" VerticalContentAlignment="Center"
                                          Padding="2"/>
                             </Border>
@@ -248,7 +249,7 @@
                             <Border Grid.Column="0" Background="White" CornerRadius="2" Margin="0,0,4,0"
                                     BorderBrush="#666" BorderThickness="1">
                                 <TextBox Text="{Binding ChangeToolNumber, UpdateSourceTrigger=PropertyChanged}"
-                                         Background="Transparent" Foreground="Black" FontSize="14" FontWeight="Bold"
+                                         Background="Transparent" Foreground="Black" FontSize="{DynamicResource FontSize.Medium}" FontWeight="Bold"
                                          TextAlignment="Center" BorderThickness="0" VerticalContentAlignment="Center"
                                          Padding="2"/>
                             </Border>

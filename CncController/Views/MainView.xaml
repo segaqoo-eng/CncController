@@ -20,7 +20,7 @@
             </Border>
             <Border Grid.Row="1" Background="White" BorderBrush="#444" BorderThickness="1">
                 <ScrollViewer>
-                    <TextBlock Text="N100 G20..." Foreground="Black" FontFamily="Consolas" Margin="5"/>
+                    <TextBlock Text="N100 G20..." Foreground="Black" FontFamily="{DynamicResource FontFamily.Mono}" Margin="5"/>
                 </ScrollViewer>
             </Border>
             <Grid Grid.Row="2" Margin="0,2,0,0">

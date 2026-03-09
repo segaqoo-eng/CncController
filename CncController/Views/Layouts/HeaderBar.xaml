@@ -5,7 +5,8 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:vm="clr-namespace:CncController.ViewModels"
              mc:Ignorable="d" 
-             d:DataContext="{d:DesignInstance Type=vm:MainViewModel}">
+             d:DataContext="{d:DesignInstance Type=vm:MainViewModel}"
+             FontFamily="{DynamicResource FontFamily.Default}">
 
     <Border Background="{DynamicResource Brush.PanelBackground}" Padding="5,0">
         <Grid>
@@ -39,7 +40,7 @@
                 <TextBlock Text="{Binding SystemStatus}"
                            Foreground="{DynamicResource Brush.Text.Primary}"
                            FontWeight="Bold"
-                           FontSize="16"
+                           FontSize="{DynamicResource FontSize.Large}"
                            VerticalAlignment="Center">
                     <TextBlock.Effect>
                         <DropShadowEffect Color="{Binding SystemStatusColor}" BlurRadius="5" ShadowDepth="0" Opacity="0.5"/>
@@ -50,7 +51,7 @@
                 <Button Content="RETRY" Command="{Binding RetryConnectionCommand}"
                         Visibility="{Binding ShowRetryButton, Converter={StaticResource BoolToVis}}"
                         Background="#007ACC" Foreground="White" FontWeight="Bold"
-                        Padding="12,4" Margin="10,0,0,0" FontSize="12"
+                        Padding="12,4" Margin="10,0,0,0" FontSize="{DynamicResource FontSize.Body}"
                         VerticalAlignment="Center" Cursor="Hand">
                     <Button.Style>
                         <Style TargetType="Button">
@@ -72,7 +73,7 @@
             <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
 
                 <!-- [2026-03-06] 快捷鍵提示 -->
-                <TextBlock Foreground="#888" FontSize="11" VerticalAlignment="Center" Margin="0,0,20,0">
+                <TextBlock Foreground="#888" FontSize="{DynamicResource FontSize.Body}" VerticalAlignment="Center" Margin="0,0,20,0">
                     <Run Text="ESC" FontWeight="Bold" Foreground="#CCC"/><Run Text=" 停止  "/>
                     <Run Text="F1" FontWeight="Bold" Foreground="#CCC"/><Run Text=" 電源  "/>
                     <Run Text="F2" FontWeight="Bold" Foreground="#CCC"/><Run Text=" 急停"/>
@@ -86,8 +87,8 @@
 
                 <TextBlock Text="{Binding ServerVersionDisplay, StringFormat='Ver: {0}'}" 
                            Foreground="{DynamicResource Brush.Text.Muted}" 
-                           FontSize="12" 
-                           VerticalAlignment="Center" 
+                           FontSize="{DynamicResource FontSize.Body}"
+                           VerticalAlignment="Center"
                            Margin="0,0,20,0"/>
 
                 <Button Click="BtnUser_Click"
@@ -106,13 +107,13 @@
                             <TextBlock Text="{Binding CurrentUser.Username[0]}" 
                                        Foreground="White" FontWeight="Bold" 
                                        HorizontalAlignment="Center" VerticalAlignment="Center" 
-                                       FontSize="16"/>
+                                       FontSize="{DynamicResource FontSize.Large}"/>
                         </Border>
 
                         <TextBlock Text="{Binding CurrentUser.Username}" 
                                    Foreground="{DynamicResource Brush.Text.Primary}" 
                                    VerticalAlignment="Center" 
-                                   FontSize="14"
+                                   FontSize="{DynamicResource FontSize.Medium}"
                                    FontWeight="SemiBold"/>
                     </StackPanel>
                 </Button>

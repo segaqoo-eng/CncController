@@ -9,7 +9,8 @@
              xmlns:views="clr-namespace:CncController.Views"
              xmlns:comp="clr-namespace:CncController.Views.Components"
              xmlns:pages="clr-namespace:CncController.Views.Pages"
-             mc:Ignorable="d" d:DesignHeight="900" d:DesignWidth="1400">
+             mc:Ignorable="d" d:DesignHeight="900" d:DesignWidth="1400"
+             FontFamily="{DynamicResource FontFamily.Default}">
 
     <Grid Background="#1E1E1E">
         <TabControl Background="Transparent" BorderThickness="0">
@@ -34,7 +35,7 @@
                 </x:Array>
 
                 <Style TargetType="TabItem">
-                    <Setter Property="FontSize" Value="16"/>
+                    <Setter Property="FontSize" Value="{DynamicResource FontSize.Large}"/>
                     <Setter Property="Foreground" Value="Gray"/>
                     <Setter Property="Template">
                         <Setter.Value>
@@ -57,7 +58,7 @@
                     <Setter Property="Background" Value="#444"/>
                     <Setter Property="Foreground" Value="#AAA"/>
                     <Setter Property="Padding" Value="5,8"/>
-                    <Setter Property="FontSize" Value="13"/>
+                    <Setter Property="FontSize" Value="{DynamicResource FontSize.Body}"/>
                     <Setter Property="FontWeight" Value="Bold"/>
                     <Setter Property="HorizontalContentAlignment" Value="Center"/>
                     <Setter Property="BorderThickness" Value="0,0,1,1"/>
@@ -147,7 +148,7 @@
                         <RowDefinition Height="60"/>
                     </Grid.RowDefinitions>
 
-                    <TextBlock Grid.Row="0" Text="1. Mechanical &amp; Motion Settings" Foreground="#5E70FF" FontWeight="Bold" FontSize="16" Margin="0,0,0,5"/>
+                    <TextBlock Grid.Row="0" Text="1. Mechanical &amp; Motion Settings" Foreground="#5E70FF" FontWeight="Bold" FontSize="{DynamicResource FontSize.Large}" Margin="0,0,0,5"/>
                     <DataGrid Grid.Row="1" ItemsSource="{Binding Axes}" AutoGenerateColumns="False"
                               Background="#2D2D2D" RowBackground="#333" Foreground="White"
                               BorderThickness="1" BorderBrush="#555" CanUserAddRows="False" RowHeight="35" 
@@ -163,7 +164,7 @@
                         </DataGrid.Columns>
                     </DataGrid>
 
-                    <TextBlock Grid.Row="3" Text="2. IO Configuration &amp; Homing Strategy" Foreground="#5E70FF" FontWeight="Bold" FontSize="16" Margin="0,0,0,5"/>
+                    <TextBlock Grid.Row="3" Text="2. IO Configuration &amp; Homing Strategy" Foreground="#5E70FF" FontWeight="Bold" FontSize="{DynamicResource FontSize.Large}" Margin="0,0,0,5"/>
                     <DataGrid Grid.Row="4" ItemsSource="{Binding Axes}" AutoGenerateColumns="False"
                               Background="#2D2D2D" RowBackground="#333" Foreground="White"
                               BorderThickness="1" BorderBrush="#555" CanUserAddRows="False" RowHeight="35"
@@ -278,12 +279,12 @@
                                             <!-- [2026-02-24] 卡片標題：軸名 + Slave 編號 -->
                                             <Grid Margin="0,0,0,10">
                                                 <StackPanel Orientation="Horizontal">
-                                                    <TextBlock Text="{Binding Title}" Foreground="#5E70FF" FontWeight="Bold" FontSize="18"/>
-                                                    <TextBlock Text="  Slave #" Foreground="#888" FontSize="13" VerticalAlignment="Bottom" Margin="4,0,0,1"/>
-                                                    <TextBlock Text="{Binding SlaveIndex}" Foreground="#888" FontSize="13" VerticalAlignment="Bottom" Margin="0,0,0,1"/>
+                                                    <TextBlock Text="{Binding Title}" Foreground="#5E70FF" FontWeight="Bold" FontSize="{DynamicResource FontSize.XLarge}"/>
+                                                    <TextBlock Text="  Slave #" Foreground="#888" FontSize="{DynamicResource FontSize.Body}" VerticalAlignment="Bottom" Margin="4,0,0,1"/>
+                                                    <TextBlock Text="{Binding SlaveIndex}" Foreground="#888" FontSize="{DynamicResource FontSize.Body}" VerticalAlignment="Bottom" Margin="0,0,0,1"/>
                                                 </StackPanel>
                                                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                                                    <TextBlock Text="{Binding StatusHex}" Foreground="#AAA" FontFamily="Consolas" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                                                    <TextBlock Text="{Binding StatusHex}" Foreground="#AAA" FontFamily="{DynamicResource FontFamily.Mono}" VerticalAlignment="Center" Margin="0,0,10,0"/>
                                                     <Border Background="#333" CornerRadius="3" Padding="8,2">
                                                         <TextBlock Text="{Binding StatusDesc}" Foreground="White" FontWeight="Bold"/>
                                                         <Border.Style>
@@ -304,7 +305,7 @@
 
                                             <Separator Background="#444" Margin="0,0,0,10"/>
 
-                                            <TextBlock Text="Digital Inputs (0x60FD)" Foreground="#888" Margin="0,0,0,5" FontSize="12"/>
+                                            <TextBlock Text="Digital Inputs (0x60FD)" Foreground="#888" Margin="0,0,0,5" FontSize="{DynamicResource FontSize.Body}"/>
                                             <ItemsControl ItemsSource="{Binding Inputs}">
                                                 <ItemsControl.ItemsPanel>
                                                     <ItemsPanelTemplate>
@@ -331,7 +332,7 @@
                                                                     </Style>
                                                                 </Ellipse.Style>
                                                             </Ellipse>
-                                                            <TextBlock Text="{Binding Index}" Foreground="#666" FontSize="10" HorizontalAlignment="Center" Margin="0,3,0,0"/>
+                                                            <TextBlock Text="{Binding Index}" Foreground="#666" FontSize="{DynamicResource FontSize.Small}" HorizontalAlignment="Center" Margin="0,3,0,0"/>
                                                         </StackPanel>
                                                     </DataTemplate>
                                                 </ItemsControl.ItemTemplate>

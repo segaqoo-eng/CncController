@@ -7,7 +7,8 @@
         xmlns:views="clr-namespace:CncController.Views"
         Title="CncController" Height="1080" Width="1920"
         WindowStyle="None" WindowState="Maximized"
-        Background="{DynamicResource Brush.WindowBackground}">
+        Background="{DynamicResource Brush.WindowBackground}"
+        FontFamily="{DynamicResource FontFamily.Default}">
 
     <Window.DataContext>
         <vm:MainViewModel/>
@@ -86,7 +87,7 @@
                     <Button DockPanel.Dock="Right" Content="RE-SCAN" Margin="10,0,0,0"
                             Command="{Binding RescanHardwareCommand}"
                             Background="#FF8C00" Foreground="White" FontWeight="Bold"
-                            Padding="15,3" FontSize="14" VerticalAlignment="Center" Cursor="Hand">
+                            Padding="15,3" FontSize="{DynamicResource FontSize.Medium}" VerticalAlignment="Center" Cursor="Hand">
                         <Button.Style>
                             <Style TargetType="Button">
                                 <Setter Property="Template">
@@ -103,7 +104,7 @@
                         </Button.Style>
                     </Button>
                     <TextBlock Text="{Binding SystemStatus}" Foreground="White" FontWeight="Bold"
-                               HorizontalAlignment="Center" FontSize="18" VerticalAlignment="Center"/>
+                               HorizontalAlignment="Center" FontSize="{DynamicResource FontSize.XLarge}" VerticalAlignment="Center"/>
                 </DockPanel>
             </Border>
 

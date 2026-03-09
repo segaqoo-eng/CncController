@@ -415,6 +415,22 @@ DispatcherTimer (500ms) → MachineControlService.GetStatusAsync()
 | **ATC PROGRAM TOOLS** | GCodeParser.ExtractToolNumbers（Regex T\d+ 去重排序）+ AtcViewModel LoadProgramTools + Navigate "Atc" 自動載入 + LOAD TOOLS 按鈕 |
 | **版本號** | `2026.03.04_BLOCKDEL_HIGHLIGHT_ATC` |
 
+### 2026-03-09
+
+| 項目 | 說明 |
+|------|------|
+| **Phase 2 ATC INI/HAL/NGC 生成** | ConfigurationService 新增 INI `[ATC]` 區段（POCKETS/Z 高度/Rack 參數）、`[RS274NGC]` REMAP（M6/M10~M26）、HAL ATC IO 接線（6 DO + 5 DI） |
+| **NGC 巨集生成** | `GenerateAtcNgc()` 依 AtcType 動態生成 toolchange.ngc / m21.ngc / m22.ngc / m13.ngc（Rack/Carousel 分流） |
+| **ATC IO 衝突檢查** | HAL 生成時比對 ATC pin 與 GENERAL IO 同 Slave 有功能的 pin，衝突 → 警告+跳過；`IsRealFunction()` 排除 "Pin N" 預設佔位名 |
+| **ATC IO 預設值倒數** | DO: 31~26、DI: 31~27（從 31 倒數），避免與 coolant/spindle(0~5) 衝突 |
+| **NUM_DIO=32** | INI `[EMCMOT]` + HAL `loadrt motmod num_dio=32`，建立 32 個 digital IO pin 供 M64/M65/M66 使用 |
+| **GENERAL IO skip ATC pin** | 同 Slave 時 GENERAL IO 跳過 ATC 佔用的 DO/DI pin，避免 HAL pin 重複 link |
+| **server.py NGC 部署** | `/api/config/update` 新增 NgcFiles 處理，寫入 `macros_metric_sim/` 目錄 |
+| **全域字體統一重構** | Theme.Dark.xaml 統一變數系統（FontFamily.Default/Mono + FontSize 7 級 + Brush）；26 個 XAML 頁面全面替換 hardcoded 值為 DynamicResource |
+| **ComboBox 顯示站號** | ATC AXIS/SPINDLE/ATC IO 設定頁 ComboBox 改用 `DisplayName`（`#站號: 名稱 (VendorId)`） |
+| **CarouselControl / SpindleToolControl** | 新增 code-behind（轉盤視覺化 + 主軸刀具顯示） |
+| **版本號** | `2026.03.09_ATC_PHASE2_FONT` |
+
 ### 2026-03-06
 
 | 項目 | 說明 |

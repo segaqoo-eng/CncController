@@ -69,7 +69,7 @@
                     <ComboBox Grid.Column="1"
                               ItemsSource="{Binding AvailableIoSlaves}"
                               SelectedItem="{Binding SelectedIoSlave}"
-                              DisplayMemberPath="Name"
+                              DisplayMemberPath="DisplayName"
                               Margin="0,4"
                               VerticalAlignment="Center"
                               FontSize="{DynamicResource FontSize.Medium}" Height="30" Foreground="Black"/>

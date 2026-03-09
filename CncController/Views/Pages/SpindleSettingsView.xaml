@@ -62,10 +62,11 @@
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
                         <TextBlock Grid.Column="0" Text="EtherCAT Slave:" Style="{StaticResource ParamLabel}"/>
-                        <ComboBox Grid.Column="1" Width="260" FontSize="{DynamicResource FontSize.Medium}" Height="30" Foreground="Black"
+                        <!-- [2026-03-09] DisplayMemberPath 改為 DisplayName，顯示站號避免選錯 -->
+                        <ComboBox Grid.Column="1" Width="300" FontSize="{DynamicResource FontSize.Medium}" Height="30" Foreground="Black"
                                   ItemsSource="{Binding AvailableSlaves}"
                                   SelectedItem="{Binding SelectedSpindleSlave}"
-                                  DisplayMemberPath="Name"/>
+                                  DisplayMemberPath="DisplayName"/>
                     </Grid>
                     <Grid Margin="0,5">
                         <Grid.ColumnDefinitions>

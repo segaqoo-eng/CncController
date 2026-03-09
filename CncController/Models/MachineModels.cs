@@ -173,21 +173,21 @@ namespace CncController.Models
         public int CarouselPulsePerRev { get; set; } = 10000;   // [2026-03-06] 編碼器脈衝/圈
         public double CarouselPitch { get; set; } = 360.0;     // [2026-03-06] 每圈行程（旋轉軸=360度）
 
-        // IO DO（對應 M64/M65 P-word）
+        // [2026-03-09] IO DO（對應 M64/M65 P-word）— 預設從 31 倒數，避免與冷卻/主軸(0~5)衝突
         public int IoSlaveIndex { get; set; } = -1;
-        public int DoCarouselOut { get; set; } = 0;
-        public int DoCarouselHome { get; set; } = 1;
-        public int DoDrawbar { get; set; } = 2;
-        public int DoAirBlow { get; set; } = 3;
-        public int DoMotorFwd { get; set; } = 4;
-        public int DoMotorRev { get; set; } = 5;
+        public int DoCarouselOut { get; set; } = 31;
+        public int DoCarouselHome { get; set; } = 30;
+        public int DoDrawbar { get; set; } = 29;
+        public int DoAirBlow { get; set; } = 28;
+        public int DoMotorFwd { get; set; } = 27;
+        public int DoMotorRev { get; set; } = 26;
 
-        // IO DI（對應 M66 P-word）
-        public int DiCarouselHome { get; set; } = 0;
-        public int DiCarouselOut { get; set; } = 1;
-        public int DiDrawbarClamp { get; set; } = 2;
-        public int DiDrawbarUnclamp { get; set; } = 3;
-        public int DiRotationIndex { get; set; } = 4;
+        // [2026-03-09] IO DI（對應 M66 P-word）— 預設從 31 倒數，避免與通用 DI 衝突
+        public int DiCarouselHome { get; set; } = 31;
+        public int DiCarouselOut { get; set; } = 30;
+        public int DiDrawbarClamp { get; set; } = 29;
+        public int DiDrawbarUnclamp { get; set; } = 28;
+        public int DiRotationIndex { get; set; } = 27;
 
         // 時序（ms）
         public int ClampDwell { get; set; } = 1000;

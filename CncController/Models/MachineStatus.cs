@@ -44,6 +44,8 @@ namespace CncController.Models
 
         [ObservableProperty] private double _feedrate;
         [ObservableProperty] private double _spindleSpeed;
+        // [2026-03-10] 主軸方向：0=停止, 1=CW正轉(M3), -1=CCW反轉(M4)
+        [ObservableProperty] private int _spindleDirection;
 
         // [2026-02-24] 新增 Feed/Spindle Override 百分比（由後端 /v2/status 回傳）
         [ObservableProperty] private double _feedOverride = 100.0;

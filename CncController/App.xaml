@@ -50,6 +50,7 @@
             <!--   漸層凸起 + Hover 變亮 + Pressed 凹入 + Cursor=Hand             -->
             <!--   尺寸預設 Medium，各頁面可用行內或 DynamicResource 覆寫           -->
             <!-- ================================================================ -->
+            <!-- [2026-03-10] 修正：Border.Background 改用 TemplateBinding，讓 DataTrigger 設 Background 能生效 -->
             <Style x:Key="BaseBtnStyle" TargetType="Button">
                 <Setter Property="FontFamily" Value="{DynamicResource FontFamily.Default}"/>
                 <Setter Property="Foreground" Value="White"/>
@@ -58,45 +59,36 @@
                 <Setter Property="Padding" Value="{DynamicResource BtnPadding.Medium}"/>
                 <Setter Property="Margin" Value="2"/>
                 <Setter Property="Cursor" Value="Hand"/>
+                <Setter Property="Background">
+                    <Setter.Value>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                            <GradientStop Color="#5E5E5E" Offset="0"/>
+                            <GradientStop Color="#4A4A4A" Offset="0.5"/>
+                            <GradientStop Color="#353535" Offset="1"/>
+                        </LinearGradientBrush>
+                    </Setter.Value>
+                </Setter>
                 <Setter Property="Template">
                     <Setter.Value>
                         <ControlTemplate TargetType="Button">
                             <Border x:Name="bd" CornerRadius="4"
                                     BorderThickness="1.5" BorderBrush="#666"
+                                    Background="{TemplateBinding Background}"
                                     Padding="{TemplateBinding Padding}">
-                                <Border.Background>
-                                    <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                                        <GradientStop Color="#5E5E5E" Offset="0"/>
-                                        <GradientStop Color="#4A4A4A" Offset="0.5"/>
-                                        <GradientStop Color="#353535" Offset="1"/>
-                                    </LinearGradientBrush>
-                                </Border.Background>
-                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                <Grid>
+                                    <!-- [2026-03-10] 半透明疊加層：hover/press 時亮/暗，不蓋掉底色（藍色反白保留） -->
+                                    <Border x:Name="overlay" CornerRadius="3" Background="Transparent"/>
+                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Grid>
                             </Border>
                             <ControlTemplate.Triggers>
                                 <Trigger Property="IsMouseOver" Value="True">
                                     <Setter TargetName="bd" Property="BorderBrush" Value="{DynamicResource Brush.Hover.Border}"/>
-                                    <Setter TargetName="bd" Property="Background">
-                                        <Setter.Value>
-                                            <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                                                <GradientStop Color="#727272" Offset="0"/>
-                                                <GradientStop Color="#5E5E5E" Offset="0.5"/>
-                                                <GradientStop Color="#484848" Offset="1"/>
-                                            </LinearGradientBrush>
-                                        </Setter.Value>
-                                    </Setter>
+                                    <Setter TargetName="overlay" Property="Background" Value="#30FFFFFF"/>
                                 </Trigger>
                                 <Trigger Property="IsPressed" Value="True">
                                     <Setter TargetName="bd" Property="BorderBrush" Value="{DynamicResource Brush.Pressed.Border}"/>
-                                    <Setter TargetName="bd" Property="Background">
-                                        <Setter.Value>
-                                            <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                                                <GradientStop Color="#2A2A2A" Offset="0"/>
-                                                <GradientStop Color="#383838" Offset="0.5"/>
-                                                <GradientStop Color="#4A4A4A" Offset="1"/>
-                                            </LinearGradientBrush>
-                                        </Setter.Value>
-                                    </Setter>
+                                    <Setter TargetName="overlay" Property="Background" Value="#30000000"/>
                                 </Trigger>
                                 <Trigger Property="IsEnabled" Value="False">
                                     <Setter TargetName="bd" Property="Opacity" Value="0.4"/>

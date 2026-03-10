@@ -55,8 +55,9 @@ namespace CncController.Views.Controls
                 if (string.IsNullOrEmpty(ctrl.ToolLabel))
                 {
                     int toolNum = (int)e.NewValue;
+                    // [2026-03-10] 繁體中文
                     ctrl.SetCurrentValue(ToolLabelProperty,
-                        toolNum > 0 ? $"T{toolNum} LOADED" : "NO TOOL LOADED");
+                        toolNum > 0 ? $"T{toolNum} 已裝載" : "無刀具");
                 }
             }
         }

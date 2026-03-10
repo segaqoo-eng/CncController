@@ -64,6 +64,13 @@ namespace CncController.Models
 
         // [2026-03-09] 新增主軸 Encoder 角度（0~360°，從 spindle.0.revs 換算）
         public double Spindle_Position { get; set; }
+
+        // [2026-03-10] 新增主軸方向：0=停止, 1=CW正轉(M3), -1=CCW反轉(M4)
+        public int Spindle_Direction { get; set; }
+
+        // [2026-03-10] 新增 IO 即時狀態（slave index → { "di": {pin→bool}, "do": {pin→bool} }）
+        // 供 IN MAP / OUT MAP 即時指示燈
+        public Dictionary<string, Dictionary<string, Dictionary<string, bool>>> IO_Status { get; set; }
     }
 
     // ==========================================
@@ -434,6 +441,10 @@ namespace CncController.Models
         // 是否反轉 (False = NO 常開, True = NC 常閉)
         [ObservableProperty]
         private bool _isInverted;
+
+        // [2026-03-10] 即時狀態（true=ON, false=OFF，供 IN MAP / OUT MAP 指示燈）
+        [ObservableProperty]
+        private bool _isActive;
 
         // 對應到的 HAL 訊號名稱 (自動生成用，例如: input-00)
         public string HalSignalName => $"din-{PinIndex:00}";

@@ -454,8 +454,9 @@ def update_config():
                         f.write(ngc_content.replace('\r\n', '\n'))
                     updated.append(ngc_path)
 
+        # [2026-03-10] 修正：INI 使用 tool_metric.tbl，dependency 需一致
         dependencies = {
-            "tool.tbl": "T1 P1 D10.0 ; Default Tool\n",
+            "tool_metric.tbl": "T1 P1 D10.0 ; Default Tool\n",
             "linuxcnc.var": "",
             "custom_config.yml": "# Auto-generated Probe Basic Config\n",
             "probe_basic_postgui.hal": "# Auto-generated PostGUI HAL\n"
@@ -563,9 +564,12 @@ def v2_status():
         
         spindle_speed = 0.0
         spindle_position = 0.0
+        # [2026-03-10] 主軸方向：0=停止, 1=CW(M3正轉), -1=CCW(M4反轉)
+        spindle_direction = 0
         try:
             if hasattr(cnc_stat, 'spindle') and len(cnc_stat.spindle) > 0:
                  spindle_speed = abs(cnc_stat.spindle[0]['speed'])
+                 spindle_direction = int(cnc_stat.spindle[0].get('direction', 0))
         except: pass
         # [2026-03-09] 主軸 encoder：嘗試多種來源讀取實際角度
         try:
@@ -704,6 +708,46 @@ def v2_status():
             current_line = int(cnc_stat.motion_line)
         except: pass
 
+        # [2026-03-10] 讀取 EtherCAT IO slave 的 din/dout 即時狀態（供 IN MAP / OUT MAP 指示燈）
+        # 格式：io_status = { "13": { "di": {0: true, 1: false, ...}, "do": {0: true, ...} } }
+        io_status = {}
+        try:
+            # 從 servo_io_data 中找出 IO slave（有 din/dout 的 slave）
+            # 嘗試讀取所有已知 slave 的 din/dout（最多 32 pin）
+            known_slaves = set()
+            if servo_io_data:
+                known_slaves = set(servo_io_data.keys())
+            # 也從 INI 的 ATC IO slave 取得
+            atc_io_idx = _ini_value('ATC', 'IO_SLAVE_INDEX')
+            if atc_io_idx is not None:
+                known_slaves.add(str(int(atc_io_idx)))
+            for slave_idx in known_slaves:
+                si = int(slave_idx)
+                prefix = f'lcec.0.{si}'
+                # 讀 din
+                di_pins = [f'{prefix}.din-{p:02d}' for p in range(32)]
+                di_vals = _read_hal_pins_batch(di_pins, prefix)
+                di_map = {}
+                for p in range(32):
+                    pname = f'{prefix}.din-{p:02d}'
+                    if pname in di_vals:
+                        di_map[p] = di_vals[pname]
+                # 讀 dout
+                do_pins = [f'{prefix}.dout-{p:02d}' for p in range(32)]
+                do_vals = _read_hal_pins_batch(do_pins, prefix)
+                do_map = {}
+                for p in range(32):
+                    pname = f'{prefix}.dout-{p:02d}'
+                    if pname in do_vals:
+                        do_map[p] = do_vals[pname]
+                if di_map or do_map:
+                    io_status[slave_idx] = {}
+                    if di_map:
+                        io_status[slave_idx]['di'] = di_map
+                    if do_map:
+                        io_status[slave_idx]['do'] = do_map
+        except: pass
+
         return success_response({
             "Connected": True,
             "Task_State": t_state,
@@ -713,6 +757,7 @@ def v2_status():
             "DTG": dtg_dict,
             "Feedrate": feed,
             "Spindle_Speed": spindle_speed,
+            "Spindle_Direction": spindle_direction,
             "Spindle_Position": spindle_position,
             "Feed_Override": feed_override,
             "Spindle_Override": spindle_override,
@@ -729,7 +774,8 @@ def v2_status():
             "Probe_Input": probe_input,
             "Block_Delete": block_delete,
             "Optional_Stop": optional_stop,
-            "Current_Line": current_line
+            "Current_Line": current_line,
+            "IO_Status": io_status
         })
 
     except Exception as e:
@@ -1995,8 +2041,9 @@ def v2_hal_setp():
 
 def _ini_value(section, key):
     """[2026-03-09] 從 INI 讀取指定 section/key 的值"""
+    # [2026-03-10] strict=False：LinuxCNC INI 有重複 REMAP= key，strict 模式會報錯
     try:
-        ini = configparser.ConfigParser()
+        ini = configparser.ConfigParser(strict=False)
         ini.read(LINUXCNC_INI_PATH, encoding='utf-8')
         return ini.get(section, key, fallback=None)
     except Exception:
@@ -2024,12 +2071,13 @@ def _read_hal_pin(pin_name):
         pass
     return None
 
-def _read_hal_pins_batch(pin_names):
-    """[2026-03-09] 批次讀取多個 HAL pin（單次 halcmd show pin motion.digital 減少 subprocess 開銷）"""
+def _read_hal_pins_batch(pin_names, prefix='motion.digital'):
+    """[2026-03-09] 批次讀取多個 HAL pin（單次 halcmd show pin 減少 subprocess 開銷）
+    [2026-03-10] 改為通用：支援任意 prefix（如 lcec.0.13）"""
     result = {}
     try:
         res = subprocess.run(
-            ['halcmd', '-s', 'show', 'pin', 'motion.digital'],
+            ['halcmd', '-s', 'show', 'pin', prefix],
             capture_output=True, text=True, timeout=0.5
         )
         if res.returncode == 0:
@@ -2131,18 +2179,14 @@ def v2_atc_status():
         for i in range(1, pockets + 1):
             slot_tools[i] = int(slot_params.get(4000 + i, 0))
 
-        # [2026-03-09] Carousel Servo encoder 回讀（真實角度）
+        # [2026-03-10] Carousel Servo 命令角度回讀（motion.analog-out-00 = M68 E0 最後送出的值）
         carousel_angle = 0.0
         try:
-            c_slave = _ini_value('ATC', 'CAROUSEL_SLAVE_INDEX')
-            if c_slave is not None and int(c_slave) >= 0:
-                c_idx = int(c_slave)
-                c_ppr = int(_ini_value('ATC', 'CAROUSEL_PPR') or 10000)
-                c_raw = _read_hal_pin(f'lcec.0.{c_idx}.position_actual_value_J{c_idx}')
-                if c_raw is not None:
-                    carousel_angle = round(float(c_raw) / c_ppr * 360.0 % 360.0, 2)
-        except:
-            pass
+            c_raw = _read_hal_pin('motion.analog-out-00')
+            if c_raw is not None and c_raw is not False:
+                carousel_angle = round(float(c_raw) % 360.0, 2)
+        except Exception as e:
+            logging.error(f"[ATC] carousel angle read error: {e}")
 
         data = {
             'Pockets': pockets,

@@ -130,7 +130,7 @@ namespace CncController.Views.Controls
 
         #region Animation
 
-        // [2026-03-06] 平滑旋轉動畫（EaseOut, 0.5s）
+        // [2026-03-10] 平滑旋轉動畫（EaseOut, 0.5s）— 自動選擇最短路徑（處理 360°/0° 邊界）
         private void AnimateToAngle(double targetAngle)
         {
             // [2026-03-09] 首次切換到 ATC 頁面時直接跳轉，不播放動畫
@@ -143,14 +143,21 @@ namespace CncController.Views.Controls
                 return;
             }
 
+            // [2026-03-10] 計算最短路徑差值（避免 350°→10° 走 -340° 大圈）
+            double diff = targetAngle - _lastAnimatedAngle;
+            // 正規化到 -180 ~ +180 範圍
+            while (diff > 180) diff -= 360;
+            while (diff < -180) diff += 360;
+            double animTo = _lastAnimatedAngle + diff;
+
             var animation = new DoubleAnimation
             {
                 From = _lastAnimatedAngle,
-                To = targetAngle,
+                To = animTo,
                 Duration = TimeSpan.FromSeconds(0.5),
                 EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
             };
-            animation.Completed += (s, e) => _lastAnimatedAngle = targetAngle;
+            animation.Completed += (s, e) => _lastAnimatedAngle = animTo;
             CarouselRotation.BeginAnimation(RotateTransform.AngleProperty, animation);
         }
 
@@ -168,11 +175,11 @@ namespace CncController.Views.Controls
             }
             else if (!IsReferenced)
             {
-                CenterTextBlock.Text = "UN REFERENCED";
+                CenterTextBlock.Text = "未歸零";
             }
             else
             {
-                CenterTextBlock.Text = $"POCKET: {CurrentPocket}";
+                CenterTextBlock.Text = $"刀位: {CurrentPocket}";
             }
         }
 

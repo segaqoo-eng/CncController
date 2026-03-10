@@ -417,6 +417,26 @@
                                   ColumnHeaderStyle="{StaticResource CenterHeaderStyle}">
                             <DataGrid.Columns>
                                 <DataGridTextColumn Header="Pin" Binding="{Binding PinIndex}" IsReadOnly="True" Width="50"/>
+                                <!-- [2026-03-10] 即時狀態指示燈（綠=ON, 灰=OFF） -->
+                                <DataGridTemplateColumn Header="狀態" Width="45">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Ellipse Width="14" Height="14" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                     Stroke="#555" StrokeThickness="1">
+                                                <Ellipse.Style>
+                                                    <Style TargetType="Ellipse">
+                                                        <Setter Property="Fill" Value="#555"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding IsActive}" Value="True">
+                                                                <Setter Property="Fill" Value="#4CAF50"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Ellipse.Style>
+                                            </Ellipse>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
                                 <DataGridTemplateColumn Header="Function Name" Width="*">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
@@ -433,7 +453,7 @@
                                 <DataGridTemplateColumn Header="Type (NC?)" Width="80">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
-                                            <CheckBox IsChecked="{Binding IsInverted, UpdateSourceTrigger=PropertyChanged}" 
+                                            <CheckBox IsChecked="{Binding IsInverted, UpdateSourceTrigger=PropertyChanged}"
                                                       HorizontalAlignment="Center" VerticalAlignment="Center" Content="NC" Foreground="White"/>
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
@@ -529,6 +549,26 @@
                                   ColumnHeaderStyle="{StaticResource CenterHeaderStyle}">
                             <DataGrid.Columns>
                                 <DataGridTextColumn Header="Pin" Binding="{Binding PinIndex}" IsReadOnly="True" Width="50"/>
+                                <!-- [2026-03-10] 即時狀態指示燈（綠=ON, 灰=OFF） -->
+                                <DataGridTemplateColumn Header="狀態" Width="45">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Ellipse Width="14" Height="14" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                     Stroke="#555" StrokeThickness="1">
+                                                <Ellipse.Style>
+                                                    <Style TargetType="Ellipse">
+                                                        <Setter Property="Fill" Value="#555"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding IsActive}" Value="True">
+                                                                <Setter Property="Fill" Value="#4CAF50"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Ellipse.Style>
+                                            </Ellipse>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
                                 <DataGridTemplateColumn Header="Function Name" Width="*">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
@@ -545,7 +585,7 @@
                                 <DataGridTemplateColumn Header="Active Low" Width="80">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
-                                            <CheckBox IsChecked="{Binding IsInverted, UpdateSourceTrigger=PropertyChanged}" 
+                                            <CheckBox IsChecked="{Binding IsInverted, UpdateSourceTrigger=PropertyChanged}"
                                                       HorizontalAlignment="Center" VerticalAlignment="Center" Content="Inv" Foreground="White"/>
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>

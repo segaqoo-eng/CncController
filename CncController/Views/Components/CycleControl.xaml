@@ -21,50 +21,7 @@
 
         <Style x:Key="FunctionBtnStyle" TargetType="Button" BasedOn="{StaticResource CycleBtnStyle}"/>
 
-        <!-- [2026-03-04] 關鍵操作色彩分層：CYCLE START 深綠漸層 -->
-        <Style x:Key="StartBtnStyle" TargetType="Button" BasedOn="{StaticResource CycleBtnStyle}">
-            <Setter Property="Background">
-                <Setter.Value>
-                    <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                        <GradientStop Color="#4CAF50" Offset="0"/>
-                        <GradientStop Color="#2E7D32" Offset="1"/>
-                    </LinearGradientBrush>
-                </Setter.Value>
-            </Setter>
-            <Setter Property="BorderBrush" Value="#1B5E20"/>
-            <Setter Property="Foreground" Value="White"/>
-            <Setter Property="FontWeight" Value="Bold"/>
-        </Style>
-
-        <!-- [2026-03-04] STOP 深紅漸層 -->
-        <Style x:Key="StopBtnStyle" TargetType="Button" BasedOn="{StaticResource CycleBtnStyle}">
-            <Setter Property="Background">
-                <Setter.Value>
-                    <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                        <GradientStop Color="#EF5350" Offset="0"/>
-                        <GradientStop Color="#C62828" Offset="1"/>
-                    </LinearGradientBrush>
-                </Setter.Value>
-            </Setter>
-            <Setter Property="BorderBrush" Value="#B71C1C"/>
-            <Setter Property="Foreground" Value="White"/>
-            <Setter Property="FontWeight" Value="Bold"/>
-        </Style>
-
-        <!-- [2026-03-04] FEED HOLD 橙色漸層 -->
-        <Style x:Key="HoldBtnStyle" TargetType="Button" BasedOn="{StaticResource CycleBtnStyle}">
-            <Setter Property="Background">
-                <Setter.Value>
-                    <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                        <GradientStop Color="#FFA726" Offset="0"/>
-                        <GradientStop Color="#E65100" Offset="1"/>
-                    </LinearGradientBrush>
-                </Setter.Value>
-            </Setter>
-            <Setter Property="BorderBrush" Value="#BF360C"/>
-            <Setter Property="Foreground" Value="White"/>
-            <Setter Property="FontWeight" Value="Bold"/>
-        </Style>
+        <!-- [2026-03-10] StartBtnStyle/StopBtnStyle/HoldBtnStyle 已移除，改為按鈕行內 DataTrigger 動態變色 -->
     </UserControl.Resources>
 
     <Border Background="#252526" BorderBrush="#444" BorderThickness="1" CornerRadius="0" Padding="5">
@@ -77,10 +34,68 @@
 
             <UniformGrid Grid.Row="0" Columns="2" Rows="5">
                 <!-- [2026-03-04] 關鍵操作色彩分層：綠=啟動、紅=停止、橙=暫停 -->
-                <Button Content="CYCLE START" Command="{Binding CycleStartCommand}" Style="{StaticResource StartBtnStyle}"/>
-                <Button Content="STOP" Command="{Binding StopCommand}" Style="{StaticResource StopBtnStyle}"/>
+                <!-- [2026-03-10] CYCLE START：執行中(RUNNING)才亮綠色，閒置灰色 -->
+                <Button Content="CYCLE START" Command="{Binding CycleStartCommand}">
+                    <Button.Style>
+                        <Style TargetType="Button" BasedOn="{StaticResource CycleBtnStyle}">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding Status.InterpState}" Value="RUNNING">
+                                    <Setter Property="Background">
+                                        <Setter.Value>
+                                            <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                                <GradientStop Color="#4CAF50" Offset="0"/>
+                                                <GradientStop Color="#2E7D32" Offset="1"/>
+                                            </LinearGradientBrush>
+                                        </Setter.Value>
+                                    </Setter>
+                                    <Setter Property="BorderBrush" Value="#1B5E20"/>
+                                    <Setter Property="Foreground" Value="White"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                </Button>
+                <!-- [2026-03-10] STOP：MouseDown 紅色，放開灰色 -->
+                <Button Content="STOP" Command="{Binding StopCommand}">
+                    <Button.Style>
+                        <Style TargetType="Button" BasedOn="{StaticResource CycleBtnStyle}">
+                            <Style.Triggers>
+                                <Trigger Property="IsPressed" Value="True">
+                                    <Setter Property="Background">
+                                        <Setter.Value>
+                                            <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                                <GradientStop Color="#EF5350" Offset="0"/>
+                                                <GradientStop Color="#C62828" Offset="1"/>
+                                            </LinearGradientBrush>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                </Button>
                 <Button Content="RELOAD PGM" Command="{Binding ReloadCommand}" Style="{StaticResource CycleBtnStyle}"/>
-                <Button Content="FEED HOLD" Command="{Binding FeedHoldCommand}" Style="{StaticResource HoldBtnStyle}"/>
+                <!-- [2026-03-10] FEED HOLD：暫停中(PAUSED)才亮橘色，閒置灰色 -->
+                <Button Content="FEED HOLD" Command="{Binding FeedHoldCommand}">
+                    <Button.Style>
+                        <Style TargetType="Button" BasedOn="{StaticResource CycleBtnStyle}">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding Status.InterpState}" Value="PAUSED">
+                                    <Setter Property="Background">
+                                        <Setter.Value>
+                                            <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                                <GradientStop Color="#FFA726" Offset="0"/>
+                                                <GradientStop Color="#E65100" Offset="1"/>
+                                            </LinearGradientBrush>
+                                        </Setter.Value>
+                                    </Setter>
+                                    <Setter Property="BorderBrush" Value="#BF360C"/>
+                                    <Setter Property="Foreground" Value="White"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                </Button>
                 <!-- [2026-03-05] GO TO HOME → CLEAR PGM，對齊 PB 版 D_1 -->
                 <Button Content="CLEAR PGM" Command="{Binding ClearProgramCommand}" Style="{StaticResource CycleBtnStyle}"/>
                 <!-- [2026-02-24] SINGLE BLOCK 綁定 ToggleSingleBlockCommand，IsSingleBlock=true 時背景變藍 -->

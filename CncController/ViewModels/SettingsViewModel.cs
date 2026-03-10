@@ -59,6 +59,9 @@ namespace CncController.ViewModels
         [ObservableProperty] private int _selectedInMapIndex = -1;
         [ObservableProperty] private int _selectedOutMapIndex = -1;
 
+        // [2026-03-10] 快取最後載入的設定，供 RebuildIoMapsFromScan 自動還原 pin 名稱
+        private MachineConfig _lastConfig;
+
         // ★★★ [新增] 提供給 UI 綁定的訊號清單 ★★★
         public List<string> CommonOutputSignals => StandardSignals.OutputSignals;
 
@@ -146,6 +149,9 @@ namespace CncController.ViewModels
 
                 System.Windows.Application.Current.Dispatcher.Invoke(() =>
                 {
+                    // [2026-03-10] 快取設定，供 RebuildIoMapsFromConfig 內的還原邏輯使用
+                    _lastConfig = config;
+
                     // 1. 同步機台類型
                     MachineConfigVM.SelectedMachineType = config.MachineType;
 
@@ -183,6 +189,9 @@ namespace CncController.ViewModels
         // [2026-03-05] 從本地存檔重建 IO Maps（後端未上線，用存檔中的 VID/PID/Index 建立 placeholder Slave）
         private void RebuildIoMapsFromConfig(MachineConfig config)
         {
+            // [2026-03-10] 快取設定
+            _lastConfig = config;
+
             InMaps.Clear();
             OutMaps.Clear();
 
@@ -209,6 +218,7 @@ namespace CncController.ViewModels
                 item.SelectedSlave = placeholderSlave;
 
                 // 還原 Pin 設定
+                // [2026-03-10] 修正：空字串不覆蓋預設 "Pin N"，避免 Function Name 顯示空白
                 if (mapping.Pins != null)
                 {
                     foreach (var savedPin in mapping.Pins)
@@ -216,7 +226,8 @@ namespace CncController.ViewModels
                         var existingPin = item.PinSettings.FirstOrDefault(p => p.PinIndex == savedPin.Index);
                         if (existingPin != null)
                         {
-                            existingPin.FunctionName = savedPin.Function;
+                            if (!string.IsNullOrEmpty(savedPin.Function))
+                                existingPin.FunctionName = savedPin.Function;
                             existingPin.IsInverted = savedPin.IsInverted;
                         }
                     }
@@ -244,6 +255,7 @@ namespace CncController.ViewModels
                 };
                 item.SelectedSlave = placeholderSlave;
 
+                // [2026-03-10] 修正：空字串不覆蓋預設 "Pin N"
                 if (mapping.Pins != null)
                 {
                     foreach (var savedPin in mapping.Pins)
@@ -251,7 +263,8 @@ namespace CncController.ViewModels
                         var existingPin = item.PinSettings.FirstOrDefault(p => p.PinIndex == savedPin.Index);
                         if (existingPin != null)
                         {
-                            existingPin.FunctionName = savedPin.Function;
+                            if (!string.IsNullOrEmpty(savedPin.Function))
+                                existingPin.FunctionName = savedPin.Function;
                             existingPin.IsInverted = savedPin.IsInverted;
                         }
                     }
@@ -265,6 +278,7 @@ namespace CncController.ViewModels
         }
 
         // [2026-03-05] 動態生成 IO 列表（取代固定 4 列的 InitializeIoMaps）
+        // [2026-03-10] 重建後自動從 _lastConfig 還原 pin 名稱，避免 CollectionChanged 觸發導致名稱遺失
         private void RebuildIoMapsFromScan(IEnumerable<DiscoveredSlave> slaves)
         {
             InMaps.Clear();
@@ -308,9 +322,55 @@ namespace CncController.ViewModels
                 }
             }
 
+            // [2026-03-10] 自動還原 pin 名稱（從快取的 _lastConfig）
+            RestorePinSettingsFromConfig();
+
             // 自動選取第一個
             SelectedInMapIndex = InMaps.Count > 0 ? 0 : -1;
             SelectedOutMapIndex = OutMaps.Count > 0 ? 0 : -1;
+        }
+
+        // [2026-03-10] 從快取設定還原 pin 名稱（供 RebuildIoMapsFromScan / RebuildIoMapsFromConfig 共用）
+        private void RestorePinSettingsFromConfig()
+        {
+            if (_lastConfig?.Mappings == null) return;
+
+            foreach (var mapping in _lastConfig.Mappings.Where(m => m.Type == MapType.Input))
+            {
+                var targetRow = InMaps.FirstOrDefault(x =>
+                    x.SelectedSlave?.Index == mapping.PhysicalIndex);
+                if (targetRow != null && mapping.Pins != null && mapping.Pins.Count > 0)
+                {
+                    foreach (var savedPin in mapping.Pins)
+                    {
+                        var existingPin = targetRow.PinSettings.FirstOrDefault(p => p.PinIndex == savedPin.Index);
+                        if (existingPin != null)
+                        {
+                            if (!string.IsNullOrEmpty(savedPin.Function))
+                                existingPin.FunctionName = savedPin.Function;
+                            existingPin.IsInverted = savedPin.IsInverted;
+                        }
+                    }
+                }
+            }
+            foreach (var mapping in _lastConfig.Mappings.Where(m => m.Type == MapType.Output))
+            {
+                var targetRow = OutMaps.FirstOrDefault(x =>
+                    x.SelectedSlave?.Index == mapping.PhysicalIndex);
+                if (targetRow != null && mapping.Pins != null && mapping.Pins.Count > 0)
+                {
+                    foreach (var savedPin in mapping.Pins)
+                    {
+                        var existingPin = targetRow.PinSettings.FirstOrDefault(p => p.PinIndex == savedPin.Index);
+                        if (existingPin != null)
+                        {
+                            if (!string.IsNullOrEmpty(savedPin.Function))
+                                existingPin.FunctionName = savedPin.Function;
+                            existingPin.IsInverted = savedPin.IsInverted;
+                        }
+                    }
+                }
+            }
         }
 
         // [2026-02-24] 機台類型下拉選單變更 handler
@@ -386,8 +446,64 @@ namespace CncController.ViewModels
             }
         }
 
+        // [2026-03-10] 進入 Settings 頁面時重新從檔案載入設定，丟棄未存檔的修改
+        public async Task ReloadFromFileAsync()
+        {
+            try
+            {
+                var config = await ConfigurationService.Instance.LoadConfigAsync();
+                if (config == null || (config.Axes == null && config.Mappings.Count == 0))
+                    return;
+
+                await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
+                {
+                    // 取得當前已掃描的 slaves（若有）
+                    var slaves = HardwareVM.Slaves.ToList();
+
+                    if (slaves.Count > 0)
+                    {
+                        // 有掃描結果：用完整 Initialize 流程（保留真實 slave 資訊）
+                        Initialize(config, slaves);
+                    }
+                    else
+                    {
+                        // 無掃描結果（後端未上線）：從設定檔重建
+                        _lastConfig = config;
+                        MachineConfigVM.SelectedMachineType = config.MachineType;
+
+                        AxisVM.Axes.Clear();
+                        if (config.Axes != null)
+                        {
+                            for (int i = 0; i < config.Axes.Count; i++)
+                            {
+                                config.Axes[i].Index = i;
+                                AxisVM.Axes.Add(config.Axes[i]);
+                            }
+                        }
+
+                        MappingVM.LoadMapping(config, new List<DiscoveredSlave>());
+                        RebuildIoMapsFromConfig(config);
+
+                        AtcBasicVM.LoadFrom(config.Atc);
+                        AtcIoVM.CurrentAtcType = config.Atc.Type;
+                        AtcIoVM.CurrentControlMode = config.Atc.ControlMode;
+                        SpindleVM.LoadFrom(config.Spindle, new List<DiscoveredSlave>());
+                    }
+
+                    AlarmService.Instance.AddLog("INFO", "Settings reloaded from config file");
+                });
+            }
+            catch (Exception ex)
+            {
+                AlarmService.Instance.AddLog("WARN", $"ReloadFromFile failed: {ex.Message}");
+            }
+        }
+
         public void Initialize(MachineConfig config, List<DiscoveredSlave> slaves)
         {
+            // [2026-03-10] 先快取設定，讓後續 RebuildIoMapsFromScan（含 CollectionChanged 觸發的）都能自動還原 pin 名稱
+            _lastConfig = config;
+
             // Step 1: 填充 HARDWARE SCAN 表格
             HardwareVM.Slaves.Clear();
             foreach (var s in slaves) HardwareVM.Slaves.Add(s);
@@ -420,6 +536,7 @@ namespace CncController.ViewModels
             IoMonitorVM.UpdateAxisMapping(MappingVM.AxisMaps);
 
             // [2026-03-05] Step 4: 動態生成 IO 列表（自動填充 SelectedSlave + InitializePins）
+            // [2026-03-10] pin 名稱還原已內建於 RebuildIoMapsFromScan（透過 _lastConfig）
             RebuildIoMapsFromScan(slaves);
 
             // [2026-03-06] Step 4.5: 載入 ATC 設定
@@ -438,42 +555,6 @@ namespace CncController.ViewModels
             if (config.Mappings.Count > 0)
             {
                 VerifyHardware(config, slaves);
-            }
-
-            // [2026-03-05] Step 6: 載入已儲存的 IO Pin 設定（用 PhysicalIndex 匹配，不需重設 SelectedSlave）
-            foreach (var mapping in config.Mappings.Where(m => m.Type == MapType.Input))
-            {
-                var targetRow = InMaps.FirstOrDefault(x =>
-                    x.SelectedSlave?.Index == mapping.PhysicalIndex);
-                if (targetRow != null && mapping.Pins != null && mapping.Pins.Count > 0)
-                {
-                    foreach (var savedPin in mapping.Pins)
-                    {
-                        var existingPin = targetRow.PinSettings.FirstOrDefault(p => p.PinIndex == savedPin.Index);
-                        if (existingPin != null)
-                        {
-                            existingPin.FunctionName = savedPin.Function;
-                            existingPin.IsInverted = savedPin.IsInverted;
-                        }
-                    }
-                }
-            }
-            foreach (var mapping in config.Mappings.Where(m => m.Type == MapType.Output))
-            {
-                var targetRow = OutMaps.FirstOrDefault(x =>
-                    x.SelectedSlave?.Index == mapping.PhysicalIndex);
-                if (targetRow != null && mapping.Pins != null && mapping.Pins.Count > 0)
-                {
-                    foreach (var savedPin in mapping.Pins)
-                    {
-                        var existingPin = targetRow.PinSettings.FirstOrDefault(p => p.PinIndex == savedPin.Index);
-                        if (existingPin != null)
-                        {
-                            existingPin.FunctionName = savedPin.Function;
-                            existingPin.IsInverted = savedPin.IsInverted;
-                        }
-                    }
-                }
             }
         }
 
@@ -654,6 +735,8 @@ namespace CncController.ViewModels
                     SpindleVM.SaveTo(config.Spindle);
 
                 // 1. 存檔並觸發重啟
+                // [2026-03-10] 更新快取，確保後續 RebuildIoMapsFromScan 使用最新設定
+                _lastConfig = config;
                 await ConfigurationService.Instance.SaveConfigAsync(config);
 
                 DeployStatus = "Restarting LinuxCNC...";
@@ -702,6 +785,34 @@ namespace CncController.ViewModels
             if (data != null)
             {
                 IoMonitorVM.UpdateData(data);
+
+                // [2026-03-10] 更新 IN MAP / OUT MAP pin 即時狀態（綠燈/灰燈）
+                // IO_Status 格式：{ "13": { "di": { "0": true, ... }, "do": { "5": false, ... } } }
+                if (data.IO_Status != null)
+                {
+                    foreach (var map in InMaps)
+                    {
+                        if (map.SelectedSlave == null) continue;
+                        var slaveKey = map.SelectedSlave.Index.ToString();
+                        if (data.IO_Status.TryGetValue(slaveKey, out var slaveIo) &&
+                            slaveIo.TryGetValue("di", out var diMap))
+                        {
+                            foreach (var pin in map.PinSettings)
+                                pin.IsActive = diMap.TryGetValue(pin.PinIndex.ToString(), out bool v) && v;
+                        }
+                    }
+                    foreach (var map in OutMaps)
+                    {
+                        if (map.SelectedSlave == null) continue;
+                        var slaveKey = map.SelectedSlave.Index.ToString();
+                        if (data.IO_Status.TryGetValue(slaveKey, out var slaveIo) &&
+                            slaveIo.TryGetValue("do", out var doMap))
+                        {
+                            foreach (var pin in map.PinSettings)
+                                pin.IsActive = doMap.TryGetValue(pin.PinIndex.ToString(), out bool v) && v;
+                        }
+                    }
+                }
             }
         }
     }

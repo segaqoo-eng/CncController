@@ -665,6 +665,9 @@ namespace CncController.ViewModels
             // [2026-03-09] 同步主軸 Encoder 角度（供 HeaderBar 即時顯示）
             Status.SpindlePosition = data.Spindle_Position;
 
+            // [2026-03-10] 同步主軸方向（0=停止, 1=CW正轉, -1=CCW反轉，供 JogConfig REV/FWD 按鈕變色）
+            Status.SpindleDirection = data.Spindle_Direction;
+
             // [2026-02-23] 新增：將後端回傳的 Active_WCS 同步至 MachineStatus 與 OffsetsVM，保持 DRO 快選列高亮一致
             if (!string.IsNullOrEmpty(data.Active_WCS))
             {
@@ -771,13 +774,20 @@ namespace CncController.ViewModels
         [RelayCommand]
         private void Navigate(string viewName)
         {
+            // [2026-03-10] 離開 ATC 頁面時停止輪詢
+            if (CurrentViewModel == AtcVM && viewName != "Atc")
+                AtcVM.StopPolling();
+
             switch (viewName)
             {
                 // ★★★ [關鍵修改] 使用長駐實體，避免切換頁面後資料遺失 ★★★
                 case "Main": CurrentViewModel = MonitorVM; break;
 
-                // ★★★ [關鍵修改] 使用長駐實體，避免切換頁面後資料遺失 ★★★
-                case "Settings": CurrentViewModel = SettingsVM; break;
+                // [2026-03-10] 進入 Settings 時重新從檔案載入，丟棄未存檔的修改
+                case "Settings":
+                    CurrentViewModel = SettingsVM;
+                    _ = SettingsVM.ReloadFromFileAsync();
+                    break;
 
                 // ★★★ [關鍵修改] 使用長駐實體，避免切換頁面後篩選狀態遺失 ★★★
                 case "History": CurrentViewModel = HistoryVM; break;
@@ -785,9 +795,11 @@ namespace CncController.ViewModels
                 case "Offsets": CurrentViewModel = OffsetsVM; break; // [2026-02-23] 新增 Offsets Tab 導航
                 case "Tool": CurrentViewModel = ToolTableVM; break; // [2026-03-03] 新增 TOOL Tab 導航
                 // [2026-03-04] ATC Tab 導航：自動載入程式刀具列表
+                // [2026-03-10] 啟動 ATC 即時輪詢（角度/IO）
                 case "Atc":
                     CurrentViewModel = AtcVM;
                     AtcVM.LoadProgramToolsCommand.Execute(null);
+                    AtcVM.StartPolling();
                     break;
                 case "Probing": CurrentViewModel = ProbingVM; break; // [2026-03-04] 新增 PROBING Tab 導航
             }

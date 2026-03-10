@@ -5,6 +5,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
+using System.Windows.Threading;
 using CncController.Models;
 using CncController.Services;
 using CncController.Helpers;
@@ -37,12 +38,29 @@ namespace CncController.ViewModels
         // [2026-03-03] REMARK 顯示
         [ObservableProperty] private string _remarkText = "";
 
+        // [2026-03-10] 刀位設定：選擇的刀位號（1~N）+ 要寫入的刀號
+        [ObservableProperty] private int _selectedSlotNumber = 1;
+        [ObservableProperty] private int _setSlotToolNumber = 1;
+
         // [2026-03-06] 刀盤屬性
         [ObservableProperty] private double _carouselAngle = 0;        // [2026-03-06] 刀盤旋轉角度
         [ObservableProperty] private int _currentPocket = 1;            // [2026-03-06] 當前刀位號
         [ObservableProperty] private bool _isReferenced = false;        // [2026-03-06] 是否已歸零
         [ObservableProperty] private bool _isAtcBusy = false;           // [2026-03-06] 換刀進行中
-        [ObservableProperty] private string _atcStatusText = "UN REFERENCED"; // [2026-03-06] 狀態文字
+        [ObservableProperty] private string _atcStatusText = "未歸零"; // [2026-03-10] 狀態文字
+
+        // [2026-03-10] DO/DI 即時狀態（根據後端回傳的 motion.digital-out/in 更新）
+        [ObservableProperty] private bool _isCarouselOut;     // 刀盤伸出
+        [ObservableProperty] private bool _isCarouselHome;    // 刀盤收回
+        [ObservableProperty] private bool _isDrawbarOn;       // 拉桿（夾/鬆刀）
+        [ObservableProperty] private bool _isAirBlowOn;       // 吹氣
+        [ObservableProperty] private bool _isMotorFwd;        // 馬達正轉
+        [ObservableProperty] private bool _isMotorRev;        // 馬達反轉
+        // [2026-03-10] DI 感測器狀態
+        [ObservableProperty] private bool _diCarouselHome;    // 刀盤歸位感測
+        [ObservableProperty] private bool _diCarouselOut;     // 刀盤到位感測
+        [ObservableProperty] private bool _diDrawbarClamp;    // 夾刀確認
+        [ObservableProperty] private bool _diDrawbarUnclamp;  // 鬆刀確認
 
         // [2026-03-03] 程式刀具列表（ProgramTools 模式）
         public ObservableCollection<string> ProgramTools { get; } = new();
@@ -58,10 +76,68 @@ namespace CncController.ViewModels
         // [2026-03-06] 刀位狀態表（供 CarouselControl 綁定）
         public ObservableCollection<AtcSlotInfo> SlotInfos { get; } = new(); // [2026-03-06]
 
+        // [2026-03-10] ATC 狀態定時輪詢（頁面活躍時每秒刷新角度/IO）
+        private DispatcherTimer _atcPollTimer;
+        private bool _isPolling = false;
+
+        // [2026-03-10] ATC IO pin 號碼快取（從 MachineConfig.Atc 載入一次）
+        private int _pinDoCarouselOut = 31;
+        private int _pinDoCarouselHome = 30;
+        private int _pinDoDrawbar = 29;
+        private int _pinDoAirBlow = 28;
+        private int _pinDoMotorFwd = 27;
+        private int _pinDoMotorRev = 26;
+        private int _pinDiCarouselHome = 31;
+        private int _pinDiCarouselOut = 30;
+        private int _pinDiDrawbarClamp = 29;
+        private int _pinDiDrawbarUnclamp = 28;
+
         // [2026-03-06] 建構函式
         public AtcViewModel()
         {
             InitializeSlots(); // [2026-03-06]
+            // [2026-03-10] 初始化 ATC 輪詢定時器（1 秒間隔，預設不啟動）
+            _atcPollTimer = new DispatcherTimer { Interval = System.TimeSpan.FromSeconds(1) };
+            _atcPollTimer.Tick += async (s, e) =>
+            {
+                if (_isPolling) return; // 防止重疊
+                _isPolling = true;
+                try { await RefreshAtcStatus(); }
+                finally { _isPolling = false; }
+            };
+        }
+
+        // [2026-03-10] 頁面進入時啟動輪詢 + 載入 IO pin 設定
+        public async void StartPolling()
+        {
+            // [2026-03-10] 載入一次 AtcConfig 的 IO pin 號碼
+            try
+            {
+                var cfg = await ConfigurationService.Instance.LoadConfigAsync();
+                if (cfg?.Atc != null)
+                {
+                    _pinDoCarouselOut = cfg.Atc.DoCarouselOut;
+                    _pinDoCarouselHome = cfg.Atc.DoCarouselHome;
+                    _pinDoDrawbar = cfg.Atc.DoDrawbar;
+                    _pinDoAirBlow = cfg.Atc.DoAirBlow;
+                    _pinDoMotorFwd = cfg.Atc.DoMotorFwd;
+                    _pinDoMotorRev = cfg.Atc.DoMotorRev;
+                    _pinDiCarouselHome = cfg.Atc.DiCarouselHome;
+                    _pinDiCarouselOut = cfg.Atc.DiCarouselOut;
+                    _pinDiDrawbarClamp = cfg.Atc.DiDrawbarClamp;
+                    _pinDiDrawbarUnclamp = cfg.Atc.DiDrawbarUnclamp;
+                }
+            }
+            catch { /* 載入失敗用預設值 */ }
+
+            if (!_atcPollTimer.IsEnabled)
+                _atcPollTimer.Start();
+        }
+
+        // [2026-03-10] 頁面離開時停止輪詢
+        public void StopPolling()
+        {
+            _atcPollTimer.Stop();
         }
 
         // [2026-03-09] CarouselAngle 變化時同步至 MachineStatus（供 HeaderBar 即時顯示）
@@ -71,18 +147,15 @@ namespace CncController.ViewModels
                 MachineStatus.CarouselPosition = value;
         }
 
-        // [2026-03-06] 初始化刀位表（預設 12 位，部分有刀）
+        // [2026-03-10] 初始化刀位表（預設 12 位，全空，由 RefreshAtcStatus 從後端 #4001~#4024 填入）
         private void InitializeSlots()
         {
             SlotInfos.Clear();
-            int toolCount = 12; // 暫時寫死
+            int toolCount = 12;
             for (int i = 1; i <= toolCount; i++)
             {
                 SlotInfos.Add(new AtcSlotInfo { SlotNumber = i, ToolNumber = 0 });
             }
-            // 預設放幾把刀（測試用）
-            if (SlotInfos.Count >= 3) { SlotInfos[0].ToolNumber = 1; SlotInfos[1].ToolNumber = 2; SlotInfos[2].ToolNumber = 3; }
-            if (SlotInfos.Count >= 6) { SlotInfos[5].ToolNumber = 6; }
         }
 
         // =====================================================================
@@ -105,20 +178,22 @@ namespace CncController.ViewModels
             await MachineControlService.Instance.SendMdiCommandAsync("M64 P0");
         }
 
-        // [2026-03-09] CLAMP TOOL：夾刀（透過專用 API → M25）
+        // [2026-03-10] CLAMP TOOL：夾刀（M25 → M65 DO OFF → 彈簧夾緊）
         [RelayCommand]
         private async Task ClampTool()
         {
             AlarmService.Instance.AddLog("INFO", "ATC: CLAMP TOOL");
-            await MachineControlService.Instance.AtcClampAsync();
+            bool ok = await MachineControlService.Instance.AtcClampAsync();
+            if (ok) IsDrawbarOn = false; // 夾刀 = DO OFF
         }
 
-        // [2026-03-09] RELEASE TOOL：鬆刀（透過專用 API → M24）
+        // [2026-03-10] RELEASE TOOL：鬆刀（M24 → M64 DO ON → 氣壓推開）
         [RelayCommand]
         private async Task ReleaseTool()
         {
             AlarmService.Instance.AddLog("INFO", "ATC: RELEASE TOOL");
-            await MachineControlService.Instance.AtcUnclampAsync();
+            bool ok = await MachineControlService.Instance.AtcUnclampAsync();
+            if (ok) IsDrawbarOn = true; // 鬆刀 = DO ON
         }
 
         // [2026-03-09] ORIENT SPINDLE：主軸定向（透過專用 API → M19）
@@ -271,13 +346,8 @@ namespace CncController.ViewModels
         {
             AlarmService.Instance.AddLog("INFO", "ATC: REV");
             // [2026-03-09] 先送指令，成功後才更新角度（避免指令失敗但動畫已動）
-            var result = await MachineControlService.Instance.AtcRevAsync();
-            if (result)
-            {
-                int toolCount = SlotInfos.Count > 0 ? SlotInfos.Count : 12;
-                CarouselAngle -= 360.0 / toolCount;
-                CurrentPocket = CurrentPocket > 1 ? CurrentPocket - 1 : toolCount;
-            }
+            // [2026-03-10] 不再本地計算角度，由 RefreshAtcStatus 從後端讀取真實值
+            await MachineControlService.Instance.AtcRevAsync();
             await RefreshAtcStatus();
         }
 
@@ -287,13 +357,8 @@ namespace CncController.ViewModels
         {
             AlarmService.Instance.AddLog("INFO", "ATC: FWD");
             // [2026-03-09] 先送指令，成功後才更新角度（避免指令失敗但動畫已動）
-            var result = await MachineControlService.Instance.AtcFwdAsync();
-            if (result)
-            {
-                int toolCount = SlotInfos.Count > 0 ? SlotInfos.Count : 12;
-                CarouselAngle += 360.0 / toolCount;
-                CurrentPocket = CurrentPocket < toolCount ? CurrentPocket + 1 : 1;
-            }
+            // [2026-03-10] 不再本地計算角度，由 RefreshAtcStatus 從後端讀取真實值
+            await MachineControlService.Instance.AtcFwdAsync();
             await RefreshAtcStatus();
         }
 
@@ -348,6 +413,57 @@ namespace CncController.ViewModels
             }
         }
 
+        // [2026-03-10] 設定刀位：將刀號寫入指定刀位（#4001~#4024）
+        [RelayCommand]
+        private async Task SetSlotTool()
+        {
+            if (SelectedSlotNumber < 1 || SelectedSlotNumber > SlotInfos.Count)
+            {
+                AlarmService.Instance.AddLog("WARN", $"ATC: 無效刀位號 {SelectedSlotNumber}");
+                return;
+            }
+            if (SetSlotToolNumber < 0)
+            {
+                AlarmService.Instance.AddLog("WARN", $"ATC: 無效刀號 {SetSlotToolNumber}");
+                return;
+            }
+            AlarmService.Instance.AddLog("INFO", $"ATC: 設定刀位 {SelectedSlotNumber} = T{SetSlotToolNumber}");
+            bool ok = await MachineControlService.Instance.AtcSetSlotAsync(SelectedSlotNumber, SetSlotToolNumber);
+            if (ok)
+                await RefreshAtcStatus();
+            else
+                AlarmService.Instance.AddLog("ERROR", $"ATC: 設定刀位 {SelectedSlotNumber} 失敗");
+        }
+
+        // [2026-03-10] 清除刀位：將指定刀位的刀號設為 0（空位）
+        [RelayCommand]
+        private async Task ClearSlotTool()
+        {
+            if (SelectedSlotNumber < 1 || SelectedSlotNumber > SlotInfos.Count)
+            {
+                AlarmService.Instance.AddLog("WARN", $"ATC: 無效刀位號 {SelectedSlotNumber}");
+                return;
+            }
+            AlarmService.Instance.AddLog("INFO", $"ATC: 清除刀位 {SelectedSlotNumber}");
+            bool ok = await MachineControlService.Instance.AtcSetSlotAsync(SelectedSlotNumber, 0);
+            if (ok)
+                await RefreshAtcStatus();
+            else
+                AlarmService.Instance.AddLog("ERROR", $"ATC: 清除刀位 {SelectedSlotNumber} 失敗");
+        }
+
+        // [2026-03-10] 清除所有刀位：將全部刀位設為 0
+        [RelayCommand]
+        private async Task ClearAllSlots()
+        {
+            AlarmService.Instance.AddLog("INFO", "ATC: 清除所有刀位");
+            for (int i = 1; i <= SlotInfos.Count; i++)
+            {
+                await MachineControlService.Instance.AtcSetSlotAsync(i, 0);
+            }
+            await RefreshAtcStatus();
+        }
+
         // [2026-03-09] ELECTRONIC TOOL SETTER
         [RelayCommand]
         private async Task ElectronicToolSetter()
@@ -368,10 +484,10 @@ namespace CncController.ViewModels
             if (status.CurrentPocket > 0)
             {
                 CurrentPocket = status.CurrentPocket;
-                AtcStatusText = $"POCKET: {status.CurrentPocket}";
+                AtcStatusText = $"刀位: {status.CurrentPocket}";
             }
-            // [2026-03-09] Servo 模式：用 encoder 真實角度；IO 模式：用 pocket 計算角度
-            if (status.ControlMode == "SERVO" && status.CarouselAngle != 0)
+            // [2026-03-10] Servo 模式：永遠用後端 encoder 真實角度（含 0°）；IO 模式：用 pocket 計算角度
+            if (status.ControlMode == "SERVO")
             {
                 CarouselAngle = status.CarouselAngle;
             }
@@ -392,6 +508,26 @@ namespace CncController.ViewModels
                         SlotInfos[slot - 1].ToolNumber = kvp.Value;
                     }
                 }
+            }
+
+            // [2026-03-10] 更新 DO 狀態（按鈕反白用）
+            if (status.DO != null)
+            {
+                IsCarouselOut  = status.DO.TryGetValue(_pinDoCarouselOut.ToString(), out var v1) && v1;
+                IsCarouselHome = status.DO.TryGetValue(_pinDoCarouselHome.ToString(), out var v2) && v2;
+                IsDrawbarOn    = status.DO.TryGetValue(_pinDoDrawbar.ToString(), out var v3) && v3;
+                IsAirBlowOn    = status.DO.TryGetValue(_pinDoAirBlow.ToString(), out var v4) && v4;
+                IsMotorFwd     = status.DO.TryGetValue(_pinDoMotorFwd.ToString(), out var v5) && v5;
+                IsMotorRev     = status.DO.TryGetValue(_pinDoMotorRev.ToString(), out var v6) && v6;
+            }
+
+            // [2026-03-10] 更新 DI 狀態（感測器指示用）
+            if (status.DI != null)
+            {
+                DiCarouselHome    = status.DI.TryGetValue(_pinDiCarouselHome.ToString(), out var d1) && d1;
+                DiCarouselOut     = status.DI.TryGetValue(_pinDiCarouselOut.ToString(), out var d2) && d2;
+                DiDrawbarClamp    = status.DI.TryGetValue(_pinDiDrawbarClamp.ToString(), out var d3) && d3;
+                DiDrawbarUnclamp  = status.DI.TryGetValue(_pinDiDrawbarUnclamp.ToString(), out var d4) && d4;
             }
         }
     }

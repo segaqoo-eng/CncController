@@ -1,4 +1,5 @@
 <!-- [2026-03-06] ATC IO Settings View - DO/DI pin configuration for ATC -->
+<!-- [2026-03-10] 全部標籤改繁體中文 -->
 <UserControl x:Class="CncController.Views.Pages.AtcIoSettingsView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -8,10 +9,7 @@
              d:DesignHeight="700" d:DesignWidth="500"
              FontFamily="{DynamicResource FontFamily.Default}">
 
-    <!-- [2026-03-06] DataContext is set by parent (AtcIoSettingsViewModel) -->
-
     <UserControl.Resources>
-        <!-- [2026-03-06] Dark theme GroupBox style -->
         <Style x:Key="DarkGroupBox" TargetType="GroupBox">
             <Setter Property="BorderBrush" Value="#555"/>
             <Setter Property="BorderThickness" Value="1"/>
@@ -26,7 +24,6 @@
             </Setter>
         </Style>
 
-        <!-- [2026-03-06] Label style -->
         <Style x:Key="IoLabel" TargetType="TextBlock">
             <Setter Property="Foreground" Value="White"/>
             <Setter Property="FontSize" Value="{DynamicResource FontSize.Medium}"/>
@@ -34,19 +31,18 @@
             <Setter Property="Margin" Value="0,4"/>
         </Style>
 
-        <!-- [2026-03-06] Pin ComboBox style -->
-        <!-- [2026-03-06] Pin ComboBox style (dark theme) -->
+        <!-- [2026-03-10] HorizontalAlignment=Left 讓 ComboBox 緊貼標籤旁邊 -->
         <Style x:Key="PinCombo" TargetType="ComboBox">
             <Setter Property="Width" Value="80"/>
             <Setter Property="Margin" Value="0,4"/>
             <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="HorizontalAlignment" Value="Left"/>
             <Setter Property="Foreground" Value="Black"/>
             <Setter Property="FontSize" Value="{DynamicResource FontSize.Medium}"/>
             <Setter Property="FontFamily" Value="{DynamicResource FontFamily.Default}"/>
             <Setter Property="Height" Value="30"/>
         </Style>
 
-        <!-- [2026-03-06] Section header style -->
         <Style x:Key="SectionHeader" TargetType="TextBlock">
             <Setter Property="Foreground" Value="#AAA"/>
             <Setter Property="FontSize" Value="{DynamicResource FontSize.Body}"/>
@@ -58,31 +54,33 @@
     <ScrollViewer VerticalScrollBarVisibility="Auto" Background="#1E1E1E">
         <StackPanel Margin="5">
 
-            <!-- [2026-03-06] IO MODULE section -->
-            <GroupBox Header="IO MODULE" Style="{StaticResource DarkGroupBox}">
+            <!-- IO 模組 -->
+            <GroupBox Header="IO 模組" Style="{StaticResource DarkGroupBox}">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto"/>
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
-                    <TextBlock Grid.Column="0" Text="EtherCAT IO Slave:" Style="{StaticResource IoLabel}" Margin="0,4,10,4"/>
+                    <TextBlock Grid.Column="0" Text="EtherCAT IO 站號：" Style="{StaticResource IoLabel}" Margin="0,4,10,4"/>
+                    <!-- [2026-03-10] HorizontalAlignment=Left 緊貼標籤 -->
                     <ComboBox Grid.Column="1"
                               ItemsSource="{Binding AvailableIoSlaves}"
                               SelectedItem="{Binding SelectedIoSlave}"
                               DisplayMemberPath="DisplayName"
                               Margin="0,4"
                               VerticalAlignment="Center"
+                              HorizontalAlignment="Left"
                               FontSize="{DynamicResource FontSize.Medium}" Height="30" Foreground="Black"/>
                 </Grid>
             </GroupBox>
 
-            <!-- [2026-03-06] DIGITAL OUTPUTS (DO) section -->
-            <GroupBox Header="DIGITAL OUTPUTS (DO)" Style="{StaticResource DarkGroupBox}">
+            <!-- 數位輸出 (DO) -->
+            <GroupBox Header="數位輸出 (DO)" Style="{StaticResource DarkGroupBox}">
                 <StackPanel>
 
-                    <!-- [2026-03-06] Carousel DO pins (visible when ShowCarouselIo) -->
+                    <!-- 刀盤 DO -->
                     <StackPanel Visibility="{Binding ShowCarouselIo, Converter={StaticResource BoolToVis}}">
-                        <TextBlock Text="-- Carousel --" Style="{StaticResource SectionHeader}"/>
+                        <TextBlock Text="── 刀盤 ──" Style="{StaticResource SectionHeader}"/>
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto"/>
@@ -93,19 +91,19 @@
                                 <RowDefinition Height="Auto"/>
                             </Grid.RowDefinitions>
 
-                            <TextBlock Grid.Row="0" Grid.Column="0" Text="DO Carousel Out:" Style="{StaticResource IoLabel}" Margin="0,4,10,4"/>
+                            <TextBlock Grid.Row="0" Grid.Column="0" Text="DO 刀盤伸出：" Style="{StaticResource IoLabel}" Margin="0,4,10,4"/>
                             <ComboBox  Grid.Row="0" Grid.Column="1" Style="{StaticResource PinCombo}"
                                        ItemsSource="{Binding AvailablePins}" SelectedItem="{Binding DoCarouselOut}"/>
 
-                            <TextBlock Grid.Row="1" Grid.Column="0" Text="DO Carousel Home:" Style="{StaticResource IoLabel}" Margin="0,4,10,4"/>
+                            <TextBlock Grid.Row="1" Grid.Column="0" Text="DO 刀盤歸位：" Style="{StaticResource IoLabel}" Margin="0,4,10,4"/>
                             <ComboBox  Grid.Row="1" Grid.Column="1" Style="{StaticResource PinCombo}"
                                        ItemsSource="{Binding AvailablePins}" SelectedItem="{Binding DoCarouselHome}"/>
                         </Grid>
                     </StackPanel>
 
-                    <!-- [2026-03-09] Motor DO pins (visible only in IO control mode) -->
+                    <!-- 馬達 DO（IO 模式） -->
                     <StackPanel Visibility="{Binding ShowMotorIo, Converter={StaticResource BoolToVis}}">
-                        <TextBlock Text="-- Motor (IO Mode) --" Style="{StaticResource SectionHeader}"/>
+                        <TextBlock Text="── 馬達（IO 模式）──" Style="{StaticResource SectionHeader}"/>
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto"/>
@@ -116,19 +114,19 @@
                                 <RowDefinition Height="Auto"/>
                             </Grid.RowDefinitions>
 
-                            <TextBlock Grid.Row="0" Grid.Column="0" Text="DO Motor FWD:" Style="{StaticResource IoLabel}" Margin="0,4,10,4"/>
+                            <TextBlock Grid.Row="0" Grid.Column="0" Text="DO 馬達正轉：" Style="{StaticResource IoLabel}" Margin="0,4,10,4"/>
                             <ComboBox  Grid.Row="0" Grid.Column="1" Style="{StaticResource PinCombo}"
                                        ItemsSource="{Binding AvailablePins}" SelectedItem="{Binding DoMotorFwd}"/>
 
-                            <TextBlock Grid.Row="1" Grid.Column="0" Text="DO Motor REV:" Style="{StaticResource IoLabel}" Margin="0,4,10,4"/>
+                            <TextBlock Grid.Row="1" Grid.Column="0" Text="DO 馬達反轉：" Style="{StaticResource IoLabel}" Margin="0,4,10,4"/>
                             <ComboBox  Grid.Row="1" Grid.Column="1" Style="{StaticResource PinCombo}"
                                        ItemsSource="{Binding AvailablePins}" SelectedItem="{Binding DoMotorRev}"/>
                         </Grid>
                     </StackPanel>
 
-                    <!-- [2026-03-06] Drawbar DO pins (visible when ShowDrawbarIo) -->
+                    <!-- 拉刀桿 DO -->
                     <StackPanel Visibility="{Binding ShowDrawbarIo, Converter={StaticResource BoolToVis}}">
-                        <TextBlock Text="-- Drawbar --" Style="{StaticResource SectionHeader}"/>
+                        <TextBlock Text="── 拉刀桿 ──" Style="{StaticResource SectionHeader}"/>
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto"/>
@@ -139,11 +137,11 @@
                                 <RowDefinition Height="Auto"/>
                             </Grid.RowDefinitions>
 
-                            <TextBlock Grid.Row="0" Grid.Column="0" Text="DO Drawbar:" Style="{StaticResource IoLabel}" Margin="0,4,10,4"/>
+                            <TextBlock Grid.Row="0" Grid.Column="0" Text="DO 拉刀桿：" Style="{StaticResource IoLabel}" Margin="0,4,10,4"/>
                             <ComboBox  Grid.Row="0" Grid.Column="1" Style="{StaticResource PinCombo}"
                                        ItemsSource="{Binding AvailablePins}" SelectedItem="{Binding DoDrawbar}"/>
 
-                            <TextBlock Grid.Row="1" Grid.Column="0" Text="DO Air Blow:" Style="{StaticResource IoLabel}" Margin="0,4,10,4"/>
+                            <TextBlock Grid.Row="1" Grid.Column="0" Text="DO 吹氣：" Style="{StaticResource IoLabel}" Margin="0,4,10,4"/>
                             <ComboBox  Grid.Row="1" Grid.Column="1" Style="{StaticResource PinCombo}"
                                        ItemsSource="{Binding AvailablePins}" SelectedItem="{Binding DoAirBlow}"/>
                         </Grid>
@@ -152,13 +150,13 @@
                 </StackPanel>
             </GroupBox>
 
-            <!-- [2026-03-06] DIGITAL INPUTS (DI) section -->
-            <GroupBox Header="DIGITAL INPUTS (DI)" Style="{StaticResource DarkGroupBox}">
+            <!-- 數位輸入 (DI) -->
+            <GroupBox Header="數位輸入 (DI)" Style="{StaticResource DarkGroupBox}">
                 <StackPanel>
 
-                    <!-- [2026-03-06] Carousel DI pins (visible when ShowCarouselIo) -->
+                    <!-- 刀盤 DI -->
                     <StackPanel Visibility="{Binding ShowCarouselIo, Converter={StaticResource BoolToVis}}">
-                        <TextBlock Text="-- Carousel --" Style="{StaticResource SectionHeader}"/>
+                        <TextBlock Text="── 刀盤 ──" Style="{StaticResource SectionHeader}"/>
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto"/>
@@ -169,33 +167,33 @@
                                 <RowDefinition Height="Auto"/>
                             </Grid.RowDefinitions>
 
-                            <TextBlock Grid.Row="0" Grid.Column="0" Text="DI Carousel Home:" Style="{StaticResource IoLabel}" Margin="0,4,10,4"/>
+                            <TextBlock Grid.Row="0" Grid.Column="0" Text="DI 刀盤原點：" Style="{StaticResource IoLabel}" Margin="0,4,10,4"/>
                             <ComboBox  Grid.Row="0" Grid.Column="1" Style="{StaticResource PinCombo}"
                                        ItemsSource="{Binding AvailablePins}" SelectedItem="{Binding DiCarouselHome}"/>
 
-                            <TextBlock Grid.Row="1" Grid.Column="0" Text="DI Carousel Out:" Style="{StaticResource IoLabel}" Margin="0,4,10,4"/>
+                            <TextBlock Grid.Row="1" Grid.Column="0" Text="DI 刀盤伸出：" Style="{StaticResource IoLabel}" Margin="0,4,10,4"/>
                             <ComboBox  Grid.Row="1" Grid.Column="1" Style="{StaticResource PinCombo}"
                                        ItemsSource="{Binding AvailablePins}" SelectedItem="{Binding DiCarouselOut}"/>
                         </Grid>
                     </StackPanel>
 
-                    <!-- [2026-03-09] Rotation Index DI (visible only in IO control mode) -->
+                    <!-- 旋轉定位 DI（IO 模式） -->
                     <StackPanel Visibility="{Binding ShowMotorIo, Converter={StaticResource BoolToVis}}">
-                        <TextBlock Text="-- Rotation Index (IO Mode) --" Style="{StaticResource SectionHeader}"/>
+                        <TextBlock Text="── 旋轉定位（IO 模式）──" Style="{StaticResource SectionHeader}"/>
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto"/>
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
-                            <TextBlock Grid.Column="0" Text="DI Rotation Index:" Style="{StaticResource IoLabel}" Margin="0,4,10,4"/>
+                            <TextBlock Grid.Column="0" Text="DI 旋轉定位：" Style="{StaticResource IoLabel}" Margin="0,4,10,4"/>
                             <ComboBox  Grid.Column="1" Style="{StaticResource PinCombo}"
                                        ItemsSource="{Binding AvailablePins}" SelectedItem="{Binding DiRotationIndex}"/>
                         </Grid>
                     </StackPanel>
 
-                    <!-- [2026-03-06] Drawbar DI pins (visible when ShowDrawbarIo) -->
+                    <!-- 拉刀桿 DI -->
                     <StackPanel Visibility="{Binding ShowDrawbarIo, Converter={StaticResource BoolToVis}}">
-                        <TextBlock Text="-- Drawbar --" Style="{StaticResource SectionHeader}"/>
+                        <TextBlock Text="── 拉刀桿 ──" Style="{StaticResource SectionHeader}"/>
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto"/>
@@ -206,11 +204,11 @@
                                 <RowDefinition Height="Auto"/>
                             </Grid.RowDefinitions>
 
-                            <TextBlock Grid.Row="0" Grid.Column="0" Text="DI Drawbar Clamp:" Style="{StaticResource IoLabel}" Margin="0,4,10,4"/>
+                            <TextBlock Grid.Row="0" Grid.Column="0" Text="DI 夾刀確認：" Style="{StaticResource IoLabel}" Margin="0,4,10,4"/>
                             <ComboBox  Grid.Row="0" Grid.Column="1" Style="{StaticResource PinCombo}"
                                        ItemsSource="{Binding AvailablePins}" SelectedItem="{Binding DiDrawbarClamp}"/>
 
-                            <TextBlock Grid.Row="1" Grid.Column="0" Text="DI Drawbar Unclamp:" Style="{StaticResource IoLabel}" Margin="0,4,10,4"/>
+                            <TextBlock Grid.Row="1" Grid.Column="0" Text="DI 鬆刀確認：" Style="{StaticResource IoLabel}" Margin="0,4,10,4"/>
                             <ComboBox  Grid.Row="1" Grid.Column="1" Style="{StaticResource PinCombo}"
                                        ItemsSource="{Binding AvailablePins}" SelectedItem="{Binding DiDrawbarUnclamp}"/>
                         </Grid>

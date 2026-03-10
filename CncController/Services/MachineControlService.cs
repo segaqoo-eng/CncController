@@ -33,6 +33,8 @@ namespace CncController.Services
         // [安全] 各用途使用獨立 HttpClient，Timeout 互不影響
         private readonly HttpClient _pollingClient;  // 輪詢 + 一般指令（3s）
         private readonly HttpClient _estopClient;    // 急停專用（2s），最高優先
+        // [2026-03-10] ATC 專用（30s）：歸零/換刀/旋轉等長時間操作，避免阻塞輪詢通道
+        private readonly HttpClient _atcClient;
         // [Item 11] 伺服器 URL 從 AppSettings 讀取，不再硬寫；可於 appsettings.json 修改
         private string _serverUrl = AppSettings.Instance.ServerUrl;
         private readonly JsonSerializerOptions _jsonOptions;
@@ -133,6 +135,8 @@ namespace CncController.Services
         {
             _pollingClient = new HttpClient { Timeout = TimeSpan.FromSeconds(3) };
             _estopClient   = new HttpClient { Timeout = TimeSpan.FromSeconds(2) };
+            // [2026-03-10] ATC 專用 HttpClient：歸零/換刀可能耗時 30 秒以上
+            _atcClient     = new HttpClient { Timeout = TimeSpan.FromSeconds(60) };
             _jsonOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
         }
 
@@ -741,11 +745,12 @@ namespace CncController.Services
         }
 
         // [2026-03-09] ATC 通用 POST 命令（回傳 bool）
+        // [2026-03-10] ATC 命令走專用 _atcClient（60s timeout），不阻塞輪詢通道
         private async Task<bool> SendAtcCommandAsync(string endpoint)
         {
             try
             {
-                var response = await _pollingClient.PostAsJsonAsync($"{_serverUrl}/v2/atc/{endpoint}", new { });
+                var response = await _atcClient.PostAsJsonAsync($"{_serverUrl}/v2/atc/{endpoint}", new { });
                 if (!response.IsSuccessStatusCode) return false;
                 var result = await response.Content.ReadFromJsonAsync<ApiResponse<object>>(_jsonOptions);
                 return result?.Status == "Success";
@@ -753,12 +758,12 @@ namespace CncController.Services
             catch (Exception ex) { AlarmService.Instance.AddLog("API", $"ATC {endpoint} failed: {ex.Message}"); return false; }
         }
 
-        // [2026-03-09] ATC POST 命令帶 payload
+        // [2026-03-10] ATC POST 命令帶 payload（專用 _atcClient）
         private async Task<bool> SendAtcCommandAsync(string endpoint, object payload)
         {
             try
             {
-                var response = await _pollingClient.PostAsJsonAsync($"{_serverUrl}/v2/atc/{endpoint}", payload);
+                var response = await _atcClient.PostAsJsonAsync($"{_serverUrl}/v2/atc/{endpoint}", payload);
                 if (!response.IsSuccessStatusCode) return false;
                 var result = await response.Content.ReadFromJsonAsync<ApiResponse<object>>(_jsonOptions);
                 return result?.Status == "Success";

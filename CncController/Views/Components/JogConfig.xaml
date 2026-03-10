@@ -73,20 +73,46 @@
         <!-- Row 4: REV / STOP / FWD 按鈕 -->
         <UniformGrid Columns="3" Margin="0,15,0,0">
             <!-- [2026-03-05] 改用 BaseBtnStyle 對齊 PB 版 -->
-            <Button Content="REV" Height="40" FontSize="{DynamicResource FontSize.Body}" Margin="2" Style="{StaticResource BaseBtnStyle}"
-                    Command="{Binding SpindleRevCommand}"/>
+            <!-- [2026-03-10] REV 按鈕：主軸反轉中(SpindleDirection=-1)時藍色高亮 -->
+            <Button Content="REV" Height="40" FontSize="{DynamicResource FontSize.Body}" Margin="2"
+                    Command="{Binding SpindleRevCommand}">
+                <Button.Style>
+                    <Style TargetType="Button" BasedOn="{StaticResource BaseBtnStyle}">
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding Status.SpindleDirection}" Value="-1">
+                                <Setter Property="Background" Value="#2196F3"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Button.Style>
+            </Button>
+            <!-- [2026-03-10] 主軸 STOP：MouseDown 紅色，放開灰色 -->
             <Button Content="STOP" Height="40" FontSize="{DynamicResource FontSize.Body}" Margin="2"
                     Command="{Binding SpindleStopCommand}">
                 <Button.Style>
                     <Style TargetType="Button" BasedOn="{StaticResource BaseBtnStyle}">
-                        <Setter Property="Background" Value="#D80000"/>
-                        <Setter Property="BorderBrush" Value="#B71C1C"/>
-                        <Setter Property="Foreground" Value="White"/>
+                        <Style.Triggers>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter Property="Background" Value="#D80000"/>
+                                <Setter Property="BorderBrush" Value="#B71C1C"/>
+                            </Trigger>
+                        </Style.Triggers>
                     </Style>
                 </Button.Style>
             </Button>
-            <Button Content="FWD" Height="40" FontSize="{DynamicResource FontSize.Body}" Margin="2" Style="{StaticResource BaseBtnStyle}"
-                    Command="{Binding SpindleFwdCommand}"/>
+            <!-- [2026-03-10] FWD 按鈕：主軸正轉中(SpindleDirection=1)時藍色高亮 -->
+            <Button Content="FWD" Height="40" FontSize="{DynamicResource FontSize.Body}" Margin="2"
+                    Command="{Binding SpindleFwdCommand}">
+                <Button.Style>
+                    <Style TargetType="Button" BasedOn="{StaticResource BaseBtnStyle}">
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding Status.SpindleDirection}" Value="1">
+                                <Setter Property="Background" Value="#2196F3"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Button.Style>
+            </Button>
         </UniformGrid>
     </StackPanel>
 </UserControl>

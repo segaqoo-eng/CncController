@@ -229,6 +229,12 @@ DispatcherTimer (500ms) → MachineControlService.GetStatusAsync()
   - SliderControl：4 條 Slider（V/F/S/R）+ Spindle Load + 重置按鈕
   - JogConfig：JOG 標籤 + JOG 速度 Slider + FEEDRATE MM/M + SPINDLE RPM + REV/STOP/FWD
   - 主軸正反轉控制（SpindleFwd/Rev/Stop → M3/M4/M5）
+- 按鈕動態色彩（CYCLE START 綠/FEED HOLD 橘/STOP IsPressed 紅 + 主軸 FWD/REV 藍色回饋）
+- ATC 夾刀/鬆刀完整流程（M24/M25 NGC 生成 + DO ON/OFF 邏輯 + 按鈕高亮修正）
+- ATC 設定三分頁繁中翻譯 + TextBox/ComboBox 左對齊
+- IN/OUT MAP 即時 IO 狀態 LED（EtherCAT slave pin 讀取 + 綠灰指示燈）
+- IO PIN 名稱持久化（_lastConfig 快取 + 自動還原）
+- Settings 進入時自動重載設定檔（丟棄未存檔修改）
 
 ### ❌ 尚未實作
 
@@ -300,6 +306,25 @@ DispatcherTimer (500ms) → MachineControlService.GetStatusAsync()
 ---
 
 ## 每日工作紀錄
+
+### 2026-03-10
+
+| 項目 | 說明 |
+|------|------|
+| **按鈕動態色彩** | CYCLE START 依 InterpState=RUNNING 亮綠、FEED HOLD 依 PAUSED 亮橘、STOP/主軸STOP 改 IsPressed 觸發紅色（放開灰色） |
+| **主軸方向按鈕** | REV 依 SpindleDirection=-1 亮藍、FWD 依 SpindleDirection=1 亮藍 |
+| **後端 Spindle_Direction** | `/v2/status` 新增 `Spindle_Direction`（cnc_stat.spindle[0]['direction']） |
+| **ATC 夾刀/鬆刀邏輯修正** | DO ON=氣壓鬆開=鬆刀、DO OFF=彈簧夾緊=夾刀；樂觀更新 ClampTool→IsDrawbarOn=false、ReleaseTool→true |
+| **AtcView DataTrigger 修正** | 夾刀按鈕 IsDrawbarOn=False 亮藍、鬆刀按鈕 IsDrawbarOn=True 亮藍（原本反了） |
+| **M24/M25 NGC 生成** | GenerateM24Ngc（鬆刀=M64 P{drawbar}）+ GenerateM25Ngc（夾刀=M65 P{drawbar}） |
+| **ATC 三分頁繁中翻譯** | AtcBasicSettingsView/AtcAxisSettingsView/AtcIoSettingsView 全部標籤改繁體中文 |
+| **ATC 三分頁對齊** | TextBox `HorizontalAlignment="Left"` + ComboBox `HorizontalAlignment="Left" Width="200"` |
+| **IO PIN 名稱持久化** | 新增 `_lastConfig` 快取 + `RestorePinSettingsFromConfig()`，`RebuildIoMapsFromScan` 每次重建自動還原 |
+| **IN/OUT MAP 即時狀態 LED** | DataGrid 新增「狀態」欄（Ellipse 綠=ON/灰=OFF），IoPinSetting 新增 IsActive 屬性 |
+| **後端 IO_Status** | 改讀 EtherCAT slave `lcec.0.{si}.din-XX`/`dout-XX`（非 motion.digital），回應結構改為巢狀 dict by slave index |
+| **Settings 進入時重載** | `ReloadFromFileAsync()` 從 MachineConfig.json 重新載入所有設定，丟棄未存檔修改 |
+| **Function Name 空白修正** | `!string.IsNullOrEmpty(savedPin.Function)` 防止空字串覆蓋預設 "Pin N" |
+| **版本號** | `2026.03.10_BTN_COLOR_ATC_FIX_IO` |
 
 ### 2026-03-04
 

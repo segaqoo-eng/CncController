@@ -287,6 +287,84 @@ namespace CncController.Services
         }
 
 
+        // [2026-03-11] 程式檔案管理 — 列表/刪除/重命名/載入
+        public async Task<List<ProgramFileInfo>> GetProgramListAsync()
+        {
+            try
+            {
+                var response = await _pollingClient.GetAsync($"{_serverUrl}/v2/program/list");
+                if (response.IsSuccessStatusCode)
+                {
+                    var result = await response.Content
+                        .ReadFromJsonAsync<ApiResponse<List<ProgramFileInfo>>>(_jsonOptions);
+                    if (result?.Status == "Success")
+                        return result.Data;
+                }
+            }
+            catch (Exception ex)
+            {
+                AlarmService.Instance.AddLog("API", $"GetProgramList failed: {ex.Message}");
+            }
+            return null;
+        }
+
+        public async Task<bool> DeleteProgramAsync(string fileName)
+        {
+            try
+            {
+                var result = await SendV2CommandAsync<string>("program/delete", new { name = fileName });
+                return result != null;
+            }
+            catch (Exception ex)
+            {
+                AlarmService.Instance.AddLog("API", $"DeleteProgram failed: {ex.Message}");
+                return false;
+            }
+        }
+
+        public async Task<bool> RenameProgramAsync(string oldName, string newName)
+        {
+            try
+            {
+                var result = await SendV2CommandAsync<string>("program/rename", new { old_name = oldName, new_name = newName });
+                return result != null;
+            }
+            catch (Exception ex)
+            {
+                AlarmService.Instance.AddLog("API", $"RenameProgram failed: {ex.Message}");
+                return false;
+            }
+        }
+
+        public async Task<bool> LoadProgramAsync(string fileName)
+        {
+            try
+            {
+                var result = await SendV2CommandAsync<string>("program/load", new { name = fileName });
+                return result != null;
+            }
+            catch (Exception ex)
+            {
+                AlarmService.Instance.AddLog("API", $"LoadProgram failed: {ex.Message}");
+                return false;
+            }
+        }
+
+        // [2026-03-11] 回讀後端程式檔案內容
+        public async Task<string> ReadProgramAsync(string fileName)
+        {
+            try
+            {
+                var result = await SendV2CommandAsync<ProgramReadResult>("program/read", new { name = fileName });
+                return result?.Content;
+            }
+            catch (Exception ex)
+            {
+                AlarmService.Instance.AddLog("API", $"ReadProgram failed: {ex.Message}");
+                return null;
+            }
+        }
+
         // --- 4. 控制指令 (對應新架構) ---
 
         public async Task ResetMachineAsync() => await SendV2CommandAsync("machine/reset");

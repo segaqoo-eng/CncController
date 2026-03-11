@@ -48,6 +48,10 @@
         <DataTemplate DataType="{x:Type vm:ProbingViewModel}">
             <pages:ProbingView/>
         </DataTemplate>
+        <!-- [2026-03-11] 新增 FileManagerViewModel DataTemplate，導航至 FileManagerView -->
+        <DataTemplate DataType="{x:Type vm:FileManagerViewModel}">
+            <pages:FileManagerView/>
+        </DataTemplate>
     </Window.Resources>
 
     <Viewbox Stretch="Uniform">
@@ -55,7 +59,8 @@
         <Grid Width="{Binding CanvasWidth}" Height="{Binding CanvasHeight}">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
-                <RowDefinition Height="30"/>
+                <!-- [2026-03-11] HeaderBar 高度 30→50（工控觸控加大） -->
+                <RowDefinition Height="50"/>
                 <RowDefinition Height="*"/>
                 <RowDefinition Height="50"/>
                 <RowDefinition Height="340"/>
@@ -85,7 +90,7 @@
                 </Border.Style>
                 <DockPanel>
                     <!-- [2026-03-11] RE-SCAN 按鈕改用 BaseBtnStyle（移除 inline 橙色） -->
-                    <Button DockPanel.Dock="Right" Content="RE-SCAN" Margin="10,0,0,0"
+                    <Button DockPanel.Dock="Right" Content="{DynamicResource Str.Btn.Rescan}" Margin="10,0,0,0"
                             Command="{Binding RescanHardwareCommand}"
                             Style="{StaticResource BaseBtnStyle}"
                             Padding="15,3" FontSize="{DynamicResource FontSize.Medium}" VerticalAlignment="Center"/>
@@ -102,24 +107,22 @@
             <layouts:JogPanel Grid.Row="2" Grid.Column="1"/>
 
             <UniformGrid Grid.Row="3" Grid.ColumnSpan="2" Rows="1" Background="{DynamicResource Brush.PanelBackground}">
-                <RadioButton Content="MAIN" Style="{StaticResource NavBtnStyle}" IsChecked="True"
+                <!-- [2026-03-11] 底部導航全部改用 DynamicResource i18n -->
+                <RadioButton Content="{DynamicResource Str.Nav.Main}" Style="{StaticResource NavBtnStyle}" IsChecked="True"
                              Command="{Binding NavigateCommand}" CommandParameter="Main"/>
-                <RadioButton Content="FILE" Style="{StaticResource NavBtnStyle}"/>
-                <!-- [2026-03-03] 新增 ATC Tab 導航按鈕 -->
-                <RadioButton Content="ATC" Style="{StaticResource NavBtnStyle}"
+                <RadioButton Content="{DynamicResource Str.Nav.File}" Style="{StaticResource NavBtnStyle}"
+                             Command="{Binding NavigateCommand}" CommandParameter="File"/>
+                <RadioButton Content="{DynamicResource Str.Nav.ATC}" Style="{StaticResource NavBtnStyle}"
                              Command="{Binding NavigateCommand}" CommandParameter="Atc"/>
-                <!-- [2026-03-04] 新增 PROBING Tab 導航按鈕 -->
-                <RadioButton Content="PROBING" Style="{StaticResource NavBtnStyle}"
+                <RadioButton Content="{DynamicResource Str.Nav.Probing}" Style="{StaticResource NavBtnStyle}"
                              Command="{Binding NavigateCommand}" CommandParameter="Probing"/>
-                <!-- [2026-03-03] TOOL：綁定導航至 ToolTableView -->
-                <RadioButton Content="TOOL" Style="{StaticResource NavBtnStyle}"
+                <RadioButton Content="{DynamicResource Str.Nav.Tool}" Style="{StaticResource NavBtnStyle}"
                              Command="{Binding NavigateCommand}" CommandParameter="Tool"/>
-                <!-- [2026-02-23] 新增 OFFSETS Tab 導航按鈕 -->
-                <RadioButton Content="OFFSETS" Style="{StaticResource NavBtnStyle}"
+                <RadioButton Content="{DynamicResource Str.Nav.Offsets}" Style="{StaticResource NavBtnStyle}"
                              Command="{Binding NavigateCommand}" CommandParameter="Offsets"/>
-                <RadioButton Content="HISTORY" Style="{StaticResource NavBtnStyle}"
+                <RadioButton Content="{DynamicResource Str.Nav.History}" Style="{StaticResource NavBtnStyle}"
                              Command="{Binding NavigateCommand}" CommandParameter="History"/>
-                <RadioButton Content="SETTINGS" Style="{StaticResource NavBtnStyle}"
+                <RadioButton Content="{DynamicResource Str.Nav.Settings}" Style="{StaticResource NavBtnStyle}"
                          Command="{Binding NavigateCommand}" CommandParameter="Settings"
                          Visibility="Visible"/>
             </UniformGrid>

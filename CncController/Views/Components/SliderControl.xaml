@@ -5,14 +5,14 @@
              FontFamily="{DynamicResource FontFamily.Default}">
 
     <UserControl.Resources>
-        <!-- [2026-03-05] 重置按鈕樣式 -->
+        <!-- [2026-03-11] 重置按鈕加大（工控觸控） -->
         <Style x:Key="ResetBtnStyle" TargetType="Button" BasedOn="{StaticResource BaseBtnStyle}">
-            <Setter Property="Width" Value="60"/>
-            <Setter Property="Height" Value="28"/>
-            <Setter Property="FontSize" Value="{DynamicResource FontSize.Body}"/>
+            <Setter Property="Width" Value="80"/>
+            <Setter Property="FontSize" Value="{DynamicResource FontSize.Large}"/>
             <Setter Property="FontWeight" Value="Bold"/>
-            <Setter Property="Padding" Value="2"/>
+            <Setter Property="Padding" Value="4"/>
             <Setter Property="Margin" Value="3,0,0,0"/>
+            <Setter Property="VerticalAlignment" Value="Stretch"/>
         </Style>
 
         <!-- [2026-03-05] Override Slider 樣式（藍色前景） -->
@@ -25,13 +25,14 @@
         </Style>
     </UserControl.Resources>
 
-    <Grid Margin="5" VerticalAlignment="Center">
+    <!-- [2026-03-11] Auto→* 平均分配欄高（Dashboard 對齊） -->
+    <Grid Margin="5">
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
         <!-- Row 0: Spindle Load -->
@@ -40,13 +41,14 @@
                 <ColumnDefinition Width="80"/>
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
+            <!-- [2026-03-11] 主軸負載字體加大 -->
             <Border Grid.Column="0" Background="#333" CornerRadius="2" Padding="5,3">
                 <TextBlock Text="{Binding Status.SpindleLoad, StringFormat={}{0:F0} %}"
-                           Foreground="White" FontWeight="Bold" FontSize="{DynamicResource FontSize.Medium}"
+                           Foreground="White" FontWeight="Bold" FontSize="{DynamicResource FontSize.Large}"
                            HorizontalAlignment="Center" VerticalAlignment="Center"/>
             </Border>
             <Border Grid.Column="1" Background="#555" CornerRadius="2" Margin="3,0,0,0" Padding="5,3">
-                <TextBlock Text="SPINDLE LOAD" Foreground="White" FontWeight="Bold" FontSize="{DynamicResource FontSize.Body}"
+                <TextBlock Text="{DynamicResource Str.Slider.SpindleLoad}" Foreground="White" FontWeight="Bold" FontSize="{DynamicResource FontSize.Large}"
                            HorizontalAlignment="Center" VerticalAlignment="Center"/>
             </Border>
         </Grid>
@@ -55,14 +57,14 @@
         <Grid Grid.Row="1" Margin="0,5">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="60"/>
+                <ColumnDefinition Width="70"/>
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
             <Slider Grid.Column="0" Style="{StaticResource OverrideSliderStyle}"
                     Value="{Binding VelocityOverride, Mode=TwoWay}" TickFrequency="10"/>
             <Border Grid.Column="1" Background="#333" Margin="3,0" CornerRadius="2">
                 <TextBlock Text="{Binding VelocityOverride, StringFormat={}{0:F0}%}"
-                           Foreground="White" FontWeight="Bold"
+                           Foreground="White" FontWeight="Bold" FontSize="{DynamicResource FontSize.Large}"
                            VerticalAlignment="Center" HorizontalAlignment="Center"/>
             </Border>
             <Button Grid.Column="2" Content="V 100%" Style="{StaticResource ResetBtnStyle}"
@@ -73,14 +75,14 @@
         <Grid Grid.Row="2" Margin="0,5">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="60"/>
+                <ColumnDefinition Width="70"/>
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
             <Slider Grid.Column="0" Style="{StaticResource OverrideSliderStyle}"
                     Value="{Binding Status.FeedOverride, Mode=TwoWay}" TickFrequency="10"/>
             <Border Grid.Column="1" Background="#333" Margin="3,0" CornerRadius="2">
                 <TextBlock Text="{Binding Status.FeedOverride, StringFormat={}{0:F0}%}"
-                           Foreground="White" FontWeight="Bold"
+                           Foreground="White" FontWeight="Bold" FontSize="{DynamicResource FontSize.Large}"
                            VerticalAlignment="Center" HorizontalAlignment="Center"/>
             </Border>
             <Button Grid.Column="2" Content="F 100%" Style="{StaticResource ResetBtnStyle}"
@@ -91,14 +93,14 @@
         <Grid Grid.Row="3" Margin="0,5">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="60"/>
+                <ColumnDefinition Width="70"/>
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
             <Slider Grid.Column="0" Style="{StaticResource OverrideSliderStyle}"
                     Value="{Binding Status.SpindleOverride, Mode=TwoWay}" TickFrequency="10"/>
             <Border Grid.Column="1" Background="#333" Margin="3,0" CornerRadius="2">
                 <TextBlock Text="{Binding Status.SpindleOverride, StringFormat={}{0:F0}%}"
-                           Foreground="White" FontWeight="Bold"
+                           Foreground="White" FontWeight="Bold" FontSize="{DynamicResource FontSize.Large}"
                            VerticalAlignment="Center" HorizontalAlignment="Center"/>
             </Border>
             <Button Grid.Column="2" Content="S 100%" Style="{StaticResource ResetBtnStyle}"
@@ -109,14 +111,14 @@
         <Grid Grid.Row="4" Margin="0,5">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="60"/>
+                <ColumnDefinition Width="70"/>
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
             <Slider Grid.Column="0" Style="{StaticResource OverrideSliderStyle}"
                     Value="{Binding RapidOverride, Mode=TwoWay}" TickFrequency="10"/>
             <Border Grid.Column="1" Background="#333" Margin="3,0" CornerRadius="2">
                 <TextBlock Text="{Binding RapidOverride, StringFormat={}{0:F0}%}"
-                           Foreground="White" FontWeight="Bold"
+                           Foreground="White" FontWeight="Bold" FontSize="{DynamicResource FontSize.Large}"
                            VerticalAlignment="Center" HorizontalAlignment="Center"/>
             </Border>
             <Button Grid.Column="2" Content="R 100%" Style="{StaticResource ResetBtnStyle}"

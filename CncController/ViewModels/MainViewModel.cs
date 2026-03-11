@@ -52,6 +52,9 @@ namespace CncController.ViewModels
         // [2026-03-04] 新增 ProbingVM：探測循環分頁長駐 ViewModel
         public ProbingViewModel ProbingVM { get; } = new ProbingViewModel();
 
+        // [2026-03-11] 新增 FileManagerVM：FILE 檔案管理分頁長駐 ViewModel
+        public FileManagerViewModel FileManagerVM { get; } = new FileManagerViewModel();
+
         // [2026-03-04] UI 全域縮放：設計畫布尺寸 = 1920/1080 ÷ UiScale
         public double CanvasWidth => 1920.0 / AppSettings.Instance.UiScale;
         public double CanvasHeight => 1080.0 / AppSettings.Instance.UiScale;
@@ -226,6 +229,14 @@ namespace CncController.ViewModels
         {
             AlarmService.Instance.AddLog("INFO", "User requested application exit.");
             System.Windows.Application.Current.Shutdown();
+        }
+
+        // [2026-03-11] 多語言切換：透過 LocalizationService 動態替換 ResourceDictionary
+        [RelayCommand]
+        private void SwitchLanguage(string culture)
+        {
+            LocalizationService.Instance.SwitchLanguage(culture);
+            AlarmService.Instance.AddLog("INFO", $"Language switched to {culture}");
         }
 
         // ==============================================================================
@@ -802,6 +813,11 @@ namespace CncController.ViewModels
                     AtcVM.StartPolling();
                     break;
                 case "Probing": CurrentViewModel = ProbingVM; break; // [2026-03-04] 新增 PROBING Tab 導航
+                // [2026-03-11] FILE 分頁導航：進入時自動刷新檔案清單
+                case "File":
+                    CurrentViewModel = FileManagerVM;
+                    FileManagerVM.InitializeCommand.Execute(null);
+                    break;
             }
         }
         // [安全] 統一運動指令前置檢查：IsEstop 與 IsPower 雙重驗證

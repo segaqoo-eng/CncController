@@ -11,11 +11,11 @@
 
     <UserControl.Resources>
         <!-- [2026-03-04] CycleBtnStyle 改繼承 BaseBtnStyle，移除本地 Template -->
+        <!-- [2026-03-11] 還原字體層級 Large→Body（base 已全域加大） -->
         <Style x:Key="CycleBtnStyle" TargetType="Button" BasedOn="{StaticResource BaseBtnStyle}">
-            <!-- [2026-03-05] 按鈕高度 38→45 對齊 PB 版 D_1 -->
             <Setter Property="Height" Value="45"/>
             <Setter Property="Margin" Value="2,3"/>
-            <Setter Property="FontSize" Value="{DynamicResource FontSize.Body}"/>
+            <Setter Property="FontSize" Value="{DynamicResource FontSize.Large}"/>
             <Setter Property="Padding" Value="{DynamicResource BtnPadding.Small}"/>
         </Style>
 
@@ -35,7 +35,7 @@
             <UniformGrid Grid.Row="0" Columns="2" Rows="5">
                 <!-- [2026-03-04] 關鍵操作色彩分層：綠=啟動、紅=停止、橙=暫停 -->
                 <!-- KEEP: status — CYCLE START 綠色(RUNNING) -->
-                <Button Content="CYCLE START" Command="{Binding CycleStartCommand}">
+                <Button Content="{DynamicResource Str.Btn.CycleStart}" Command="{Binding CycleStartCommand}">
                     <Button.Style>
                         <Style TargetType="Button" BasedOn="{StaticResource CycleBtnStyle}">
                             <Style.Triggers>
@@ -56,7 +56,7 @@
                     </Button.Style>
                 </Button>
                 <!-- KEEP: status — STOP IsPressed 紅色 -->
-                <Button Content="STOP" Command="{Binding StopCommand}">
+                <Button Content="{DynamicResource Str.Btn.Stop}" Command="{Binding StopCommand}">
                     <Button.Style>
                         <Style TargetType="Button" BasedOn="{StaticResource CycleBtnStyle}">
                             <Style.Triggers>
@@ -74,9 +74,9 @@
                         </Style>
                     </Button.Style>
                 </Button>
-                <Button Content="RELOAD PGM" Command="{Binding ReloadCommand}" Style="{StaticResource CycleBtnStyle}"/>
+                <Button Content="{DynamicResource Str.Btn.ReloadPgm}" Command="{Binding ReloadCommand}" Style="{StaticResource CycleBtnStyle}"/>
                 <!-- KEEP: status — FEED HOLD 橘色(PAUSED) -->
-                <Button Content="FEED HOLD" Command="{Binding FeedHoldCommand}">
+                <Button Content="{DynamicResource Str.Btn.FeedHold}" Command="{Binding FeedHoldCommand}">
                     <Button.Style>
                         <Style TargetType="Button" BasedOn="{StaticResource CycleBtnStyle}">
                             <Style.Triggers>
@@ -97,9 +97,9 @@
                     </Button.Style>
                 </Button>
                 <!-- [2026-03-05] GO TO HOME → CLEAR PGM，對齊 PB 版 D_1 -->
-                <Button Content="CLEAR PGM" Command="{Binding ClearProgramCommand}" Style="{StaticResource CycleBtnStyle}"/>
+                <Button Content="{DynamicResource Str.Btn.ClearPgm}" Command="{Binding ClearProgramCommand}" Style="{StaticResource CycleBtnStyle}"/>
                 <!-- [2026-02-24] SINGLE BLOCK 綁定 ToggleSingleBlockCommand，IsSingleBlock=true 時背景變藍 -->
-                <Button Content="SINGLE BLOCK" Command="{Binding ToggleSingleBlockCommand}">
+                <Button Content="{DynamicResource Str.Btn.SingleBlock}" Command="{Binding ToggleSingleBlockCommand}">
                     <Button.Style>
                         <Style TargetType="Button" BasedOn="{StaticResource CycleBtnStyle}">
                             <Style.Triggers>
@@ -111,7 +111,7 @@
                         </Style>
                     </Button.Style>
                 </Button>
-                <Button Content="FLOOD" Command="{Binding ToggleFloodCommand}">
+                <Button Content="{DynamicResource Str.Btn.Flood}" Command="{Binding ToggleFloodCommand}">
                     <Button.Style>
                         <Style TargetType="Button" BasedOn="{StaticResource CycleBtnStyle}">
                             <Style.Triggers>
@@ -125,7 +125,7 @@
                     </Button.Style>
                 </Button>
                 <!-- [2026-03-04] BLOCK DELETE 綁定 ToggleBlockDeleteCommand，IsBlockDelete=true 時背景變藍 -->
-                <Button Content="BLOCK DELETE" Command="{Binding ToggleBlockDeleteCommand}">
+                <Button Content="{DynamicResource Str.Btn.BlockDelete}" Command="{Binding ToggleBlockDeleteCommand}">
                     <Button.Style>
                         <Style TargetType="Button" BasedOn="{StaticResource CycleBtnStyle}">
                             <Style.Triggers>
@@ -138,7 +138,7 @@
                     </Button.Style>
                 </Button>
                 <!-- [2026-02-23] 新增 MIST 按鈕連結 ToggleMistCommand，IsMistOn=true 時背景變藍 -->
-                <Button Content="MIST" Command="{Binding ToggleMistCommand}">
+                <Button Content="{DynamicResource Str.Btn.Mist}" Command="{Binding ToggleMistCommand}">
                     <Button.Style>
                         <Style TargetType="Button" BasedOn="{StaticResource CycleBtnStyle}">
                             <Style.Triggers>
@@ -151,7 +151,7 @@
                     </Button.Style>
                 </Button>
                 <!-- [2026-03-04] M01 BREAK 綁定 ToggleOptionalStopCommand，IsOptionalStop=true 時背景變藍 -->
-                <Button Content="M01 BREAK" Command="{Binding ToggleOptionalStopCommand}">
+                <Button Content="{DynamicResource Str.Btn.M01Break}" Command="{Binding ToggleOptionalStopCommand}">
                     <Button.Style>
                         <Style TargetType="Button" BasedOn="{StaticResource CycleBtnStyle}">
                             <Style.Triggers>
@@ -175,8 +175,9 @@
                 </Grid.ColumnDefinitions>
 
                 <!-- KEEP: status — POWER 綠色(IsPower=True) -->
-                <Button Grid.Column="0" Command="{Binding TogglePowerCommand}" Margin="2" Content="POWER" Cursor="Hand"
-                        Height="45" FontSize="{DynamicResource FontSize.Body}" FontWeight="Bold" Foreground="White">
+                <!-- [2026-03-11] 還原字體層級 Large→Body（base 已全域加大） -->
+                <Button Grid.Column="0" Command="{Binding TogglePowerCommand}" Margin="2" Content="{DynamicResource Str.Btn.Power}" Cursor="Hand"
+                        Height="45" FontSize="{DynamicResource FontSize.Large}" FontWeight="Bold" Foreground="White">
                     <Button.Style>
                         <Style TargetType="Button">
                             <Setter Property="Template">
@@ -227,8 +228,8 @@
                 </Border>
 
                 <!-- KEEP: status — E-STOP 紅色(IsEstop=False) -->
-                <Button Grid.Column="2" Command="{Binding ToggleEstopCommand}" Margin="2" Content="E-STOP" Cursor="Hand"
-                        Height="45" FontSize="{DynamicResource FontSize.Body}" FontWeight="Bold" Foreground="White">
+                <Button Grid.Column="2" Command="{Binding ToggleEstopCommand}" Margin="2" Content="{DynamicResource Str.Btn.Estop}" Cursor="Hand"
+                        Height="45" FontSize="{DynamicResource FontSize.Large}" FontWeight="Bold" Foreground="White">
                     <Button.Style>
                         <Style TargetType="Button">
                             <Setter Property="Template">

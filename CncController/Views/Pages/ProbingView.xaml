@@ -140,31 +140,7 @@
     <!-- 整頁背景圖（Layer 0）+ UI 疊層（Layer 1） -->
     <!-- ================================================================ -->
     <Grid>
-        <!-- [2026-03-05] Layer 0: 整頁背景圖（依模式切換） -->
-        <Image Source="/Resources/Images/Porbing_BACK.png" Stretch="Fill" Opacity="0.6">
-            <Image.Style>
-                <Style TargetType="Image">
-                    <Setter Property="Visibility" Value="Visible"/>
-                    <Style.Triggers>
-                        <DataTrigger Binding="{Binding SelectedProbeMode}" Value="ToolSetter">
-                            <Setter Property="Visibility" Value="Collapsed"/>
-                        </DataTrigger>
-                    </Style.Triggers>
-                </Style>
-            </Image.Style>
-        </Image>
-        <Image Source="/Resources/Images/TOOL_BACK.png" Stretch="Fill" Opacity="0.7">
-            <Image.Style>
-                <Style TargetType="Image">
-                    <Setter Property="Visibility" Value="Collapsed"/>
-                    <Style.Triggers>
-                        <DataTrigger Binding="{Binding SelectedProbeMode}" Value="ToolSetter">
-                            <Setter Property="Visibility" Value="Visible"/>
-                        </DataTrigger>
-                    </Style.Triggers>
-                </Style>
-            </Image.Style>
-        </Image>
+        <!-- [2026-03-11] 移除底圖，改為純色背景 -->
 
         <!-- Layer 1: UI 內容 -->
         <Grid>
@@ -491,9 +467,55 @@
                 </Border>
 
                 <!-- ======================================================== -->
-                <!-- Col 1: 中央（底圖穿透可見） -->
+                <!-- [2026-03-11] Col 1: 中央自繪探針刀具（取代底圖） -->
                 <!-- ======================================================== -->
-                <!-- 留空，讓 Layer 0 背景圖穿透 -->
+                <Viewbox Grid.Column="1" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center"
+                         Margin="10" MaxWidth="320" MaxHeight="450">
+                    <Canvas Width="200" Height="360">
+                        <!-- 主軸本體（深灰圓柱） -->
+                        <Rectangle Canvas.Left="60" Canvas.Top="0" Width="80" Height="120"
+                                   RadiusX="6" RadiusY="6" Fill="#555" Stroke="#888" StrokeThickness="1.5"/>
+                        <!-- 主軸夾頭（漸層） -->
+                        <Rectangle Canvas.Left="70" Canvas.Top="120" Width="60" Height="30"
+                                   RadiusX="3" RadiusY="3">
+                            <Rectangle.Fill>
+                                <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                                    <GradientStop Color="#777" Offset="0"/>
+                                    <GradientStop Color="#AAA" Offset="0.5"/>
+                                    <GradientStop Color="#777" Offset="1"/>
+                                </LinearGradientBrush>
+                            </Rectangle.Fill>
+                        </Rectangle>
+                        <!-- 探針桿（細長金屬桿） -->
+                        <Rectangle Canvas.Left="95" Canvas.Top="150" Width="10" Height="150"
+                                   RadiusX="2" RadiusY="2">
+                            <Rectangle.Fill>
+                                <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                                    <GradientStop Color="#999" Offset="0"/>
+                                    <GradientStop Color="#DDD" Offset="0.4"/>
+                                    <GradientStop Color="#999" Offset="1"/>
+                                </LinearGradientBrush>
+                            </Rectangle.Fill>
+                        </Rectangle>
+                        <!-- 探針球頭（紅色） -->
+                        <Ellipse Canvas.Left="86" Canvas.Top="296" Width="28" Height="28"
+                                 Fill="#E53935" Stroke="#B71C1C" StrokeThickness="1.5"/>
+                        <!-- 探針球頭高光 -->
+                        <Ellipse Canvas.Left="92" Canvas.Top="300" Width="10" Height="8"
+                                 Fill="#FF8A80" Opacity="0.7"/>
+                        <!-- 主軸標籤 -->
+                        <TextBlock Canvas.Left="72" Canvas.Top="45" Text="SPINDLE"
+                                   Foreground="#CCC" FontSize="14" FontWeight="Bold" FontFamily="Consolas"/>
+                        <!-- 探針標籤 -->
+                        <TextBlock Canvas.Left="78" Canvas.Top="230" Text="PROBE"
+                                   Foreground="#8B5CF6" FontSize="13" FontWeight="Bold" FontFamily="Consolas"/>
+                        <!-- 工件示意（底部方塊） -->
+                        <Rectangle Canvas.Left="20" Canvas.Top="340" Width="160" Height="20"
+                                   RadiusX="2" RadiusY="2" Fill="#4A5568" Stroke="#718096" StrokeThickness="1"/>
+                        <TextBlock Canvas.Left="62" Canvas.Top="342" Text="WORKPIECE"
+                                   Foreground="#A0AEC0" FontSize="11" FontWeight="SemiBold" FontFamily="Consolas"/>
+                    </Canvas>
+                </Viewbox>
 
                 <!-- ======================================================== -->
                 <!-- Col 2: 3x3 九宮格（依 SelectedProbeTab 切換）— TOUCH PROBE -->
@@ -1894,7 +1916,7 @@
                     </ScrollViewer>
                 </Border>
 
-                <!-- [2026-03-05] 說明文字已包含在 TOOL_BACK.PNG 底圖中，不需額外面板 -->
+                <!-- [2026-03-11] 底圖已移除，改為自繪探針 -->
 
                 <!-- ======================================================== -->
                 <!-- Col 3: 垂直 Tab（TOUCH PROBE / TOOL SETTER） -->

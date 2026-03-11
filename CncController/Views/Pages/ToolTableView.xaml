@@ -7,6 +7,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:vm="clr-namespace:CncController.ViewModels"
              xmlns:helpers="clr-namespace:CncController.Helpers"
+             xmlns:controls="clr-namespace:CncController.Views.Controls"
              mc:Ignorable="d"
              d:DataContext="{d:DesignInstance Type=vm:ToolTableViewModel}"
              FontFamily="{DynamicResource FontFamily.Default}"
@@ -17,29 +18,25 @@
         <helpers:BindingProxy x:Key="Proxy" Data="{Binding}"/>
 
         <!-- [2026-03-04] 通用按鈕 → 繼承全域 BaseBtnStyle（移除本地 Template） -->
+        <!-- [2026-03-11] 字體加大 FontSize.Large + Height 45 + Padding 加大 -->
         <Style x:Key="ToolBtnStyle" TargetType="Button" BasedOn="{StaticResource BaseBtnStyle}">
-            <Setter Property="FontSize" Value="{DynamicResource FontSize.Small}"/>
-            <Setter Property="Padding" Value="{DynamicResource BtnPadding.Small}"/>
+            <Setter Property="FontSize" Value="{DynamicResource FontSize.Large}"/>
+            <Setter Property="Height" Value="45"/>
+            <Setter Property="Padding" Value="12,6"/>
             <Setter Property="Margin" Value="3"/>
         </Style>
 
-        <!-- [2026-03-04] 右側面板大按鈕 → 繼承 ToolBtnStyle（間接繼承 BaseBtnStyle） -->
+        <!-- [2026-03-11] 右側面板按鈕加大 Height 45 + FontSize.Large -->
         <Style x:Key="PanelBtnStyle" TargetType="Button" BasedOn="{StaticResource ToolBtnStyle}">
-            <Setter Property="Height" Value="38"/>
-            <Setter Property="FontSize" Value="{DynamicResource FontSize.Body}"/>
+            <Setter Property="Height" Value="45"/>
+            <Setter Property="FontSize" Value="{DynamicResource FontSize.Large}"/>
             <Setter Property="Margin" Value="4,4"/>
             <Setter Property="HorizontalContentAlignment" Value="Center"/>
         </Style>
     </UserControl.Resources>
 
-    <!-- [2026-03-03] 最外層 Grid：Layer 0 = 背景圖，Layer 1 = 所有 UI 浮在上面 -->
+    <!-- [2026-03-11] 最外層 Grid：移除 TOOL_BACK.png 背景圖，改用自繪刀具 -->
     <Grid ClipToBounds="True">
-
-        <!-- Layer 0: TOOL_BACK.png 填滿整個頁面背景 -->
-        <Image Source="/Resources/Images/TOOL_BACK.png"
-               Stretch="UniformToFill" HorizontalAlignment="Right" VerticalAlignment="Center"/>
-
-        <!-- Layer 1: 所有 UI 元素浮在背景圖上方 -->
         <Grid Margin="10">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="55*"/>
@@ -50,21 +47,24 @@
             <Border Grid.Column="0" Background="#E8252526" BorderBrush="#444" BorderThickness="1"
                     CornerRadius="4" Margin="0,0,5,0">
                 <DockPanel Margin="8">
-                    <TextBlock DockPanel.Dock="Top" Text="TOOL TABLE" Foreground="#AAAAAA"
-                               FontSize="{DynamicResource FontSize.Body}" FontWeight="Bold" Margin="0,0,0,6"/>
+                    <!-- [2026-03-11] TOOL TABLE 標題字體加大 FontSize.XLarge -->
+                    <!-- [2026-03-11] i18n: TOOL TABLE -->
+                    <TextBlock DockPanel.Dock="Top" Text="{DynamicResource Str.Tool.Table}" Foreground="#AAAAAA"
+                               FontSize="{DynamicResource FontSize.XLarge}" FontWeight="Bold" Margin="0,0,0,6"/>
 
                     <!-- 底部按鈕列 -->
                     <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Margin="0,8,0,0"
                                 HorizontalAlignment="Left">
                         <!-- [2026-03-11] 移除 inline 色彩，統一 BaseBtnStyle 深灰漸層 -->
-                        <Button Content="DELETE" Style="{StaticResource ToolBtnStyle}"
-                                Command="{Binding DeleteToolCommand}" Width="80"/>
-                        <Button Content="ADD TOOL" Style="{StaticResource ToolBtnStyle}"
-                                Command="{Binding AddToolCommand}" Width="90"/>
-                        <Button Content="SAVE TABLE" Style="{StaticResource ToolBtnStyle}"
-                                Command="{Binding SaveTableCommand}" Width="100"/>
-                        <Button Content="RELOAD TABLE" Style="{StaticResource ToolBtnStyle}"
-                                Command="{Binding ReloadTableCommand}" Width="110"/>
+                        <!-- [2026-03-11] 按鈕寬度加大配合 FontSize.Large -->
+                        <Button Content="{DynamicResource Str.Btn.Delete}" Style="{StaticResource ToolBtnStyle}"
+                                Command="{Binding DeleteToolCommand}" Width="100"/>
+                        <Button Content="{DynamicResource Str.Btn.AddTool}" Style="{StaticResource ToolBtnStyle}"
+                                Command="{Binding AddToolCommand}" Width="120"/>
+                        <Button Content="{DynamicResource Str.Btn.SaveTable}" Style="{StaticResource ToolBtnStyle}"
+                                Command="{Binding SaveTableCommand}" Width="130"/>
+                        <Button Content="{DynamicResource Str.Btn.ReloadTable}" Style="{StaticResource ToolBtnStyle}"
+                                Command="{Binding ReloadTableCommand}" Width="150"/>
                     </StackPanel>
 
                     <!-- DataGrid -->
@@ -81,14 +81,15 @@
                               AlternatingRowBackground="#292929"
                               Foreground="White"
                               BorderThickness="0"
-                              ColumnHeaderHeight="28"
-                              RowHeight="28">
+                              ColumnHeaderHeight="34"
+                              RowHeight="34">
                         <DataGrid.ColumnHeaderStyle>
                             <Style TargetType="DataGridColumnHeader">
                                 <Setter Property="Background" Value="#333"/>
                                 <Setter Property="Foreground" Value="#AAAAAA"/>
                                 <Setter Property="FontWeight" Value="Bold"/>
-                                <Setter Property="FontSize" Value="{DynamicResource FontSize.Small}"/>
+                                <!-- [2026-03-11] 欄位標頭字體加大 Small→Large -->
+                                <Setter Property="FontSize" Value="{DynamicResource FontSize.Large}"/>
                                 <Setter Property="HorizontalContentAlignment" Value="Center"/>
                                 <Setter Property="Padding" Value="4"/>
                             </Style>
@@ -97,6 +98,8 @@
                             <Style TargetType="DataGridCell">
                                 <Setter Property="Foreground" Value="White"/>
                                 <Setter Property="BorderThickness" Value="0"/>
+                                <!-- [2026-03-11] DataGrid 內容字體加大 FontSize.Large -->
+                                <Setter Property="FontSize" Value="{DynamicResource FontSize.Large}"/>
                                 <Setter Property="Padding" Value="4,2"/>
                                 <Style.Triggers>
                                     <Trigger Property="IsSelected" Value="True">
@@ -143,10 +146,11 @@
                 <Border DockPanel.Dock="Top" Background="#DD333333" CornerRadius="3" Padding="6,4" Margin="0,0,0,6"
                         BorderBrush="#666" BorderThickness="1">
                     <DockPanel>
-                        <TextBlock DockPanel.Dock="Left" Text="REMARK" Foreground="#CCC" FontSize="{DynamicResource FontSize.Body}" FontWeight="Bold"
+                        <!-- [2026-03-11] REMARK 標籤和輸入框字體加大 FontSize.Large -->
+                        <TextBlock DockPanel.Dock="Left" Text="{DynamicResource Str.Tool.Remark}" Foreground="#CCC" FontSize="{DynamicResource FontSize.Large}" FontWeight="Bold"
                                    VerticalAlignment="Center" Margin="0,0,8,0"/>
                         <TextBox Text="{Binding SelectedTool.Remark, UpdateSourceTrigger=PropertyChanged}"
-                                 Background="White" Foreground="Black" FontSize="{DynamicResource FontSize.Body}" FontWeight="Bold" Padding="6,3"
+                                 Background="White" Foreground="Black" FontSize="{DynamicResource FontSize.Large}" FontWeight="Bold" Padding="6,3"
                                  BorderBrush="#888" BorderThickness="1"/>
                     </DockPanel>
                 </Border>
@@ -155,65 +159,35 @@
                 <Border DockPanel.Dock="Bottom" Background="#DD333333" CornerRadius="3" Padding="6,4" Margin="0,6,0,0"
                         BorderBrush="#666" BorderThickness="1">
                     <DockPanel>
-                        <TextBlock DockPanel.Dock="Left" Text="MDI" Foreground="#CCC" FontSize="{DynamicResource FontSize.Body}" FontWeight="Bold"
+                        <!-- [2026-03-11] MDI 標籤和輸入框字體加大 FontSize.Large -->
+                        <TextBlock DockPanel.Dock="Left" Text="MDI" Foreground="#CCC" FontSize="{DynamicResource FontSize.Large}" FontWeight="Bold"
                                    VerticalAlignment="Center" Margin="0,0,6,0"/>
                         <TextBox Text="{Binding MdiInput, UpdateSourceTrigger=PropertyChanged}"
-                                 Background="White" Foreground="Black" FontSize="{DynamicResource FontSize.Body}" Padding="6,3"
+                                 Background="White" Foreground="Black" FontSize="{DynamicResource FontSize.Large}" Padding="6,3"
                                  BorderBrush="#888" BorderThickness="1"/>
                     </DockPanel>
                 </Border>
 
-                <!-- [2026-03-03] 中間主區域：Canvas 直接 Left/Top 像素定位，對齊 DIFF3.PNG -->
+                <!-- [2026-03-11] 中間主區域：自繪刀具圖 + TOOL CHANGE PANEL -->
                 <Grid>
-                    <Canvas>
-                        <!-- 咖啡色框：T{n} 刀具號（夾頭處） -->
-                        <Border Canvas.Left="370" Canvas.Top="220" Background="White" CornerRadius="3" Padding="10,3"
-                                BorderBrush="#666" BorderThickness="1">
-                            <TextBlock Foreground="Black" FontSize="{DynamicResource FontSize.Medium}" FontWeight="Bold" HorizontalAlignment="Center">
-                                <Run Text="T"/>
-                                <Run Text="{Binding MachineStatus.ToolNumber, Mode=OneWay}"/>
-                            </TextBlock>
-                        </Border>
+                    <!-- [2026-03-11] 自繪刀具圖示（取代 TOOL_BACK.png + Canvas 像素定位） -->
+                    <controls:ToolDisplayControl
+                        HorizontalAlignment="Left" VerticalAlignment="Stretch"
+                        Margin="10,0,0,0"
+                        ToolNumber="{Binding MachineStatus.ToolNumber, Mode=OneWay}"
+                        ToolLength="{Binding MachineStatus.ToolLength, Mode=OneWay}"
+                        ToolDiameter="{Binding MachineStatus.ToolDiameter, Mode=OneWay}"/>
 
-                        <!-- 紅色框：TOOL LENGTH（垂直箭頭↕旁） -->
-                        <StackPanel Canvas.Left="170" Canvas.Top="300" Orientation="Horizontal">
-                            <TextBlock Text="TOOL&#x0a;LENGTH" Foreground="White" FontSize="{DynamicResource FontSize.Small}" FontWeight="Bold"
-                                       VerticalAlignment="Center" Margin="0,0,4,0" TextAlignment="Right">
-                                <TextBlock.Effect>
-                                    <DropShadowEffect ShadowDepth="1" Color="Black" Opacity="0.8" BlurRadius="3"/>
-                                </TextBlock.Effect>
-                            </TextBlock>
-                            <Border Background="White" CornerRadius="2" Padding="8,4"
-                                    BorderBrush="#666" BorderThickness="1">
-                                <TextBlock Text="{Binding MachineStatus.ToolLength, StringFormat={}{0:F4}, Mode=OneWay}"
-                                           Foreground="Black" FontFamily="Consolas" FontSize="{DynamicResource FontSize.Medium}" FontWeight="Bold"/>
-                            </Border>
-                        </StackPanel>
-
-                        <!-- 綠色框：DIAM（水平箭頭↔旁） -->
-                        <StackPanel Canvas.Left="230" Canvas.Top="480" Orientation="Horizontal">
-                            <TextBlock Text="DIAM" Foreground="White" FontSize="{DynamicResource FontSize.Small}" FontWeight="Bold"
-                                       VerticalAlignment="Center" Margin="0,0,4,0">
-                                <TextBlock.Effect>
-                                    <DropShadowEffect ShadowDepth="1" Color="Black" Opacity="0.8" BlurRadius="3"/>
-                                </TextBlock.Effect>
-                            </TextBlock>
-                            <Border Background="White" CornerRadius="2" Padding="8,4"
-                                    BorderBrush="#666" BorderThickness="1">
-                                <TextBlock Text="{Binding MachineStatus.ToolDiameter, StringFormat={}{0:F4}, Mode=OneWay}"
-                                           Foreground="Black" FontFamily="Consolas" FontSize="{DynamicResource FontSize.Medium}" FontWeight="Bold"/>
-                            </Border>
-                        </StackPanel>
-                    </Canvas>
-
-                    <!-- 黃色框：TOOL CHANGE PANEL（最右側） -->
-                    <StackPanel HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,70,10,0" Width="210">
+                    <!-- TOOL CHANGE PANEL（最右側） -->
+                    <!-- [2026-03-11] 右側面板寬度加大 210→260 配合按鈕加大 -->
+                    <StackPanel HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,70,10,0" Width="260">
 
                         <!-- [2026-03-11] TOOL CHANGE PANEL 標題（統一 PanelTitle） -->
                         <Border Style="{StaticResource PanelTitleBorder}" Margin="0,0,0,6">
-                            <TextBlock Text="TOOL CHANGE PANEL" Style="{StaticResource PanelTitleText}"/>
+                            <TextBlock Text="{DynamicResource Str.Tool.ChangePanel}" Style="{StaticResource PanelTitleText}"/>
                         </Border>
 
+                        <!-- [2026-03-11] 右側按鈕移除 inline Background/BorderBrush，統一由 BaseBtnStyle 控制 -->
                         <!-- [n] LOAD SPINDLE -->
                         <Grid Margin="0,0,0,4">
                             <Grid.ColumnDefinitions>
@@ -223,17 +197,17 @@
                             <Border Grid.Column="0" Background="White" CornerRadius="2" Margin="0,0,4,0"
                                     BorderBrush="#666" BorderThickness="1">
                                 <TextBox Text="{Binding ChangeToolNumber, UpdateSourceTrigger=PropertyChanged}"
-                                         Background="Transparent" Foreground="Black" FontSize="{DynamicResource FontSize.Medium}" FontWeight="Bold"
+                                         Background="Transparent" Foreground="Black" FontSize="{DynamicResource FontSize.Large}" FontWeight="Bold"
                                          TextAlignment="Center" BorderThickness="0" VerticalContentAlignment="Center"
                                          Padding="2"/>
                             </Border>
-                            <Button Grid.Column="1" Content="LOAD SPINDLE" Style="{StaticResource PanelBtnStyle}"
-                                    Command="{Binding LoadSpindleCommand}" Background="#444" BorderBrush="#666"/>
+                            <Button Grid.Column="1" Content="{DynamicResource Str.Tool.LoadSpindle}" Style="{StaticResource PanelBtnStyle}"
+                                    Command="{Binding LoadSpindleCommand}"/>
                         </Grid>
 
                         <!-- UNLOAD SPINDLE -->
-                        <Button Content="UNLOAD SPINDLE" Style="{StaticResource PanelBtnStyle}"
-                                Command="{Binding UnloadSpindleCommand}" Background="#444" BorderBrush="#666"/>
+                        <Button Content="{DynamicResource Str.Tool.UnloadSpindle}" Style="{StaticResource PanelBtnStyle}"
+                                Command="{Binding UnloadSpindleCommand}"/>
 
                         <!-- [n] M6 G43 -->
                         <Grid Margin="0,4,0,0">
@@ -244,23 +218,23 @@
                             <Border Grid.Column="0" Background="White" CornerRadius="2" Margin="0,0,4,0"
                                     BorderBrush="#666" BorderThickness="1">
                                 <TextBox Text="{Binding ChangeToolNumber, UpdateSourceTrigger=PropertyChanged}"
-                                         Background="Transparent" Foreground="Black" FontSize="{DynamicResource FontSize.Medium}" FontWeight="Bold"
+                                         Background="Transparent" Foreground="Black" FontSize="{DynamicResource FontSize.Large}" FontWeight="Bold"
                                          TextAlignment="Center" BorderThickness="0" VerticalContentAlignment="Center"
                                          Padding="2"/>
                             </Border>
                             <Button Grid.Column="1" Content="M6 G43" Style="{StaticResource PanelBtnStyle}"
-                                    Command="{Binding M6G43Command}" Background="#444" BorderBrush="#666"/>
+                                    Command="{Binding M6G43Command}"/>
                         </Grid>
 
                         <Separator Background="Transparent" Margin="0,8,0,8"/>
 
                         <!-- ELECTRONIC TOOL SETTER -->
-                        <Button Content="ELECTRONIC TOOL SETTER" Style="{StaticResource PanelBtnStyle}"
-                                Command="{Binding ElectronicToolSetterCommand}" Background="#444" BorderBrush="#666"/>
+                        <Button Content="{DynamicResource Str.Tool.ElectronicToolSetter}" Style="{StaticResource PanelBtnStyle}"
+                                Command="{Binding ElectronicToolSetterCommand}"/>
 
                         <!-- TOUCH OFF CURRENT TOOL -->
-                        <Button Content="TOUCH OFF CURRENT TOOL" Style="{StaticResource PanelBtnStyle}"
-                                Command="{Binding TouchOffCurrentToolCommand}" Background="#444" BorderBrush="#666"/>
+                        <Button Content="{DynamicResource Str.Tool.TouchOffCurrentTool}" Style="{StaticResource PanelBtnStyle}"
+                                Command="{Binding TouchOffCurrentToolCommand}"/>
                     </StackPanel>
                 </Grid>
             </DockPanel>

@@ -7,10 +7,10 @@
 
     <UserControl.Resources>
         <!-- [2026-03-04] ToolBtnStyle 改繼承 BaseBtnStyle，移除本地 Template -->
+        <!-- [2026-03-11] 按鈕字體加大 Body→Large -->
         <Style x:Key="ToolBtnStyle" TargetType="Button" BasedOn="{StaticResource BaseBtnStyle}">
-            <Setter Property="Height" Value="42"/>
             <Setter Property="Margin" Value="3"/>
-            <Setter Property="FontSize" Value="{DynamicResource FontSize.Body}"/>
+            <Setter Property="FontSize" Value="{DynamicResource FontSize.Large}"/>
             <Setter Property="Padding" Value="{DynamicResource BtnPadding.Small}"/>
         </Style>
 
@@ -24,23 +24,33 @@
     </UserControl.Resources>
 
     <!-- [2026-02-24] 外框：圓角 8px + 內距 8px — 觸控間距 -->
+    <!-- [2026-03-11] StackPanel→Grid 平均分配欄高（Dashboard 對齊） -->
     <Border Background="#2D2D30" BorderBrush="#555" BorderThickness="1" CornerRadius="8" Padding="8">
-        <StackPanel>
-            <!-- Row 1: T [ToolNumber] | M6 G43 -->
-            <Grid Margin="0,0,0,4">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <!-- Row 0: T [ToolNumber] | M6 G43 -->
+            <Grid Grid.Row="0" Margin="0,0,0,4">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
                 <Border Grid.Column="0" Style="{StaticResource InfoCellStyle}">
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
-                        <TextBlock Text="T" Foreground="Gray" FontSize="{DynamicResource FontSize.Medium}" FontWeight="Bold"
+                        <!-- [2026-03-11] T 標籤加大 Medium→XLarge -->
+                        <TextBlock Text="T" Foreground="Gray" FontSize="{DynamicResource FontSize.XLarge}" FontWeight="Bold"
                                    VerticalAlignment="Center" Margin="0,0,6,0"/>
-                        <!-- [2026-02-24] 刀具號用獨立邊框（模仿 PB 版輸入框風格） -->
                         <Border BorderBrush="#888" BorderThickness="1" CornerRadius="3"
                                 Background="#1A1A1E" Padding="8,2" MinWidth="30">
                             <TextBlock Text="{Binding Status.ToolNumber}" Foreground="White"
-                                       FontWeight="Bold" FontSize="{DynamicResource FontSize.Large}" FontFamily="Consolas"
+                                       FontWeight="Bold" FontSize="{DynamicResource FontSize.XLarge}" FontFamily="Consolas"
                                        HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                     </StackPanel>
@@ -48,12 +58,12 @@
                 <Border Grid.Column="1" Style="{StaticResource InfoCellStyle}">
                     <TextBlock Text="M6 G43" Foreground="{DynamicResource Brush.Text.Primary}"
                                VerticalAlignment="Center" HorizontalAlignment="Center"
-                               FontSize="{DynamicResource FontSize.Body}" FontWeight="Bold"/>
+                               FontSize="{DynamicResource FontSize.XLarge}" FontWeight="Bold"/>
                 </Border>
             </Grid>
 
-            <!-- Row 2: G43 | G49（依 ToolNumber 高亮：0=G49 亮藍，>0=G43 亮藍） -->
-            <Grid Margin="0,0,0,6">
+            <!-- Row 1: G43 | G49（依 ToolNumber 高亮：0=G49 亮藍，>0=G43 亮藍） -->
+            <Grid Grid.Row="1" Margin="0,0,0,6">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="*"/>
@@ -71,7 +81,7 @@
                         </Style>
                     </Border.Style>
                     <TextBlock Text="G43" VerticalAlignment="Center" HorizontalAlignment="Center"
-                               FontWeight="Bold" FontSize="{DynamicResource FontSize.Medium}">
+                               FontWeight="Bold" FontSize="{DynamicResource FontSize.XLarge}">
                         <TextBlock.Style>
                             <Style TargetType="TextBlock">
                                 <Setter Property="Foreground" Value="#00BFFF"/>
@@ -97,7 +107,7 @@
                         </Style>
                     </Border.Style>
                     <TextBlock Text="G49" VerticalAlignment="Center" HorizontalAlignment="Center"
-                               FontWeight="Bold" FontSize="{DynamicResource FontSize.Medium}">
+                               FontWeight="Bold" FontSize="{DynamicResource FontSize.XLarge}">
                         <TextBlock.Style>
                             <Style TargetType="TextBlock">
                                 <Setter Property="Foreground" Value="Gray"/>
@@ -112,58 +122,60 @@
                 </Border>
             </Grid>
 
-            <!-- Row 3: LENGTH -->
-            <Border Background="#1E1E1E" CornerRadius="4" Margin="2,3" Padding="8,8">
+            <!-- Row 2: LENGTH -->
+            <Border Grid.Row="2" Background="#1E1E1E" CornerRadius="4" Margin="2,3" Padding="8,8">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto"/>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
-                    <TextBlock Grid.Column="0" Text="LENGTH" Foreground="Gray" VerticalAlignment="Center"
-                               FontSize="{DynamicResource FontSize.Body}" FontWeight="SemiBold"/>
+                    <!-- [2026-03-11] 刀長標籤加大 Body→Large / 數值加大 Large→XLarge / 單位加大 Body→Large -->
+                    <TextBlock Grid.Column="0" Text="{DynamicResource Str.Tool.Length}" Foreground="Gray" VerticalAlignment="Center"
+                               FontSize="{DynamicResource FontSize.Large}" FontWeight="SemiBold"/>
                     <TextBlock Grid.Column="1" Text="{Binding Status.ToolLength, StringFormat=F4}"
-                               Foreground="White" FontWeight="Bold" FontFamily="Consolas" FontSize="{DynamicResource FontSize.Large}"
+                               Foreground="White" FontWeight="Bold" FontFamily="Consolas" FontSize="{DynamicResource FontSize.XLarge}"
                                HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,6,0"/>
-                    <TextBlock Grid.Column="2" Text="MM" Foreground="Gray" VerticalAlignment="Center" FontSize="{DynamicResource FontSize.Body}"/>
+                    <TextBlock Grid.Column="2" Text="MM" Foreground="Gray" VerticalAlignment="Center" FontSize="{DynamicResource FontSize.Large}"/>
                 </Grid>
             </Border>
 
-            <!-- Row 4: DIAM -->
-            <Border Background="#1E1E1E" CornerRadius="4" Margin="2,3" Padding="8,8">
+            <!-- Row 3: DIAM -->
+            <Border Grid.Row="3" Background="#1E1E1E" CornerRadius="4" Margin="2,3" Padding="8,8">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto"/>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
-                    <TextBlock Grid.Column="0" Text="DIAM" Foreground="Gray" VerticalAlignment="Center"
-                               FontSize="{DynamicResource FontSize.Body}" FontWeight="SemiBold"/>
+                    <!-- [2026-03-11] 刀徑標籤加大 Body→Large / 數值加大 Large→XLarge / 單位加大 Body→Large -->
+                    <TextBlock Grid.Column="0" Text="{DynamicResource Str.Tool.Diameter}" Foreground="Gray" VerticalAlignment="Center"
+                               FontSize="{DynamicResource FontSize.Large}" FontWeight="SemiBold"/>
                     <TextBlock Grid.Column="1" Text="{Binding Status.ToolDiameter, StringFormat=F4}"
-                               Foreground="White" FontWeight="Bold" FontFamily="Consolas" FontSize="{DynamicResource FontSize.Large}"
+                               Foreground="White" FontWeight="Bold" FontFamily="Consolas" FontSize="{DynamicResource FontSize.XLarge}"
                                HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,6,0"/>
-                    <TextBlock Grid.Column="2" Text="MM" Foreground="Gray" VerticalAlignment="Center" FontSize="{DynamicResource FontSize.Body}"/>
+                    <TextBlock Grid.Column="2" Text="MM" Foreground="Gray" VerticalAlignment="Center" FontSize="{DynamicResource FontSize.Large}"/>
                 </Grid>
             </Border>
 
-            <!-- Row 5: GO TO ZERO | GO TO G30 -->
-            <Grid Margin="0,8,0,0">
+            <!-- Row 4: GO TO ZERO | GO TO G30 -->
+            <Grid Grid.Row="4" Margin="0,4,0,0">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
-                <Button Grid.Column="0" Content="GO TO ZERO"
+                <Button Grid.Column="0" Content="{DynamicResource Str.Tool.GoToZero}"
                         Command="{Binding GoToZeroCommand}"
                         Style="{StaticResource ToolBtnStyle}"/>
-                <Button Grid.Column="1" Content="GO TO G30"
+                <Button Grid.Column="1" Content="{DynamicResource Str.Tool.GoToG30}"
                         Command="{Binding GoToG30Command}"
                         Style="{StaticResource ToolBtnStyle}"/>
             </Grid>
 
-            <!-- [2026-02-24] Row 6: GO TO HOME — 機械零點 G53 G0（對齊 PB 版） -->
-            <Button Content="GO TO HOME" Margin="3,4,3,2"
+            <!-- Row 5: GO TO HOME — 機械零點 G53 G0（對齊 PB 版） -->
+            <Button Grid.Row="5" Content="{DynamicResource Str.Tool.GoToHome}" Margin="3,4,3,2"
                     Command="{Binding GoToHomeCommand}"
                     Style="{StaticResource ToolBtnStyle}"/>
-        </StackPanel>
+        </Grid>
     </Border>
 </UserControl>

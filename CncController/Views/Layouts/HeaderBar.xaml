@@ -8,7 +8,8 @@
              d:DataContext="{d:DesignInstance Type=vm:MainViewModel}"
              FontFamily="{DynamicResource FontFamily.Default}">
 
-    <Border Background="{DynamicResource Brush.PanelBackground}" Padding="5,0">
+    <!-- [2026-03-11] Padding 加大（工控觸控） -->
+    <Border Background="{DynamicResource Brush.PanelBackground}" Padding="8,4">
         <Grid>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto"/>
@@ -16,14 +17,30 @@
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
 
-            <Menu Grid.Column="0" Background="Transparent" Foreground="{DynamicResource Brush.Text.Muted}" VerticalAlignment="Center">
+            <!-- [2026-03-11] Menu 字體加大（工控觸控） -->
+            <Menu Grid.Column="0" Background="Transparent" Foreground="{DynamicResource Brush.Text.Muted}"
+                  VerticalAlignment="Center" FontSize="{DynamicResource FontSize.Large}">
                 <!-- [2026-02-23] File 選單加 EXIT 子項，呼叫 ExitAppCommand 關閉應用程式 -->
-                <MenuItem Header="{DynamicResource Str.Nav.File}" Foreground="{DynamicResource Brush.Text.Muted}">
+                <MenuItem Header="{DynamicResource Str.Nav.File}" Foreground="{DynamicResource Brush.Text.Muted}"
+                          Padding="10,6">
                     <MenuItem Header="{DynamicResource Str.Header.Exit}"
                               Command="{Binding DataContext.ExitAppCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                              Foreground="#333"/>
+                              Foreground="#333" FontSize="{DynamicResource FontSize.Large}" Padding="8,4"/>
                 </MenuItem>
-                <MenuItem Header="{DynamicResource Str.Nav.Settings}" Foreground="{DynamicResource Brush.Text.Muted}"/>
+                <MenuItem Header="{DynamicResource Str.Nav.Settings}" Foreground="{DynamicResource Brush.Text.Muted}"
+                          Padding="10,6"/>
+                <!-- [2026-03-11] 多語言切換選單 -->
+                <MenuItem Header="{DynamicResource Str.Header.Language}" Foreground="{DynamicResource Brush.Text.Muted}"
+                          Padding="10,6">
+                    <MenuItem Header="{DynamicResource Str.Header.LangZhTW}"
+                              Command="{Binding DataContext.SwitchLanguageCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                              CommandParameter="zh-TW"
+                              Foreground="#333" FontSize="{DynamicResource FontSize.Large}" Padding="8,4"/>
+                    <MenuItem Header="{DynamicResource Str.Header.LangEnUS}"
+                              Command="{Binding DataContext.SwitchLanguageCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                              CommandParameter="en-US"
+                              Foreground="#333" FontSize="{DynamicResource FontSize.Large}" Padding="8,4"/>
+                </MenuItem>
             </Menu>
 
             <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">

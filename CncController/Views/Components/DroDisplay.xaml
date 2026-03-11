@@ -10,8 +10,9 @@
 
     <Border BorderBrush="{DynamicResource Brush.Border}" BorderThickness="1" CornerRadius="4" Padding="5">
         <Grid>
+            <!-- [2026-03-11] 全部 * 平均分配欄高（Dashboard 對齊），標題加大、數字縮小 -->
             <Grid.RowDefinitions>
-                <RowDefinition Height="25"/>
+                <RowDefinition Height="*"/>
                 <RowDefinition Height="*"/>
                 <RowDefinition Height="*"/>
                 <RowDefinition Height="*"/>
@@ -19,32 +20,34 @@
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
-                <RowDefinition Height="40"/>
+                <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
             <Grid.ColumnDefinitions>
+                <!-- [2026-03-11] ZERO/REF 欄寬加大（工控觸控螢幕） -->
+                <ColumnDefinition Width="80"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="70"/>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="60"/>
             </Grid.ColumnDefinitions>
 
-            <!-- ========== 標題列 (Row 0) ========== -->
-            <TextBlock Grid.Row="0" Grid.Column="0" Text="AXIS" Foreground="{DynamicResource Brush.Text.Muted}" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="{DynamicResource FontSize.Body}"/>
+            <!-- [2026-03-11] 標題列 (Row 0)：FontSize.Medium + Bold（標題需比內容醒目） -->
+            <TextBlock Grid.Row="0" Grid.Column="0" Text="{DynamicResource Str.Label.Axis}" Foreground="{DynamicResource Brush.Text.Muted}" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="{DynamicResource FontSize.Large}" FontWeight="Bold"/>
             <!-- [2026-02-24] Work 欄標題動態顯示 G5X（如 "G54 WORK"） -->
             <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
-                <TextBlock Text="{Binding DataContext.Status.ActiveCoordSystem, RelativeSource={RelativeSource AncestorType=Window}}" Foreground="#007ACC" FontWeight="Bold" FontSize="{DynamicResource FontSize.Body}"/>
-                <TextBlock Text=" WORK" Foreground="{DynamicResource Brush.Text.Muted}" FontSize="{DynamicResource FontSize.Body}"/>
+                <TextBlock Text="{Binding DataContext.Status.ActiveCoordSystem, RelativeSource={RelativeSource AncestorType=Window}}" Foreground="#007ACC" FontWeight="Bold" FontSize="{DynamicResource FontSize.Large}"/>
+                <TextBlock Text="{DynamicResource Str.Label.Work}" Foreground="{DynamicResource Brush.Text.Muted}" FontSize="{DynamicResource FontSize.Large}" FontWeight="Bold"/>
             </StackPanel>
-            <TextBlock Grid.Row="0" Grid.Column="2" Text="MACHINE" Foreground="{DynamicResource Brush.Text.Muted}" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="{DynamicResource FontSize.Body}"/>
-            <TextBlock Grid.Row="0" Grid.Column="3" Text="DTG" Foreground="{DynamicResource Brush.Text.Muted}" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="{DynamicResource FontSize.Body}"/>
-            <TextBlock Grid.Row="0" Grid.Column="4" Text="REF" Foreground="{DynamicResource Brush.Text.Muted}" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="{DynamicResource FontSize.Body}"/>
+            <TextBlock Grid.Row="0" Grid.Column="2" Text="{DynamicResource Str.Label.Machine}" Foreground="{DynamicResource Brush.Text.Muted}" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="{DynamicResource FontSize.Large}" FontWeight="Bold"/>
+            <TextBlock Grid.Row="0" Grid.Column="3" Text="{DynamicResource Str.Label.DTG}" Foreground="{DynamicResource Brush.Text.Muted}" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="{DynamicResource FontSize.Large}" FontWeight="Bold"/>
+            <TextBlock Grid.Row="0" Grid.Column="4" Text="{DynamicResource Str.Label.Ref}" Foreground="{DynamicResource Brush.Text.Muted}" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="{DynamicResource FontSize.Large}" FontWeight="Bold"/>
 
             <!-- ========== X 軸 (Row 1) ========== -->
             <!-- [2026-03-11] 統一按鈕樣式：ZERO 改用 BaseBtnStyle，REF 加 BasedOn 繼承 BaseBtnStyle -->
             <!-- KEEP: status — REF X/Y/Z/A/B/C 紅(未復歸)↔綠(已復歸)，REF ALL 同 -->
             <!-- ZERO X -->
-            <Button Grid.Row="1" Grid.Column="0" Content="ZERO X" Margin="2" FontSize="{DynamicResource FontSize.Small}" FontWeight="Bold"
+            <!-- [2026-03-11] ZERO/REF 按鈕字體 Small→Medium（工控觸控螢幕） -->
+            <Button Grid.Row="1" Grid.Column="0" Content="ZERO X" Margin="2" FontSize="{DynamicResource FontSize.Medium}" FontWeight="Bold"
                     Style="{StaticResource BaseBtnStyle}"
                     Command="{Binding DataContext.DroZeroAxisCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                     CommandParameter="X"/>
@@ -64,7 +67,7 @@
                            Foreground="{DynamicResource Brush.DRO.Foreground}" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="5" FontSize="{DynamicResource FontSize.DRO}" FontWeight="Bold" FontFamily="{DynamicResource FontFamily.Mono}"/>
             </Border>
             <!-- REF X -->
-            <Button Grid.Row="1" Grid.Column="4" Content="REF X" Margin="2" FontSize="{DynamicResource FontSize.Small}" FontWeight="Bold"
+            <Button Grid.Row="1" Grid.Column="4" Content="REF X" Margin="2" FontSize="{DynamicResource FontSize.Medium}" FontWeight="Bold"
                     Foreground="White" BorderThickness="1"
                     Command="{Binding DataContext.RefAxisCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                     CommandParameter="X">
@@ -83,7 +86,7 @@
             </Button>
 
             <!-- ========== Y 軸 (Row 2) ========== -->
-            <Button Grid.Row="2" Grid.Column="0" Content="ZERO Y" Margin="2" FontSize="{DynamicResource FontSize.Small}" FontWeight="Bold"
+            <Button Grid.Row="2" Grid.Column="0" Content="ZERO Y" Margin="2" FontSize="{DynamicResource FontSize.Medium}" FontWeight="Bold"
                     Style="{StaticResource BaseBtnStyle}"
                     Command="{Binding DataContext.DroZeroAxisCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                     CommandParameter="Y"/>
@@ -99,7 +102,7 @@
                 <TextBlock Text="{Binding DataContext.Status.DtgY, RelativeSource={RelativeSource AncestorType=Window}, StringFormat=F3}"
                            Foreground="{DynamicResource Brush.DRO.Foreground}" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="5" FontSize="{DynamicResource FontSize.DRO}" FontWeight="Bold" FontFamily="{DynamicResource FontFamily.Mono}"/>
             </Border>
-            <Button Grid.Row="2" Grid.Column="4" Content="REF Y" Margin="2" FontSize="{DynamicResource FontSize.Small}" FontWeight="Bold"
+            <Button Grid.Row="2" Grid.Column="4" Content="REF Y" Margin="2" FontSize="{DynamicResource FontSize.Medium}" FontWeight="Bold"
                     Foreground="White" BorderThickness="1"
                     Command="{Binding DataContext.RefAxisCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                     CommandParameter="Y">
@@ -118,7 +121,7 @@
             </Button>
 
             <!-- ========== Z 軸 (Row 3) ========== -->
-            <Button Grid.Row="3" Grid.Column="0" Content="ZERO Z" Margin="2" FontSize="{DynamicResource FontSize.Small}" FontWeight="Bold"
+            <Button Grid.Row="3" Grid.Column="0" Content="ZERO Z" Margin="2" FontSize="{DynamicResource FontSize.Medium}" FontWeight="Bold"
                     Style="{StaticResource BaseBtnStyle}"
                     Command="{Binding DataContext.DroZeroAxisCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                     CommandParameter="Z"/>
@@ -134,7 +137,7 @@
                 <TextBlock Text="{Binding DataContext.Status.DtgZ, RelativeSource={RelativeSource AncestorType=Window}, StringFormat=F3}"
                            Foreground="{DynamicResource Brush.DRO.Foreground}" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="5" FontSize="{DynamicResource FontSize.DRO}" FontWeight="Bold" FontFamily="{DynamicResource FontFamily.Mono}"/>
             </Border>
-            <Button Grid.Row="3" Grid.Column="4" Content="REF Z" Margin="2" FontSize="{DynamicResource FontSize.Small}" FontWeight="Bold"
+            <Button Grid.Row="3" Grid.Column="4" Content="REF Z" Margin="2" FontSize="{DynamicResource FontSize.Medium}" FontWeight="Bold"
                     Foreground="White" BorderThickness="1"
                     Command="{Binding DataContext.RefAxisCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                     CommandParameter="Z">
@@ -153,7 +156,7 @@
             </Button>
 
             <!-- ========== A 軸 (Row 4) — 動態顯示 ========== -->
-            <Button Grid.Row="4" Grid.Column="0" Content="ZERO A" Margin="2" FontSize="{DynamicResource FontSize.Small}" FontWeight="Bold" Height="36"
+            <Button Grid.Row="4" Grid.Column="0" Content="ZERO A" Margin="2" FontSize="{DynamicResource FontSize.Medium}" FontWeight="Bold" Height="36"
                     Style="{StaticResource BaseBtnStyle}"
                     Visibility="{Binding DataContext.IsAxisAEnabled, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVis}}"
                     Command="{Binding DataContext.DroZeroAxisCommand, RelativeSource={RelativeSource AncestorType=Window}}"
@@ -173,7 +176,7 @@
                 <TextBlock Text="{Binding DataContext.Status.DtgA, RelativeSource={RelativeSource AncestorType=Window}, StringFormat=F3}"
                            Foreground="{DynamicResource Brush.DRO.Foreground}" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="5" FontSize="{DynamicResource FontSize.DRO}" FontWeight="Bold" FontFamily="{DynamicResource FontFamily.Mono}"/>
             </Border>
-            <Button Grid.Row="4" Grid.Column="4" Content="REF A" Margin="2" FontSize="{DynamicResource FontSize.Small}" FontWeight="Bold" Height="36"
+            <Button Grid.Row="4" Grid.Column="4" Content="REF A" Margin="2" FontSize="{DynamicResource FontSize.Medium}" FontWeight="Bold" Height="36"
                     Foreground="White" BorderThickness="1"
                     Visibility="{Binding DataContext.IsAxisAEnabled, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVis}}"
                     Command="{Binding DataContext.RefAxisCommand, RelativeSource={RelativeSource AncestorType=Window}}"
@@ -193,7 +196,7 @@
             </Button>
 
             <!-- ========== B 軸 (Row 5) — 動態顯示 ========== -->
-            <Button Grid.Row="5" Grid.Column="0" Content="ZERO B" Margin="2" FontSize="{DynamicResource FontSize.Small}" FontWeight="Bold" Height="36"
+            <Button Grid.Row="5" Grid.Column="0" Content="ZERO B" Margin="2" FontSize="{DynamicResource FontSize.Medium}" FontWeight="Bold" Height="36"
                     Style="{StaticResource BaseBtnStyle}"
                     Visibility="{Binding DataContext.IsAxisBEnabled, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVis}}"
                     Command="{Binding DataContext.DroZeroAxisCommand, RelativeSource={RelativeSource AncestorType=Window}}"
@@ -213,7 +216,7 @@
                 <TextBlock Text="{Binding DataContext.Status.DtgB, RelativeSource={RelativeSource AncestorType=Window}, StringFormat=F3}"
                            Foreground="{DynamicResource Brush.DRO.Foreground}" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="5" FontSize="{DynamicResource FontSize.DRO}" FontWeight="Bold" FontFamily="{DynamicResource FontFamily.Mono}"/>
             </Border>
-            <Button Grid.Row="5" Grid.Column="4" Content="REF B" Margin="2" FontSize="{DynamicResource FontSize.Small}" FontWeight="Bold" Height="36"
+            <Button Grid.Row="5" Grid.Column="4" Content="REF B" Margin="2" FontSize="{DynamicResource FontSize.Medium}" FontWeight="Bold" Height="36"
                     Foreground="White" BorderThickness="1"
                     Visibility="{Binding DataContext.IsAxisBEnabled, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVis}}"
                     Command="{Binding DataContext.RefAxisCommand, RelativeSource={RelativeSource AncestorType=Window}}"
@@ -233,7 +236,7 @@
             </Button>
 
             <!-- ========== C 軸 (Row 6) — 動態顯示 ========== -->
-            <Button Grid.Row="6" Grid.Column="0" Content="ZERO C" Margin="2" FontSize="{DynamicResource FontSize.Small}" FontWeight="Bold" Height="36"
+            <Button Grid.Row="6" Grid.Column="0" Content="ZERO C" Margin="2" FontSize="{DynamicResource FontSize.Medium}" FontWeight="Bold" Height="36"
                     Style="{StaticResource BaseBtnStyle}"
                     Visibility="{Binding DataContext.IsAxisCEnabled, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVis}}"
                     Command="{Binding DataContext.DroZeroAxisCommand, RelativeSource={RelativeSource AncestorType=Window}}"
@@ -253,7 +256,7 @@
                 <TextBlock Text="{Binding DataContext.Status.DtgC, RelativeSource={RelativeSource AncestorType=Window}, StringFormat=F3}"
                            Foreground="{DynamicResource Brush.DRO.Foreground}" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="5" FontSize="{DynamicResource FontSize.DRO}" FontWeight="Bold" FontFamily="{DynamicResource FontFamily.Mono}"/>
             </Border>
-            <Button Grid.Row="6" Grid.Column="4" Content="REF C" Margin="2" FontSize="{DynamicResource FontSize.Small}" FontWeight="Bold" Height="36"
+            <Button Grid.Row="6" Grid.Column="4" Content="REF C" Margin="2" FontSize="{DynamicResource FontSize.Medium}" FontWeight="Bold" Height="36"
                     Foreground="White" BorderThickness="1"
                     Visibility="{Binding DataContext.IsAxisCEnabled, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVis}}"
                     Command="{Binding DataContext.RefAxisCommand, RelativeSource={RelativeSource AncestorType=Window}}"
@@ -273,14 +276,15 @@
             </Button>
 
             <!-- ========== 底部按鈕列 (Row 7) ========== -->
+            <!-- [2026-03-11] 底部按鈕字體 Body→Large（工控觸控螢幕） -->
             <Button Grid.Row="7" Grid.Column="0" Grid.ColumnSpan="2" Margin="2,5"
-                    Content="{DynamicResource Str.Btn.ZeroAll}" FontSize="{DynamicResource FontSize.Body}" FontWeight="Bold"
+                    Content="{DynamicResource Str.Btn.ZeroAll}" FontSize="{DynamicResource FontSize.Large}" FontWeight="Bold"
                     Style="{StaticResource BaseBtnStyle}"
                     Command="{Binding DataContext.DroZeroAllCommand, RelativeSource={RelativeSource AncestorType=Window}}"/>
 
             <!-- [2026-02-24] 原點復歸 ALL：未復歸→紅色（原點復歸 ALL）/ 已復歸→綠色（已復歸），仍可再次點擊 -->
             <Button Grid.Row="7" Grid.Column="2" Grid.ColumnSpan="3" Margin="2,5"
-                    FontSize="{DynamicResource FontSize.Body}" FontWeight="Bold" Foreground="White" BorderThickness="1"
+                    FontSize="{DynamicResource FontSize.Large}" FontWeight="Bold" Foreground="White" BorderThickness="1"
                     Command="{Binding DataContext.HomeAllCommand, RelativeSource={RelativeSource AncestorType=Window}}">
                 <Button.Style>
                     <Style TargetType="Button" BasedOn="{StaticResource BaseBtnStyle}">

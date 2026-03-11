@@ -67,7 +67,8 @@
         </Style>
     </UserControl.Resources>
 
-    <Grid HorizontalAlignment="Center" VerticalAlignment="Center">
+    <!-- [2026-03-11] JOG 內容置中，MAN/AUTO/MDI 靠底部 + 10px 留白 -->
+    <Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="20"/>
@@ -75,8 +76,8 @@
             <!-- [2026-02-24] 旋轉軸區域 -->
             <RowDefinition Height="10"/>
             <RowDefinition Height="Auto"/>
-            <!-- [2026-03-03] MAN/AUTO/MDI 模式按鈕 -->
-            <RowDefinition Height="16"/>
+            <!-- [2026-03-11] 彈性空間：將 MAN/AUTO/MDI 推到底部 -->
+            <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
@@ -282,14 +283,13 @@
             </StackPanel>
         </StackPanel>
 
-        <!-- [2026-03-03] MAN/AUTO/MDI 模式切換按鈕（從 OffsetsView 移至此） -->
-        <UniformGrid Grid.Row="6" Rows="1" Columns="3" HorizontalAlignment="Center">
+        <!-- [2026-03-11] MAN/AUTO/MDI 模式切換按鈕：靠底部 + 10px 留白 + 平均欄寬 -->
+        <UniformGrid Grid.Row="6" Rows="1" Columns="3" HorizontalAlignment="Stretch" Margin="5,0,5,10">
             <Button Content="MAN" Command="{Binding SetModeCommand}" CommandParameter="MANUAL">
                 <Button.Style>
                     <Style TargetType="Button" BasedOn="{StaticResource JogRotaryBtn}">
-                        <Setter Property="Width" Value="60"/>
-                        <Setter Property="Height" Value="32"/>
-                        <Setter Property="FontSize" Value="{DynamicResource FontSize.Body}"/>
+                        <Setter Property="Height" Value="36"/>
+                        <Setter Property="FontSize" Value="{DynamicResource FontSize.Large}"/>
                         <Style.Triggers>
                             <DataTrigger Binding="{Binding Status.TaskMode}" Value="MANUAL">
                                 <Setter Property="Background" Value="{DynamicResource Brush.Checked}"/>
@@ -302,9 +302,8 @@
             <Button Content="AUTO" Command="{Binding SetModeCommand}" CommandParameter="AUTO">
                 <Button.Style>
                     <Style TargetType="Button" BasedOn="{StaticResource JogRotaryBtn}">
-                        <Setter Property="Width" Value="60"/>
-                        <Setter Property="Height" Value="32"/>
-                        <Setter Property="FontSize" Value="{DynamicResource FontSize.Body}"/>
+                        <Setter Property="Height" Value="36"/>
+                        <Setter Property="FontSize" Value="{DynamicResource FontSize.Large}"/>
                         <Style.Triggers>
                             <DataTrigger Binding="{Binding Status.TaskMode}" Value="AUTO">
                                 <Setter Property="Background" Value="{DynamicResource Brush.Checked}"/>
@@ -317,9 +316,8 @@
             <Button Content="MDI" Command="{Binding SetModeCommand}" CommandParameter="MDI">
                 <Button.Style>
                     <Style TargetType="Button" BasedOn="{StaticResource JogRotaryBtn}">
-                        <Setter Property="Width" Value="60"/>
-                        <Setter Property="Height" Value="32"/>
-                        <Setter Property="FontSize" Value="{DynamicResource FontSize.Body}"/>
+                        <Setter Property="Height" Value="36"/>
+                        <Setter Property="FontSize" Value="{DynamicResource FontSize.Large}"/>
                         <Style.Triggers>
                             <DataTrigger Binding="{Binding Status.TaskMode}" Value="MDI">
                                 <Setter Property="Background" Value="{DynamicResource Brush.Checked}"/>

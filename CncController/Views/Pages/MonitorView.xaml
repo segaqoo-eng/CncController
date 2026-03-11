@@ -1,4 +1,4 @@
-﻿<UserControl x:Class="CncController.Views.Pages.MonitorView"
+<UserControl x:Class="CncController.Views.Pages.MonitorView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -12,41 +12,54 @@
 
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="400"/>
+            <!-- [2026-03-11] G-Code 欄寬 400→600（加大 1.5 倍） -->
+            <ColumnDefinition Width="600"/>
             <ColumnDefinition Width="70"/>
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
+        <!-- ============================================ -->
+        <!-- Column 0: G-Code 程式碼區 -->
+        <!-- ============================================ -->
         <Grid Grid.Column="0" Margin="0,0,2,0">
             <Grid.RowDefinitions>
-                <RowDefinition Height="30"/>
+                <!-- [2026-03-11] 標題列高度 30→60（工控觸控加大） -->
+                <RowDefinition Height="60"/>
                 <RowDefinition Height="*"/>
-                <RowDefinition Height="40"/>
+                <RowDefinition Height="50"/>
             </Grid.RowDefinitions>
 
-            <!-- [2026-03-11] 標題列：G-CODE PROGRAM + 檔名 + LOAD 按鈕（統一 PanelTitle） -->
+            <!-- [2026-03-11] 標題列：G-CODE + 檔名 + LOAD 按鈕（高度 60px 工控觸控） -->
             <Border Grid.Row="0" Style="{StaticResource PanelTitleBorder}" CornerRadius="2,2,0,0">
-                <DockPanel Margin="2,0">
+                <DockPanel Margin="4,0">
                     <TextBlock DockPanel.Dock="Left" Text="G-CODE" Style="{StaticResource PanelTitleText}"
+                               FontSize="{DynamicResource FontSize.XLarge}"
                                VerticalAlignment="Center" HorizontalAlignment="Left"/>
-                    <Button DockPanel.Dock="Right" Content="LOAD" Command="{Binding LoadLocalFileCommand}"
-                            Style="{StaticResource BaseBtnStyle}" Padding="12,2" Margin="4,2"
-                            FontSize="{DynamicResource FontSize.Body}" VerticalAlignment="Center"/>
-                    <!-- [2026-03-04] 已載入檔名顯示（無檔案時隱藏） -->
-                    <TextBlock Text="{Binding CurrentFileName}" Foreground="#AAA" FontSize="{DynamicResource FontSize.Body}"
-                               VerticalAlignment="Center" Margin="8,0,0,0" TextTrimming="CharacterEllipsis"/>
+                    <!-- [2026-03-11] 上傳：本地開檔 → 預覽 → 上傳到後端 -->
+                    <Button DockPanel.Dock="Right" Content="{DynamicResource Str.File.Upload}" Command="{Binding LoadLocalFileCommand}"
+                            Style="{StaticResource BaseBtnStyle}" Padding="16,6" Margin="4,4"
+                            FontSize="{DynamicResource FontSize.Large}" Height="42" MinWidth="80"
+                            VerticalAlignment="Center"/>
+                    <!-- [2026-03-11] 開啟舊檔：本地開檔 → 僅預覽不上傳 -->
+                    <Button DockPanel.Dock="Right" Content="{DynamicResource Str.File.Open}" Command="{Binding OpenLocalFileCommand}"
+                            Style="{StaticResource BaseBtnStyle}" Padding="16,6" Margin="4,4"
+                            FontSize="{DynamicResource FontSize.Large}" Height="42" MinWidth="80"
+                            VerticalAlignment="Center"/>
+                    <!-- 已載入檔名顯示 -->
+                    <TextBlock Text="{Binding CurrentFileName}" Foreground="#AAA" FontSize="{DynamicResource FontSize.Large}"
+                               VerticalAlignment="Center" Margin="12,0,0,0" TextTrimming="CharacterEllipsis"/>
                 </DockPanel>
             </Border>
 
-            <!-- [2026-03-04] G-Code 逐行顯示（行號 + 高亮執行中行 + 自動捲動） -->
+            <!-- G-Code 逐行顯示（行號 + 高亮執行中行） -->
             <Border Grid.Row="1" Background="White" BorderBrush="#444" BorderThickness="1">
                 <Grid>
-                <!-- [2026-03-04] 空狀態提示：無程式載入時居中顯示 -->
+                <!-- 空狀態提示 -->
                 <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center"
                             Visibility="{Binding IsGCodeEmpty, Converter={StaticResource BoolToVis}}">
-                    <TextBlock Text="NO PROGRAM LOADED" Foreground="#BBB" FontSize="{DynamicResource FontSize.Large}"
+                    <TextBlock Text="{DynamicResource Str.Monitor.NoProgramLoaded}" Foreground="#BBB" FontSize="{DynamicResource FontSize.XLarge}"
                                FontWeight="Bold" HorizontalAlignment="Center" Margin="0,0,0,8"/>
-                    <TextBlock Text="Click LOAD to open a G-Code file" Foreground="#CCC" FontSize="{DynamicResource FontSize.Body}"
+                    <TextBlock Text="{DynamicResource Str.Monitor.LoadHint}" Foreground="#CCC" FontSize="{DynamicResource FontSize.Large}"
                                HorizontalAlignment="Center"/>
                 </StackPanel>
                 <ListBox x:Name="GCodeListBox" ItemsSource="{Binding GCodeLines}"
@@ -84,15 +97,16 @@
                                     </Style>
                                 </Grid.Style>
                                 <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="45"/>
+                                    <!-- [2026-03-11] 行號欄加寬配合大字體 -->
+                                    <ColumnDefinition Width="55"/>
                                     <ColumnDefinition Width="*"/>
                                 </Grid.ColumnDefinitions>
                                 <TextBlock Grid.Column="0" Text="{Binding LineNumber}"
-                                           Foreground="#999" FontFamily="{DynamicResource FontFamily.Mono}" FontSize="{DynamicResource FontSize.Body}"
-                                           TextAlignment="Right" Padding="0,0,6,0"
+                                           Foreground="#999" FontFamily="{DynamicResource FontFamily.Mono}" FontSize="{DynamicResource FontSize.Large}"
+                                           TextAlignment="Right" Padding="0,1,6,1"
                                            Background="#F0F0F0"/>
                                 <TextBlock Grid.Column="1" Text="{Binding Text}"
-                                           FontFamily="{DynamicResource FontFamily.Mono}" FontSize="{DynamicResource FontSize.Body}" Padding="4,0,0,0">
+                                           FontFamily="{DynamicResource FontFamily.Mono}" FontSize="{DynamicResource FontSize.Large}" Padding="4,1,0,1">
                                     <TextBlock.Style>
                                         <Style TargetType="TextBlock">
                                             <Setter Property="Foreground" Value="Black"/>
@@ -113,33 +127,41 @@
                 </Grid>
             </Border>
 
+            <!-- [2026-03-11] MDI 輸入列（高度 50px 工控觸控加大） -->
             <Grid Grid.Row="2" Margin="0,2,0,0">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="60"/>
+                    <ColumnDefinition Width="80"/>
                 </Grid.ColumnDefinitions>
                 <ComboBox IsEditable="True" IsTextSearchEnabled="False"
                           Text="{Binding MdiInput, UpdateSourceTrigger=PropertyChanged}"
                           ItemsSource="{Binding MdiHistory}"
-                          VerticalContentAlignment="Center" Padding="5"
-                          Background="White" FontFamily="{DynamicResource FontFamily.Mono}">
+                          VerticalContentAlignment="Center" Padding="6"
+                          Background="White" FontFamily="{DynamicResource FontFamily.Mono}"
+                          FontSize="{DynamicResource FontSize.Large}">
                     <ComboBox.InputBindings>
                         <KeyBinding Key="Return" Command="{Binding SendMdiCommand}"/>
                     </ComboBox.InputBindings>
                 </ComboBox>
-                <!-- [2026-03-11] 移除 inline Background，改用 BaseBtnStyle -->
-                <Button Grid.Column="1" Content="SEND" Margin="2,0,0,0"
+                <Button Grid.Column="1" Content="{DynamicResource Str.Btn.Send}" Margin="2,0,0,0"
                         Command="{Binding SendMdiCommand}"
-                        Style="{StaticResource BaseBtnStyle}" Foreground="White" FontWeight="Bold"/>
+                        Style="{StaticResource BaseBtnStyle}" Foreground="White" FontWeight="Bold"
+                        FontSize="{DynamicResource FontSize.Large}"/>
             </Grid>
         </Grid>
 
+        <!-- ============================================ -->
+        <!-- Column 1: 3D 視角按鈕 -->
+        <!-- ============================================ -->
         <StackPanel Grid.Column="1" Margin="2,0">
             <Button Content="ISO" Height="40" Margin="0,0,0,3" Background="#333" Foreground="White" BorderThickness="0"/>
             <Button Content="TOP" Height="40" Margin="0,0,0,3" Background="#333" Foreground="White" BorderThickness="0"/>
             <Button Content="FRONT" Height="40" Margin="0,0,0,3" Background="#333" Foreground="White" BorderThickness="0"/>
         </StackPanel>
 
+        <!-- ============================================ -->
+        <!-- Column 2: 3D 預覽區 -->
+        <!-- ============================================ -->
         <Border Grid.Column="2" Background="Black" BorderBrush="#444" BorderThickness="1">
             <hx:HelixViewport3D ZoomExtentsWhenLoaded="True" ShowCoordinateSystem="True" Background="Black">
                 <hx:SunLight/>

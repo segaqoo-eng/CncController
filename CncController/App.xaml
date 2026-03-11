@@ -1,6 +1,7 @@
 ﻿<Application x:Class="CncController.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:conv="clr-namespace:CncController.Converters"
              StartupUri="MainWindow.xaml">
     <!--<Application.Resources>
         <Style x:Key="NavButtonStyle" TargetType="RadioButton">
@@ -44,6 +45,8 @@
 
             <!-- [2026-02-24] 全域 BoolToVis 轉換器，供所有 UserControl 使用 -->
             <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+            <!-- [2026-03-11] 檔案大小格式化轉換器 -->
+            <conv:FileSizeConverter x:Key="FileSizeConverter"/>
 
             <!-- ================================================================ -->
             <!-- [2026-03-04] BaseBtnStyle：全域按鈕基底樣式                       -->
@@ -136,16 +139,16 @@
                                         </Setter.Value>
                                     </Setter>
                                 </Trigger>
-                                <!-- [2026-03-11] 分頁選取色統一為 #5E70FF 藍紫漸層 -->
+                                <!-- [2026-03-11] 分頁選取色改為 #00897B 青綠漸層（與按鈕藍 #007ACC 區分） -->
                                 <Trigger Property="IsChecked" Value="True">
-                                    <Setter TargetName="bd" Property="BorderBrush" Value="#8090FF"/>
+                                    <Setter TargetName="bd" Property="BorderBrush" Value="#26A69A"/>
                                     <Setter Property="Foreground" Value="White"/>
                                     <Setter TargetName="bd" Property="Background">
                                         <Setter.Value>
                                             <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                                                <GradientStop Color="#7A8AFF" Offset="0"/>
-                                                <GradientStop Color="#5E70FF" Offset="0.5"/>
-                                                <GradientStop Color="#4A5CE0" Offset="1"/>
+                                                <GradientStop Color="#26A69A" Offset="0"/>
+                                                <GradientStop Color="#00897B" Offset="0.5"/>
+                                                <GradientStop Color="#00796B" Offset="1"/>
                                             </LinearGradientBrush>
                                         </Setter.Value>
                                     </Setter>
@@ -160,11 +163,11 @@
                 </Setter>
             </Style>
 
-            <!-- [2026-03-04] NavBtnStyle：底部導航（漸層版） -->
+            <!-- [2026-03-11] NavBtnStyle：字體加大 Medium→Large（工控觸控） -->
             <Style x:Key="NavBtnStyle" TargetType="RadioButton">
                 <Setter Property="FontFamily" Value="{DynamicResource FontFamily.Default}"/>
                 <Setter Property="Foreground" Value="{DynamicResource Brush.Text.Primary}"/>
-                <Setter Property="FontSize" Value="{DynamicResource FontSize.Medium}"/>
+                <Setter Property="FontSize" Value="{DynamicResource FontSize.Large}"/>
                 <Setter Property="FontWeight" Value="Bold"/>
                 <Setter Property="Height" Value="50"/>
                 <Setter Property="Margin" Value="1,0"/>
@@ -194,13 +197,14 @@
                                         </Setter.Value>
                                     </Setter>
                                 </Trigger>
+                                <!-- [2026-03-11] NavBtnStyle 選取色改為青綠 -->
                                 <Trigger Property="IsChecked" Value="True">
                                     <Setter TargetName="bd" Property="Background">
                                         <Setter.Value>
                                             <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                                                <GradientStop Color="#7A8AFF" Offset="0"/>
-                                                <GradientStop Color="#5E70FF" Offset="0.5"/>
-                                                <GradientStop Color="#4A5CE0" Offset="1"/>
+                                                <GradientStop Color="#26A69A" Offset="0"/>
+                                                <GradientStop Color="#00897B" Offset="0.5"/>
+                                                <GradientStop Color="#00796B" Offset="1"/>
                                             </LinearGradientBrush>
                                         </Setter.Value>
                                     </Setter>

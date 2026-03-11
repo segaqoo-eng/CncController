@@ -44,7 +44,8 @@
     <SolidColorBrush x:Key="Brush.Border" Color="#444444"/>
 
     <SolidColorBrush x:Key="Brush.Button.Static" Color="#333333"/>
-    <SolidColorBrush x:Key="Brush.Button.Active" Color="#5E70FF"/>
+    <!-- [2026-03-11] 分頁選取色改為青綠（與按鈕藍 #007ACC 區分） -->
+    <SolidColorBrush x:Key="Brush.Button.Active" Color="#00897B"/>
     <SolidColorBrush x:Key="Brush.Button.Danger" Color="#CC0000"/>
     <SolidColorBrush x:Key="Brush.Text.Primary" Color="White"/>
     <SolidColorBrush x:Key="Brush.Text.Muted" Color="#AAAAAA"/>
@@ -63,6 +64,6 @@
     <SolidColorBrush x:Key="Brush.PanelTitle.Border" Color="#2980B9"/>
 
     <!-- [2026-03-11] GroupHeader 群組標題統一色 -->
-    <SolidColorBrush x:Key="Brush.GroupHeader.Foreground" Color="#5E70FF"/>
+    <SolidColorBrush x:Key="Brush.GroupHeader.Foreground" Color="#00897B"/>
 
 </ResourceDictionary>

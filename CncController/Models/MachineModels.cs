@@ -457,6 +457,21 @@ namespace CncController.Models
         public bool IsInverted { get; set; } // True = NC, False = NO
     }
 
+    // [2026-03-11] 程式檔案資訊（後端 /v2/program/list 回傳）
+    public class ProgramFileInfo
+    {
+        public string Name { get; set; } = "";
+        public long Size { get; set; }
+        public double Modified { get; set; }
+    }
+
+    // [2026-03-11] 程式檔案回讀結果
+    public class ProgramReadResult
+    {
+        public string Name { get; set; } = "";
+        public string Content { get; set; } = "";
+    }
+
     // [2026-03-03] 新增 ToolEntry：刀具表條目（對齊 PB 版 TOOL 分頁 DataGrid）
     public partial class ToolEntry : ObservableObject
     {

@@ -16,22 +16,26 @@
         <!-- [2026-02-24] BindingProxy：讓 DataGridColumn 可綁定 ViewModel 的軸可見性屬性 -->
         <helpers:BindingProxy x:Key="Proxy" Data="{Binding}"/>
         <!-- [2026-03-04] OffsetBtnStyle 改為 BasedOn BaseBtnStyle，移除自訂 Template -->
+        <!-- [2026-03-11] FontSize 加大為 Large，Height 45px -->
         <Style x:Key="OffsetBtnStyle" TargetType="Button" BasedOn="{StaticResource BaseBtnStyle}">
-            <Setter Property="FontSize" Value="{DynamicResource FontSize.Body}"/>
+            <Setter Property="FontSize" Value="{DynamicResource FontSize.Large}"/>
+            <Setter Property="Height" Value="45"/>
             <Setter Property="Margin" Value="3"/>
             <Setter Property="Padding" Value="8,4"/>
         </Style>
 
         <!-- [2026-03-04] WCS 選擇按鈕樣式（大按鈕），BasedOn OffsetBtnStyle -->
+        <!-- [2026-03-11] FontSize 加大為 Large -->
         <Style x:Key="WcsBtnStyle" TargetType="Button" BasedOn="{StaticResource OffsetBtnStyle}">
-            <Setter Property="Height" Value="36"/>
-            <Setter Property="FontSize" Value="{DynamicResource FontSize.Body}"/>
+            <Setter Property="Height" Value="40"/>
+            <Setter Property="FontSize" Value="{DynamicResource FontSize.Large}"/>
             <Setter Property="Margin" Value="4,3"/>
         </Style>
 
-        <!-- [2026-03-11] ZERO 按鈕樣式（移除 inline 棕色，統一深灰漸層） -->
+        <!-- [2026-03-11] ZERO 按鈕樣式 — FontSize 加大為 Large，Height 40px -->
         <Style x:Key="ZeroBtnStyle" TargetType="Button" BasedOn="{StaticResource OffsetBtnStyle}">
-            <Setter Property="FontSize" Value="{DynamicResource FontSize.XSmall}"/>
+            <Setter Property="FontSize" Value="{DynamicResource FontSize.Large}"/>
+            <Setter Property="Height" Value="40"/>
             <Setter Property="Padding" Value="4,2"/>
             <Setter Property="Margin" Value="1"/>
         </Style>
@@ -49,22 +53,23 @@
             <!-- ========== 左欄：座標系總表 ========== -->
             <Border Grid.Column="0" Background="#252526" BorderBrush="#444" BorderThickness="1" CornerRadius="4" Margin="0,0,5,0">
                 <DockPanel Margin="8">
-                    <!-- [2026-03-11] 統一 PanelTitle -->
+                    <!-- [2026-03-11] 統一 PanelTitle，FontSize 加大為 XLarge -->
                     <Border DockPanel.Dock="Top" Style="{StaticResource PanelTitleBorder}" Margin="0,0,0,6">
-                        <TextBlock Text="WORK OFFSET TABLE" Style="{StaticResource PanelTitleText}"/>
+                        <TextBlock Text="{DynamicResource Str.Offset.Table}" Style="{StaticResource PanelTitleText}" FontSize="{DynamicResource FontSize.XLarge}"/>
                     </Border>
 
                     <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Margin="0,8,0,0"
                                 HorizontalAlignment="Left">
-                        <Button Content="CLEAR SELECTED" Style="{StaticResource OffsetBtnStyle}"
-                                Command="{Binding ClearSelectedCommand}" Width="130"/>
-                        <Button Content="CLEAR ALL" Style="{StaticResource OffsetBtnStyle}"
-                                Command="{Binding ClearAllCommand}" Width="90"/>
+                        <!-- [2026-03-11] 按鈕加寬配合 FontSize.Large -->
+                        <Button Content="{DynamicResource Str.Btn.ClearSelected}" Style="{StaticResource OffsetBtnStyle}"
+                                Command="{Binding ClearSelectedCommand}" Width="160"/>
+                        <Button Content="{DynamicResource Str.Btn.ClearAll}" Style="{StaticResource OffsetBtnStyle}"
+                                Command="{Binding ClearAllCommand}" Width="110"/>
                         <!-- [2026-03-11] 移除 inline 色彩，統一深灰 -->
-                        <Button Content="SAVE TABLE" Style="{StaticResource OffsetBtnStyle}"
-                                Command="{Binding SaveTableCommand}" Width="90"/>
-                        <Button Content="RELOAD TABLE" Style="{StaticResource OffsetBtnStyle}"
-                                Command="{Binding ReloadTableCommand}" Width="110"/>
+                        <Button Content="{DynamicResource Str.Btn.SaveTable}" Style="{StaticResource OffsetBtnStyle}"
+                                Command="{Binding SaveTableCommand}" Width="120"/>
+                        <Button Content="{DynamicResource Str.Btn.ReloadTable}" Style="{StaticResource OffsetBtnStyle}"
+                                Command="{Binding ReloadTableCommand}" Width="140"/>
                     </StackPanel>
 
                     <DataGrid ItemsSource="{Binding OffsetTable}"
@@ -80,21 +85,26 @@
                               AlternatingRowBackground="#292929"
                               Foreground="White"
                               BorderThickness="0"
-                              ColumnHeaderHeight="28"
-                              RowHeight="30">
+                              ColumnHeaderHeight="40"
+                              RowHeight="40">
+                        <!-- [2026-03-11] ColumnHeaderHeight/RowHeight 加大 -->
                         <DataGrid.ColumnHeaderStyle>
                             <Style TargetType="DataGridColumnHeader">
                                 <Setter Property="Background" Value="#333"/>
                                 <Setter Property="Foreground" Value="#AAAAAA"/>
                                 <Setter Property="FontWeight" Value="Bold"/>
-                                <Setter Property="FontSize" Value="{DynamicResource FontSize.Body}"/>
+                                <!-- [2026-03-11] DataGrid 欄位標頭字體加大為 XLarge -->
+                                <Setter Property="FontSize" Value="{DynamicResource FontSize.XLarge}"/>
                                 <Setter Property="HorizontalContentAlignment" Value="Center"/>
                                 <Setter Property="Padding" Value="4"/>
                             </Style>
                         </DataGrid.ColumnHeaderStyle>
                         <DataGrid.CellStyle>
+                            <!-- [2026-03-11] DataGrid 內容字體加大為 XLarge + Mono 等寬 -->
                             <Style TargetType="DataGridCell">
                                 <Setter Property="Foreground" Value="White"/>
+                                <Setter Property="FontSize" Value="{DynamicResource FontSize.XLarge}"/>
+                                <Setter Property="FontFamily" Value="{DynamicResource FontFamily.Mono}"/>
                                 <Setter Property="BorderThickness" Value="0"/>
                                 <Setter Property="Padding" Value="4,2"/>
                                 <Style.Triggers>
@@ -124,9 +134,9 @@
             <!-- ========== 右欄：WORK COORDINATE OFFSETS（對齊 PB 版） ========== -->
             <Border Grid.Column="1" Background="#252526" BorderBrush="#444" BorderThickness="1" CornerRadius="4" Margin="5,0,0,0">
                 <DockPanel Margin="10">
-                    <!-- [2026-03-11] 統一 PanelTitle -->
+                    <!-- [2026-03-11] 統一 PanelTitle，FontSize 加大為 XLarge -->
                     <Border DockPanel.Dock="Top" Style="{StaticResource PanelTitleBorder}" Margin="0,0,0,8">
-                        <TextBlock Text="WORK COORDINATE OFFSETS" Style="{StaticResource PanelTitleText}"/>
+                        <TextBlock Text="{DynamicResource Str.Offset.Coordinates}" Style="{StaticResource PanelTitleText}" FontSize="{DynamicResource FontSize.XLarge}"/>
                     </Border>
 
                     <!-- [2026-02-24] WCS 按鈕改為 2 行（對齊 PB 版：Row1=G54-G58，Row2=G59/G59.1-G59.3） -->
@@ -255,9 +265,10 @@
 
                     <!-- [2026-02-24] 7 欄座標表格（對齊 PB 版：ZERO | AXIS | WC CURRENT POS | MACHINE COORDS | WC OFFSET | G52/G92 OFFSET | TOOL OFFSET） -->
                     <Grid Margin="0,0,0,0">
+                        <!-- [2026-03-11] ZERO 欄加寬 70、AXIS 欄加寬 45、資料行高 42、表頭行高 30 -->
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="60"/>  <!-- ZERO 按鈕 -->
-                            <ColumnDefinition Width="35"/>  <!-- AXIS 標籤 -->
+                            <ColumnDefinition Width="80"/>  <!-- ZERO 按鈕 -->
+                            <ColumnDefinition Width="50"/>  <!-- AXIS 標籤 -->
                             <ColumnDefinition Width="*"/>   <!-- WC CURRENT POS -->
                             <ColumnDefinition Width="*"/>   <!-- MACHINE COORDS -->
                             <ColumnDefinition Width="*"/>   <!-- WC OFFSET -->
@@ -265,204 +276,205 @@
                             <ColumnDefinition Width="*"/>   <!-- TOOL OFFSET -->
                         </Grid.ColumnDefinitions>
                         <Grid.RowDefinitions>
-                            <RowDefinition Height="24"/>   <!-- 表頭 -->
-                            <RowDefinition Height="36"/>   <!-- X -->
-                            <RowDefinition Height="36"/>   <!-- Y -->
-                            <RowDefinition Height="36"/>   <!-- Z -->
+                            <RowDefinition Height="36"/>   <!-- 表頭 -->
+                            <RowDefinition Height="50"/>   <!-- X -->
+                            <RowDefinition Height="50"/>   <!-- Y -->
+                            <RowDefinition Height="50"/>   <!-- Z -->
                             <RowDefinition Height="Auto"/> <!-- A -->
                             <RowDefinition Height="Auto"/> <!-- B -->
                             <RowDefinition Height="Auto"/> <!-- C -->
                         </Grid.RowDefinitions>
 
                         <!-- 表頭 -->
-                        <TextBlock Grid.Row="0" Grid.Column="0" Text="SET TO&#x0a;ZERO" Foreground="#888" FontSize="{DynamicResource FontSize.XSmall}" HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center"/>
-                        <TextBlock Grid.Row="0" Grid.Column="1" Text="AXIS" Foreground="#888" FontSize="{DynamicResource FontSize.XSmall}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        <TextBlock Grid.Row="0" Grid.Column="2" Text="WC CURRENT POS" Foreground="#888" FontSize="{DynamicResource FontSize.XSmall}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        <TextBlock Grid.Row="0" Grid.Column="3" Text="MACHINE COORDS" Foreground="#888" FontSize="{DynamicResource FontSize.XSmall}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        <TextBlock Grid.Row="0" Grid.Column="4" Text="WC OFFSET" Foreground="#888" FontSize="{DynamicResource FontSize.XSmall}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        <TextBlock Grid.Row="0" Grid.Column="5" Text="G52/G92 OFFSET" Foreground="#888" FontSize="{DynamicResource FontSize.XSmall}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        <TextBlock Grid.Row="0" Grid.Column="6" Text="TOOL OFFSET" Foreground="#888" FontSize="{DynamicResource FontSize.XSmall}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        <!-- [2026-03-11] 右側表頭字體加大 Body→Large -->
+                        <TextBlock Grid.Row="0" Grid.Column="0" Text="{DynamicResource Str.Offset.SetToZero}" Foreground="#888" FontSize="{DynamicResource FontSize.Large}" HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center"/>
+                        <TextBlock Grid.Row="0" Grid.Column="1" Text="{DynamicResource Str.Label.Axis}" Foreground="#888" FontSize="{DynamicResource FontSize.Large}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Row="0" Grid.Column="2" Text="{DynamicResource Str.Offset.WcCurrentPos}" Foreground="#888" FontSize="{DynamicResource FontSize.Large}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Row="0" Grid.Column="3" Text="{DynamicResource Str.Offset.MachineCoords}" Foreground="#888" FontSize="{DynamicResource FontSize.Large}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Row="0" Grid.Column="4" Text="{DynamicResource Str.Offset.WcOffset}" Foreground="#888" FontSize="{DynamicResource FontSize.Large}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Row="0" Grid.Column="5" Text="{DynamicResource Str.Offset.G92Offset}" Foreground="#888" FontSize="{DynamicResource FontSize.Large}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Row="0" Grid.Column="6" Text="{DynamicResource Str.Offset.ToolOffset}" Foreground="#888" FontSize="{DynamicResource FontSize.Large}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
 
                         <!-- ===== X 行 ===== -->
-                        <Button Grid.Row="1" Grid.Column="0" Content="ZERO" Style="{StaticResource ZeroBtnStyle}"
+                        <Button Grid.Row="1" Grid.Column="0" Content="{DynamicResource Str.Btn.Zero}" Style="{StaticResource ZeroBtnStyle}"
                                 Command="{Binding SetToZeroAxisCommand}" CommandParameter="X"/>
                         <Border Grid.Row="1" Grid.Column="1" Background="#3A2A2A" Margin="1" CornerRadius="2">
-                            <TextBlock Text="X" Foreground="White" FontWeight="Bold" FontSize="{DynamicResource FontSize.Medium}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <TextBlock Text="X" Foreground="White" FontWeight="Bold" FontSize="{DynamicResource FontSize.XLarge}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <Border Grid.Row="1" Grid.Column="2" Background="#1A2E1A" Margin="1" CornerRadius="2">
-                            <TextBlock Text="{Binding MachineStatus.WorkX, StringFormat={}{0:F4}}" Foreground="#90EE90" FontFamily="Consolas" FontSize="{DynamicResource FontSize.Body}" FontWeight="Bold"
+                            <TextBlock Text="{Binding MachineStatus.WorkX, StringFormat={}{0:F4}}" Foreground="#90EE90" FontFamily="{DynamicResource FontFamily.Mono}" FontSize="{DynamicResource FontSize.XLarge}" FontWeight="Bold"
                                        HorizontalAlignment="Right" VerticalAlignment="Center" Margin="4,0"/>
                         </Border>
                         <Border Grid.Row="1" Grid.Column="3" Background="#1A1A2E" Margin="1" CornerRadius="2">
-                            <TextBlock Text="{Binding MachineStatus.X, StringFormat={}{0:F4}}" Foreground="#00BFFF" FontFamily="Consolas" FontSize="{DynamicResource FontSize.Body}" FontWeight="Bold"
+                            <TextBlock Text="{Binding MachineStatus.X, StringFormat={}{0:F4}}" Foreground="#00BFFF" FontFamily="{DynamicResource FontFamily.Mono}" FontSize="{DynamicResource FontSize.XLarge}" FontWeight="Bold"
                                        HorizontalAlignment="Right" VerticalAlignment="Center" Margin="4,0"/>
                         </Border>
                         <Border Grid.Row="1" Grid.Column="4" Background="#2A2A2A" Margin="1" CornerRadius="2">
-                            <TextBlock Text="{Binding SelectedRow.X, StringFormat={}{0:F4}}" Foreground="#AAAAAA" FontFamily="Consolas" FontSize="{DynamicResource FontSize.Body}" FontWeight="Bold"
+                            <TextBlock Text="{Binding SelectedRow.X, StringFormat={}{0:F4}}" Foreground="#AAAAAA" FontFamily="{DynamicResource FontFamily.Mono}" FontSize="{DynamicResource FontSize.XLarge}" FontWeight="Bold"
                                        HorizontalAlignment="Right" VerticalAlignment="Center" Margin="4,0"/>
                         </Border>
                         <Border Grid.Row="1" Grid.Column="5" Background="#2A2A22" Margin="1" CornerRadius="2">
-                            <TextBlock Text="{Binding MachineStatus.G92X, StringFormat={}{0:F4}}" Foreground="#CCCC88" FontFamily="Consolas" FontSize="{DynamicResource FontSize.Body}" FontWeight="Bold"
+                            <TextBlock Text="{Binding MachineStatus.G92X, StringFormat={}{0:F4}}" Foreground="#CCCC88" FontFamily="{DynamicResource FontFamily.Mono}" FontSize="{DynamicResource FontSize.XLarge}" FontWeight="Bold"
                                        HorizontalAlignment="Right" VerticalAlignment="Center" Margin="4,0"/>
                         </Border>
                         <Border Grid.Row="1" Grid.Column="6" Background="#2A222A" Margin="1" CornerRadius="2">
-                            <TextBlock Text="{Binding MachineStatus.ToolOffsetX, StringFormat={}{0:F4}}" Foreground="#CC88CC" FontFamily="Consolas" FontSize="{DynamicResource FontSize.Body}" FontWeight="Bold"
+                            <TextBlock Text="{Binding MachineStatus.ToolOffsetX, StringFormat={}{0:F4}}" Foreground="#CC88CC" FontFamily="{DynamicResource FontFamily.Mono}" FontSize="{DynamicResource FontSize.XLarge}" FontWeight="Bold"
                                        HorizontalAlignment="Right" VerticalAlignment="Center" Margin="4,0"/>
                         </Border>
 
                         <!-- ===== Y 行 ===== -->
-                        <Button Grid.Row="2" Grid.Column="0" Content="ZERO" Style="{StaticResource ZeroBtnStyle}"
+                        <Button Grid.Row="2" Grid.Column="0" Content="{DynamicResource Str.Btn.Zero}" Style="{StaticResource ZeroBtnStyle}"
                                 Command="{Binding SetToZeroAxisCommand}" CommandParameter="Y"/>
                         <Border Grid.Row="2" Grid.Column="1" Background="#3A2A2A" Margin="1" CornerRadius="2">
-                            <TextBlock Text="Y" Foreground="White" FontWeight="Bold" FontSize="{DynamicResource FontSize.Medium}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <TextBlock Text="Y" Foreground="White" FontWeight="Bold" FontSize="{DynamicResource FontSize.XLarge}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <Border Grid.Row="2" Grid.Column="2" Background="#1A2E1A" Margin="1" CornerRadius="2">
-                            <TextBlock Text="{Binding MachineStatus.WorkY, StringFormat={}{0:F4}}" Foreground="#90EE90" FontFamily="Consolas" FontSize="{DynamicResource FontSize.Body}" FontWeight="Bold"
+                            <TextBlock Text="{Binding MachineStatus.WorkY, StringFormat={}{0:F4}}" Foreground="#90EE90" FontFamily="{DynamicResource FontFamily.Mono}" FontSize="{DynamicResource FontSize.XLarge}" FontWeight="Bold"
                                        HorizontalAlignment="Right" VerticalAlignment="Center" Margin="4,0"/>
                         </Border>
                         <Border Grid.Row="2" Grid.Column="3" Background="#1A1A2E" Margin="1" CornerRadius="2">
-                            <TextBlock Text="{Binding MachineStatus.Y, StringFormat={}{0:F4}}" Foreground="#00BFFF" FontFamily="Consolas" FontSize="{DynamicResource FontSize.Body}" FontWeight="Bold"
+                            <TextBlock Text="{Binding MachineStatus.Y, StringFormat={}{0:F4}}" Foreground="#00BFFF" FontFamily="{DynamicResource FontFamily.Mono}" FontSize="{DynamicResource FontSize.XLarge}" FontWeight="Bold"
                                        HorizontalAlignment="Right" VerticalAlignment="Center" Margin="4,0"/>
                         </Border>
                         <Border Grid.Row="2" Grid.Column="4" Background="#2A2A2A" Margin="1" CornerRadius="2">
-                            <TextBlock Text="{Binding SelectedRow.Y, StringFormat={}{0:F4}}" Foreground="#AAAAAA" FontFamily="Consolas" FontSize="{DynamicResource FontSize.Body}" FontWeight="Bold"
+                            <TextBlock Text="{Binding SelectedRow.Y, StringFormat={}{0:F4}}" Foreground="#AAAAAA" FontFamily="{DynamicResource FontFamily.Mono}" FontSize="{DynamicResource FontSize.XLarge}" FontWeight="Bold"
                                        HorizontalAlignment="Right" VerticalAlignment="Center" Margin="4,0"/>
                         </Border>
                         <Border Grid.Row="2" Grid.Column="5" Background="#2A2A22" Margin="1" CornerRadius="2">
-                            <TextBlock Text="{Binding MachineStatus.G92Y, StringFormat={}{0:F4}}" Foreground="#CCCC88" FontFamily="Consolas" FontSize="{DynamicResource FontSize.Body}" FontWeight="Bold"
+                            <TextBlock Text="{Binding MachineStatus.G92Y, StringFormat={}{0:F4}}" Foreground="#CCCC88" FontFamily="{DynamicResource FontFamily.Mono}" FontSize="{DynamicResource FontSize.XLarge}" FontWeight="Bold"
                                        HorizontalAlignment="Right" VerticalAlignment="Center" Margin="4,0"/>
                         </Border>
                         <Border Grid.Row="2" Grid.Column="6" Background="#2A222A" Margin="1" CornerRadius="2">
-                            <TextBlock Text="{Binding MachineStatus.ToolOffsetY, StringFormat={}{0:F4}}" Foreground="#CC88CC" FontFamily="Consolas" FontSize="{DynamicResource FontSize.Body}" FontWeight="Bold"
+                            <TextBlock Text="{Binding MachineStatus.ToolOffsetY, StringFormat={}{0:F4}}" Foreground="#CC88CC" FontFamily="{DynamicResource FontFamily.Mono}" FontSize="{DynamicResource FontSize.XLarge}" FontWeight="Bold"
                                        HorizontalAlignment="Right" VerticalAlignment="Center" Margin="4,0"/>
                         </Border>
 
                         <!-- ===== Z 行 ===== -->
-                        <Button Grid.Row="3" Grid.Column="0" Content="ZERO" Style="{StaticResource ZeroBtnStyle}"
+                        <Button Grid.Row="3" Grid.Column="0" Content="{DynamicResource Str.Btn.Zero}" Style="{StaticResource ZeroBtnStyle}"
                                 Command="{Binding SetToZeroAxisCommand}" CommandParameter="Z"/>
                         <Border Grid.Row="3" Grid.Column="1" Background="#3A2A2A" Margin="1" CornerRadius="2">
-                            <TextBlock Text="Z" Foreground="White" FontWeight="Bold" FontSize="{DynamicResource FontSize.Medium}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <TextBlock Text="Z" Foreground="White" FontWeight="Bold" FontSize="{DynamicResource FontSize.XLarge}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <Border Grid.Row="3" Grid.Column="2" Background="#1A2E1A" Margin="1" CornerRadius="2">
-                            <TextBlock Text="{Binding MachineStatus.WorkZ, StringFormat={}{0:F4}}" Foreground="#90EE90" FontFamily="Consolas" FontSize="{DynamicResource FontSize.Body}" FontWeight="Bold"
+                            <TextBlock Text="{Binding MachineStatus.WorkZ, StringFormat={}{0:F4}}" Foreground="#90EE90" FontFamily="{DynamicResource FontFamily.Mono}" FontSize="{DynamicResource FontSize.XLarge}" FontWeight="Bold"
                                        HorizontalAlignment="Right" VerticalAlignment="Center" Margin="4,0"/>
                         </Border>
                         <Border Grid.Row="3" Grid.Column="3" Background="#1A1A2E" Margin="1" CornerRadius="2">
-                            <TextBlock Text="{Binding MachineStatus.Z, StringFormat={}{0:F4}}" Foreground="#00BFFF" FontFamily="Consolas" FontSize="{DynamicResource FontSize.Body}" FontWeight="Bold"
+                            <TextBlock Text="{Binding MachineStatus.Z, StringFormat={}{0:F4}}" Foreground="#00BFFF" FontFamily="{DynamicResource FontFamily.Mono}" FontSize="{DynamicResource FontSize.XLarge}" FontWeight="Bold"
                                        HorizontalAlignment="Right" VerticalAlignment="Center" Margin="4,0"/>
                         </Border>
                         <Border Grid.Row="3" Grid.Column="4" Background="#2A2A2A" Margin="1" CornerRadius="2">
-                            <TextBlock Text="{Binding SelectedRow.Z, StringFormat={}{0:F4}}" Foreground="#AAAAAA" FontFamily="Consolas" FontSize="{DynamicResource FontSize.Body}" FontWeight="Bold"
+                            <TextBlock Text="{Binding SelectedRow.Z, StringFormat={}{0:F4}}" Foreground="#AAAAAA" FontFamily="{DynamicResource FontFamily.Mono}" FontSize="{DynamicResource FontSize.XLarge}" FontWeight="Bold"
                                        HorizontalAlignment="Right" VerticalAlignment="Center" Margin="4,0"/>
                         </Border>
                         <Border Grid.Row="3" Grid.Column="5" Background="#2A2A22" Margin="1" CornerRadius="2">
-                            <TextBlock Text="{Binding MachineStatus.G92Z, StringFormat={}{0:F4}}" Foreground="#CCCC88" FontFamily="Consolas" FontSize="{DynamicResource FontSize.Body}" FontWeight="Bold"
+                            <TextBlock Text="{Binding MachineStatus.G92Z, StringFormat={}{0:F4}}" Foreground="#CCCC88" FontFamily="{DynamicResource FontFamily.Mono}" FontSize="{DynamicResource FontSize.XLarge}" FontWeight="Bold"
                                        HorizontalAlignment="Right" VerticalAlignment="Center" Margin="4,0"/>
                         </Border>
                         <Border Grid.Row="3" Grid.Column="6" Background="#2A222A" Margin="1" CornerRadius="2">
-                            <TextBlock Text="{Binding MachineStatus.ToolOffsetZ, StringFormat={}{0:F4}}" Foreground="#CC88CC" FontFamily="Consolas" FontSize="{DynamicResource FontSize.Body}" FontWeight="Bold"
+                            <TextBlock Text="{Binding MachineStatus.ToolOffsetZ, StringFormat={}{0:F4}}" Foreground="#CC88CC" FontFamily="{DynamicResource FontFamily.Mono}" FontSize="{DynamicResource FontSize.XLarge}" FontWeight="Bold"
                                        HorizontalAlignment="Right" VerticalAlignment="Center" Margin="4,0"/>
                         </Border>
 
                         <!-- ===== A 行（依 IsAxisAEnabled 動態顯示） ===== -->
-                        <Button Grid.Row="4" Grid.Column="0" Content="ZERO" Style="{StaticResource ZeroBtnStyle}" Height="36"
+                        <Button Grid.Row="4" Grid.Column="0" Content="{DynamicResource Str.Btn.Zero}" Style="{StaticResource ZeroBtnStyle}" Height="50"
                                 Command="{Binding SetToZeroAxisCommand}" CommandParameter="A"
                                 Visibility="{Binding IsAxisAEnabled, Converter={StaticResource BoolToVis}}"/>
-                        <Border Grid.Row="4" Grid.Column="1" Background="#3A2A2A" Margin="1" CornerRadius="2" Height="36"
+                        <Border Grid.Row="4" Grid.Column="1" Background="#3A2A2A" Margin="1" CornerRadius="2" Height="50"
                                 Visibility="{Binding IsAxisAEnabled, Converter={StaticResource BoolToVis}}">
-                            <TextBlock Text="A" Foreground="White" FontWeight="Bold" FontSize="{DynamicResource FontSize.Medium}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <TextBlock Text="A" Foreground="White" FontWeight="Bold" FontSize="{DynamicResource FontSize.XLarge}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
-                        <Border Grid.Row="4" Grid.Column="2" Background="#1A2E1A" Margin="1" CornerRadius="2" Height="36"
+                        <Border Grid.Row="4" Grid.Column="2" Background="#1A2E1A" Margin="1" CornerRadius="2" Height="50"
                                 Visibility="{Binding IsAxisAEnabled, Converter={StaticResource BoolToVis}}">
-                            <TextBlock Text="{Binding MachineStatus.WorkA, StringFormat={}{0:F4}}" Foreground="#90EE90" FontFamily="Consolas" FontSize="{DynamicResource FontSize.Body}" FontWeight="Bold"
+                            <TextBlock Text="{Binding MachineStatus.WorkA, StringFormat={}{0:F4}}" Foreground="#90EE90" FontFamily="{DynamicResource FontFamily.Mono}" FontSize="{DynamicResource FontSize.XLarge}" FontWeight="Bold"
                                        HorizontalAlignment="Right" VerticalAlignment="Center" Margin="4,0"/>
                         </Border>
-                        <Border Grid.Row="4" Grid.Column="3" Background="#1A1A2E" Margin="1" CornerRadius="2" Height="36"
+                        <Border Grid.Row="4" Grid.Column="3" Background="#1A1A2E" Margin="1" CornerRadius="2" Height="50"
                                 Visibility="{Binding IsAxisAEnabled, Converter={StaticResource BoolToVis}}">
-                            <TextBlock Text="{Binding MachineStatus.A, StringFormat={}{0:F4}}" Foreground="#00BFFF" FontFamily="Consolas" FontSize="{DynamicResource FontSize.Body}" FontWeight="Bold"
+                            <TextBlock Text="{Binding MachineStatus.A, StringFormat={}{0:F4}}" Foreground="#00BFFF" FontFamily="{DynamicResource FontFamily.Mono}" FontSize="{DynamicResource FontSize.XLarge}" FontWeight="Bold"
                                        HorizontalAlignment="Right" VerticalAlignment="Center" Margin="4,0"/>
                         </Border>
-                        <Border Grid.Row="4" Grid.Column="4" Background="#2A2A2A" Margin="1" CornerRadius="2" Height="36"
+                        <Border Grid.Row="4" Grid.Column="4" Background="#2A2A2A" Margin="1" CornerRadius="2" Height="50"
                                 Visibility="{Binding IsAxisAEnabled, Converter={StaticResource BoolToVis}}">
-                            <TextBlock Text="{Binding SelectedRow.A, StringFormat={}{0:F4}}" Foreground="#AAAAAA" FontFamily="Consolas" FontSize="{DynamicResource FontSize.Body}" FontWeight="Bold"
+                            <TextBlock Text="{Binding SelectedRow.A, StringFormat={}{0:F4}}" Foreground="#AAAAAA" FontFamily="{DynamicResource FontFamily.Mono}" FontSize="{DynamicResource FontSize.XLarge}" FontWeight="Bold"
                                        HorizontalAlignment="Right" VerticalAlignment="Center" Margin="4,0"/>
                         </Border>
-                        <Border Grid.Row="4" Grid.Column="5" Background="#2A2A22" Margin="1" CornerRadius="2" Height="36"
+                        <Border Grid.Row="4" Grid.Column="5" Background="#2A2A22" Margin="1" CornerRadius="2" Height="50"
                                 Visibility="{Binding IsAxisAEnabled, Converter={StaticResource BoolToVis}}">
-                            <TextBlock Text="{Binding MachineStatus.G92A, StringFormat={}{0:F4}}" Foreground="#CCCC88" FontFamily="Consolas" FontSize="{DynamicResource FontSize.Body}" FontWeight="Bold"
+                            <TextBlock Text="{Binding MachineStatus.G92A, StringFormat={}{0:F4}}" Foreground="#CCCC88" FontFamily="{DynamicResource FontFamily.Mono}" FontSize="{DynamicResource FontSize.XLarge}" FontWeight="Bold"
                                        HorizontalAlignment="Right" VerticalAlignment="Center" Margin="4,0"/>
                         </Border>
-                        <Border Grid.Row="4" Grid.Column="6" Background="#2A222A" Margin="1" CornerRadius="2" Height="36"
+                        <Border Grid.Row="4" Grid.Column="6" Background="#2A222A" Margin="1" CornerRadius="2" Height="50"
                                 Visibility="{Binding IsAxisAEnabled, Converter={StaticResource BoolToVis}}">
-                            <TextBlock Text="0.0000" Foreground="#CC88CC" FontFamily="Consolas" FontSize="{DynamicResource FontSize.Body}" FontWeight="Bold"
+                            <TextBlock Text="0.0000" Foreground="#CC88CC" FontFamily="{DynamicResource FontFamily.Mono}" FontSize="{DynamicResource FontSize.XLarge}" FontWeight="Bold"
                                        HorizontalAlignment="Right" VerticalAlignment="Center" Margin="4,0"/>
                         </Border>
 
                         <!-- ===== B 行（依 IsAxisBEnabled 動態顯示） ===== -->
-                        <Button Grid.Row="5" Grid.Column="0" Content="ZERO" Style="{StaticResource ZeroBtnStyle}" Height="36"
+                        <Button Grid.Row="5" Grid.Column="0" Content="{DynamicResource Str.Btn.Zero}" Style="{StaticResource ZeroBtnStyle}" Height="50"
                                 Command="{Binding SetToZeroAxisCommand}" CommandParameter="B"
                                 Visibility="{Binding IsAxisBEnabled, Converter={StaticResource BoolToVis}}"/>
-                        <Border Grid.Row="5" Grid.Column="1" Background="#3A2A2A" Margin="1" CornerRadius="2" Height="36"
+                        <Border Grid.Row="5" Grid.Column="1" Background="#3A2A2A" Margin="1" CornerRadius="2" Height="50"
                                 Visibility="{Binding IsAxisBEnabled, Converter={StaticResource BoolToVis}}">
-                            <TextBlock Text="B" Foreground="White" FontWeight="Bold" FontSize="{DynamicResource FontSize.Medium}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <TextBlock Text="B" Foreground="White" FontWeight="Bold" FontSize="{DynamicResource FontSize.XLarge}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
-                        <Border Grid.Row="5" Grid.Column="2" Background="#1A2E1A" Margin="1" CornerRadius="2" Height="36"
+                        <Border Grid.Row="5" Grid.Column="2" Background="#1A2E1A" Margin="1" CornerRadius="2" Height="50"
                                 Visibility="{Binding IsAxisBEnabled, Converter={StaticResource BoolToVis}}">
-                            <TextBlock Text="{Binding MachineStatus.WorkB, StringFormat={}{0:F4}}" Foreground="#90EE90" FontFamily="Consolas" FontSize="{DynamicResource FontSize.Body}" FontWeight="Bold"
+                            <TextBlock Text="{Binding MachineStatus.WorkB, StringFormat={}{0:F4}}" Foreground="#90EE90" FontFamily="{DynamicResource FontFamily.Mono}" FontSize="{DynamicResource FontSize.XLarge}" FontWeight="Bold"
                                        HorizontalAlignment="Right" VerticalAlignment="Center" Margin="4,0"/>
                         </Border>
-                        <Border Grid.Row="5" Grid.Column="3" Background="#1A1A2E" Margin="1" CornerRadius="2" Height="36"
+                        <Border Grid.Row="5" Grid.Column="3" Background="#1A1A2E" Margin="1" CornerRadius="2" Height="50"
                                 Visibility="{Binding IsAxisBEnabled, Converter={StaticResource BoolToVis}}">
-                            <TextBlock Text="{Binding MachineStatus.B, StringFormat={}{0:F4}}" Foreground="#00BFFF" FontFamily="Consolas" FontSize="{DynamicResource FontSize.Body}" FontWeight="Bold"
+                            <TextBlock Text="{Binding MachineStatus.B, StringFormat={}{0:F4}}" Foreground="#00BFFF" FontFamily="{DynamicResource FontFamily.Mono}" FontSize="{DynamicResource FontSize.XLarge}" FontWeight="Bold"
                                        HorizontalAlignment="Right" VerticalAlignment="Center" Margin="4,0"/>
                         </Border>
-                        <Border Grid.Row="5" Grid.Column="4" Background="#2A2A2A" Margin="1" CornerRadius="2" Height="36"
+                        <Border Grid.Row="5" Grid.Column="4" Background="#2A2A2A" Margin="1" CornerRadius="2" Height="50"
                                 Visibility="{Binding IsAxisBEnabled, Converter={StaticResource BoolToVis}}">
-                            <TextBlock Text="{Binding SelectedRow.B, StringFormat={}{0:F4}}" Foreground="#AAAAAA" FontFamily="Consolas" FontSize="{DynamicResource FontSize.Body}" FontWeight="Bold"
+                            <TextBlock Text="{Binding SelectedRow.B, StringFormat={}{0:F4}}" Foreground="#AAAAAA" FontFamily="{DynamicResource FontFamily.Mono}" FontSize="{DynamicResource FontSize.XLarge}" FontWeight="Bold"
                                        HorizontalAlignment="Right" VerticalAlignment="Center" Margin="4,0"/>
                         </Border>
-                        <Border Grid.Row="5" Grid.Column="5" Background="#2A2A22" Margin="1" CornerRadius="2" Height="36"
+                        <Border Grid.Row="5" Grid.Column="5" Background="#2A2A22" Margin="1" CornerRadius="2" Height="50"
                                 Visibility="{Binding IsAxisBEnabled, Converter={StaticResource BoolToVis}}">
-                            <TextBlock Text="{Binding MachineStatus.G92B, StringFormat={}{0:F4}}" Foreground="#CCCC88" FontFamily="Consolas" FontSize="{DynamicResource FontSize.Body}" FontWeight="Bold"
+                            <TextBlock Text="{Binding MachineStatus.G92B, StringFormat={}{0:F4}}" Foreground="#CCCC88" FontFamily="{DynamicResource FontFamily.Mono}" FontSize="{DynamicResource FontSize.XLarge}" FontWeight="Bold"
                                        HorizontalAlignment="Right" VerticalAlignment="Center" Margin="4,0"/>
                         </Border>
-                        <Border Grid.Row="5" Grid.Column="6" Background="#2A222A" Margin="1" CornerRadius="2" Height="36"
+                        <Border Grid.Row="5" Grid.Column="6" Background="#2A222A" Margin="1" CornerRadius="2" Height="50"
                                 Visibility="{Binding IsAxisBEnabled, Converter={StaticResource BoolToVis}}">
-                            <TextBlock Text="0.0000" Foreground="#CC88CC" FontFamily="Consolas" FontSize="{DynamicResource FontSize.Body}" FontWeight="Bold"
+                            <TextBlock Text="0.0000" Foreground="#CC88CC" FontFamily="{DynamicResource FontFamily.Mono}" FontSize="{DynamicResource FontSize.XLarge}" FontWeight="Bold"
                                        HorizontalAlignment="Right" VerticalAlignment="Center" Margin="4,0"/>
                         </Border>
 
                         <!-- ===== C 行（依 IsAxisCEnabled 動態顯示） ===== -->
-                        <Button Grid.Row="6" Grid.Column="0" Content="ZERO" Style="{StaticResource ZeroBtnStyle}" Height="36"
+                        <Button Grid.Row="6" Grid.Column="0" Content="{DynamicResource Str.Btn.Zero}" Style="{StaticResource ZeroBtnStyle}" Height="50"
                                 Command="{Binding SetToZeroAxisCommand}" CommandParameter="C"
                                 Visibility="{Binding IsAxisCEnabled, Converter={StaticResource BoolToVis}}"/>
-                        <Border Grid.Row="6" Grid.Column="1" Background="#3A2A2A" Margin="1" CornerRadius="2" Height="36"
+                        <Border Grid.Row="6" Grid.Column="1" Background="#3A2A2A" Margin="1" CornerRadius="2" Height="50"
                                 Visibility="{Binding IsAxisCEnabled, Converter={StaticResource BoolToVis}}">
-                            <TextBlock Text="C" Foreground="White" FontWeight="Bold" FontSize="{DynamicResource FontSize.Medium}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <TextBlock Text="C" Foreground="White" FontWeight="Bold" FontSize="{DynamicResource FontSize.XLarge}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
-                        <Border Grid.Row="6" Grid.Column="2" Background="#1A2E1A" Margin="1" CornerRadius="2" Height="36"
+                        <Border Grid.Row="6" Grid.Column="2" Background="#1A2E1A" Margin="1" CornerRadius="2" Height="50"
                                 Visibility="{Binding IsAxisCEnabled, Converter={StaticResource BoolToVis}}">
-                            <TextBlock Text="{Binding MachineStatus.WorkC, StringFormat={}{0:F4}}" Foreground="#90EE90" FontFamily="Consolas" FontSize="{DynamicResource FontSize.Body}" FontWeight="Bold"
+                            <TextBlock Text="{Binding MachineStatus.WorkC, StringFormat={}{0:F4}}" Foreground="#90EE90" FontFamily="{DynamicResource FontFamily.Mono}" FontSize="{DynamicResource FontSize.XLarge}" FontWeight="Bold"
                                        HorizontalAlignment="Right" VerticalAlignment="Center" Margin="4,0"/>
                         </Border>
-                        <Border Grid.Row="6" Grid.Column="3" Background="#1A1A2E" Margin="1" CornerRadius="2" Height="36"
+                        <Border Grid.Row="6" Grid.Column="3" Background="#1A1A2E" Margin="1" CornerRadius="2" Height="50"
                                 Visibility="{Binding IsAxisCEnabled, Converter={StaticResource BoolToVis}}">
-                            <TextBlock Text="{Binding MachineStatus.C, StringFormat={}{0:F4}}" Foreground="#00BFFF" FontFamily="Consolas" FontSize="{DynamicResource FontSize.Body}" FontWeight="Bold"
+                            <TextBlock Text="{Binding MachineStatus.C, StringFormat={}{0:F4}}" Foreground="#00BFFF" FontFamily="{DynamicResource FontFamily.Mono}" FontSize="{DynamicResource FontSize.XLarge}" FontWeight="Bold"
                                        HorizontalAlignment="Right" VerticalAlignment="Center" Margin="4,0"/>
                         </Border>
-                        <Border Grid.Row="6" Grid.Column="4" Background="#2A2A2A" Margin="1" CornerRadius="2" Height="36"
+                        <Border Grid.Row="6" Grid.Column="4" Background="#2A2A2A" Margin="1" CornerRadius="2" Height="50"
                                 Visibility="{Binding IsAxisCEnabled, Converter={StaticResource BoolToVis}}">
-                            <TextBlock Text="{Binding SelectedRow.C, StringFormat={}{0:F4}}" Foreground="#AAAAAA" FontFamily="Consolas" FontSize="{DynamicResource FontSize.Body}" FontWeight="Bold"
+                            <TextBlock Text="{Binding SelectedRow.C, StringFormat={}{0:F4}}" Foreground="#AAAAAA" FontFamily="{DynamicResource FontFamily.Mono}" FontSize="{DynamicResource FontSize.XLarge}" FontWeight="Bold"
                                        HorizontalAlignment="Right" VerticalAlignment="Center" Margin="4,0"/>
                         </Border>
-                        <Border Grid.Row="6" Grid.Column="5" Background="#2A2A22" Margin="1" CornerRadius="2" Height="36"
+                        <Border Grid.Row="6" Grid.Column="5" Background="#2A2A22" Margin="1" CornerRadius="2" Height="50"
                                 Visibility="{Binding IsAxisCEnabled, Converter={StaticResource BoolToVis}}">
-                            <TextBlock Text="{Binding MachineStatus.G92C, StringFormat={}{0:F4}}" Foreground="#CCCC88" FontFamily="Consolas" FontSize="{DynamicResource FontSize.Body}" FontWeight="Bold"
+                            <TextBlock Text="{Binding MachineStatus.G92C, StringFormat={}{0:F4}}" Foreground="#CCCC88" FontFamily="{DynamicResource FontFamily.Mono}" FontSize="{DynamicResource FontSize.XLarge}" FontWeight="Bold"
                                        HorizontalAlignment="Right" VerticalAlignment="Center" Margin="4,0"/>
                         </Border>
-                        <Border Grid.Row="6" Grid.Column="6" Background="#2A222A" Margin="1" CornerRadius="2" Height="36"
+                        <Border Grid.Row="6" Grid.Column="6" Background="#2A222A" Margin="1" CornerRadius="2" Height="50"
                                 Visibility="{Binding IsAxisCEnabled, Converter={StaticResource BoolToVis}}">
-                            <TextBlock Text="0.0000" Foreground="#CC88CC" FontFamily="Consolas" FontSize="{DynamicResource FontSize.Body}" FontWeight="Bold"
+                            <TextBlock Text="0.0000" Foreground="#CC88CC" FontFamily="{DynamicResource FontFamily.Mono}" FontSize="{DynamicResource FontSize.XLarge}" FontWeight="Bold"
                                        HorizontalAlignment="Right" VerticalAlignment="Center" Margin="4,0"/>
                         </Border>
                     </Grid>

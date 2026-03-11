@@ -18,6 +18,8 @@
     <sys:String x:Key="Str.Nav.Probing">探針測量</sys:String>
     <sys:String x:Key="Str.Nav.Settings">系統設定</sys:String>
     <sys:String x:Key="Str.Nav.Status">狀態診斷</sys:String>
+    <!-- [2026-03-11] 新增 -->
+    <sys:String x:Key="Str.Nav.History">歷史紀錄</sys:String>
 
     <!-- ===== 通用按鈕 ===== -->
     <sys:String x:Key="Str.Btn.CycleStart">啟動</sys:String>
@@ -37,12 +39,45 @@
     <sys:String x:Key="Str.Btn.Set">設定</sys:String>
     <sys:String x:Key="Str.Btn.ClearAll">全部清除</sys:String>
     <sys:String x:Key="Str.Btn.Send">送出</sys:String>
+    <!-- [2026-03-11] 新增按鈕 keys -->
+    <sys:String x:Key="Str.Btn.Rescan">重新掃描</sys:String>
+    <sys:String x:Key="Str.Btn.ReloadPgm">重新載入程式</sys:String>
+    <sys:String x:Key="Str.Btn.ClearPgm">清除程式</sys:String>
+    <sys:String x:Key="Str.Btn.Flood">冷卻液</sys:String>
+    <sys:String x:Key="Str.Btn.Mist">霧化冷卻</sys:String>
+    <sys:String x:Key="Str.Btn.M01Break">M01 暫停</sys:String>
+    <sys:String x:Key="Str.Btn.Power">電源</sys:String>
+    <sys:String x:Key="Str.Btn.Estop">急停</sys:String>
+    <sys:String x:Key="Str.Btn.Delete">刪除</sys:String>
+    <sys:String x:Key="Str.Btn.AddTool">新增刀具</sys:String>
+    <sys:String x:Key="Str.Btn.SaveTable">儲存表格</sys:String>
+    <sys:String x:Key="Str.Btn.ReloadTable">重新載入</sys:String>
+    <sys:String x:Key="Str.Btn.ClearSelected">清除選定</sys:String>
+    <sys:String x:Key="Str.Btn.Zero">歸零</sys:String>
+
+    <!-- ===== 檔案管理 ===== -->
+    <sys:String x:Key="Str.File.Panel">機台程式</sys:String>
+    <sys:String x:Key="Str.File.Refresh">刷新</sys:String>
+    <sys:String x:Key="Str.File.Run">執行</sys:String>
+    <sys:String x:Key="Str.File.Delete">刪除</sys:String>
+    <sys:String x:Key="Str.File.Rename">重命名</sys:String>
+    <sys:String x:Key="Str.File.NoFiles">尚無程式檔案</sys:String>
+    <sys:String x:Key="Str.File.Open">開啟舊檔</sys:String>
+    <sys:String x:Key="Str.File.Upload">上傳</sys:String>
+    <sys:String x:Key="Str.File.Confirm">確認</sys:String>
+    <sys:String x:Key="Str.File.Cancel">取消</sys:String>
+    <sys:String x:Key="Str.File.Preview">G-Code 預覽</sys:String>
+    <sys:String x:Key="Str.File.SetProgram">設定加工程式</sys:String>
+    <sys:String x:Key="Str.File.NoPreview">選取檔案以預覽</sys:String>
 
     <!-- ===== 標籤 ===== -->
     <sys:String x:Key="Str.Label.Work">工作座標</sys:String>
     <sys:String x:Key="Str.Label.Machine">機械座標</sys:String>
     <sys:String x:Key="Str.Label.DTG">剩餘距離</sys:String>
     <sys:String x:Key="Str.Label.Status">狀態</sys:String>
+    <!-- [2026-03-11] 新增標籤 keys -->
+    <sys:String x:Key="Str.Label.Axis">軸</sys:String>
+    <sys:String x:Key="Str.Label.Ref">原點復歸</sys:String>
 
     <!-- ===== JOG ===== -->
     <sys:String x:Key="Str.Jog.Continuous">連續</sys:String>
@@ -54,6 +89,57 @@
     <sys:String x:Key="Str.Header.ShortcutStop"> 停止  </sys:String>
     <sys:String x:Key="Str.Header.ShortcutPower"> 電源  </sys:String>
     <sys:String x:Key="Str.Header.ShortcutEstop"> 急停</sys:String>
+    <!-- [2026-03-11] 多語言選單 -->
+    <sys:String x:Key="Str.Header.Language">語言</sys:String>
+    <sys:String x:Key="Str.Header.LangZhTW">繁體中文</sys:String>
+    <sys:String x:Key="Str.Header.LangEnUS">English</sys:String>
+
+    <!-- ===== 刀具表 ===== -->
+    <!-- [2026-03-11] 新增 -->
+    <sys:String x:Key="Str.Tool.Table">刀具表</sys:String>
+    <sys:String x:Key="Str.Tool.Remark">備註</sys:String>
+    <sys:String x:Key="Str.Tool.ChangePanel">換刀面板</sys:String>
+    <sys:String x:Key="Str.Tool.LoadSpindle">裝刀至主軸</sys:String>
+    <sys:String x:Key="Str.Tool.UnloadSpindle">卸刀回刀庫</sys:String>
+    <sys:String x:Key="Str.Tool.ElectronicToolSetter">電子對刀儀</sys:String>
+    <sys:String x:Key="Str.Tool.TouchOffCurrentTool">目前刀具對刀</sys:String>
+    <sys:String x:Key="Str.Tool.GoToZero">移至零點</sys:String>
+    <sys:String x:Key="Str.Tool.GoToG30">移至 G30</sys:String>
+    <sys:String x:Key="Str.Tool.GoToHome">移至原點</sys:String>
+    <sys:String x:Key="Str.Tool.Length">刀長</sys:String>
+    <sys:String x:Key="Str.Tool.Diameter">刀徑</sys:String>
+
+    <!-- ===== 補正表 ===== -->
+    <!-- [2026-03-11] 新增 -->
+    <sys:String x:Key="Str.Offset.Table">工件補正表</sys:String>
+    <sys:String x:Key="Str.Offset.Coordinates">工件座標補正</sys:String>
+    <sys:String x:Key="Str.Offset.SetToZero">歸零&#x0a;設定</sys:String>
+    <sys:String x:Key="Str.Offset.WcCurrentPos">工件位置</sys:String>
+    <sys:String x:Key="Str.Offset.MachineCoords">機械座標</sys:String>
+    <sys:String x:Key="Str.Offset.WcOffset">工件補正</sys:String>
+    <sys:String x:Key="Str.Offset.G92Offset">G92 補正</sys:String>
+    <sys:String x:Key="Str.Offset.ToolOffset">刀具補正</sys:String>
+
+    <!-- ===== Slider / Override ===== -->
+    <!-- [2026-03-11] 新增 -->
+    <sys:String x:Key="Str.Slider.SpindleLoad">主軸負載</sys:String>
+
+    <!-- ===== Monitor（MAIN 頁面 G-Code） ===== -->
+    <!-- [2026-03-11] 新增 -->
+    <sys:String x:Key="Str.Monitor.NoProgramLoaded">尚未載入程式</sys:String>
+    <sys:String x:Key="Str.Monitor.LoadHint">按「上傳」開啟 G-Code 檔案</sys:String>
+
+    <!-- ===== 歷史紀錄 ===== -->
+    <!-- [2026-03-11] 新增 -->
+    <sys:String x:Key="Str.History.ClearAlarms">清除警報</sys:String>
+    <sys:String x:Key="Str.History.DateTime">日期 / 時間</sys:String>
+    <sys:String x:Key="Str.History.Type">類型</sys:String>
+    <sys:String x:Key="Str.History.Message">訊息</sys:String>
+    <sys:String x:Key="Str.History.All">全部</sys:String>
+    <sys:String x:Key="Str.History.Info">資訊</sys:String>
+    <sys:String x:Key="Str.History.Warn">警告</sys:String>
+    <sys:String x:Key="Str.History.Error">錯誤</sys:String>
+    <sys:String x:Key="Str.History.Debug">偵錯</sys:String>
 
     <!-- ===== ATC 自動刀庫 ===== -->
     <sys:String x:Key="Str.Atc.UmbrellaAtc">斗笠式刀庫</sys:String>

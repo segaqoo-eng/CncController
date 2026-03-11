@@ -32,19 +32,19 @@
         <Border Grid.Row="0" BorderBrush="#444" BorderThickness="0,0,0,1" Padding="10,10,10,0">
             <DockPanel LastChildFill="False">
                 <StackPanel Orientation="Horizontal">
-                    <RadioButton Content="ALL" Style="{StaticResource TabButtonStyle}" IsChecked="True"
+                    <RadioButton Content="{DynamicResource Str.History.All}" Style="{StaticResource TabButtonStyle}" IsChecked="True"
                                  Command="{Binding SetFilterCommand}" CommandParameter="ALL"/>
-                    <RadioButton Content="INFO" Style="{StaticResource TabButtonStyle}"
+                    <RadioButton Content="{DynamicResource Str.History.Info}" Style="{StaticResource TabButtonStyle}"
                                  Command="{Binding SetFilterCommand}" CommandParameter="INFO"/>
-                    <RadioButton Content="WARN" Style="{StaticResource TabButtonStyle}"
+                    <RadioButton Content="{DynamicResource Str.History.Warn}" Style="{StaticResource TabButtonStyle}"
                                  Command="{Binding SetFilterCommand}" CommandParameter="WARN"/>
-                    <RadioButton Content="ERROR" Style="{StaticResource TabButtonStyle}"
+                    <RadioButton Content="{DynamicResource Str.History.Error}" Style="{StaticResource TabButtonStyle}"
                                  Command="{Binding SetFilterCommand}" CommandParameter="ERROR"/>
-                    <RadioButton Content="DEBUG" Style="{StaticResource TabButtonStyle}" Foreground="Gray"
+                    <RadioButton Content="{DynamicResource Str.History.Debug}" Style="{StaticResource TabButtonStyle}" Foreground="Gray"
                                  Command="{Binding SetFilterCommand}" CommandParameter="DEBUG"/>
                 </StackPanel>
 
-                <Button DockPanel.Dock="Right" Content="CLEAR ALARMS" Width="160" Height="45" 
+                <Button DockPanel.Dock="Right" Content="{DynamicResource Str.History.ClearAlarms}" Width="160" Height="45" 
                         Background="#333" Foreground="White" BorderBrush="Gray" Margin="0,0,0,5"
                         FontSize="{DynamicResource FontSize.Large}" FontWeight="Bold"
                         Command="{Binding ClearActiveAlarmsCommand}">
@@ -102,9 +102,9 @@
             </DataGrid.Resources>
 
             <DataGrid.Columns>
-                <DataGridTextColumn Header="DATE / TIME" Binding="{Binding Time, StringFormat='yyyy/MM/dd HH:mm:ss'}" Width="220" Foreground="#AAA"/>
+                <DataGridTextColumn Header="{DynamicResource Str.History.DateTime}" Binding="{Binding Time, StringFormat='yyyy/MM/dd HH:mm:ss'}" Width="220" Foreground="#AAA"/>
 
-                <DataGridTextColumn Header="TYPE" Binding="{Binding Type}" Width="120">
+                <DataGridTextColumn Header="{DynamicResource Str.History.Type}" Binding="{Binding Type}" Width="120">
                     <DataGridTextColumn.ElementStyle>
                         <Style TargetType="TextBlock">
                             <Setter Property="Foreground" Value="{Binding ColorBrush}"/>
@@ -114,7 +114,7 @@
                     </DataGridTextColumn.ElementStyle>
                 </DataGridTextColumn>
 
-                <DataGridTextColumn Header="MESSAGE" Binding="{Binding DisplayMessage}" Width="*" >
+                <DataGridTextColumn Header="{DynamicResource Str.History.Message}" Binding="{Binding DisplayMessage}" Width="*" >
                     <DataGridTextColumn.ElementStyle>
                         <Style TargetType="TextBlock">
                             <Setter Property="Foreground" Value="{Binding ColorBrush}"/>

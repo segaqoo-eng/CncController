@@ -529,7 +529,115 @@ def upload_file():
         print(f"[Upload Error] {str(e)}")
         return jsonify({'status': 'Error', 'message': str(e)}), 500
 
-        
+
+
+# [2026-03-11] 程式檔案管理 — 列表/刪除/重命名/載入
+@app.route('/v2/program/list', methods=['GET'])
+def v2_program_list():
+    """列出 NC 檔案（檔名 + 大小 + 修改時間）"""
+    try:
+        if not os.path.exists(NC_FILES_DIR):
+            return success_response([])
+        files = []
+        for f in os.listdir(NC_FILES_DIR):
+            fp = os.path.join(NC_FILES_DIR, f)
+            if os.path.isfile(fp):
+                stat = os.stat(fp)
+                files.append({
+                    'name': f,
+                    'size': stat.st_size,
+                    'modified': stat.st_mtime
+                })
+        # 依修改時間降冪（最新在最前）
+        files.sort(key=lambda x: x['modified'], reverse=True)
+        return success_response(files)
+    except Exception as e:
+        return error_response(f"List fail: {e}")
+
+@app.route('/v2/program/delete', methods=['POST'])
+def v2_program_delete():
+    """刪除指定 NC 檔案"""
+    try:
+        data = request.json or {}
+        filename = data.get('name', '')
+        if not filename:
+            return error_response("Missing filename", 400)
+        filename = os.path.basename(filename)
+        filepath = os.path.join(NC_FILES_DIR, filename)
+        if not os.path.exists(filepath):
+            return error_response(f"File not found: {filename}", 404)
+        os.remove(filepath)
+        print(f"[FileMan] Deleted: {filepath}")
+        return success_response(f"Deleted: {filename}")
+    except Exception as e:
+        return error_response(f"Delete fail: {e}")
+
+@app.route('/v2/program/rename', methods=['POST'])
+def v2_program_rename():
+    """重命名 NC 檔案"""
+    try:
+        data = request.json or {}
+        old_name = data.get('old_name', '')
+        new_name = data.get('new_name', '')
+        if not old_name or not new_name:
+            return error_response("Missing old_name or new_name", 400)
+        old_name = os.path.basename(old_name)
+        new_name = os.path.basename(new_name)
+        old_path = os.path.join(NC_FILES_DIR, old_name)
+        new_path = os.path.join(NC_FILES_DIR, new_name)
+        if not os.path.exists(old_path):
+            return error_response(f"File not found: {old_name}", 404)
+        if os.path.exists(new_path):
+            return error_response(f"Target exists: {new_name}", 409)
+        os.rename(old_path, new_path)
+        print(f"[FileMan] Renamed: {old_name} -> {new_name}")
+        return success_response(f"Renamed: {old_name} -> {new_name}")
+    except Exception as e:
+        return error_response(f"Rename fail: {e}")
+
+@app.route('/v2/program/load', methods=['POST'])
+def v2_program_load():
+    """載入指定 NC 檔案到 LinuxCNC（不執行）"""
+    if not ensure_cnc_connections(): return error_response("No connection")
+    try:
+        data = request.json or {}
+        filename = data.get('name', '')
+        if not filename:
+            return error_response("Missing filename", 400)
+        filename = os.path.basename(filename)
+        filepath = os.path.join(NC_FILES_DIR, filename)
+        if not os.path.exists(filepath):
+            return error_response(f"File not found: {filename}", 404)
+        cnc_stat.poll()
+        if cnc_stat.task_mode != linuxcnc.MODE_AUTO:
+            cnc_cmd.mode(linuxcnc.MODE_AUTO)
+            cnc_cmd.wait_complete()
+        cnc_cmd.program_open(filepath)
+        cnc_cmd.wait_complete()
+        print(f"[FileMan] Loaded: {filepath}")
+        return success_response(f"Loaded: {filename}")
+    except Exception as e:
+        return error_response(f"Load fail: {e}")
+
+# [2026-03-11] 回讀 NC 檔案內容
+@app.route('/v2/program/read', methods=['POST'])
+def v2_program_read():
+    """回讀 NC 檔案內容"""
+    try:
+        data = request.json or {}
+        filename = data.get('name', '')
+        if not filename:
+            return error_response("Missing filename", 400)
+        filename = os.path.basename(filename)
+        filepath = os.path.join(NC_FILES_DIR, filename)
+        if not os.path.exists(filepath):
+            return error_response(f"File not found: {filename}", 404)
+        with open(filepath, 'r', encoding='utf-8') as f:
+            content = f.read()
+        return success_response({"name": filename, "content": content})
+    except Exception as e:
+        return error_response(f"Read fail: {e}")
+
 @app.route('/v2/status', methods=['GET'])
 def v2_status():
     global cnc_stat

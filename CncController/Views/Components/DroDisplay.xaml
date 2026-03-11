@@ -41,9 +41,11 @@
             <TextBlock Grid.Row="0" Grid.Column="4" Text="REF" Foreground="{DynamicResource Brush.Text.Muted}" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="{DynamicResource FontSize.Body}"/>
 
             <!-- ========== X 軸 (Row 1) ========== -->
+            <!-- [2026-03-11] 統一按鈕樣式：ZERO 改用 BaseBtnStyle，REF 加 BasedOn 繼承 BaseBtnStyle -->
+            <!-- KEEP: status — REF X/Y/Z/A/B/C 紅(未復歸)↔綠(已復歸)，REF ALL 同 -->
             <!-- ZERO X -->
             <Button Grid.Row="1" Grid.Column="0" Content="ZERO X" Margin="2" FontSize="{DynamicResource FontSize.Small}" FontWeight="Bold"
-                    Foreground="White" Background="#555" BorderBrush="#666" BorderThickness="1"
+                    Style="{StaticResource BaseBtnStyle}"
                     Command="{Binding DataContext.DroZeroAxisCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                     CommandParameter="X"/>
             <!-- Work X -->
@@ -67,7 +69,7 @@
                     Command="{Binding DataContext.RefAxisCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                     CommandParameter="X">
                 <Button.Style>
-                    <Style TargetType="Button">
+                    <Style TargetType="Button" BasedOn="{StaticResource BaseBtnStyle}">
                         <Setter Property="Background" Value="#D32F2F"/>
                         <Setter Property="BorderBrush" Value="#B71C1C"/>
                         <Style.Triggers>
@@ -82,7 +84,7 @@
 
             <!-- ========== Y 軸 (Row 2) ========== -->
             <Button Grid.Row="2" Grid.Column="0" Content="ZERO Y" Margin="2" FontSize="{DynamicResource FontSize.Small}" FontWeight="Bold"
-                    Foreground="White" Background="#555" BorderBrush="#666" BorderThickness="1"
+                    Style="{StaticResource BaseBtnStyle}"
                     Command="{Binding DataContext.DroZeroAxisCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                     CommandParameter="Y"/>
             <Border Grid.Row="2" Grid.Column="1" Background="{DynamicResource Brush.DRO.Background}" Margin="2" CornerRadius="2">
@@ -102,7 +104,7 @@
                     Command="{Binding DataContext.RefAxisCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                     CommandParameter="Y">
                 <Button.Style>
-                    <Style TargetType="Button">
+                    <Style TargetType="Button" BasedOn="{StaticResource BaseBtnStyle}">
                         <Setter Property="Background" Value="#D32F2F"/>
                         <Setter Property="BorderBrush" Value="#B71C1C"/>
                         <Style.Triggers>
@@ -117,7 +119,7 @@
 
             <!-- ========== Z 軸 (Row 3) ========== -->
             <Button Grid.Row="3" Grid.Column="0" Content="ZERO Z" Margin="2" FontSize="{DynamicResource FontSize.Small}" FontWeight="Bold"
-                    Foreground="White" Background="#555" BorderBrush="#666" BorderThickness="1"
+                    Style="{StaticResource BaseBtnStyle}"
                     Command="{Binding DataContext.DroZeroAxisCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                     CommandParameter="Z"/>
             <Border Grid.Row="3" Grid.Column="1" Background="{DynamicResource Brush.DRO.Background}" Margin="2" CornerRadius="2">
@@ -137,7 +139,7 @@
                     Command="{Binding DataContext.RefAxisCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                     CommandParameter="Z">
                 <Button.Style>
-                    <Style TargetType="Button">
+                    <Style TargetType="Button" BasedOn="{StaticResource BaseBtnStyle}">
                         <Setter Property="Background" Value="#D32F2F"/>
                         <Setter Property="BorderBrush" Value="#B71C1C"/>
                         <Style.Triggers>
@@ -152,7 +154,7 @@
 
             <!-- ========== A 軸 (Row 4) — 動態顯示 ========== -->
             <Button Grid.Row="4" Grid.Column="0" Content="ZERO A" Margin="2" FontSize="{DynamicResource FontSize.Small}" FontWeight="Bold" Height="36"
-                    Foreground="White" Background="#555" BorderBrush="#666" BorderThickness="1"
+                    Style="{StaticResource BaseBtnStyle}"
                     Visibility="{Binding DataContext.IsAxisAEnabled, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVis}}"
                     Command="{Binding DataContext.DroZeroAxisCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                     CommandParameter="A"/>
@@ -177,7 +179,7 @@
                     Command="{Binding DataContext.RefAxisCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                     CommandParameter="A">
                 <Button.Style>
-                    <Style TargetType="Button">
+                    <Style TargetType="Button" BasedOn="{StaticResource BaseBtnStyle}">
                         <Setter Property="Background" Value="#D32F2F"/>
                         <Setter Property="BorderBrush" Value="#B71C1C"/>
                         <Style.Triggers>
@@ -192,7 +194,7 @@
 
             <!-- ========== B 軸 (Row 5) — 動態顯示 ========== -->
             <Button Grid.Row="5" Grid.Column="0" Content="ZERO B" Margin="2" FontSize="{DynamicResource FontSize.Small}" FontWeight="Bold" Height="36"
-                    Foreground="White" Background="#555" BorderBrush="#666" BorderThickness="1"
+                    Style="{StaticResource BaseBtnStyle}"
                     Visibility="{Binding DataContext.IsAxisBEnabled, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVis}}"
                     Command="{Binding DataContext.DroZeroAxisCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                     CommandParameter="B"/>
@@ -217,7 +219,7 @@
                     Command="{Binding DataContext.RefAxisCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                     CommandParameter="B">
                 <Button.Style>
-                    <Style TargetType="Button">
+                    <Style TargetType="Button" BasedOn="{StaticResource BaseBtnStyle}">
                         <Setter Property="Background" Value="#D32F2F"/>
                         <Setter Property="BorderBrush" Value="#B71C1C"/>
                         <Style.Triggers>
@@ -232,7 +234,7 @@
 
             <!-- ========== C 軸 (Row 6) — 動態顯示 ========== -->
             <Button Grid.Row="6" Grid.Column="0" Content="ZERO C" Margin="2" FontSize="{DynamicResource FontSize.Small}" FontWeight="Bold" Height="36"
-                    Foreground="White" Background="#555" BorderBrush="#666" BorderThickness="1"
+                    Style="{StaticResource BaseBtnStyle}"
                     Visibility="{Binding DataContext.IsAxisCEnabled, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVis}}"
                     Command="{Binding DataContext.DroZeroAxisCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                     CommandParameter="C"/>
@@ -257,7 +259,7 @@
                     Command="{Binding DataContext.RefAxisCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                     CommandParameter="C">
                 <Button.Style>
-                    <Style TargetType="Button">
+                    <Style TargetType="Button" BasedOn="{StaticResource BaseBtnStyle}">
                         <Setter Property="Background" Value="#D32F2F"/>
                         <Setter Property="BorderBrush" Value="#B71C1C"/>
                         <Style.Triggers>
@@ -273,7 +275,7 @@
             <!-- ========== 底部按鈕列 (Row 7) ========== -->
             <Button Grid.Row="7" Grid.Column="0" Grid.ColumnSpan="2" Margin="2,5"
                     Content="{DynamicResource Str.Btn.ZeroAll}" FontSize="{DynamicResource FontSize.Body}" FontWeight="Bold"
-                    Foreground="White" Background="#555" BorderBrush="#666" BorderThickness="1"
+                    Style="{StaticResource BaseBtnStyle}"
                     Command="{Binding DataContext.DroZeroAllCommand, RelativeSource={RelativeSource AncestorType=Window}}"/>
 
             <!-- [2026-02-24] 原點復歸 ALL：未復歸→紅色（原點復歸 ALL）/ 已復歸→綠色（已復歸），仍可再次點擊 -->
@@ -281,7 +283,7 @@
                     FontSize="{DynamicResource FontSize.Body}" FontWeight="Bold" Foreground="White" BorderThickness="1"
                     Command="{Binding DataContext.HomeAllCommand, RelativeSource={RelativeSource AncestorType=Window}}">
                 <Button.Style>
-                    <Style TargetType="Button">
+                    <Style TargetType="Button" BasedOn="{StaticResource BaseBtnStyle}">
                         <Setter Property="Background" Value="#D32F2F"/>
                         <Setter Property="BorderBrush" Value="#B71C1C"/>
                         <Setter Property="Content" Value="{DynamicResource Str.Btn.RefAll}"/>

@@ -58,4 +58,11 @@
     <SolidColorBrush x:Key="Brush.Hover.Border" Color="#0090FF"/>
     <SolidColorBrush x:Key="Brush.Pressed.Border" Color="#40B0FF"/>
 
+    <!-- [2026-03-11] PanelTitle 區塊標題統一色 -->
+    <SolidColorBrush x:Key="Brush.PanelTitle.Background" Color="#1A5276"/>
+    <SolidColorBrush x:Key="Brush.PanelTitle.Border" Color="#2980B9"/>
+
+    <!-- [2026-03-11] GroupHeader 群組標題統一色 -->
+    <SolidColorBrush x:Key="Brush.GroupHeader.Foreground" Color="#5E70FF"/>
+
 </ResourceDictionary>

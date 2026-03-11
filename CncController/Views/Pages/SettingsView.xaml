@@ -101,7 +101,9 @@
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
                     <StackPanel Orientation="Horizontal">
-                        <Button Command="{Binding HardwareVM.StartScanCommand}" Content="SCAN BUS" Width="150" Height="40" Background="#5E70FF" Foreground="White" FontWeight="Bold"/>
+                        <!-- [2026-03-11] 移除 inline Background，改用 BaseBtnStyle -->
+                        <Button Command="{Binding HardwareVM.StartScanCommand}" Content="SCAN BUS" Width="150" Height="40"
+                                Style="{StaticResource BaseBtnStyle}" Foreground="White" FontWeight="Bold"/>
                         <TextBlock Text="{Binding HardwareVM.StatusMessage}" Foreground="White" VerticalAlignment="Center" Margin="20,0"/>
                     </StackPanel>
 
@@ -131,7 +133,9 @@
                     </Grid.ColumnDefinitions>
                     <StackPanel Grid.Column="0" Margin="0,0,20,0">
                         <comp:MachineConfigView DataContext="{Binding MachineConfigVM}"/>
-                        <Button Content="UPDATE MAPPING TABLE" Command="{Binding ApplyMachineConfigCommand}" Height="45" Margin="0,20,0,0" Background="#007ACC" Foreground="White" FontWeight="Bold"/>
+                        <!-- [2026-03-11] 移除 inline Background，改用 BaseBtnStyle -->
+                        <Button Content="UPDATE MAPPING TABLE" Command="{Binding ApplyMachineConfigCommand}" Height="45" Margin="0,20,0,0"
+                                Style="{StaticResource BaseBtnStyle}" Foreground="White" FontWeight="Bold"/>
                     </StackPanel>
                     <comp:AxisMappingView Grid.Column="1" DataContext="{Binding MappingVM}"/>
                 </Grid>
@@ -148,7 +152,8 @@
                         <RowDefinition Height="60"/>
                     </Grid.RowDefinitions>
 
-                    <TextBlock Grid.Row="0" Text="1. Mechanical &amp; Motion Settings" Foreground="#5E70FF" FontWeight="Bold" FontSize="{DynamicResource FontSize.Large}" Margin="0,0,0,5"/>
+                    <!-- [2026-03-11] 統一 GroupHeader -->
+                    <TextBlock Grid.Row="0" Text="1. Mechanical &amp; Motion Settings" Style="{StaticResource GroupHeaderText}" Margin="0,0,0,5"/>
                     <DataGrid Grid.Row="1" ItemsSource="{Binding Axes}" AutoGenerateColumns="False"
                               Background="#2D2D2D" RowBackground="#333" Foreground="White"
                               BorderThickness="1" BorderBrush="#555" CanUserAddRows="False" RowHeight="35" 
@@ -164,7 +169,8 @@
                         </DataGrid.Columns>
                     </DataGrid>
 
-                    <TextBlock Grid.Row="3" Text="2. IO Configuration &amp; Homing Strategy" Foreground="#5E70FF" FontWeight="Bold" FontSize="{DynamicResource FontSize.Large}" Margin="0,0,0,5"/>
+                    <!-- [2026-03-11] 統一 GroupHeader -->
+                    <TextBlock Grid.Row="3" Text="2. IO Configuration &amp; Homing Strategy" Style="{StaticResource GroupHeaderText}" Margin="0,0,0,5"/>
                     <DataGrid Grid.Row="4" ItemsSource="{Binding Axes}" AutoGenerateColumns="False"
                               Background="#2D2D2D" RowBackground="#333" Foreground="White"
                               BorderThickness="1" BorderBrush="#555" CanUserAddRows="False" RowHeight="35"
@@ -218,9 +224,9 @@
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <ComboBox SelectedValue="{Binding HomingMode, UpdateSourceTrigger=PropertyChanged}" SelectedValuePath="Tag">
-                                            <ComboBoxItem Content="Immediate" Tag="{x:Static models:HomingMode.Immediate}" ToolTip="原地歸零"/>
-                                            <ComboBoxItem Content="Home Switch" Tag="{x:Static models:HomingMode.HomeSwitch}" ToolTip="使用獨立原點開關"/>
-                                            <ComboBoxItem Content="Limit Switch" Tag="{x:Static models:HomingMode.LimitSwitch}" ToolTip="使用極限開關當原點"/>
+                                            <ComboBoxItem Content="Immediate" Tag="{x:Static models:HomingMode.Immediate}" ToolTip="{DynamicResource Str.Setting.HomingImmediate}"/>
+                                            <ComboBoxItem Content="Home Switch" Tag="{x:Static models:HomingMode.HomeSwitch}" ToolTip="{DynamicResource Str.Setting.HomingHomeSwitch}"/>
+                                            <ComboBoxItem Content="Limit Switch" Tag="{x:Static models:HomingMode.LimitSwitch}" ToolTip="{DynamicResource Str.Setting.HomingLimitSwitch}"/>
                                         </ComboBox>
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
@@ -258,7 +264,9 @@
                                 DataContext="{Binding DataContext, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                 IsEnabled="{Binding CanEditHardware}">
                         <TextBlock Text="{Binding DeployStatus}" Foreground="#AAA" VerticalAlignment="Center" Margin="0,0,10,0"/>
-                        <Button Command="{Binding GenerateAndDeployCommand}" Content="GENERATE &amp; RESTART" Width="200" Height="40" Background="#28a745" Foreground="White" FontWeight="Bold"/>
+                        <!-- [2026-03-11] 移除 inline 綠色，統一深灰 -->
+                        <Button Command="{Binding GenerateAndDeployCommand}" Content="GENERATE &amp; RESTART" Width="200" Height="40"
+                                Style="{StaticResource BaseBtnStyle}"/>
                     </StackPanel>
                 </Grid>
             </TabItem>
@@ -418,7 +426,7 @@
                             <DataGrid.Columns>
                                 <DataGridTextColumn Header="Pin" Binding="{Binding PinIndex}" IsReadOnly="True" Width="50"/>
                                 <!-- [2026-03-10] 即時狀態指示燈（綠=ON, 灰=OFF） -->
-                                <DataGridTemplateColumn Header="狀態" Width="45">
+                                <DataGridTemplateColumn Header="{DynamicResource Str.Label.Status}" Width="45">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
                                             <Ellipse Width="14" Height="14" HorizontalAlignment="Center" VerticalAlignment="Center"
@@ -550,7 +558,7 @@
                             <DataGrid.Columns>
                                 <DataGridTextColumn Header="Pin" Binding="{Binding PinIndex}" IsReadOnly="True" Width="50"/>
                                 <!-- [2026-03-10] 即時狀態指示燈（綠=ON, 灰=OFF） -->
-                                <DataGridTemplateColumn Header="狀態" Width="45">
+                                <DataGridTemplateColumn Header="{DynamicResource Str.Label.Status}" Width="45">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
                                             <Ellipse Width="14" Height="14" HorizontalAlignment="Center" VerticalAlignment="Center"

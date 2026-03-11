@@ -19,7 +19,7 @@
             <Menu Grid.Column="0" Background="Transparent" Foreground="{DynamicResource Brush.Text.Muted}" VerticalAlignment="Center">
                 <!-- [2026-02-23] File 選單加 EXIT 子項，呼叫 ExitAppCommand 關閉應用程式 -->
                 <MenuItem Header="{DynamicResource Str.Nav.File}" Foreground="{DynamicResource Brush.Text.Muted}">
-                    <MenuItem Header="EXIT（關閉程式）"
+                    <MenuItem Header="{DynamicResource Str.Header.Exit}"
                               Command="{Binding DataContext.ExitAppCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                               Foreground="#333"/>
                 </MenuItem>
@@ -48,26 +48,12 @@
                 </TextBlock>
 
                 <!-- [2026-03-04] RETRY 按鈕：斷線時顯示 -->
+                <!-- [2026-03-11] RETRY 改用 BaseBtnStyle，移除 inline Background 和自訂 Template -->
                 <Button Content="RETRY" Command="{Binding RetryConnectionCommand}"
                         Visibility="{Binding ShowRetryButton, Converter={StaticResource BoolToVis}}"
-                        Background="#007ACC" Foreground="White" FontWeight="Bold"
+                        Style="{StaticResource BaseBtnStyle}" Foreground="White" FontWeight="Bold"
                         Padding="12,4" Margin="10,0,0,0" FontSize="{DynamicResource FontSize.Body}"
-                        VerticalAlignment="Center" Cursor="Hand">
-                    <Button.Style>
-                        <Style TargetType="Button">
-                            <Setter Property="Template">
-                                <Setter.Value>
-                                    <ControlTemplate TargetType="Button">
-                                        <Border Background="{TemplateBinding Background}"
-                                                CornerRadius="3" Padding="{TemplateBinding Padding}">
-                                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                        </Border>
-                                    </ControlTemplate>
-                                </Setter.Value>
-                            </Setter>
-                        </Style>
-                    </Button.Style>
-                </Button>
+                        VerticalAlignment="Center" Cursor="Hand"/>
             </StackPanel>
 
             <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
@@ -93,9 +79,9 @@
 
                 <!-- [2026-03-06] 快捷鍵提示 -->
                 <TextBlock Foreground="#888" FontSize="{DynamicResource FontSize.Body}" VerticalAlignment="Center" Margin="0,0,20,0">
-                    <Run Text="ESC" FontWeight="Bold" Foreground="#CCC"/><Run Text=" 停止  "/>
-                    <Run Text="F1" FontWeight="Bold" Foreground="#CCC"/><Run Text=" 電源  "/>
-                    <Run Text="F2" FontWeight="Bold" Foreground="#CCC"/><Run Text=" 急停"/>
+                    <Run Text="ESC" FontWeight="Bold" Foreground="#CCC"/><Run Text="{DynamicResource Str.Header.ShortcutStop}"/>
+                    <Run Text="F1" FontWeight="Bold" Foreground="#CCC"/><Run Text="{DynamicResource Str.Header.ShortcutPower}"/>
+                    <Run Text="F2" FontWeight="Bold" Foreground="#CCC"/><Run Text="{DynamicResource Str.Header.ShortcutEstop}"/>
                 </TextBlock>
 
                 <TextBlock Text="{DynamicResource Str.Title}"

@@ -34,7 +34,7 @@
 
             <UniformGrid Grid.Row="0" Columns="2" Rows="5">
                 <!-- [2026-03-04] 關鍵操作色彩分層：綠=啟動、紅=停止、橙=暫停 -->
-                <!-- [2026-03-10] CYCLE START：執行中(RUNNING)才亮綠色，閒置灰色 -->
+                <!-- KEEP: status — CYCLE START 綠色(RUNNING) -->
                 <Button Content="CYCLE START" Command="{Binding CycleStartCommand}">
                     <Button.Style>
                         <Style TargetType="Button" BasedOn="{StaticResource CycleBtnStyle}">
@@ -55,7 +55,7 @@
                         </Style>
                     </Button.Style>
                 </Button>
-                <!-- [2026-03-10] STOP：MouseDown 紅色，放開灰色 -->
+                <!-- KEEP: status — STOP IsPressed 紅色 -->
                 <Button Content="STOP" Command="{Binding StopCommand}">
                     <Button.Style>
                         <Style TargetType="Button" BasedOn="{StaticResource CycleBtnStyle}">
@@ -75,7 +75,7 @@
                     </Button.Style>
                 </Button>
                 <Button Content="RELOAD PGM" Command="{Binding ReloadCommand}" Style="{StaticResource CycleBtnStyle}"/>
-                <!-- [2026-03-10] FEED HOLD：暫停中(PAUSED)才亮橘色，閒置灰色 -->
+                <!-- KEEP: status — FEED HOLD 橘色(PAUSED) -->
                 <Button Content="FEED HOLD" Command="{Binding FeedHoldCommand}">
                     <Button.Style>
                         <Style TargetType="Button" BasedOn="{StaticResource CycleBtnStyle}">
@@ -174,7 +174,7 @@
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
 
-                <!-- [2026-03-04] POWER：保留獨立 Template（綠色動態切換），加 Cursor=Hand -->
+                <!-- KEEP: status — POWER 綠色(IsPower=True) -->
                 <Button Grid.Column="0" Command="{Binding TogglePowerCommand}" Margin="2" Content="POWER" Cursor="Hand"
                         Height="45" FontSize="{DynamicResource FontSize.Body}" FontWeight="Bold" Foreground="White">
                     <Button.Style>
@@ -226,7 +226,7 @@
                                VerticalAlignment="Center" HorizontalAlignment="Center"/>
                 </Border>
 
-                <!-- [2026-03-04] E-STOP：保留獨立 Template（紅色動態切換），加 Cursor=Hand -->
+                <!-- KEEP: status — E-STOP 紅色(IsEstop=False) -->
                 <Button Grid.Column="2" Command="{Binding ToggleEstopCommand}" Margin="2" Content="E-STOP" Cursor="Hand"
                         Height="45" FontSize="{DynamicResource FontSize.Body}" FontWeight="Bold" Foreground="White">
                     <Button.Style>

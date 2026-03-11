@@ -136,15 +136,16 @@
                                         </Setter.Value>
                                     </Setter>
                                 </Trigger>
+                                <!-- [2026-03-11] 分頁選取色統一為 #5E70FF 藍紫漸層 -->
                                 <Trigger Property="IsChecked" Value="True">
-                                    <Setter TargetName="bd" Property="BorderBrush" Value="#40A0F0"/>
+                                    <Setter TargetName="bd" Property="BorderBrush" Value="#8090FF"/>
                                     <Setter Property="Foreground" Value="White"/>
                                     <Setter TargetName="bd" Property="Background">
                                         <Setter.Value>
                                             <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                                                <GradientStop Color="#2090E8" Offset="0"/>
-                                                <GradientStop Color="#0078D4" Offset="0.5"/>
-                                                <GradientStop Color="#005FA3" Offset="1"/>
+                                                <GradientStop Color="#7A8AFF" Offset="0"/>
+                                                <GradientStop Color="#5E70FF" Offset="0.5"/>
+                                                <GradientStop Color="#4A5CE0" Offset="1"/>
                                             </LinearGradientBrush>
                                         </Setter.Value>
                                     </Setter>
@@ -208,6 +209,30 @@
                         </ControlTemplate>
                     </Setter.Value>
                 </Setter>
+            </Style>
+
+            <!-- [2026-03-11] PanelTitleBorder：大區塊標題外框（統一深藍背景） -->
+            <Style x:Key="PanelTitleBorder" TargetType="Border">
+                <Setter Property="Background" Value="{DynamicResource Brush.PanelTitle.Background}"/>
+                <Setter Property="BorderBrush" Value="{DynamicResource Brush.PanelTitle.Border}"/>
+                <Setter Property="BorderThickness" Value="1"/>
+                <Setter Property="CornerRadius" Value="3"/>
+                <Setter Property="Padding" Value="8,5"/>
+            </Style>
+
+            <!-- [2026-03-11] PanelTitleText：大區塊標題文字 -->
+            <Style x:Key="PanelTitleText" TargetType="TextBlock">
+                <Setter Property="Foreground" Value="White"/>
+                <Setter Property="FontSize" Value="{DynamicResource FontSize.Medium}"/>
+                <Setter Property="FontWeight" Value="Bold"/>
+                <Setter Property="HorizontalAlignment" Value="Center"/>
+            </Style>
+
+            <!-- [2026-03-11] GroupHeaderText：群組標題文字（#5E70FF 藍紫） -->
+            <Style x:Key="GroupHeaderText" TargetType="TextBlock">
+                <Setter Property="Foreground" Value="{DynamicResource Brush.GroupHeader.Foreground}"/>
+                <Setter Property="FontSize" Value="{DynamicResource FontSize.Medium}"/>
+                <Setter Property="FontWeight" Value="Bold"/>
             </Style>
 
         </ResourceDictionary>

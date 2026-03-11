@@ -21,14 +21,14 @@
     <Border Background="#252526" CornerRadius="5" BorderBrush="#3E3E42" BorderThickness="1" Padding="15">
         <StackPanel>
 
-            <TextBlock Text="機台軸數設定" 
+            <TextBlock Text="{DynamicResource Str.Setting.MachineAxisConfig}" 
                        Foreground="#007ACC" 
                        FontSize="{DynamicResource FontSize.Large}"
                        FontWeight="Bold" 
                        Margin="0,0,0,15"/>
 
             <!-- [2026-02-24] 機台類型下拉選單 -->
-            <TextBlock Text="機台類型"
+            <TextBlock Text="{DynamicResource Str.Setting.MachineType}"
                        Foreground="#AAAAAA"
                        FontSize="{DynamicResource FontSize.Body}"
                        Margin="0,0,0,5"/>
@@ -39,24 +39,24 @@
 
             <Rectangle Height="1" Fill="#444" Margin="0,0,0,10"/>
 
-            <TextBlock Text="啟用軸（依機台類型自動設定）："
+            <TextBlock Text="{DynamicResource Str.Setting.EnabledAxes}"
                        Foreground="#AAAAAA"
                        FontSize="{DynamicResource FontSize.Body}"
                        Margin="0,0,0,10"
                        TextWrapping="Wrap"/>
 
             <StackPanel Margin="5,0,0,0">
-                <CheckBox Content="X Axis (基本軸)" IsChecked="{Binding EnableX}"/>
-                <CheckBox Content="Y Axis (基本軸)" IsChecked="{Binding EnableY}"/>
-                <CheckBox Content="Z Axis (基本軸)" IsChecked="{Binding EnableZ}"/>
+                <CheckBox Content="{DynamicResource Str.Setting.AxisXBasic}" IsChecked="{Binding EnableX}"/>
+                <CheckBox Content="{DynamicResource Str.Setting.AxisYBasic}" IsChecked="{Binding EnableY}"/>
+                <CheckBox Content="{DynamicResource Str.Setting.AxisZBasic}" IsChecked="{Binding EnableZ}"/>
             </StackPanel>
 
             <Rectangle Height="1" Fill="#444" Margin="0,15,0,10"/>
 
             <StackPanel Margin="5,0,0,0">
-                <CheckBox Content="A Axis (第4軸/旋轉)" IsChecked="{Binding EnableA}"/>
-                <CheckBox Content="B Axis (第5軸/旋轉)" IsChecked="{Binding EnableB}"/>
-                <CheckBox Content="C Axis (第6軸/旋轉)" IsChecked="{Binding EnableC}"/>
+                <CheckBox Content="{DynamicResource Str.Setting.AxisARotary}" IsChecked="{Binding EnableA}"/>
+                <CheckBox Content="{DynamicResource Str.Setting.AxisBRotary}" IsChecked="{Binding EnableB}"/>
+                <CheckBox Content="{DynamicResource Str.Setting.AxisCRotary}" IsChecked="{Binding EnableC}"/>
             </StackPanel>
 
         </StackPanel>

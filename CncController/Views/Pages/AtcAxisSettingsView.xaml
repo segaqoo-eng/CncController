@@ -46,14 +46,14 @@
             <!-- [2026-03-06] CAROUSEL ROTATION SERVO -->
             <GroupBox BorderBrush="#555" BorderThickness="1" Margin="0,0,0,10" Padding="15,10">
                 <GroupBox.Header>
-                    <TextBlock Text="刀盤旋轉伺服" Foreground="#5E70FF" FontWeight="Bold" FontSize="{DynamicResource FontSize.Medium}"/>
+                    <TextBlock Text="{DynamicResource Str.Atc.CarouselRotationServo}" Style="{StaticResource GroupHeaderText}"/>
                 </GroupBox.Header>
                 <Grid Margin="0,5">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="180"/>
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
-                    <TextBlock Grid.Column="0" Text="EtherCAT 站號：" Style="{StaticResource ParamLabel}"/>
+                    <TextBlock Grid.Column="0" Text="{DynamicResource Str.Atc.EtherCatSlaveId}" Style="{StaticResource ParamLabel}"/>
                     <!-- [2026-03-09] DisplayMemberPath 改為 DisplayName，顯示站號避免選錯 -->
                     <ComboBox Grid.Column="1" Width="300" FontSize="{DynamicResource FontSize.Medium}" Height="30" Foreground="Black" HorizontalAlignment="Left"
                               ItemsSource="{Binding AvailableSlaves}"
@@ -65,7 +65,7 @@
             <!-- [2026-03-06] MECHANICAL PARAMETERS -->
             <GroupBox BorderBrush="#555" BorderThickness="1" Margin="0,0,0,10" Padding="15,10">
                 <GroupBox.Header>
-                    <TextBlock Text="機械參數" Foreground="#5E70FF" FontWeight="Bold" FontSize="{DynamicResource FontSize.Medium}"/>
+                    <TextBlock Text="{DynamicResource Str.Atc.MechanicalParams}" Style="{StaticResource GroupHeaderText}"/>
                 </GroupBox.Header>
                 <StackPanel>
                     <Grid Margin="0,5">
@@ -73,7 +73,7 @@
                             <ColumnDefinition Width="180"/>
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="每轉脈衝數：" Style="{StaticResource ParamLabel}"/>
+                        <TextBlock Grid.Column="0" Text="{DynamicResource Str.Atc.PulsePerRev}" Style="{StaticResource ParamLabel}"/>
                         <StackPanel Grid.Column="1" Orientation="Horizontal">
                             <TextBox Style="{StaticResource DarkTextBox}"
                                      Text="{Binding CarouselPulsePerRev, UpdateSourceTrigger=PropertyChanged}"/>
@@ -85,7 +85,7 @@
                             <ColumnDefinition Width="180"/>
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="導程：" Style="{StaticResource ParamLabel}"/>
+                        <TextBlock Grid.Column="0" Text="{DynamicResource Str.Atc.Pitch}" Style="{StaticResource ParamLabel}"/>
                         <StackPanel Grid.Column="1" Orientation="Horizontal">
                             <TextBox Style="{StaticResource DarkTextBox}"
                                      Text="{Binding CarouselPitch, UpdateSourceTrigger=PropertyChanged}"/>
@@ -98,7 +98,7 @@
             <!-- [2026-03-06] MOTION PARAMETERS -->
             <GroupBox BorderBrush="#555" BorderThickness="1" Margin="0,0,0,10" Padding="15,10">
                 <GroupBox.Header>
-                    <TextBlock Text="運動參數" Foreground="#5E70FF" FontWeight="Bold" FontSize="{DynamicResource FontSize.Medium}"/>
+                    <TextBlock Text="{DynamicResource Str.Atc.MotionParams}" Style="{StaticResource GroupHeaderText}"/>
                 </GroupBox.Header>
                 <StackPanel>
                     <Grid Margin="0,5">
@@ -106,7 +106,7 @@
                             <ColumnDefinition Width="180"/>
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="最大速度：" Style="{StaticResource ParamLabel}"/>
+                        <TextBlock Grid.Column="0" Text="{DynamicResource Str.Atc.MaxVelocity}" Style="{StaticResource ParamLabel}"/>
                         <StackPanel Grid.Column="1" Orientation="Horizontal">
                             <TextBox Style="{StaticResource DarkTextBox}"
                                      Text="{Binding CarouselMaxVel, UpdateSourceTrigger=PropertyChanged}"/>
@@ -118,7 +118,7 @@
                             <ColumnDefinition Width="180"/>
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="最大加速度：" Style="{StaticResource ParamLabel}"/>
+                        <TextBlock Grid.Column="0" Text="{DynamicResource Str.Atc.MaxAcceleration}" Style="{StaticResource ParamLabel}"/>
                         <StackPanel Grid.Column="1" Orientation="Horizontal">
                             <TextBox Style="{StaticResource DarkTextBox}"
                                      Text="{Binding CarouselMaxAccel, UpdateSourceTrigger=PropertyChanged}"/>
@@ -131,7 +131,7 @@
             <!-- [2026-03-06] INFO -->
             <GroupBox BorderBrush="#555" BorderThickness="1" Margin="0,0,0,10" Padding="15,10">
                 <GroupBox.Header>
-                    <TextBlock Text="資訊" Foreground="#5E70FF" FontWeight="Bold" FontSize="{DynamicResource FontSize.Medium}"/>
+                    <TextBlock Text="{DynamicResource Str.Atc.Info}" Style="{StaticResource GroupHeaderText}"/>
                 </GroupBox.Header>
                 <StackPanel>
                     <TextBlock FontSize="{DynamicResource FontSize.Medium}" Foreground="#CCC" Margin="0,4">
@@ -153,7 +153,7 @@
                             </MultiBinding>
                         </TextBlock.Text>
                     </TextBlock>
-                    <TextBlock Text="尚未選擇站號" FontSize="{DynamicResource FontSize.Medium}" Foreground="#888" Margin="0,4">
+                    <TextBlock Text="{DynamicResource Str.Atc.NoSlaveSelected}" FontSize="{DynamicResource FontSize.Medium}" Foreground="#888" Margin="0,4">
                         <TextBlock.Style>
                             <Style TargetType="TextBlock">
                                 <Setter Property="Visibility" Value="Collapsed"/>

@@ -29,12 +29,11 @@
             <Setter Property="Margin" Value="4,3"/>
         </Style>
 
-        <!-- [2026-03-04] ZERO 按鈕樣式（表格內嵌小按鈕），BasedOn OffsetBtnStyle，保留棕色背景 -->
+        <!-- [2026-03-11] ZERO 按鈕樣式（移除 inline 棕色，統一深灰漸層） -->
         <Style x:Key="ZeroBtnStyle" TargetType="Button" BasedOn="{StaticResource OffsetBtnStyle}">
             <Setter Property="FontSize" Value="{DynamicResource FontSize.XSmall}"/>
             <Setter Property="Padding" Value="4,2"/>
             <Setter Property="Margin" Value="1"/>
-            <Setter Property="Background" Value="#664422"/>
         </Style>
 
         <!-- [2026-03-03] 移除 ModeBtnStyle：MAN/AUTO/MDI 按鈕已移至 JogPanel 區域 -->
@@ -50,8 +49,10 @@
             <!-- ========== 左欄：座標系總表 ========== -->
             <Border Grid.Column="0" Background="#252526" BorderBrush="#444" BorderThickness="1" CornerRadius="4" Margin="0,0,5,0">
                 <DockPanel Margin="8">
-                    <TextBlock DockPanel.Dock="Top" Text="WORK OFFSET TABLE" Foreground="#AAAAAA"
-                               FontSize="{DynamicResource FontSize.Body}" FontWeight="Bold" Margin="0,0,0,6"/>
+                    <!-- [2026-03-11] 統一 PanelTitle -->
+                    <Border DockPanel.Dock="Top" Style="{StaticResource PanelTitleBorder}" Margin="0,0,0,6">
+                        <TextBlock Text="WORK OFFSET TABLE" Style="{StaticResource PanelTitleText}"/>
+                    </Border>
 
                     <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Margin="0,8,0,0"
                                 HorizontalAlignment="Left">
@@ -59,12 +60,11 @@
                                 Command="{Binding ClearSelectedCommand}" Width="130"/>
                         <Button Content="CLEAR ALL" Style="{StaticResource OffsetBtnStyle}"
                                 Command="{Binding ClearAllCommand}" Width="90"/>
+                        <!-- [2026-03-11] 移除 inline 色彩，統一深灰 -->
                         <Button Content="SAVE TABLE" Style="{StaticResource OffsetBtnStyle}"
-                                Command="{Binding SaveTableCommand}" Width="90"
-                                Background="#445588"/>
+                                Command="{Binding SaveTableCommand}" Width="90"/>
                         <Button Content="RELOAD TABLE" Style="{StaticResource OffsetBtnStyle}"
-                                Command="{Binding ReloadTableCommand}" Width="110"
-                                Background="#226633"/>
+                                Command="{Binding ReloadTableCommand}" Width="110"/>
                     </StackPanel>
 
                     <DataGrid ItemsSource="{Binding OffsetTable}"
@@ -124,8 +124,10 @@
             <!-- ========== 右欄：WORK COORDINATE OFFSETS（對齊 PB 版） ========== -->
             <Border Grid.Column="1" Background="#252526" BorderBrush="#444" BorderThickness="1" CornerRadius="4" Margin="5,0,0,0">
                 <DockPanel Margin="10">
-                    <TextBlock DockPanel.Dock="Top" Text="WORK COORDINATE OFFSETS" Foreground="#AAAAAA"
-                               FontSize="{DynamicResource FontSize.Body}" FontWeight="Bold" Margin="0,0,0,8"/>
+                    <!-- [2026-03-11] 統一 PanelTitle -->
+                    <Border DockPanel.Dock="Top" Style="{StaticResource PanelTitleBorder}" Margin="0,0,0,8">
+                        <TextBlock Text="WORK COORDINATE OFFSETS" Style="{StaticResource PanelTitleText}"/>
+                    </Border>
 
                     <!-- [2026-02-24] WCS 按鈕改為 2 行（對齊 PB 版：Row1=G54-G58，Row2=G59/G59.1-G59.3） -->
                     <StackPanel DockPanel.Dock="Top" Margin="0,0,0,4">

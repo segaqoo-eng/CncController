@@ -31,6 +31,57 @@ See @memory.md for current bugs, progress, and decisions.
 
 ---
 
+## UI 樣式規範（必須遵守）
+
+### 分頁選取色
+- **子分頁 / Tab 選取**：統一使用 `BaseRadioBtnStyle`（繼承即可），選取色為 **#5E70FF 藍紫漸層**（#7A8AFF→#5E70FF→#4A5CE0）
+- **按鈕 toggle（開關狀態）**：使用 `Brush.Checked`（#007ACC 藍），如 SINGLE BLOCK / FLOOD / MIST 等
+- **主導航列**：使用 `NavBtnStyle`（已繼承 BaseRadioBtnStyle）
+- **禁止**在新分頁中自訂選取色，一律繼承全域 Style
+
+### 區塊標頭
+- **大區塊標題**（如面板標題）：外層 `<Border Style="{StaticResource PanelTitleBorder}">`，內層 `<TextBlock Style="{StaticResource PanelTitleText}"/>`，背景色 = `Brush.PanelTitle.Background`（#1A5276 深藍）
+- **群組標題**（如 GroupBox header、設定分類標題）：使用 `<TextBlock Style="{StaticResource GroupHeaderText}"/>`，前景色 = `Brush.GroupHeader.Foreground`（#5E70FF 藍紫）
+- **禁止**在新元件中 inline 寫死標頭背景色（#444 / #1A5276 / #252526 等）
+
+### 按鈕樣式
+- **一般按鈕**：一律繼承 `BaseBtnStyle`（深灰漸層 #5E5E5E→#3A3A3E→#2A2A2E）
+- **禁止** inline 設定任何 `Background="#xxx"` 色碼（一律由 Style 繼承鏈控制）
+- **唯一例外**：狀態指示按鈕（標有 `<!-- KEEP: status -->` 註解），這些按鈕的動態色彩透過 DataTrigger 控制，不可移除
+
+### 按鈕 Style 繼承鏈
+```
+BaseBtnStyle (Theme.Dark.xaml 全域)
+├── AtcBtnStyle (AtcView 本地) → PanelBtnStyle (AtcView 本地)
+├── CycleBtnStyle (CycleControl 本地)
+├── ToolBtnStyle (ToolTableView 本地) → PanelBtnStyle (ToolTableView 本地)
+├── OffsetBtnStyle (Theme.Dark.xaml 全域) → WcsBtnStyle (OffsetsView 本地)
+├── JogArrowBtn (JogPanel 本地) → JogRotaryBtn (JogPanel 本地)
+└── 直接使用：DRO ZERO/REF、Settings SCAN/UPDATE、Monitor SEND、HeaderBar RETRY、Probing SIM
+```
+
+### KEEP: status 按鈕例外清單
+| 按鈕 | 檔案 | DataTrigger 色彩邏輯 |
+|------|------|---------------------|
+| CYCLE START | CycleControl | InterpState=RUNNING → 綠 |
+| FEED HOLD | CycleControl | InterpState=PAUSED → 橘 |
+| STOP | CycleControl | IsPressed → 紅 |
+| POWER | CycleControl | IsPower=True → 綠 |
+| E-STOP | CycleControl | IsEstop=False → 紅 |
+| REF X/Y/Z/A/B/C | DroDisplay | IsXHomed~IsCHomed=True → 綠 / False → 紅 |
+| REF ALL | DroDisplay | IsAllHomed=True → 綠 / False → 紅 |
+| FWD / REV | JogConfig | SpindleDirection=1/-1 → 藍 |
+| 夾刀 / 鬆刀 | AtcView | IsDrawbarOn=True/False → 藍 |
+
+### 多語言（i18n）— 強制規則
+- **所有新增的 UI 顯示文字**（Content / Text / Header / ToolTip）**必須**使用 `{DynamicResource Str.xxx}` 綁定
+- 對應的 key-value **必須同步新增**至 `Resources/Languages/Lang.zh-TW.xaml`
+- **禁止**在 XAML 中硬編碼中文或任何可翻譯文字
+- Key 命名規範：`Str.Nav.*`（導航）/ `Str.Btn.*`（按鈕）/ `Str.Label.*`（標籤）/ `Str.Atc.*` / `Str.Probe.*` / `Str.Setting.*` / `Str.Tool.*` / `Str.Offset.*` / `Str.Header.*`
+- 英文技術用語（如 MDI / G54 / M6 G43 / X+ / SPINDLE RPM）可保持 inline 不需 i18n
+
+---
+
 ## Build & Run
 
 ```bash

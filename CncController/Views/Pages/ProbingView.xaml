@@ -1,3 +1,4 @@
+<!-- [2026-03-11] i18n：hardcoded Chinese → DynamicResource Str.Probe.* -->
 <!-- [2026-03-04] ProbingView：探測循環頁面（對齊 PB 版 Probing_outSide_2.png）
      Porbing_BACK.png 為整頁背景（Layer 0），所有 UI 元件浮在上面（Layer 1） -->
 <UserControl x:Class="CncController.Views.Pages.ProbingView"
@@ -187,27 +188,27 @@
                         </Style.Triggers>
                     </Style>
                 </StackPanel.Style>
-                <RadioButton Content="外角探測" Style="{StaticResource ProbeTabStyle}"
+                <RadioButton Content="{DynamicResource Str.Probe.OutsideCorners}" Style="{StaticResource ProbeTabStyle}"
                              IsChecked="True" GroupName="ProbeTab"
                              Command="{Binding SwitchProbeTabCommand}" CommandParameter="OutsideCorners"/>
-                <RadioButton Content="內角探測" Style="{StaticResource ProbeTabStyle}"
+                <RadioButton Content="{DynamicResource Str.Probe.InsideCorners}" Style="{StaticResource ProbeTabStyle}"
                              GroupName="ProbeTab"
                              Command="{Binding SwitchProbeTabCommand}" CommandParameter="InsideCorners"/>
-                <RadioButton Content="凸台與口袋" Style="{StaticResource ProbeTabStyle}"
+                <RadioButton Content="{DynamicResource Str.Probe.BossAndPocket}" Style="{StaticResource ProbeTabStyle}"
                              GroupName="ProbeTab"
                              Command="{Binding SwitchProbeTabCommand}" CommandParameter="BossAndPocket"/>
-                <RadioButton Content="脊與谷" Style="{StaticResource ProbeTabStyle}"
+                <RadioButton Content="{DynamicResource Str.Probe.RidgeAndValley}" Style="{StaticResource ProbeTabStyle}"
                              GroupName="ProbeTab"
                              Command="{Binding SwitchProbeTabCommand}" CommandParameter="RidgeAndValley"/>
-                <RadioButton Content="邊緣角度" Style="{StaticResource ProbeTabStyle}"
+                <RadioButton Content="{DynamicResource Str.Probe.EdgeAngle}" Style="{StaticResource ProbeTabStyle}"
                              GroupName="ProbeTab"
                              Command="{Binding SwitchProbeTabCommand}" CommandParameter="EdgeAngle"/>
-                <RadioButton Content="旋轉軸" Style="{StaticResource ProbeTabStyle}"
+                <RadioButton Content="{DynamicResource Str.Probe.RotaryAxis}" Style="{StaticResource ProbeTabStyle}"
                              IsEnabled="False" GroupName="ProbeTab"/>
-                <RadioButton Content="校正" Style="{StaticResource ProbeTabStyle}"
+                <RadioButton Content="{DynamicResource Str.Probe.Calibrate}" Style="{StaticResource ProbeTabStyle}"
                              GroupName="ProbeTab"
                              Command="{Binding SwitchProbeTabCommand}" CommandParameter="Calibrate"/>
-                <RadioButton Content="探測說明" Style="{StaticResource ProbeTabStyle}"
+                <RadioButton Content="{DynamicResource Str.Probe.ProbeHelp}" Style="{StaticResource ProbeTabStyle}"
                              GroupName="ProbeTab"
                              Command="{Binding SwitchProbeTabCommand}" CommandParameter="ProbeHelp"/>
             </StackPanel>
@@ -226,22 +227,22 @@
                         </Style.Triggers>
                     </Style>
                 </StackPanel.Style>
-                <RadioButton Content="主軸零點" Style="{StaticResource ProbeTabStyle}"
+                <RadioButton Content="{DynamicResource Str.Probe.SpindleZero}" Style="{StaticResource ProbeTabStyle}"
                              IsChecked="True" GroupName="TsMode"
                              Command="{Binding TsSwitchModeCommand}" CommandParameter="SpindleZero"/>
-                <RadioButton Content="對刀位置" Style="{StaticResource ProbeTabStyle}"
+                <RadioButton Content="{DynamicResource Str.Probe.ToolSetterPos}" Style="{StaticResource ProbeTabStyle}"
                              GroupName="TsMode"
                              Command="{Binding TsSwitchModeCommand}" CommandParameter="ToolTouchOff"/>
-                <RadioButton Content="快慢探測速度" Style="{StaticResource ProbeTabStyle}"
+                <RadioButton Content="{DynamicResource Str.Probe.ProbeSpeeds}" Style="{StaticResource ProbeTabStyle}"
                              GroupName="TsMode"
                              Command="{Binding TsSwitchModeCommand}" CommandParameter="FastSlowFr"/>
-                <RadioButton Content="XY 行程 / 退回" Style="{StaticResource ProbeTabStyle}"
+                <RadioButton Content="{DynamicResource Str.Probe.XYTravelRetract}" Style="{StaticResource ProbeTabStyle}"
                              GroupName="TsMode"
                              Command="{Binding TsSwitchModeCommand}" CommandParameter="XyTravel"/>
-                <RadioButton Content="斷刀 / 自訂" Style="{StaticResource ProbeTabStyle}"
+                <RadioButton Content="{DynamicResource Str.Probe.BreakCustom}" Style="{StaticResource ProbeTabStyle}"
                              GroupName="TsMode"
                              Command="{Binding TsSwitchModeCommand}" CommandParameter="BreakageUser"/>
-                <RadioButton Content="探針刀具尺寸" Style="{StaticResource ProbeTabStyle}"
+                <RadioButton Content="{DynamicResource Str.Probe.ProbeToolSize}" Style="{StaticResource ProbeTabStyle}"
                              GroupName="TsMode"
                              Command="{Binding TsSwitchModeCommand}" CommandParameter="ToolDim"/>
             </StackPanel>
@@ -277,7 +278,7 @@
                         <!-- ====== 上：WORK OFFSETS ====== -->
                         <Border Background="#333" CornerRadius="5,5,0,0" Padding="6,4">
                             <StackPanel>
-                                <TextBlock Text="工件座標系" Foreground="#FFF" FontSize="{DynamicResource FontSize.Large}"
+                                <TextBlock Text="{DynamicResource Str.Probe.WorkCoordSystem}" Foreground="#FFF" FontSize="{DynamicResource FontSize.Large}"
                                            FontWeight="Bold" Margin="0,0,0,4"/>
                                 <!-- Row 1: G54~G59 -->
                                 <UniformGrid Rows="1" Columns="6" Margin="0,0,0,2">
@@ -317,7 +318,7 @@
                                     <RadioButton Grid.Column="2" Content="G59.3" Style="{StaticResource WcsSelectStyle}"
                                                  GroupName="WcsSelect"
                                                  Command="{Binding SelectWcsCommand}" CommandParameter="G59.3"/>
-                                    <ToggleButton Grid.Column="3" Content="僅顯示探測位置"
+                                    <ToggleButton Grid.Column="3" Content="{DynamicResource Str.Probe.PositionOnly}"
                                                   IsChecked="{Binding IsProbePositionOnly}"
                                                   Foreground="#FFF" FontSize="{DynamicResource FontSize.Medium}" FontWeight="Bold"
                                                   Background="#3A3A3A" Margin="2,0" Padding="6,3" Cursor="Hand">
@@ -358,7 +359,7 @@
                         <!-- ====== 中：PROBING PARAMETERS ====== -->
                         <Border Background="#3A3A3ACC" Padding="6,4" Margin="0,2,0,0">
                             <StackPanel>
-                                <TextBlock Text="探測參數" Foreground="#FFF" FontSize="{DynamicResource FontSize.Large}"
+                                <TextBlock Text="{DynamicResource Str.Probe.ProbeParams}" Foreground="#FFF" FontSize="{DynamicResource FontSize.Large}"
                                            FontWeight="Bold" Margin="0,0,0,4"/>
                                 <!-- 5 行參數：標籤靠右 + 白底輸入框 -->
                                 <Grid>
@@ -376,29 +377,29 @@
                                         <RowDefinition Height="Auto"/>
                                         <RowDefinition Height="Auto"/>
                                     </Grid.RowDefinitions>
-                                    <TextBlock Grid.Row="0" Grid.Column="0" Text="探針刀號 #" Style="{StaticResource ParamLbl}" HorizontalAlignment="Right" Margin="0,2,6,2"/>
+                                    <TextBlock Grid.Row="0" Grid.Column="0" Text="{DynamicResource Str.Probe.ProbeToolNum}" Style="{StaticResource ParamLbl}" HorizontalAlignment="Right" Margin="0,2,6,2"/>
                                     <TextBox   Grid.Row="0" Grid.Column="1" Text="{Binding ProbeToolNumber, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ParamTxt}"/>
-                                    <TextBlock Grid.Row="0" Grid.Column="3" Text="慢速探測 mm/min" Style="{StaticResource ParamLbl}" HorizontalAlignment="Right" Margin="0,2,6,2"/>
+                                    <TextBlock Grid.Row="0" Grid.Column="3" Text="{DynamicResource Str.Probe.SlowProbeSpeed}" Style="{StaticResource ParamLbl}" HorizontalAlignment="Right" Margin="0,2,6,2"/>
                                     <TextBox   Grid.Row="0" Grid.Column="4" Text="{Binding ProbeSlowFeed, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ParamTxt}"/>
 
-                                    <TextBlock Grid.Row="1" Grid.Column="0" Text="快移速度 mm/min" Style="{StaticResource ParamLbl}" HorizontalAlignment="Right" Margin="0,2,6,2"/>
+                                    <TextBlock Grid.Row="1" Grid.Column="0" Text="{DynamicResource Str.Probe.TraverseSpeed}" Style="{StaticResource ParamLbl}" HorizontalAlignment="Right" Margin="0,2,6,2"/>
                                     <TextBox   Grid.Row="1" Grid.Column="1" Text="{Binding ProbeTraverseFr, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ParamTxt}"/>
-                                    <TextBlock Grid.Row="1" Grid.Column="3" Text="快速探測 mm/min" Style="{StaticResource ParamLbl}" HorizontalAlignment="Right" Margin="0,2,6,2"/>
+                                    <TextBlock Grid.Row="1" Grid.Column="3" Text="{DynamicResource Str.Probe.FastProbeSpeed}" Style="{StaticResource ParamLbl}" HorizontalAlignment="Right" Margin="0,2,6,2"/>
                                     <TextBox   Grid.Row="1" Grid.Column="4" Text="{Binding ProbeFastFeed, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ParamTxt}"/>
 
-                                    <TextBlock Grid.Row="2" Grid.Column="0" Text="XY 最大距離 mm" Style="{StaticResource ParamLbl}" HorizontalAlignment="Right" Margin="0,2,6,2"/>
+                                    <TextBlock Grid.Row="2" Grid.Column="0" Text="{DynamicResource Str.Probe.XYMaxDistance}" Style="{StaticResource ParamLbl}" HorizontalAlignment="Right" Margin="0,2,6,2"/>
                                     <TextBox   Grid.Row="2" Grid.Column="1" Text="{Binding MaxXyDistance, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ParamTxt}"/>
-                                    <TextBlock Grid.Row="2" Grid.Column="3" Text="XY 安全間距 mm" Style="{StaticResource ParamLbl}" HorizontalAlignment="Right" Margin="0,2,6,2"/>
+                                    <TextBlock Grid.Row="2" Grid.Column="3" Text="{DynamicResource Str.Probe.XYClearance}" Style="{StaticResource ParamLbl}" HorizontalAlignment="Right" Margin="0,2,6,2"/>
                                     <TextBox   Grid.Row="2" Grid.Column="4" Text="{Binding XyClearance, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ParamTxt}"/>
 
-                                    <TextBlock Grid.Row="3" Grid.Column="0" Text="Z 最大距離 mm" Style="{StaticResource ParamLbl}" HorizontalAlignment="Right" Margin="0,2,6,2"/>
+                                    <TextBlock Grid.Row="3" Grid.Column="0" Text="{DynamicResource Str.Probe.ZMaxDistance}" Style="{StaticResource ParamLbl}" HorizontalAlignment="Right" Margin="0,2,6,2"/>
                                     <TextBox   Grid.Row="3" Grid.Column="1" Text="{Binding MaxZDistance, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ParamTxt}"/>
-                                    <TextBlock Grid.Row="3" Grid.Column="3" Text="Z 安全間距 mm" Style="{StaticResource ParamLbl}" HorizontalAlignment="Right" Margin="0,2,6,2"/>
+                                    <TextBlock Grid.Row="3" Grid.Column="3" Text="{DynamicResource Str.Probe.ZClearance}" Style="{StaticResource ParamLbl}" HorizontalAlignment="Right" Margin="0,2,6,2"/>
                                     <TextBox   Grid.Row="3" Grid.Column="4" Text="{Binding ZClearance, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ParamTxt}"/>
 
-                                    <TextBlock Grid.Row="4" Grid.Column="0" Text="額外探測深度 mm" Style="{StaticResource ParamLbl}" HorizontalAlignment="Right" Margin="0,2,6,2"/>
+                                    <TextBlock Grid.Row="4" Grid.Column="0" Text="{DynamicResource Str.Probe.ExtraDepth}" Style="{StaticResource ParamLbl}" HorizontalAlignment="Right" Margin="0,2,6,2"/>
                                     <TextBox   Grid.Row="4" Grid.Column="1" Text="{Binding ExtraProbeDepth, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ParamTxt}"/>
-                                    <TextBlock Grid.Row="4" Grid.Column="3" Text="偏移寬度 mm" Style="{StaticResource ParamLbl}" HorizontalAlignment="Right" Margin="0,2,6,2"/>
+                                    <TextBlock Grid.Row="4" Grid.Column="3" Text="{DynamicResource Str.Probe.OffsetWidth}" Style="{StaticResource ParamLbl}" HorizontalAlignment="Right" Margin="0,2,6,2"/>
                                     <TextBox   Grid.Row="4" Grid.Column="4" Text="{Binding StepOffWidth, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ParamTxt}"/>
                                 </Grid>
                             </StackPanel>
@@ -409,13 +410,13 @@
                             <StackPanel>
                                 <!-- 4 按鈕等寬一列 -->
                                 <UniformGrid Rows="1" Columns="4" Margin="0,0,0,4">
-                                    <Button Content="更新探測參數" Style="{StaticResource ProbeBtnStyle}"
+                                    <Button Content="{DynamicResource Str.Probe.UpdateParams}" Style="{StaticResource ProbeBtnStyle}"
                                             Command="{Binding UpdateProbeParamsCommand}" Padding="4,6" FontSize="{DynamicResource FontSize.Body}"/>
-                                    <Button Content="清除全部數據" Style="{StaticResource ProbeBtnStyle}"
+                                    <Button Content="{DynamicResource Str.Probe.ClearAllData}" Style="{StaticResource ProbeBtnStyle}"
                                             Command="{Binding ResetAllDataCommand}" Padding="4,5"/>
-                                    <Button Content="X 數據清除" Style="{StaticResource ProbeBtnStyle}"
+                                    <Button Content="{DynamicResource Str.Probe.ClearXData}" Style="{StaticResource ProbeBtnStyle}"
                                             Command="{Binding XDataResetCommand}" Padding="4,5"/>
-                                    <Button Content="Y 數據清除" Style="{StaticResource ProbeBtnStyle}"
+                                    <Button Content="{DynamicResource Str.Probe.ClearYData}" Style="{StaticResource ProbeBtnStyle}"
                                             Command="{Binding YDataResetCommand}" Padding="4,5"/>
                                 </UniformGrid>
 
@@ -437,38 +438,38 @@
                                         <RowDefinition Height="Auto"/>
                                         <RowDefinition Height="Auto"/>
                                     </Grid.RowDefinitions>
-                                    <TextBlock Grid.Row="0" Grid.Column="0" Text="X- 探測" Style="{StaticResource ResultLbl}" HorizontalAlignment="Right" Margin="0,2,4,2"/>
+                                    <TextBlock Grid.Row="0" Grid.Column="0" Text="{DynamicResource Str.Probe.XMinusProbe}" Style="{StaticResource ResultLbl}" HorizontalAlignment="Right" Margin="0,2,4,2"/>
                                     <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding ResultX, StringFormat='{}{0:F4}'}" Style="{StaticResource ResultVal}"/>
-                                    <TextBlock Grid.Row="0" Grid.Column="3" Text="X+ 探測" Style="{StaticResource ResultLbl}" HorizontalAlignment="Right" Margin="0,2,4,2"/>
+                                    <TextBlock Grid.Row="0" Grid.Column="3" Text="{DynamicResource Str.Probe.XPlusProbe}" Style="{StaticResource ResultLbl}" HorizontalAlignment="Right" Margin="0,2,4,2"/>
                                     <TextBlock Grid.Row="0" Grid.Column="4" Text="{Binding ResultXOffset, StringFormat='{}{0:F4}'}" Style="{StaticResource ResultVal}"/>
-                                    <TextBlock Grid.Row="0" Grid.Column="6" Text="X 寬度" Style="{StaticResource ResultLbl}" HorizontalAlignment="Right" Margin="0,2,4,2"/>
+                                    <TextBlock Grid.Row="0" Grid.Column="6" Text="{DynamicResource Str.Probe.XWidth}" Style="{StaticResource ResultLbl}" HorizontalAlignment="Right" Margin="0,2,4,2"/>
                                     <TextBlock Grid.Row="0" Grid.Column="7" Text="{Binding ResultWidthX, StringFormat='{}{0:F4}'}" Style="{StaticResource ResultVal}"/>
 
-                                    <TextBlock Grid.Row="1" Grid.Column="0" Text="Y- 探測" Style="{StaticResource ResultLbl}" HorizontalAlignment="Right" Margin="0,2,4,2"/>
+                                    <TextBlock Grid.Row="1" Grid.Column="0" Text="{DynamicResource Str.Probe.YMinusProbe}" Style="{StaticResource ResultLbl}" HorizontalAlignment="Right" Margin="0,2,4,2"/>
                                     <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding ResultY, StringFormat='{}{0:F4}'}" Style="{StaticResource ResultVal}"/>
-                                    <TextBlock Grid.Row="1" Grid.Column="3" Text="Y+ 探測" Style="{StaticResource ResultLbl}" HorizontalAlignment="Right" Margin="0,2,4,2"/>
+                                    <TextBlock Grid.Row="1" Grid.Column="3" Text="{DynamicResource Str.Probe.YPlusProbe}" Style="{StaticResource ResultLbl}" HorizontalAlignment="Right" Margin="0,2,4,2"/>
                                     <TextBlock Grid.Row="1" Grid.Column="4" Text="{Binding ResultYOffset, StringFormat='{}{0:F4}'}" Style="{StaticResource ResultVal}"/>
-                                    <TextBlock Grid.Row="1" Grid.Column="6" Text="Y 寬度" Style="{StaticResource ResultLbl}" HorizontalAlignment="Right" Margin="0,2,4,2"/>
+                                    <TextBlock Grid.Row="1" Grid.Column="6" Text="{DynamicResource Str.Probe.YWidth}" Style="{StaticResource ResultLbl}" HorizontalAlignment="Right" Margin="0,2,4,2"/>
                                     <TextBlock Grid.Row="1" Grid.Column="7" Text="{Binding ResultWidthY, StringFormat='{}{0:F4}'}" Style="{StaticResource ResultVal}"/>
 
-                                    <TextBlock Grid.Row="2" Grid.Column="0" Text="Z- 探測" Style="{StaticResource ResultLbl}" HorizontalAlignment="Right" Margin="0,2,4,2"/>
+                                    <TextBlock Grid.Row="2" Grid.Column="0" Text="{DynamicResource Str.Probe.ZMinusProbe}" Style="{StaticResource ResultLbl}" HorizontalAlignment="Right" Margin="0,2,4,2"/>
                                     <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding ResultZ, StringFormat='{}{0:F4}'}" Style="{StaticResource ResultVal}"/>
                                     <TextBlock Grid.Row="2" Grid.Column="3" Text="DIAM ∅" Style="{StaticResource ResultLbl}" HorizontalAlignment="Right" Margin="0,2,4,2"/>
                                     <TextBlock Grid.Row="2" Grid.Column="4" Text="{Binding ResultEdgeWidth, StringFormat='{}{0:F4}'}" Style="{StaticResource ResultVal}"/>
-                                    <TextBlock Grid.Row="2" Grid.Column="6" Text="X 中心" Style="{StaticResource ResultLbl}" HorizontalAlignment="Right" Margin="0,2,4,2"/>
+                                    <TextBlock Grid.Row="2" Grid.Column="6" Text="{DynamicResource Str.Probe.XCenter}" Style="{StaticResource ResultLbl}" HorizontalAlignment="Right" Margin="0,2,4,2"/>
                                     <TextBlock Grid.Row="2" Grid.Column="7" Text="{Binding ResultXCenter, StringFormat='{}{0:F4}'}" Style="{StaticResource ResultVal}"/>
 
                                     <TextBlock Grid.Row="3" Grid.Column="0" Text="EDGE Δ" Style="{StaticResource ResultLbl}" HorizontalAlignment="Right" Margin="0,2,4,2"/>
                                     <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding ResultEdgeDelta, StringFormat='{}{0:F4}'}" Style="{StaticResource ResultVal}"/>
                                     <TextBlock Grid.Row="3" Grid.Column="3" Text="EDGE ∠" Style="{StaticResource ResultLbl}" HorizontalAlignment="Right" Margin="0,2,4,2"/>
                                     <TextBlock Grid.Row="3" Grid.Column="4" Text="{Binding ResultAngle, StringFormat='{}{0:F4}'}" Style="{StaticResource ResultVal}"/>
-                                    <TextBlock Grid.Row="3" Grid.Column="6" Text="Y 中心" Style="{StaticResource ResultLbl}" HorizontalAlignment="Right" Margin="0,2,4,2"/>
+                                    <TextBlock Grid.Row="3" Grid.Column="6" Text="{DynamicResource Str.Probe.YCenter}" Style="{StaticResource ResultLbl}" HorizontalAlignment="Right" Margin="0,2,4,2"/>
                                     <TextBlock Grid.Row="3" Grid.Column="7" Text="{Binding ResultYCenter, StringFormat='{}{0:F4}'}" Style="{StaticResource ResultVal}"/>
                                 </Grid>
 
                                 <!-- [2026-03-06] 狀態文字 + 停止探測按鈕 -->
                                 <DockPanel Margin="0,6,0,2">
-                                    <Button DockPanel.Dock="Right" Content="停止探測" FontSize="{DynamicResource FontSize.Medium}" FontWeight="Bold"
+                                    <Button DockPanel.Dock="Right" Content="{DynamicResource Str.Probe.StopProbe}" FontSize="{DynamicResource FontSize.Medium}" FontWeight="Bold"
                                             Foreground="White" Padding="12,4" Margin="6,0,0,0" Cursor="Hand"
                                             Command="{Binding StopProbeCommand}"
                                             Visibility="{Binding IsProbing, Converter={StaticResource BoolToVis}}">
@@ -1168,7 +1169,7 @@
                     <Border Background="#1A1A1ACC" CornerRadius="4" Padding="8,4" Margin="0,6,0,0">
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                             <Border Background="#444" CornerRadius="3" Padding="10,3" Margin="0,0,10,0">
-                                <TextBlock Text="提示" Foreground="#FFF" FontSize="{DynamicResource FontSize.Body}" FontWeight="Bold"/>
+                                <TextBlock Text="{DynamicResource Str.Probe.Hint}" Foreground="#FFF" FontSize="{DynamicResource FontSize.Body}" FontWeight="Bold"/>
                             </Border>
                             <TextBlock Text="X :" Foreground="#AAA" FontSize="{DynamicResource FontSize.Body}" FontWeight="Bold"
                                        VerticalAlignment="Center" Margin="0,0,4,0"/>
@@ -1359,11 +1360,11 @@
                                 <ColumnDefinition Width="Auto"/>
                                 <ColumnDefinition Width="80"/>
                             </Grid.ColumnDefinitions>
-                            <Button Grid.Column="0" Content="設定旋轉 WCO"
+                            <Button Grid.Column="0" Content="{DynamicResource Str.Probe.SetRotationWco}"
                                     Style="{StaticResource ProbeBtnStyle}"
                                     Command="{Binding SetRotationWcoCommand}" Padding="10,4"/>
                             <StackPanel Grid.Column="1"/>
-                            <TextBlock Grid.Column="2" Text="邊緣寬度" Foreground="#AAA"
+                            <TextBlock Grid.Column="2" Text="{DynamicResource Str.Probe.EdgeWidth}" Foreground="#AAA"
                                        FontSize="{DynamicResource FontSize.Small}" FontWeight="Bold" VerticalAlignment="Center" Margin="0,0,6,0"/>
                             <TextBox Grid.Column="3" FontFamily="Consolas" FontSize="{DynamicResource FontSize.Body}"
                                      Foreground="#000" Background="#FFF" BorderBrush="#999"
@@ -1407,7 +1408,7 @@
                                      HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
                                      Height="26"
                                      Text="{Binding ProbeCalOffset, StringFormat='{}{0:F6}', UpdateSourceTrigger=PropertyChanged}"/>
-                            <Button Grid.Column="3" Content="校正重置"
+                            <Button Grid.Column="3" Content="{DynamicResource Str.Probe.CalReset}"
                                     Style="{StaticResource ProbeBtnStyle}" Padding="10,4"
                                     Command="{Binding ProbeCalResetCommand}"/>
                         </Grid>
@@ -1460,9 +1461,9 @@
                             </Button>
                             <!-- CALIBRATION DIAMETER -->
                             <StackPanel Grid.Column="3" VerticalAlignment="Center" Margin="10,0,0,0">
-                                <TextBlock Text="校正" Foreground="#AAA" FontSize="{DynamicResource FontSize.Small}"
+                                <TextBlock Text="{DynamicResource Str.Probe.CalLabel}" Foreground="#AAA" FontSize="{DynamicResource FontSize.Small}"
                                            FontWeight="Bold" HorizontalAlignment="Center"/>
-                                <TextBlock Text="直徑" Foreground="#AAA" FontSize="{DynamicResource FontSize.Small}"
+                                <TextBlock Text="{DynamicResource Str.Probe.Diameter}" Foreground="#AAA" FontSize="{DynamicResource FontSize.Small}"
                                            FontWeight="Bold" HorizontalAlignment="Center" Margin="0,0,0,4"/>
                                 <TextBox FontFamily="Consolas" FontSize="{DynamicResource FontSize.Body}" Width="100"
                                          Foreground="#000" Background="#FFF" BorderBrush="#999"
@@ -1481,7 +1482,7 @@
                                 <ColumnDefinition Width="6"/>
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
-                            <Button Grid.Column="0" Content="校正 XY 平均誤差" Padding="4,6"
+                            <Button Grid.Column="0" Content="{DynamicResource Str.Probe.CalXYAvgError}" Padding="4,6"
                                     Background="#0078D4" Foreground="White" FontSize="{DynamicResource FontSize.XSmall}" FontWeight="Bold"
                                     Cursor="Hand" Command="{Binding CalOnAvgXyErrorCommand}">
                                 <Button.Template>
@@ -1493,10 +1494,10 @@
                                     </ControlTemplate>
                                 </Button.Template>
                             </Button>
-                            <Button Grid.Column="2" Content="校正 X 誤差"
+                            <Button Grid.Column="2" Content="{DynamicResource Str.Probe.CalXError}"
                                     Style="{StaticResource ProbeBtnStyle}" Padding="4,6" FontSize="{DynamicResource FontSize.XSmall}"
                                     Command="{Binding CalOnXErrorCommand}"/>
-                            <Button Grid.Column="4" Content="校正 Y 誤差"
+                            <Button Grid.Column="4" Content="{DynamicResource Str.Probe.CalYError}"
                                     Style="{StaticResource ProbeBtnStyle}" Padding="4,6" FontSize="{DynamicResource FontSize.XSmall}"
                                     Command="{Binding CalOnYErrorCommand}"/>
                         </Grid>
@@ -1556,7 +1557,7 @@
                             </Button>
                             <!-- CALIBRATION WIDTH X / Y -->
                             <StackPanel Grid.Column="3" VerticalAlignment="Center" Margin="10,0,0,0">
-                                <TextBlock Text="校正寬度" Foreground="#AAA" FontSize="{DynamicResource FontSize.Small}"
+                                <TextBlock Text="{DynamicResource Str.Probe.CalWidth}" Foreground="#AAA" FontSize="{DynamicResource FontSize.Small}"
                                            FontWeight="Bold" HorizontalAlignment="Center" Margin="0,0,0,6"/>
                                 <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
                                     <TextBlock Text="X :" Foreground="#AAA" FontSize="{DynamicResource FontSize.Body}" FontWeight="Bold"
@@ -1611,7 +1612,7 @@
                                     Style="{StaticResource ProbeBtnStyle}" Padding="14,6" Margin="0,0,10,0">
                                 <StackPanel Orientation="Horizontal">
                                     <TextBlock Text="◄" FontSize="{DynamicResource FontSize.Body}" Margin="0,0,6,0"/>
-                                    <TextBlock Text="上一頁" FontSize="{DynamicResource FontSize.Body}" FontWeight="Bold"/>
+                                    <TextBlock Text="{DynamicResource Str.Probe.PrevPage}" FontSize="{DynamicResource FontSize.Body}" FontWeight="Bold"/>
                                 </StackPanel>
                             </Button>
                             <TextBlock Grid.Column="2" VerticalAlignment="Center" HorizontalAlignment="Center"
@@ -1625,7 +1626,7 @@
                             <Button Grid.Column="3" Command="{Binding HelpNextPageCommand}"
                                     Style="{StaticResource ProbeBtnStyle}" Padding="14,6" Margin="10,0,0,0">
                                 <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="下一頁" FontSize="{DynamicResource FontSize.Body}" FontWeight="Bold"/>
+                                    <TextBlock Text="{DynamicResource Str.Probe.NextPage}" FontSize="{DynamicResource FontSize.Body}" FontWeight="Bold"/>
                                     <TextBlock Text="►" FontSize="{DynamicResource FontSize.Body}" Margin="6,0,0,0"/>
                                 </StackPanel>
                             </Button>
@@ -1709,7 +1710,7 @@
                     <StackPanel>
                         <!-- 標題列 -->
                         <Border Background="#555" CornerRadius="4" Padding="8,4" Margin="0,0,0,6">
-                            <TextBlock Text="對刀儀參數" Foreground="White"
+                            <TextBlock Text="{DynamicResource Str.Probe.ToolSetterParams}" Foreground="White"
                                        FontSize="{DynamicResource FontSize.Large}" FontWeight="Bold"/>
                         </Border>
 
@@ -1724,7 +1725,7 @@
                             <!-- ====== 左欄 ====== -->
                             <StackPanel Grid.Column="0">
                                 <!-- PROBE SPINDLE NOSE ZERO -->
-                                <Button Content="探測主軸零點" Style="{StaticResource ProbeBtnStyle}"
+                                <Button Content="{DynamicResource Str.Probe.ProbeSpindleZero}" Style="{StaticResource ProbeBtnStyle}"
                                         Command="{Binding TsProbeSpindleNoseZeroCommand}"
                                         HorizontalAlignment="Stretch" Padding="8,8" Margin="0,2" FontSize="{DynamicResource FontSize.Medium}"/>
 
@@ -1748,7 +1749,7 @@
                                 </Grid>
 
                                 <!-- SET TOOL TOUCH OFF POS -->
-                                <Button Content="設定對刀位置" Style="{StaticResource ProbeBtnStyle}"
+                                <Button Content="{DynamicResource Str.Probe.SetToolSetterPos}" Style="{StaticResource ProbeBtnStyle}"
                                         Command="{Binding TsSetToolTouchOffPosCommand}"
                                         HorizontalAlignment="Stretch" Padding="8,8" Margin="0,4" FontSize="{DynamicResource FontSize.Medium}"/>
 
@@ -1762,18 +1763,18 @@
                                         <RowDefinition Height="Auto"/>
                                         <RowDefinition Height="Auto"/>
                                     </Grid.RowDefinitions>
-                                    <Button Grid.Row="0" Grid.Column="0" Content="刀具直徑探測"
+                                    <Button Grid.Row="0" Grid.Column="0" Content="{DynamicResource Str.Probe.ToolDiamProbe}"
                                             Style="{StaticResource ProbeBtnStyle}" Padding="6,4" FontSize="{DynamicResource FontSize.Body}" Margin="0,2,4,2"/>
                                     <TextBox Grid.Row="0" Grid.Column="1" Style="{StaticResource ParamTxt}"
                                              Text="{Binding TsToolDiamProbe, UpdateSourceTrigger=PropertyChanged}"/>
-                                    <Button Grid.Row="1" Grid.Column="0" Content="刀具直徑補正"
+                                    <Button Grid.Row="1" Grid.Column="0" Content="{DynamicResource Str.Probe.ToolDiamComp}"
                                             Style="{StaticResource ProbeBtnStyle}" Padding="6,4" FontSize="{DynamicResource FontSize.Body}" Margin="0,2,4,2"/>
                                     <TextBox Grid.Row="1" Grid.Column="1" Style="{StaticResource ParamTxt}"
                                              Text="{Binding TsToolDiamOffset, UpdateSourceTrigger=PropertyChanged}"/>
                                 </Grid>
 
                                 <!-- TOOL OFFSET DIRECTION -->
-                                <TextBlock Text="刀具偏移方向" FontSize="{DynamicResource FontSize.Body}" FontWeight="Bold"
+                                <TextBlock Text="{DynamicResource Str.Probe.ToolOffsetDir}" FontSize="{DynamicResource FontSize.Body}" FontWeight="Bold"
                                            Foreground="#333" HorizontalAlignment="Center" Margin="0,6,0,2"/>
                                 <Grid HorizontalAlignment="Center">
                                     <Grid.ColumnDefinitions>
@@ -1791,7 +1792,7 @@
                                             Padding="2,3" FontSize="{DynamicResource FontSize.Small}" Margin="2">
                                         <StackPanel Orientation="Horizontal">
                                             <TextBlock Text="▲" FontSize="{DynamicResource FontSize.XSmall}" Margin="0,0,2,0"/>
-                                            <TextBlock Text="後" FontSize="{DynamicResource FontSize.Small}"/>
+                                            <TextBlock Text="{DynamicResource Str.Probe.DirBack}" FontSize="{DynamicResource FontSize.Small}"/>
                                         </StackPanel>
                                     </Button>
                                     <Button Grid.Row="1" Grid.Column="0" Style="{StaticResource ProbeBtnStyle}"
@@ -1799,7 +1800,7 @@
                                             Padding="2,3" FontSize="{DynamicResource FontSize.Small}" Margin="2" Background="#0078D4" Foreground="White">
                                         <StackPanel Orientation="Horizontal">
                                             <TextBlock Text="◄" FontSize="{DynamicResource FontSize.XSmall}" Margin="0,0,2,0"/>
-                                            <TextBlock Text="左" FontSize="{DynamicResource FontSize.Small}"/>
+                                            <TextBlock Text="{DynamicResource Str.Probe.DirLeft}" FontSize="{DynamicResource FontSize.Small}"/>
                                         </StackPanel>
                                     </Button>
                                     <TextBox Grid.Row="1" Grid.Column="1" Style="{StaticResource ParamTxt}"
@@ -1809,7 +1810,7 @@
                                             Command="{Binding TsSetOffsetDirectionCommand}" CommandParameter="RIGHT"
                                             Padding="2,3" FontSize="{DynamicResource FontSize.Small}" Margin="2">
                                         <StackPanel Orientation="Horizontal">
-                                            <TextBlock Text="右" FontSize="{DynamicResource FontSize.Small}"/>
+                                            <TextBlock Text="{DynamicResource Str.Probe.DirRight}" FontSize="{DynamicResource FontSize.Small}"/>
                                             <TextBlock Text="►" FontSize="{DynamicResource FontSize.XSmall}" Margin="2,0,0,0"/>
                                         </StackPanel>
                                     </Button>
@@ -1818,7 +1819,7 @@
                                             Padding="2,3" FontSize="{DynamicResource FontSize.Small}" Margin="2">
                                         <StackPanel Orientation="Horizontal">
                                             <TextBlock Text="▼" FontSize="{DynamicResource FontSize.XSmall}" Margin="0,0,2,0"/>
-                                            <TextBlock Text="前" FontSize="{DynamicResource FontSize.Small}"/>
+                                            <TextBlock Text="{DynamicResource Str.Probe.DirFront}" FontSize="{DynamicResource FontSize.Small}"/>
                                         </StackPanel>
                                     </Button>
                                 </Grid>
@@ -1843,29 +1844,29 @@
                                     <RowDefinition Height="Auto"/>
                                     <RowDefinition Height="*"/>
                                 </Grid.RowDefinitions>
-                                <TextBlock Grid.Row="0" Grid.Column="0" Text="主軸零點 mm" Style="{StaticResource ParamLbl}" Foreground="#333" HorizontalAlignment="Right" Margin="0,2,8,2"/>
+                                <TextBlock Grid.Row="0" Grid.Column="0" Text="{DynamicResource Str.Probe.SpindleZeroMm}" Style="{StaticResource ParamLbl}" Foreground="#333" HorizontalAlignment="Right" Margin="0,2,8,2"/>
                                 <TextBox Grid.Row="0" Grid.Column="1" Style="{StaticResource ParamTxt}" Text="{Binding TsSpindleZero, StringFormat='{}{0:F4}', UpdateSourceTrigger=PropertyChanged}"/>
-                                <TextBlock Grid.Row="1" Grid.Column="0" Text="快速探測 mm/min" Style="{StaticResource ParamLbl}" Foreground="#333" HorizontalAlignment="Right" Margin="0,2,8,2"/>
+                                <TextBlock Grid.Row="1" Grid.Column="0" Text="{DynamicResource Str.Probe.FastProbeSpeed}" Style="{StaticResource ParamLbl}" Foreground="#333" HorizontalAlignment="Right" Margin="0,2,8,2"/>
                                 <TextBox Grid.Row="1" Grid.Column="1" Style="{StaticResource ParamTxt}" Text="{Binding TsFastProbeFr, StringFormat='{}{0:F1}', UpdateSourceTrigger=PropertyChanged}"/>
-                                <TextBlock Grid.Row="2" Grid.Column="0" Text="慢速探測 mm/min" Style="{StaticResource ParamLbl}" Foreground="#333" HorizontalAlignment="Right" Margin="0,2,8,2"/>
+                                <TextBlock Grid.Row="2" Grid.Column="0" Text="{DynamicResource Str.Probe.SlowProbeSpeed}" Style="{StaticResource ParamLbl}" Foreground="#333" HorizontalAlignment="Right" Margin="0,2,8,2"/>
                                 <TextBox Grid.Row="2" Grid.Column="1" Style="{StaticResource ParamTxt}" Text="{Binding TsSlowProbeFr, StringFormat='{}{0:F1}', UpdateSourceTrigger=PropertyChanged}"/>
-                                <TextBlock Grid.Row="3" Grid.Column="0" Text="快移速度 mm/min" Style="{StaticResource ParamLbl}" Foreground="#333" HorizontalAlignment="Right" Margin="0,2,8,2"/>
+                                <TextBlock Grid.Row="3" Grid.Column="0" Text="{DynamicResource Str.Probe.TraverseSpeed}" Style="{StaticResource ParamLbl}" Foreground="#333" HorizontalAlignment="Right" Margin="0,2,8,2"/>
                                 <TextBox Grid.Row="3" Grid.Column="1" Style="{StaticResource ParamTxt}" Text="{Binding TsTraverseFr, StringFormat='{}{0:F1}', UpdateSourceTrigger=PropertyChanged}"/>
-                                <TextBlock Grid.Row="4" Grid.Column="0" Text="Z 最大行程 mm" Style="{StaticResource ParamLbl}" Foreground="#333" HorizontalAlignment="Right" Margin="0,2,8,2"/>
+                                <TextBlock Grid.Row="4" Grid.Column="0" Text="{DynamicResource Str.Probe.ZMaxTravel}" Style="{StaticResource ParamLbl}" Foreground="#333" HorizontalAlignment="Right" Margin="0,2,8,2"/>
                                 <TextBox Grid.Row="4" Grid.Column="1" Style="{StaticResource ParamTxt}" Text="{Binding TsZMaxTravel, StringFormat='{}{0:F4}', UpdateSourceTrigger=PropertyChanged}"/>
-                                <TextBlock Grid.Row="5" Grid.Column="0" Text="XY 最大行程 mm" Style="{StaticResource ParamLbl}" Foreground="#333" HorizontalAlignment="Right" Margin="0,2,8,2"/>
+                                <TextBlock Grid.Row="5" Grid.Column="0" Text="{DynamicResource Str.Probe.XYMaxTravel}" Style="{StaticResource ParamLbl}" Foreground="#333" HorizontalAlignment="Right" Margin="0,2,8,2"/>
                                 <TextBox Grid.Row="5" Grid.Column="1" Style="{StaticResource ParamTxt}" Text="{Binding TsXyMaxTravel, StringFormat='{}{0:F4}', UpdateSourceTrigger=PropertyChanged}"/>
-                                <TextBlock Grid.Row="6" Grid.Column="0" Text="退回距離 mm" Style="{StaticResource ParamLbl}" Foreground="#333" HorizontalAlignment="Right" Margin="0,2,8,2"/>
+                                <TextBlock Grid.Row="6" Grid.Column="0" Text="{DynamicResource Str.Probe.RetractDistance}" Style="{StaticResource ParamLbl}" Foreground="#333" HorizontalAlignment="Right" Margin="0,2,8,2"/>
                                 <TextBox Grid.Row="6" Grid.Column="1" Style="{StaticResource ParamTxt}" Text="{Binding TsRetractDist, StringFormat='{}{0:F4}', UpdateSourceTrigger=PropertyChanged}"/>
-                                <TextBlock Grid.Row="7" Grid.Column="0" Text="斷刀容差 mm" Style="{StaticResource ParamLbl}" Foreground="#333" HorizontalAlignment="Right" Margin="0,2,8,2"/>
+                                <TextBlock Grid.Row="7" Grid.Column="0" Text="{DynamicResource Str.Probe.BreakTolerance}" Style="{StaticResource ParamLbl}" Foreground="#333" HorizontalAlignment="Right" Margin="0,2,8,2"/>
                                 <TextBox Grid.Row="7" Grid.Column="1" Style="{StaticResource ParamTxt}" Text="{Binding TsBreakageTolerance, StringFormat='{}{0:F4}', UpdateSourceTrigger=PropertyChanged}"/>
-                                <TextBlock Grid.Row="8" Grid.Column="0" Text="自訂參數 1" Style="{StaticResource ParamLbl}" Foreground="#333" HorizontalAlignment="Right" Margin="0,2,8,2"/>
+                                <TextBlock Grid.Row="8" Grid.Column="0" Text="{DynamicResource Str.Probe.CustomParam1}" Style="{StaticResource ParamLbl}" Foreground="#333" HorizontalAlignment="Right" Margin="0,2,8,2"/>
                                 <TextBox Grid.Row="8" Grid.Column="1" Style="{StaticResource ParamTxt}" Text="{Binding TsUserParam1, StringFormat='{}{0:F4}', UpdateSourceTrigger=PropertyChanged}"/>
-                                <TextBlock Grid.Row="9" Grid.Column="0" Text="自訂參數 2" Style="{StaticResource ParamLbl}" Foreground="#333" HorizontalAlignment="Right" Margin="0,2,8,2"/>
+                                <TextBlock Grid.Row="9" Grid.Column="0" Text="{DynamicResource Str.Probe.CustomParam2}" Style="{StaticResource ParamLbl}" Foreground="#333" HorizontalAlignment="Right" Margin="0,2,8,2"/>
                                 <TextBox Grid.Row="9" Grid.Column="1" Style="{StaticResource ParamTxt}" Text="{Binding TsUserParam2, StringFormat='{}{0:F4}', UpdateSourceTrigger=PropertyChanged}"/>
                                 <!-- UPDATE 按鈕放右欄底部 -->
                                 <Button Grid.Row="10" Grid.Column="0" Grid.ColumnSpan="2"
-                                        Content="更新對刀儀參數" Style="{StaticResource ProbeBtnStyle}"
+                                        Content="{DynamicResource Str.Probe.UpdateToolSetterParams}" Style="{StaticResource ProbeBtnStyle}"
                                         Command="{Binding TsUpdateParametersCommand}"
                                         HorizontalAlignment="Stretch" Padding="6,6" Margin="0,8,0,0" FontSize="{DynamicResource FontSize.Body}"
                                         VerticalAlignment="Bottom"/>
@@ -1874,7 +1875,7 @@
 
                         <!-- [2026-03-06] 狀態文字 + 停止探測按鈕 -->
                         <DockPanel Margin="0,6,0,2">
-                            <Button DockPanel.Dock="Right" Content="停止探測" FontSize="{DynamicResource FontSize.Medium}" FontWeight="Bold"
+                            <Button DockPanel.Dock="Right" Content="{DynamicResource Str.Probe.StopProbe}" FontSize="{DynamicResource FontSize.Medium}" FontWeight="Bold"
                                     Foreground="White" Padding="12,4" Margin="6,0,0,0" Cursor="Hand"
                                     Command="{Binding StopProbeCommand}"
                                     Visibility="{Binding IsProbing, Converter={StaticResource BoolToVis}}">
@@ -1963,7 +1964,7 @@
                             <KeyBinding Key="Return" Command="{Binding SendMdiCommand}"/>
                         </TextBox.InputBindings>
                     </TextBox>
-                    <Button Grid.Column="2" Content="送出" Style="{StaticResource ProbeBtnStyle}"
+                    <Button Grid.Column="2" Content="{DynamicResource Str.Btn.Send}" Style="{StaticResource ProbeBtnStyle}"
                             Command="{Binding SendMdiCommand}"/>
                 </Grid>
             </Border>

@@ -84,25 +84,11 @@
                     </Style>
                 </Border.Style>
                 <DockPanel>
+                    <!-- [2026-03-11] RE-SCAN 按鈕改用 BaseBtnStyle（移除 inline 橙色） -->
                     <Button DockPanel.Dock="Right" Content="RE-SCAN" Margin="10,0,0,0"
                             Command="{Binding RescanHardwareCommand}"
-                            Background="#FF8C00" Foreground="White" FontWeight="Bold"
-                            Padding="15,3" FontSize="{DynamicResource FontSize.Medium}" VerticalAlignment="Center" Cursor="Hand">
-                        <Button.Style>
-                            <Style TargetType="Button">
-                                <Setter Property="Template">
-                                    <Setter.Value>
-                                        <ControlTemplate TargetType="Button">
-                                            <Border Background="{TemplateBinding Background}"
-                                                    CornerRadius="3" Padding="{TemplateBinding Padding}">
-                                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                            </Border>
-                                        </ControlTemplate>
-                                    </Setter.Value>
-                                </Setter>
-                            </Style>
-                        </Button.Style>
-                    </Button>
+                            Style="{StaticResource BaseBtnStyle}"
+                            Padding="15,3" FontSize="{DynamicResource FontSize.Medium}" VerticalAlignment="Center"/>
                     <TextBlock Text="{Binding SystemStatus}" Foreground="White" FontWeight="Bold"
                                HorizontalAlignment="Center" FontSize="{DynamicResource FontSize.XLarge}" VerticalAlignment="Center"/>
                 </DockPanel>
@@ -111,7 +97,8 @@
             <layouts:HeaderBar Grid.Row="1" Grid.ColumnSpan="2"/>
 
             <!-- [2026-03-06] 使用 CachedContentControl 快取 View，避免每次切換都重建 XAML 樹 -->
-            <views:CachedContentControl Grid.Row="2" Grid.Column="0" Content="{Binding CurrentViewModel}"/>
+            <!-- [2026-03-11] 綁定 CurrentContent（自訂 DP），不覆蓋 base.Content -->
+            <views:CachedContentControl Grid.Row="2" Grid.Column="0" CurrentContent="{Binding CurrentViewModel}"/>
             <layouts:JogPanel Grid.Row="2" Grid.Column="1"/>
 
             <UniformGrid Grid.Row="3" Grid.ColumnSpan="2" Rows="1" Background="{DynamicResource Brush.PanelBackground}">

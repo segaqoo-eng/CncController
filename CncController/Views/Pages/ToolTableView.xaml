@@ -56,18 +56,15 @@
                     <!-- 底部按鈕列 -->
                     <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Margin="0,8,0,0"
                                 HorizontalAlignment="Left">
+                        <!-- [2026-03-11] 移除 inline 色彩，統一 BaseBtnStyle 深灰漸層 -->
                         <Button Content="DELETE" Style="{StaticResource ToolBtnStyle}"
-                                Command="{Binding DeleteToolCommand}" Width="80"
-                                Background="#663333"/>
+                                Command="{Binding DeleteToolCommand}" Width="80"/>
                         <Button Content="ADD TOOL" Style="{StaticResource ToolBtnStyle}"
-                                Command="{Binding AddToolCommand}" Width="90"
-                                Background="#336633"/>
+                                Command="{Binding AddToolCommand}" Width="90"/>
                         <Button Content="SAVE TABLE" Style="{StaticResource ToolBtnStyle}"
-                                Command="{Binding SaveTableCommand}" Width="100"
-                                Background="#445588"/>
+                                Command="{Binding SaveTableCommand}" Width="100"/>
                         <Button Content="RELOAD TABLE" Style="{StaticResource ToolBtnStyle}"
-                                Command="{Binding ReloadTableCommand}" Width="110"
-                                Background="#226633"/>
+                                Command="{Binding ReloadTableCommand}" Width="110"/>
                     </StackPanel>
 
                     <!-- DataGrid -->
@@ -212,11 +209,9 @@
                     <!-- 黃色框：TOOL CHANGE PANEL（最右側） -->
                     <StackPanel HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,70,10,0" Width="210">
 
-                        <!-- [2026-03-03] TOOL CHANGE PANEL 標題（非按鈕，深藍底色區分） -->
-                        <Border Background="#1A5276" CornerRadius="3" Padding="8,5" Margin="0,0,0,6"
-                                BorderBrush="#2980B9" BorderThickness="1">
-                            <TextBlock Text="TOOL CHANGE PANEL" Foreground="White"
-                                       FontSize="{DynamicResource FontSize.Body}" FontWeight="Bold" HorizontalAlignment="Center"/>
+                        <!-- [2026-03-11] TOOL CHANGE PANEL 標題（統一 PanelTitle） -->
+                        <Border Style="{StaticResource PanelTitleBorder}" Margin="0,0,0,6">
+                            <TextBlock Text="TOOL CHANGE PANEL" Style="{StaticResource PanelTitleText}"/>
                         </Border>
 
                         <!-- [n] LOAD SPINDLE -->

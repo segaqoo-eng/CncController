@@ -1,10 +1,15 @@
-﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:sys="clr-namespace:System;assembly=mscorlib">
+
+    <!-- ================================================================ -->
+    <!-- [2026-03-11] i18n 語言資源（繁體中文）                            -->
+    <!-- ================================================================ -->
 
     <sys:String x:Key="Str.Title">CncController 控制器</sys:String>
     <sys:String x:Key="Str.Status.Idle">閒置</sys:String>
 
+    <!-- ===== 導航 ===== -->
     <sys:String x:Key="Str.Nav.Main">主畫面</sys:String>
     <sys:String x:Key="Str.Nav.File">檔案管理</sys:String>
     <sys:String x:Key="Str.Nav.ATC">自動換刀</sys:String>
@@ -14,6 +19,7 @@
     <sys:String x:Key="Str.Nav.Settings">系統設定</sys:String>
     <sys:String x:Key="Str.Nav.Status">狀態診斷</sys:String>
 
+    <!-- ===== 通用按鈕 ===== -->
     <sys:String x:Key="Str.Btn.CycleStart">啟動</sys:String>
     <sys:String x:Key="Str.Btn.Stop">停止</sys:String>
     <sys:String x:Key="Str.Btn.Reload">重載檔案</sys:String>
@@ -24,18 +30,193 @@
     <sys:String x:Key="Str.Btn.OptionalStop">選擇停止</sys:String>
     <sys:String x:Key="Str.Btn.HomeAll">全軸回原點</sys:String>
     <sys:String x:Key="Str.Btn.ZeroAll">全部歸零</sys:String>
+    <sys:String x:Key="Str.Btn.RefAll">原點復歸 ALL</sys:String>
+    <sys:String x:Key="Str.Btn.Homed">已復歸</sys:String>
+    <sys:String x:Key="Str.Btn.Fwd">正轉</sys:String>
+    <sys:String x:Key="Str.Btn.Rev">反轉</sys:String>
+    <sys:String x:Key="Str.Btn.Set">設定</sys:String>
+    <sys:String x:Key="Str.Btn.ClearAll">全部清除</sys:String>
+    <sys:String x:Key="Str.Btn.Send">送出</sys:String>
 
+    <!-- ===== 標籤 ===== -->
     <sys:String x:Key="Str.Label.Work">工作座標</sys:String>
     <sys:String x:Key="Str.Label.Machine">機械座標</sys:String>
     <sys:String x:Key="Str.Label.DTG">剩餘距離</sys:String>
+    <sys:String x:Key="Str.Label.Status">狀態</sys:String>
 
+    <!-- ===== JOG ===== -->
     <sys:String x:Key="Str.Jog.Continuous">連續</sys:String>
     <sys:String x:Key="Str.Jog.Feedrate">手動速度</sys:String>
     <sys:String x:Key="Str.Jog.Spindle">主軸轉速</sys:String>
-    <sys:String x:Key="Str.Btn.Fwd">正轉</sys:String>
-    <sys:String x:Key="Str.Btn.Rev">反轉</sys:String>
 
-    <!-- [2026-02-24] DRO PB 版：ZERO ALL / REF ALL / 已復歸 -->
-    <sys:String x:Key="Str.Btn.RefAll">原點復歸 ALL</sys:String>
-    <sys:String x:Key="Str.Btn.Homed">已復歸</sys:String>
+    <!-- ===== HeaderBar ===== -->
+    <sys:String x:Key="Str.Header.Exit">EXIT（關閉程式）</sys:String>
+    <sys:String x:Key="Str.Header.ShortcutStop"> 停止  </sys:String>
+    <sys:String x:Key="Str.Header.ShortcutPower"> 電源  </sys:String>
+    <sys:String x:Key="Str.Header.ShortcutEstop"> 急停</sys:String>
+
+    <!-- ===== ATC 自動刀庫 ===== -->
+    <sys:String x:Key="Str.Atc.UmbrellaAtc">斗笠式刀庫</sys:String>
+    <sys:String x:Key="Str.Atc.ProgramTools">程式刀具</sys:String>
+    <sys:String x:Key="Str.Atc.ManualAtc">手動換刀</sys:String>
+    <sys:String x:Key="Str.Atc.CarouselRev">&#x21B6; 刀盤反轉</sys:String>
+    <sys:String x:Key="Str.Atc.CarouselFwd">刀盤正轉 &#x21B7;</sys:String>
+    <sys:String x:Key="Str.Atc.RetractAtc">&#x25C0; 刀盤收回</sys:String>
+    <sys:String x:Key="Str.Atc.ExtendAtc">刀盤伸出 &#x25B6;</sys:String>
+    <sys:String x:Key="Str.Atc.ClampTool">夾刀</sys:String>
+    <sys:String x:Key="Str.Atc.ReleaseTool">鬆刀</sys:String>
+    <sys:String x:Key="Str.Atc.OrientSpindle">主軸定位</sys:String>
+    <sys:String x:Key="Str.Atc.UnlockSpindle">主軸解鎖</sys:String>
+    <sys:String x:Key="Str.Atc.MoveAboveCarousel">主軸移至刀盤上方</sys:String>
+    <sys:String x:Key="Str.Atc.MoveToToolChangeHeight">主軸移至換刀高度</sys:String>
+    <sys:String x:Key="Str.Atc.RefCarousel">刀庫歸零</sys:String>
+    <sys:String x:Key="Str.Atc.ProgramToolsTitle">程式使用刀具</sys:String>
+    <sys:String x:Key="Str.Atc.AutoControlPanel">自動換刀&#x0a;控制面板</sys:String>
+    <sys:String x:Key="Str.Atc.LoadSpindle">裝刀至主軸</sys:String>
+    <sys:String x:Key="Str.Atc.UnloadSpindle">卸刀回刀庫</sys:String>
+    <sys:String x:Key="Str.Atc.ElectronicToolSetter">電子對刀儀</sys:String>
+    <sys:String x:Key="Str.Atc.TouchOffCurrentTool">目前刀具對刀</sys:String>
+    <sys:String x:Key="Str.Atc.SlotConfig">刀位設定</sys:String>
+    <sys:String x:Key="Str.Atc.SlotNumber">刀位</sys:String>
+    <sys:String x:Key="Str.Atc.ToolNumber">刀號</sys:String>
+
+    <!-- ATC 設定 — 基本 -->
+    <sys:String x:Key="Str.Atc.AtcType">刀庫類型</sys:String>
+    <sys:String x:Key="Str.Atc.AtcTypeLabel">刀庫類型：</sys:String>
+    <sys:String x:Key="Str.Atc.ControlMode">控制模式：</sys:String>
+    <sys:String x:Key="Str.Atc.ToolCount">刀具數量：</sys:String>
+    <sys:String x:Key="Str.Atc.SafetyPosition">安全位置</sys:String>
+    <sys:String x:Key="Str.Atc.ZToolChangeHeight">Z 換刀高度：</sys:String>
+    <sys:String x:Key="Str.Atc.ZClearanceHeight">Z 安全高度：</sys:String>
+    <sys:String x:Key="Str.Atc.TimingConfig">時序設定</sys:String>
+    <sys:String x:Key="Str.Atc.ClampDelay">夾刀延遲：</sys:String>
+    <sys:String x:Key="Str.Atc.UnclampDelay">鬆刀延遲：</sys:String>
+    <sys:String x:Key="Str.Atc.AirBlowDelay">吹氣延遲：</sys:String>
+    <sys:String x:Key="Str.Atc.SensorTimeout">感測器逾時：</sys:String>
+    <sys:String x:Key="Str.Atc.RackParams">排刀架參數</sys:String>
+    <sys:String x:Key="Str.Atc.TraverseSpeed">移動速度：</sys:String>
+    <sys:String x:Key="Str.Atc.Pocket1XY">刀位 1 X / Y：</sys:String>
+    <sys:String x:Key="Str.Atc.Pocket2XY">刀位 2 X / Y：</sys:String>
+    <sys:String x:Key="Str.Atc.ClearanceXY">安全間距 X / Y：</sys:String>
+
+    <!-- ATC 設定 — 軸 -->
+    <sys:String x:Key="Str.Atc.CarouselRotationServo">刀盤旋轉伺服</sys:String>
+    <sys:String x:Key="Str.Atc.EtherCatSlaveId">EtherCAT 站號：</sys:String>
+    <sys:String x:Key="Str.Atc.MechanicalParams">機械參數</sys:String>
+    <sys:String x:Key="Str.Atc.PulsePerRev">每轉脈衝數：</sys:String>
+    <sys:String x:Key="Str.Atc.Pitch">導程：</sys:String>
+    <sys:String x:Key="Str.Atc.MotionParams">運動參數</sys:String>
+    <sys:String x:Key="Str.Atc.MaxVelocity">最大速度：</sys:String>
+    <sys:String x:Key="Str.Atc.MaxAcceleration">最大加速度：</sys:String>
+    <sys:String x:Key="Str.Atc.Info">資訊</sys:String>
+    <sys:String x:Key="Str.Atc.NoSlaveSelected">尚未選擇站號</sys:String>
+
+    <!-- ATC 設定 — IO -->
+    <sys:String x:Key="Str.Atc.IoModule">IO 模組</sys:String>
+    <sys:String x:Key="Str.Atc.EtherCatIoSlaveId">EtherCAT IO 站號：</sys:String>
+    <sys:String x:Key="Str.Atc.DigitalOutput">數位輸出 (DO)</sys:String>
+    <sys:String x:Key="Str.Atc.DigitalInput">數位輸入 (DI)</sys:String>
+    <sys:String x:Key="Str.Atc.SectionCarousel">── 刀盤 ──</sys:String>
+    <sys:String x:Key="Str.Atc.SectionMotor">── 馬達（IO 模式）──</sys:String>
+    <sys:String x:Key="Str.Atc.SectionDrawbar">── 拉刀桿 ──</sys:String>
+    <sys:String x:Key="Str.Atc.SectionRotationIndex">── 旋轉定位（IO 模式）──</sys:String>
+    <sys:String x:Key="Str.Atc.DoCarouselOut">DO 刀盤伸出：</sys:String>
+    <sys:String x:Key="Str.Atc.DoCarouselHome">DO 刀盤歸位：</sys:String>
+    <sys:String x:Key="Str.Atc.DoMotorFwd">DO 馬達正轉：</sys:String>
+    <sys:String x:Key="Str.Atc.DoMotorRev">DO 馬達反轉：</sys:String>
+    <sys:String x:Key="Str.Atc.DoDrawbar">DO 拉刀桿：</sys:String>
+    <sys:String x:Key="Str.Atc.DoAirBlow">DO 吹氣：</sys:String>
+    <sys:String x:Key="Str.Atc.DiCarouselHome">DI 刀盤原點：</sys:String>
+    <sys:String x:Key="Str.Atc.DiCarouselOut">DI 刀盤伸出：</sys:String>
+    <sys:String x:Key="Str.Atc.DiRotationIndex">DI 旋轉定位：</sys:String>
+    <sys:String x:Key="Str.Atc.DiDrawbarClamp">DI 夾刀確認：</sys:String>
+    <sys:String x:Key="Str.Atc.DiDrawbarUnclamp">DI 鬆刀確認：</sys:String>
+
+    <!-- ===== Probing 探測 ===== -->
+    <sys:String x:Key="Str.Probe.OutsideCorners">外角探測</sys:String>
+    <sys:String x:Key="Str.Probe.InsideCorners">內角探測</sys:String>
+    <sys:String x:Key="Str.Probe.BossAndPocket">凸台與口袋</sys:String>
+    <sys:String x:Key="Str.Probe.RidgeAndValley">脊與谷</sys:String>
+    <sys:String x:Key="Str.Probe.EdgeAngle">邊緣角度</sys:String>
+    <sys:String x:Key="Str.Probe.RotaryAxis">旋轉軸</sys:String>
+    <sys:String x:Key="Str.Probe.Calibrate">校正</sys:String>
+    <sys:String x:Key="Str.Probe.ProbeHelp">探測說明</sys:String>
+    <sys:String x:Key="Str.Probe.SpindleZero">主軸零點</sys:String>
+    <sys:String x:Key="Str.Probe.ToolSetterPos">對刀位置</sys:String>
+    <sys:String x:Key="Str.Probe.ProbeSpeeds">快慢探測速度</sys:String>
+    <sys:String x:Key="Str.Probe.XYTravelRetract">XY 行程 / 退回</sys:String>
+    <sys:String x:Key="Str.Probe.BreakCustom">斷刀 / 自訂</sys:String>
+    <sys:String x:Key="Str.Probe.ProbeToolSize">探針刀具尺寸</sys:String>
+    <sys:String x:Key="Str.Probe.WorkCoordSystem">工件座標系</sys:String>
+    <sys:String x:Key="Str.Probe.PositionOnly">僅顯示探測位置</sys:String>
+    <sys:String x:Key="Str.Probe.ProbeParams">探測參數</sys:String>
+    <sys:String x:Key="Str.Probe.ProbeToolNum">探針刀號 #</sys:String>
+    <sys:String x:Key="Str.Probe.SlowProbeSpeed">慢速探測 mm/min</sys:String>
+    <sys:String x:Key="Str.Probe.TraverseSpeed">快移速度 mm/min</sys:String>
+    <sys:String x:Key="Str.Probe.FastProbeSpeed">快速探測 mm/min</sys:String>
+    <sys:String x:Key="Str.Probe.XYMaxDistance">XY 最大距離 mm</sys:String>
+    <sys:String x:Key="Str.Probe.XYClearance">XY 安全間距 mm</sys:String>
+    <sys:String x:Key="Str.Probe.ZMaxDistance">Z 最大距離 mm</sys:String>
+    <sys:String x:Key="Str.Probe.ZClearance">Z 安全間距 mm</sys:String>
+    <sys:String x:Key="Str.Probe.ExtraDepth">額外探測深度 mm</sys:String>
+    <sys:String x:Key="Str.Probe.OffsetWidth">偏移寬度 mm</sys:String>
+    <sys:String x:Key="Str.Probe.UpdateParams">更新探測參數</sys:String>
+    <sys:String x:Key="Str.Probe.ClearAllData">清除全部數據</sys:String>
+    <sys:String x:Key="Str.Probe.ClearXData">X 數據清除</sys:String>
+    <sys:String x:Key="Str.Probe.ClearYData">Y 數據清除</sys:String>
+    <sys:String x:Key="Str.Probe.XMinusProbe">X- 探測</sys:String>
+    <sys:String x:Key="Str.Probe.XPlusProbe">X+ 探測</sys:String>
+    <sys:String x:Key="Str.Probe.XWidth">X 寬度</sys:String>
+    <sys:String x:Key="Str.Probe.YMinusProbe">Y- 探測</sys:String>
+    <sys:String x:Key="Str.Probe.YPlusProbe">Y+ 探測</sys:String>
+    <sys:String x:Key="Str.Probe.YWidth">Y 寬度</sys:String>
+    <sys:String x:Key="Str.Probe.ZMinusProbe">Z- 探測</sys:String>
+    <sys:String x:Key="Str.Probe.XCenter">X 中心</sys:String>
+    <sys:String x:Key="Str.Probe.YCenter">Y 中心</sys:String>
+    <sys:String x:Key="Str.Probe.StopProbe">停止探測</sys:String>
+    <sys:String x:Key="Str.Probe.Hint">提示</sys:String>
+    <sys:String x:Key="Str.Probe.SetRotationWco">設定旋轉 WCO</sys:String>
+    <sys:String x:Key="Str.Probe.EdgeWidth">邊緣寬度</sys:String>
+    <sys:String x:Key="Str.Probe.CalReset">校正重置</sys:String>
+    <sys:String x:Key="Str.Probe.CalLabel">校正</sys:String>
+    <sys:String x:Key="Str.Probe.Diameter">直徑</sys:String>
+    <sys:String x:Key="Str.Probe.CalXYAvgError">校正 XY 平均誤差</sys:String>
+    <sys:String x:Key="Str.Probe.CalXError">校正 X 誤差</sys:String>
+    <sys:String x:Key="Str.Probe.CalYError">校正 Y 誤差</sys:String>
+    <sys:String x:Key="Str.Probe.CalWidth">校正寬度</sys:String>
+    <sys:String x:Key="Str.Probe.PrevPage">上一頁</sys:String>
+    <sys:String x:Key="Str.Probe.NextPage">下一頁</sys:String>
+    <sys:String x:Key="Str.Probe.ToolSetterParams">對刀儀參數</sys:String>
+    <sys:String x:Key="Str.Probe.ProbeSpindleZero">探測主軸零點</sys:String>
+    <sys:String x:Key="Str.Probe.SetToolSetterPos">設定對刀位置</sys:String>
+    <sys:String x:Key="Str.Probe.ToolDiamProbe">刀具直徑探測</sys:String>
+    <sys:String x:Key="Str.Probe.ToolDiamComp">刀具直徑補正</sys:String>
+    <sys:String x:Key="Str.Probe.ToolOffsetDir">刀具偏移方向</sys:String>
+    <sys:String x:Key="Str.Probe.DirBack">後</sys:String>
+    <sys:String x:Key="Str.Probe.DirLeft">左</sys:String>
+    <sys:String x:Key="Str.Probe.DirRight">右</sys:String>
+    <sys:String x:Key="Str.Probe.DirFront">前</sys:String>
+    <sys:String x:Key="Str.Probe.SpindleZeroMm">主軸零點 mm</sys:String>
+    <sys:String x:Key="Str.Probe.ZMaxTravel">Z 最大行程 mm</sys:String>
+    <sys:String x:Key="Str.Probe.XYMaxTravel">XY 最大行程 mm</sys:String>
+    <sys:String x:Key="Str.Probe.RetractDistance">退回距離 mm</sys:String>
+    <sys:String x:Key="Str.Probe.BreakTolerance">斷刀容差 mm</sys:String>
+    <sys:String x:Key="Str.Probe.CustomParam1">自訂參數 1</sys:String>
+    <sys:String x:Key="Str.Probe.CustomParam2">自訂參數 2</sys:String>
+    <sys:String x:Key="Str.Probe.UpdateToolSetterParams">更新對刀儀參數</sys:String>
+
+    <!-- ===== Settings 設定 ===== -->
+    <sys:String x:Key="Str.Setting.MachineAxisConfig">機台軸數設定</sys:String>
+    <sys:String x:Key="Str.Setting.MachineType">機台類型</sys:String>
+    <sys:String x:Key="Str.Setting.EnabledAxes">啟用軸（依機台類型自動設定）：</sys:String>
+    <sys:String x:Key="Str.Setting.AxisXBasic">X Axis (基本軸)</sys:String>
+    <sys:String x:Key="Str.Setting.AxisYBasic">Y Axis (基本軸)</sys:String>
+    <sys:String x:Key="Str.Setting.AxisZBasic">Z Axis (基本軸)</sys:String>
+    <sys:String x:Key="Str.Setting.AxisARotary">A Axis (第4軸/旋轉)</sys:String>
+    <sys:String x:Key="Str.Setting.AxisBRotary">B Axis (第5軸/旋轉)</sys:String>
+    <sys:String x:Key="Str.Setting.AxisCRotary">C Axis (第6軸/旋轉)</sys:String>
+    <sys:String x:Key="Str.Setting.HomingImmediate">原地歸零</sys:String>
+    <sys:String x:Key="Str.Setting.HomingHomeSwitch">使用獨立原點開關</sys:String>
+    <sys:String x:Key="Str.Setting.HomingLimitSwitch">使用極限開關當原點</sys:String>
+
 </ResourceDictionary>

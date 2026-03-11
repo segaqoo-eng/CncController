@@ -10,11 +10,8 @@
     <!-- [2026-03-10] TextBox 靠左對齊 + 全部標籤改繁體中文 -->
 
     <UserControl.Resources>
-        <Style x:Key="SectionHeader" TargetType="TextBlock">
-            <Setter Property="Foreground" Value="#5E70FF"/>
-            <Setter Property="FontWeight" Value="Bold"/>
-            <Setter Property="FontSize" Value="{DynamicResource FontSize.Medium}"/>
-        </Style>
+        <!-- [2026-03-11] 改用全域 GroupHeaderText -->
+        <Style x:Key="SectionHeader" TargetType="TextBlock" BasedOn="{StaticResource GroupHeaderText}"/>
         <Style x:Key="ParamLabel" TargetType="TextBlock">
             <Setter Property="Foreground" Value="White"/>
             <Setter Property="FontSize" Value="{DynamicResource FontSize.Medium}"/>
@@ -56,7 +53,7 @@
             <!-- [2026-03-06] ATC TYPE section -->
             <GroupBox Style="{StaticResource SettingsGroupBox}">
                 <GroupBox.Header>
-                    <TextBlock Text="刀庫類型" Style="{StaticResource SectionHeader}"/>
+                    <TextBlock Text="{DynamicResource Str.Atc.AtcType}" Style="{StaticResource SectionHeader}"/>
                 </GroupBox.Header>
                 <StackPanel>
                     <Grid Margin="0,5">
@@ -64,7 +61,7 @@
                             <ColumnDefinition Width="180"/>
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="刀庫類型：" Style="{StaticResource ParamLabel}"/>
+                        <TextBlock Grid.Column="0" Text="{DynamicResource Str.Atc.AtcTypeLabel}" Style="{StaticResource ParamLabel}"/>
                         <ComboBox Grid.Column="1" FontSize="{DynamicResource FontSize.Medium}" Height="30" Foreground="Black" HorizontalAlignment="Left" Width="200"
                                   ItemsSource="{Binding AvailableAtcTypes}"
                                   SelectedItem="{Binding SelectedAtcType}"/>
@@ -76,7 +73,7 @@
                             <ColumnDefinition Width="180"/>
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="控制模式：" Style="{StaticResource ParamLabel}"/>
+                        <TextBlock Grid.Column="0" Text="{DynamicResource Str.Atc.ControlMode}" Style="{StaticResource ParamLabel}"/>
                         <ComboBox Grid.Column="1" FontSize="{DynamicResource FontSize.Medium}" Height="30" Foreground="Black" HorizontalAlignment="Left" Width="200"
                                   ItemsSource="{Binding AvailableControlModes}"
                                   SelectedItem="{Binding ControlMode}"/>
@@ -86,7 +83,7 @@
                             <ColumnDefinition Width="180"/>
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="刀具數量：" Style="{StaticResource ParamLabel}"/>
+                        <TextBlock Grid.Column="0" Text="{DynamicResource Str.Atc.ToolCount}" Style="{StaticResource ParamLabel}"/>
                         <TextBox Grid.Column="1" Style="{StaticResource ParamTextBox}"
                                  Text="{Binding ToolCount, UpdateSourceTrigger=PropertyChanged}"/>
                     </Grid>
@@ -97,7 +94,7 @@
             <GroupBox Style="{StaticResource SettingsGroupBox}"
                       Visibility="{Binding ShowTimingParams, Converter={StaticResource BoolToVis}}">
                 <GroupBox.Header>
-                    <TextBlock Text="安全位置" Style="{StaticResource SectionHeader}"/>
+                    <TextBlock Text="{DynamicResource Str.Atc.SafetyPosition}" Style="{StaticResource SectionHeader}"/>
                 </GroupBox.Header>
                 <StackPanel>
                     <Grid Margin="0,5">
@@ -105,7 +102,7 @@
                             <ColumnDefinition Width="180"/>
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="Z 換刀高度：" Style="{StaticResource ParamLabel}"/>
+                        <TextBlock Grid.Column="0" Text="{DynamicResource Str.Atc.ZToolChangeHeight}" Style="{StaticResource ParamLabel}"/>
                         <StackPanel Grid.Column="1" Orientation="Horizontal">
                             <TextBox Style="{StaticResource ParamTextBox}"
                                      Text="{Binding ZToolChangeHeight, UpdateSourceTrigger=PropertyChanged}"/>
@@ -117,7 +114,7 @@
                             <ColumnDefinition Width="180"/>
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="Z 安全高度：" Style="{StaticResource ParamLabel}"/>
+                        <TextBlock Grid.Column="0" Text="{DynamicResource Str.Atc.ZClearanceHeight}" Style="{StaticResource ParamLabel}"/>
                         <StackPanel Grid.Column="1" Orientation="Horizontal">
                             <TextBox Style="{StaticResource ParamTextBox}"
                                      Text="{Binding ZClearanceHeight, UpdateSourceTrigger=PropertyChanged}"/>
@@ -131,7 +128,7 @@
             <GroupBox Style="{StaticResource SettingsGroupBox}"
                       Visibility="{Binding ShowTimingParams, Converter={StaticResource BoolToVis}}">
                 <GroupBox.Header>
-                    <TextBlock Text="時序設定" Style="{StaticResource SectionHeader}"/>
+                    <TextBlock Text="{DynamicResource Str.Atc.TimingConfig}" Style="{StaticResource SectionHeader}"/>
                 </GroupBox.Header>
                 <StackPanel>
                     <Grid Margin="0,5">
@@ -139,7 +136,7 @@
                             <ColumnDefinition Width="180"/>
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="夾刀延遲：" Style="{StaticResource ParamLabel}"/>
+                        <TextBlock Grid.Column="0" Text="{DynamicResource Str.Atc.ClampDelay}" Style="{StaticResource ParamLabel}"/>
                         <StackPanel Grid.Column="1" Orientation="Horizontal">
                             <TextBox Style="{StaticResource ParamTextBox}"
                                      Text="{Binding ClampDwell, UpdateSourceTrigger=PropertyChanged}"/>
@@ -151,7 +148,7 @@
                             <ColumnDefinition Width="180"/>
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="鬆刀延遲：" Style="{StaticResource ParamLabel}"/>
+                        <TextBlock Grid.Column="0" Text="{DynamicResource Str.Atc.UnclampDelay}" Style="{StaticResource ParamLabel}"/>
                         <StackPanel Grid.Column="1" Orientation="Horizontal">
                             <TextBox Style="{StaticResource ParamTextBox}"
                                      Text="{Binding UnclampDwell, UpdateSourceTrigger=PropertyChanged}"/>
@@ -163,7 +160,7 @@
                             <ColumnDefinition Width="180"/>
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="吹氣延遲：" Style="{StaticResource ParamLabel}"/>
+                        <TextBlock Grid.Column="0" Text="{DynamicResource Str.Atc.AirBlowDelay}" Style="{StaticResource ParamLabel}"/>
                         <StackPanel Grid.Column="1" Orientation="Horizontal">
                             <TextBox Style="{StaticResource ParamTextBox}"
                                      Text="{Binding AirBlowDwell, UpdateSourceTrigger=PropertyChanged}"/>
@@ -175,7 +172,7 @@
                             <ColumnDefinition Width="180"/>
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="感測器逾時：" Style="{StaticResource ParamLabel}"/>
+                        <TextBlock Grid.Column="0" Text="{DynamicResource Str.Atc.SensorTimeout}" Style="{StaticResource ParamLabel}"/>
                         <StackPanel Grid.Column="1" Orientation="Horizontal">
                             <TextBox Style="{StaticResource ParamTextBox}"
                                      Text="{Binding SensorTimeout, UpdateSourceTrigger=PropertyChanged}"/>
@@ -189,7 +186,7 @@
             <GroupBox Style="{StaticResource SettingsGroupBox}"
                       Visibility="{Binding ShowRackParams, Converter={StaticResource BoolToVis}}">
                 <GroupBox.Header>
-                    <TextBlock Text="排刀架參數" Style="{StaticResource SectionHeader}"/>
+                    <TextBlock Text="{DynamicResource Str.Atc.RackParams}" Style="{StaticResource SectionHeader}"/>
                 </GroupBox.Header>
                 <StackPanel>
                     <Grid Margin="0,5">
@@ -197,7 +194,7 @@
                             <ColumnDefinition Width="180"/>
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="移動速度：" Style="{StaticResource ParamLabel}"/>
+                        <TextBlock Grid.Column="0" Text="{DynamicResource Str.Atc.TraverseSpeed}" Style="{StaticResource ParamLabel}"/>
                         <StackPanel Grid.Column="1" Orientation="Horizontal">
                             <TextBox Style="{StaticResource ParamTextBox}"
                                      Text="{Binding RackTraverseSpeed, UpdateSourceTrigger=PropertyChanged}"/>
@@ -209,7 +206,7 @@
                             <ColumnDefinition Width="180"/>
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="刀位 1 X / Y：" Style="{StaticResource ParamLabel}"/>
+                        <TextBlock Grid.Column="0" Text="{DynamicResource Str.Atc.Pocket1XY}" Style="{StaticResource ParamLabel}"/>
                         <StackPanel Grid.Column="1" Orientation="Horizontal">
                             <TextBox Style="{StaticResource ParamTextBox}"
                                      Text="{Binding RackPocket1X, UpdateSourceTrigger=PropertyChanged}"/>
@@ -222,7 +219,7 @@
                             <ColumnDefinition Width="180"/>
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="刀位 2 X / Y：" Style="{StaticResource ParamLabel}"/>
+                        <TextBlock Grid.Column="0" Text="{DynamicResource Str.Atc.Pocket2XY}" Style="{StaticResource ParamLabel}"/>
                         <StackPanel Grid.Column="1" Orientation="Horizontal">
                             <TextBox Style="{StaticResource ParamTextBox}"
                                      Text="{Binding RackPocket2X, UpdateSourceTrigger=PropertyChanged}"/>
@@ -235,7 +232,7 @@
                             <ColumnDefinition Width="180"/>
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="安全間距 X / Y：" Style="{StaticResource ParamLabel}"/>
+                        <TextBlock Grid.Column="0" Text="{DynamicResource Str.Atc.ClearanceXY}" Style="{StaticResource ParamLabel}"/>
                         <StackPanel Grid.Column="1" Orientation="Horizontal">
                             <TextBox Style="{StaticResource ParamTextBox}"
                                      Text="{Binding RackClearanceX, UpdateSourceTrigger=PropertyChanged}"/>

@@ -62,7 +62,7 @@
                 <!-- Left vertical label -->
                 <Border DockPanel.Dock="Left" Background="#DD333333" Width="22" CornerRadius="3,0,0,3"
                         BorderBrush="#555" BorderThickness="1,1,0,1">
-                    <TextBlock Text="斗笠式刀庫" Foreground="#AAA" FontSize="{DynamicResource FontSize.Small}" FontWeight="Bold"
+                    <TextBlock Text="{DynamicResource Str.Atc.UmbrellaAtc}" Foreground="#AAA" FontSize="{DynamicResource FontSize.Small}" FontWeight="Bold"
                                HorizontalAlignment="Center" VerticalAlignment="Center">
                         <TextBlock.LayoutTransform>
                             <RotateTransform Angle="-90"/>
@@ -79,11 +79,11 @@
 
                     <!-- Mode toggle tabs (match PB style) -->
                     <UniformGrid Grid.Row="0" Rows="1" Columns="2" Margin="0,0,0,4">
-                        <RadioButton Content="程式刀具" Style="{StaticResource ModeToggleStyle}"
+                        <RadioButton Content="{DynamicResource Str.Atc.ProgramTools}" Style="{StaticResource ModeToggleStyle}"
                                      GroupName="AtcMode" FontSize="{DynamicResource FontSize.Body}" Padding="8,8"
                                      IsChecked="{Binding IsProgramMode, Mode=OneWay}"
                                      Command="{Binding SwitchModeCommand}" CommandParameter="ProgramTools"/>
-                        <RadioButton Content="手動換刀" Style="{StaticResource ModeToggleStyle}"
+                        <RadioButton Content="{DynamicResource Str.Atc.ManualAtc}" Style="{StaticResource ModeToggleStyle}"
                                      GroupName="AtcMode" FontSize="{DynamicResource FontSize.Body}" Padding="8,8"
                                      IsChecked="{Binding IsManualMode, Mode=OneWay}"
                                      Command="{Binding SwitchModeCommand}" CommandParameter="ManualAtc"/>
@@ -102,7 +102,7 @@
                             <!-- [2026-03-10] 8 buttons, 2 columns — DO 開啟時按鈕反白（藍色高亮） -->
                             <UniformGrid Grid.Row="0" Rows="4" Columns="2" Margin="0,0,0,8">
                                 <!-- 刀盤反轉（馬達反轉 DO） -->
-                                <Button Content="&#x21B6; 刀盤反轉"
+                                <Button Content="{DynamicResource Str.Atc.CarouselRev}"
                                         Command="{Binding AtcRevCommand}" FontSize="{DynamicResource FontSize.Body}" Padding="6,10" Margin="3,4">
                                     <Button.Style>
                                         <Style TargetType="Button" BasedOn="{StaticResource AtcBtnStyle}">
@@ -115,7 +115,7 @@
                                     </Button.Style>
                                 </Button>
                                 <!-- 刀盤正轉（馬達正轉 DO） -->
-                                <Button Content="刀盤正轉 &#x21B7;"
+                                <Button Content="{DynamicResource Str.Atc.CarouselFwd}"
                                         Command="{Binding AtcFwdCommand}" FontSize="{DynamicResource FontSize.Body}" Padding="6,10" Margin="3,4">
                                     <Button.Style>
                                         <Style TargetType="Button" BasedOn="{StaticResource AtcBtnStyle}">
@@ -128,7 +128,7 @@
                                     </Button.Style>
                                 </Button>
                                 <!-- 刀盤收回（CarouselHome DO） -->
-                                <Button Content="&#x25C0; 刀盤收回"
+                                <Button Content="{DynamicResource Str.Atc.RetractAtc}"
                                         Command="{Binding RetractAtcCommand}" FontSize="{DynamicResource FontSize.Body}" Padding="6,10" Margin="3,4">
                                     <Button.Style>
                                         <Style TargetType="Button" BasedOn="{StaticResource AtcBtnStyle}">
@@ -141,7 +141,7 @@
                                     </Button.Style>
                                 </Button>
                                 <!-- 刀盤伸出（CarouselOut DO） -->
-                                <Button Content="刀盤伸出 &#x25B6;"
+                                <Button Content="{DynamicResource Str.Atc.ExtendAtc}"
                                         Command="{Binding ExtendAtcCommand}" FontSize="{DynamicResource FontSize.Body}" Padding="6,10" Margin="3,4">
                                     <Button.Style>
                                         <Style TargetType="Button" BasedOn="{StaticResource AtcBtnStyle}">
@@ -154,7 +154,7 @@
                                     </Button.Style>
                                 </Button>
                                 <!-- [2026-03-10] 夾刀（Drawbar DO OFF = 彈簧夾緊 = IsDrawbarOn=False） -->
-                                <Button Content="夾刀"
+                                <Button Content="{DynamicResource Str.Atc.ClampTool}"
                                         Command="{Binding ClampToolCommand}" FontSize="{DynamicResource FontSize.Body}" Padding="6,10" Margin="3,4">
                                     <Button.Style>
                                         <Style TargetType="Button" BasedOn="{StaticResource AtcBtnStyle}">
@@ -167,7 +167,7 @@
                                     </Button.Style>
                                 </Button>
                                 <!-- [2026-03-10] 鬆刀（Drawbar DO ON = 氣壓鬆開 = IsDrawbarOn=True） -->
-                                <Button Content="鬆刀"
+                                <Button Content="{DynamicResource Str.Atc.ReleaseTool}"
                                         Command="{Binding ReleaseToolCommand}" FontSize="{DynamicResource FontSize.Body}" Padding="6,10" Margin="3,4">
                                     <Button.Style>
                                         <Style TargetType="Button" BasedOn="{StaticResource AtcBtnStyle}">
@@ -180,25 +180,24 @@
                                     </Button.Style>
                                 </Button>
                                 <!-- 主軸定位 -->
-                                <Button Content="主軸定位" Style="{StaticResource AtcBtnStyle}"
+                                <Button Content="{DynamicResource Str.Atc.OrientSpindle}" Style="{StaticResource AtcBtnStyle}"
                                         Command="{Binding OrientSpindleCommand}" FontSize="{DynamicResource FontSize.Body}" Padding="6,10" Margin="3,4"/>
                                 <!-- 主軸解鎖 -->
-                                <Button Content="主軸解鎖" Style="{StaticResource AtcBtnStyle}"
+                                <Button Content="{DynamicResource Str.Atc.UnlockSpindle}" Style="{StaticResource AtcBtnStyle}"
                                         Command="{Binding UnlockSpindleCommand}" FontSize="{DynamicResource FontSize.Body}" Padding="6,10" Margin="3,4"/>
                             </UniformGrid>
 
                             <!-- [2026-03-06] 3 full-width buttons at bottom (match UN_BIG4) -->
                             <StackPanel Grid.Row="1">
-                                <Button Content="主軸移至刀盤上方" Style="{StaticResource AtcBtnStyle}"
+                                <Button Content="{DynamicResource Str.Atc.MoveAboveCarousel}" Style="{StaticResource AtcBtnStyle}"
                                         Command="{Binding MoveHeadAboveCarouselCommand}"
                                         HorizontalAlignment="Stretch" FontSize="{DynamicResource FontSize.Body}" Padding="8,12" Margin="3,4"/>
-                                <Button Content="主軸移至換刀高度" Style="{StaticResource AtcBtnStyle}"
+                                <Button Content="{DynamicResource Str.Atc.MoveToToolChangeHeight}" Style="{StaticResource AtcBtnStyle}"
                                         Command="{Binding MoveToolToCarouselHeightCommand}"
                                         HorizontalAlignment="Stretch" FontSize="{DynamicResource FontSize.Body}" Padding="8,12" Margin="3,4"/>
-                                <Button Content="刀庫歸零" Style="{StaticResource AtcBtnStyle}"
+                                <Button Content="{DynamicResource Str.Atc.RefCarousel}" Style="{StaticResource AtcBtnStyle}"
                                         Command="{Binding RefCarouselCommand}"
-                                        HorizontalAlignment="Stretch" Background="#445588"
-                                        FontSize="{DynamicResource FontSize.Medium}" Padding="8,14" Margin="3,8,3,3"/>
+                                        HorizontalAlignment="Stretch"                                         FontSize="{DynamicResource FontSize.Medium}" Padding="8,14" Margin="3,8,3,3"/>
                             </StackPanel>
                         </Grid>
                     </Border>
@@ -214,10 +213,9 @@
                                 <RowDefinition Height="Auto"/>
                             </Grid.RowDefinitions>
 
-                            <!-- [2026-03-06] Title bar -->
-                            <Border Grid.Row="0" Background="#444" CornerRadius="3" Padding="8,8" Margin="0,0,0,8">
-                                <TextBlock Text="程式使用刀具" Foreground="White"
-                                           FontSize="{DynamicResource FontSize.Medium}" FontWeight="Bold" HorizontalAlignment="Center"/>
+                            <!-- [2026-03-11] Title bar（統一 PanelTitle） -->
+                            <Border Grid.Row="0" Style="{StaticResource PanelTitleBorder}" Margin="0,0,0,8">
+                                <TextBlock Text="{DynamicResource Str.Atc.ProgramToolsTitle}" Style="{StaticResource PanelTitleText}"/>
                             </Border>
 
                             <!-- [2026-03-06] Tool list (fills remaining space) -->
@@ -228,10 +226,9 @@
                                      ScrollViewer.VerticalScrollBarVisibility="Auto"/>
 
                             <!-- [2026-03-06] REF CAROUSEL at bottom -->
-                            <Button Grid.Row="2" Content="刀庫歸零" Style="{StaticResource AtcBtnStyle}"
+                            <Button Grid.Row="2" Content="{DynamicResource Str.Atc.RefCarousel}" Style="{StaticResource AtcBtnStyle}"
                                     Command="{Binding RefCarouselCommand}"
-                                    HorizontalAlignment="Stretch" Background="#445588"
-                                    FontSize="{DynamicResource FontSize.Medium}" Padding="8,14" Margin="0,8,0,0"/>
+                                    HorizontalAlignment="Stretch"                                     FontSize="{DynamicResource FontSize.Medium}" Padding="8,14" Margin="0,8,0,0"/>
                         </Grid>
                     </Border>
                 </Grid>
@@ -264,11 +261,9 @@
                  ====================================================================== -->
             <StackPanel Grid.Column="3" VerticalAlignment="Top">
 
-                <!-- [2026-03-06] ATC AUTOMATIC CONTROL PANEL 標題（深藍底） -->
-                <Border Background="#1A5276" CornerRadius="3" Padding="8,5" Margin="0,0,0,6"
-                        BorderBrush="#2980B9" BorderThickness="1">
-                    <TextBlock Text="自動換刀&#x0a;控制面板" Foreground="White"
-                               FontSize="{DynamicResource FontSize.Body}" FontWeight="Bold" HorizontalAlignment="Center"
+                <!-- [2026-03-11] ATC AUTOMATIC CONTROL PANEL 標題（統一 PanelTitle） -->
+                <Border Style="{StaticResource PanelTitleBorder}" Margin="0,0,0,6">
+                    <TextBlock Text="{DynamicResource Str.Atc.AutoControlPanel}" Style="{StaticResource PanelTitleText}"
                                TextAlignment="Center"/>
                 </Border>
 
@@ -285,13 +280,15 @@
                                  TextAlignment="Center" BorderThickness="0" VerticalContentAlignment="Center"
                                  Padding="2"/>
                     </Border>
-                    <Button Grid.Column="1" Content="裝刀至主軸" Style="{StaticResource PanelBtnStyle}"
-                            Command="{Binding LoadSpindleCommand}" Background="#444" BorderBrush="#666"/>
+                    <!-- [2026-03-11] 移除 inline Background，統一由 PanelBtnStyle 繼承 BaseBtnStyle 深灰漸層 -->
+                    <Button Grid.Column="1" Content="{DynamicResource Str.Atc.LoadSpindle}" Style="{StaticResource PanelBtnStyle}"
+                            Command="{Binding LoadSpindleCommand}"/>
                 </Grid>
 
                 <!-- [2026-03-06] UNLOAD SPINDLE -->
-                <Button Content="卸刀回刀庫" Style="{StaticResource PanelBtnStyle}"
-                        Command="{Binding UnloadSpindleCommand}" Background="#444" BorderBrush="#666"/>
+                <!-- [2026-03-11] 移除 inline Background -->
+                <Button Content="{DynamicResource Str.Atc.UnloadSpindle}" Style="{StaticResource PanelBtnStyle}"
+                        Command="{Binding UnloadSpindleCommand}"/>
 
                 <Separator Background="#444" Margin="0,6"/>
 
@@ -325,20 +322,20 @@
                 <Separator Background="#444" Margin="0,6"/>
 
                 <!-- [2026-03-06] ELECTRONIC TOOL SETTER -->
-                <Button Content="電子對刀儀" Style="{StaticResource PanelBtnStyle}"
-                        Command="{Binding ElectronicToolSetterCommand}" Background="#444" BorderBrush="#666"/>
+                <!-- [2026-03-11] 移除 inline Background -->
+                <Button Content="{DynamicResource Str.Atc.ElectronicToolSetter}" Style="{StaticResource PanelBtnStyle}"
+                        Command="{Binding ElectronicToolSetterCommand}"/>
 
                 <!-- [2026-03-06] TOUCH OFF CURRENT TOOL -->
-                <Button Content="目前刀具對刀" Style="{StaticResource PanelBtnStyle}"
-                        Command="{Binding TouchOffCurrentToolCommand}" Background="#444" BorderBrush="#666"/>
+                <!-- [2026-03-11] 移除 inline Background -->
+                <Button Content="{DynamicResource Str.Atc.TouchOffCurrentTool}" Style="{StaticResource PanelBtnStyle}"
+                        Command="{Binding TouchOffCurrentToolCommand}"/>
 
                 <Separator Background="#444" Margin="0,6"/>
 
-                <!-- [2026-03-10] 刀位設定區塊 -->
-                <Border Background="#1A5276" CornerRadius="3" Padding="8,4" Margin="0,0,0,4"
-                        BorderBrush="#2980B9" BorderThickness="1">
-                    <TextBlock Text="刀位設定" Foreground="White"
-                               FontSize="{DynamicResource FontSize.Body}" FontWeight="Bold" HorizontalAlignment="Center"/>
+                <!-- [2026-03-11] 刀位設定區塊（統一 PanelTitle） -->
+                <Border Style="{StaticResource PanelTitleBorder}" Margin="0,0,0,4">
+                    <TextBlock Text="{DynamicResource Str.Atc.SlotConfig}" Style="{StaticResource PanelTitleText}"/>
                 </Border>
 
                 <!-- 刀位號 + 刀號 -->
@@ -349,14 +346,14 @@
                         <ColumnDefinition Width="Auto"/>
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
-                    <TextBlock Grid.Column="0" Text="刀位" Foreground="#CCC" FontSize="{DynamicResource FontSize.Small}"
+                    <TextBlock Grid.Column="0" Text="{DynamicResource Str.Atc.SlotNumber}" Foreground="#CCC" FontSize="{DynamicResource FontSize.Small}"
                                VerticalAlignment="Center" Margin="0,0,4,0"/>
                     <Border Grid.Column="1" Background="White" CornerRadius="2" BorderBrush="#666" BorderThickness="1" Margin="0,0,6,0">
                         <TextBox Text="{Binding SelectedSlotNumber, UpdateSourceTrigger=PropertyChanged}"
                                  Background="Transparent" Foreground="Black" FontSize="{DynamicResource FontSize.Medium}" FontWeight="Bold"
                                  TextAlignment="Center" BorderThickness="0" VerticalContentAlignment="Center" Padding="2"/>
                     </Border>
-                    <TextBlock Grid.Column="2" Text="刀號" Foreground="#CCC" FontSize="{DynamicResource FontSize.Small}"
+                    <TextBlock Grid.Column="2" Text="{DynamicResource Str.Atc.ToolNumber}" Foreground="#CCC" FontSize="{DynamicResource FontSize.Small}"
                                VerticalAlignment="Center" Margin="0,0,4,0"/>
                     <Border Grid.Column="3" Background="White" CornerRadius="2" BorderBrush="#666" BorderThickness="1">
                         <TextBox Text="{Binding SetSlotToolNumber, UpdateSourceTrigger=PropertyChanged}"
@@ -365,14 +362,14 @@
                     </Border>
                 </Grid>
 
-                <!-- 設定 / 清除 / 全部清除 -->
+                <!-- [2026-03-11] 設定 / 清除 / 全部清除（移除 inline 色彩，統一深灰） -->
                 <UniformGrid Rows="1" Columns="3" Margin="0,2,0,4">
-                    <Button Content="設定" Style="{StaticResource PanelBtnStyle}" Height="32"
-                            Command="{Binding SetSlotToolCommand}" Background="#2E7D32" BorderBrush="#4CAF50" Margin="0,0,2,0"/>
-                    <Button Content="清除" Style="{StaticResource PanelBtnStyle}" Height="32"
-                            Command="{Binding ClearSlotToolCommand}" Background="#C62828" BorderBrush="#EF5350" Margin="2,0,2,0"/>
-                    <Button Content="全部清除" Style="{StaticResource PanelBtnStyle}" Height="32" FontSize="{DynamicResource FontSize.Small}"
-                            Command="{Binding ClearAllSlotsCommand}" Background="#555" BorderBrush="#777" Margin="2,0,0,0"/>
+                    <Button Content="{DynamicResource Str.Btn.Set}" Style="{StaticResource PanelBtnStyle}" Height="32"
+                            Command="{Binding SetSlotToolCommand}" Margin="0,0,2,0"/>
+                    <Button Content="{DynamicResource Str.Btn.Clear}" Style="{StaticResource PanelBtnStyle}" Height="32"
+                            Command="{Binding ClearSlotToolCommand}" Margin="2,0,2,0"/>
+                    <Button Content="{DynamicResource Str.Btn.ClearAll}" Style="{StaticResource PanelBtnStyle}" Height="32" FontSize="{DynamicResource FontSize.Small}"
+                            Command="{Binding ClearAllSlotsCommand}" Margin="2,0,0,0"/>
                 </UniformGrid>
 
                 <Separator Background="#444" Margin="0,2"/>
@@ -390,8 +387,9 @@
                                  TextAlignment="Center" BorderThickness="0" VerticalContentAlignment="Center"
                                  Padding="2"/>
                     </Border>
+                    <!-- [2026-03-11] 移除 inline Background -->
                     <Button Grid.Column="1" Content="M6 G43" Style="{StaticResource PanelBtnStyle}"
-                            Command="{Binding M6G43Command}" Background="#444" BorderBrush="#666"/>
+                            Command="{Binding M6G43Command}"/>
                 </Grid>
             </StackPanel>
         </Grid>
@@ -405,7 +403,7 @@
                 <TextBlock DockPanel.Dock="Left" Text="MDI" Foreground="#CCC"
                            FontSize="{DynamicResource FontSize.Body}" FontWeight="Bold" VerticalAlignment="Center"
                            Margin="0,0,6,0"/>
-                <Button DockPanel.Dock="Right" Content="送出" Style="{StaticResource AtcBtnStyle}"
+                <Button DockPanel.Dock="Right" Content="{DynamicResource Str.Btn.Send}" Style="{StaticResource AtcBtnStyle}"
                         Command="{Binding SendMdiCommand}" Width="60" Margin="4,0,0,0"/>
                 <TextBox Text="{Binding MdiInput, UpdateSourceTrigger=PropertyChanged}"
                          Background="White" Foreground="Black" FontSize="{DynamicResource FontSize.Body}" Padding="6,3"

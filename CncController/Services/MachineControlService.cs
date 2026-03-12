@@ -5,6 +5,7 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Linq;
 using CncController.Models;
 
 namespace CncController.Services
@@ -362,6 +363,55 @@ namespace CncController.Services
             {
                 AlarmService.Instance.AddLog("API", $"ReadProgram failed: {ex.Message}");
                 return null;
+            }
+        }
+
+        // --- 3.5 巨集變數讀寫（#1~#5999） ---
+
+        // [2026-03-12] 讀取指定範圍巨集變數
+        public async Task<Dictionary<string, double>> ReadMacroVariablesAsync(int start, int end)
+        {
+            try
+            {
+                var result = await SendV2CommandAsync<Dictionary<string, double>>("macro/readall", new { start, end });
+                return result ?? new Dictionary<string, double>();
+            }
+            catch (Exception ex)
+            {
+                AlarmService.Instance.AddLog("API", $"ReadMacroVars failed: {ex.Message}");
+                return new Dictionary<string, double>();
+            }
+        }
+
+        // [2026-03-12] 寫入巨集變數（透過 MDI 安全寫入）
+        public async Task<bool> WriteMacroVariableAsync(int varId, double value)
+        {
+            try
+            {
+                var assignments = new Dictionary<string, double> { { varId.ToString(), value } };
+                var result = await SendV2CommandAsync<string>("macro/write", new { assignments });
+                return result != null;
+            }
+            catch (Exception ex)
+            {
+                AlarmService.Instance.AddLog("API", $"WriteMacroVar #{varId} failed: {ex.Message}");
+                return false;
+            }
+        }
+
+        // [2026-03-12] 批次寫入巨集變數
+        public async Task<bool> WriteMacroVariablesAsync(Dictionary<int, double> vars)
+        {
+            try
+            {
+                var assignments = vars.ToDictionary(kv => kv.Key.ToString(), kv => kv.Value);
+                var result = await SendV2CommandAsync<string>("macro/write", new { assignments });
+                return result != null;
+            }
+            catch (Exception ex)
+            {
+                AlarmService.Instance.AddLog("API", $"WriteMacroVars failed: {ex.Message}");
+                return false;
             }
         }
 
@@ -879,6 +929,238 @@ namespace CncController.Services
         {
             public string Active { get; set; }
             public Dictionary<string, Dictionary<string, double>> Offsets { get; set; }
+        }
+
+        // ============================================================
+        // [2026-03-12] 刀具壽命 API
+        // ============================================================
+
+        /// <summary>讀取所有刀具壽命數據</summary>
+        public async Task<Dictionary<string, ToolLifeRaw>?> GetToolLifeAsync()
+        {
+            try
+            {
+                var response = await _pollingClient.GetAsync($"{_serverUrl}/v2/tool/life");
+                var result = await response.Content.ReadFromJsonAsync<ApiResponse<Dictionary<string, ToolLifeRaw>>>(_jsonOptions);
+                return result?.Status == "Success" ? result.Data : null;
+            }
+            catch (Exception ex)
+            {
+                AlarmService.Instance.AddLog("API", $"Tool life read failed: {ex.Message}");
+                return null;
+            }
+        }
+
+        /// <summary>設定壽命上限</summary>
+        public async Task<bool> SetToolLifeConfigAsync(int toolNumber, int maxTimeSec, int maxCount)
+        {
+            try
+            {
+                var response = await _pollingClient.PostAsJsonAsync($"{_serverUrl}/v2/tool/life/config",
+                    new { tool_number = toolNumber, max_time_sec = maxTimeSec, max_count = maxCount });
+                var result = await response.Content.ReadFromJsonAsync<ApiResponse<object>>(_jsonOptions);
+                return result?.Status == "Success";
+            }
+            catch (Exception ex)
+            {
+                AlarmService.Instance.AddLog("API", $"Tool life config failed: {ex.Message}");
+                return false;
+            }
+        }
+
+        /// <summary>歸零指定刀號壽命</summary>
+        public async Task<bool> ResetToolLifeAsync(int toolNumber)
+        {
+            try
+            {
+                var response = await _pollingClient.PostAsJsonAsync($"{_serverUrl}/v2/tool/life/reset",
+                    new { tool_number = toolNumber });
+                var result = await response.Content.ReadFromJsonAsync<ApiResponse<object>>(_jsonOptions);
+                return result?.Status == "Success";
+            }
+            catch (Exception ex)
+            {
+                AlarmService.Instance.AddLog("API", $"Tool life reset failed: {ex.Message}");
+                return false;
+            }
+        }
+
+        // ============================================================
+        // [2026-03-12] 備份/還原 API
+        // ============================================================
+
+        /// <summary>建立備份（可附帶前端 JSON 設定檔）</summary>
+        public async Task<ApiResponse<BackupCreateResult>> CreateBackupAsync(Dictionary<string, string>? frontendConfigs = null)
+        {
+            try
+            {
+                var payload = frontendConfigs ?? new Dictionary<string, string>();
+                var response = await _atcClient.PostAsJsonAsync($"{_serverUrl}/v2/backup/create", payload);
+                return await response.Content.ReadFromJsonAsync<ApiResponse<BackupCreateResult>>(_jsonOptions);
+            }
+            catch (Exception ex)
+            {
+                AlarmService.Instance.AddLog("API", $"Backup create failed: {ex.Message}");
+                return null;
+            }
+        }
+
+        /// <summary>列出所有備份</summary>
+        public async Task<ApiResponse<List<BackupInfo>>> GetBackupListAsync()
+        {
+            try
+            {
+                var response = await _atcClient.GetAsync($"{_serverUrl}/v2/backup/list");
+                return await response.Content.ReadFromJsonAsync<ApiResponse<List<BackupInfo>>>(_jsonOptions);
+            }
+            catch (Exception ex)
+            {
+                AlarmService.Instance.AddLog("API", $"Backup list failed: {ex.Message}");
+                return null;
+            }
+        }
+
+        /// <summary>還原指定備份</summary>
+        public async Task<ApiResponse<BackupRestoreResult>> RestoreBackupAsync(string name)
+        {
+            try
+            {
+                var response = await _atcClient.PostAsJsonAsync($"{_serverUrl}/v2/backup/restore", new { name });
+                return await response.Content.ReadFromJsonAsync<ApiResponse<BackupRestoreResult>>(_jsonOptions);
+            }
+            catch (Exception ex)
+            {
+                AlarmService.Instance.AddLog("API", $"Backup restore failed: {ex.Message}");
+                return null;
+            }
+        }
+
+        /// <summary>刪除指定備份</summary>
+        public async Task<bool> DeleteBackupAsync(string name)
+        {
+            try
+            {
+                var response = await _atcClient.PostAsJsonAsync($"{_serverUrl}/v2/backup/delete", new { name });
+                var result = await response.Content.ReadFromJsonAsync<ApiResponse<object>>(_jsonOptions);
+                return result?.Status == "Success";
+            }
+            catch (Exception ex)
+            {
+                AlarmService.Instance.AddLog("API", $"Backup delete failed: {ex.Message}");
+                return false;
+            }
+        }
+
+        // ============================================================
+        // [2026-03-12] 加工統計 API
+        // ============================================================
+        public async Task<MachiningStats?> GetMachiningStatsAsync()
+        {
+            try
+            {
+                var response = await _pollingClient.GetAsync($"{_serverUrl}/v2/machining/stats");
+                var result = await response.Content.ReadFromJsonAsync<ApiResponse<MachiningStats>>(_jsonOptions);
+                return result?.Data;
+            }
+            catch { return null; }
+        }
+
+        public async Task<bool> ResetMachiningStatsAsync()
+        {
+            try
+            {
+                var response = await _pollingClient.PostAsJsonAsync($"{_serverUrl}/v2/machining/stats/reset", new { });
+                var result = await response.Content.ReadFromJsonAsync<ApiResponse<object>>(_jsonOptions);
+                return result?.Status == "Success";
+            }
+            catch { return false; }
+        }
+
+        // ============================================================
+        // [2026-03-12] 維護保養 API
+        // ============================================================
+        public async Task<List<MaintenanceItem>?> GetMaintenanceAsync()
+        {
+            try
+            {
+                var response = await _pollingClient.GetAsync($"{_serverUrl}/v2/maintenance");
+                var result = await response.Content.ReadFromJsonAsync<ApiResponse<List<MaintenanceItem>>>(_jsonOptions);
+                return result?.Data;
+            }
+            catch { return null; }
+        }
+
+        public async Task<bool> SaveMaintenanceAsync(List<MaintenanceItem> items)
+        {
+            try
+            {
+                // [2026-03-12] 轉為後端格式
+                var payload = items.Select(i => new {
+                    name = i.Name,
+                    interval_hours = i.IntervalHours,
+                    accumulated_hours = i.AccumulatedHours,
+                    last_reset_time = i.LastResetTime
+                }).ToList();
+                var response = await _pollingClient.PostAsJsonAsync($"{_serverUrl}/v2/maintenance",
+                    new { items = payload });
+                var result = await response.Content.ReadFromJsonAsync<ApiResponse<object>>(_jsonOptions);
+                return result?.Status == "Success";
+            }
+            catch { return false; }
+        }
+
+        public async Task<bool> ResetMaintenanceItemAsync(string name)
+        {
+            try
+            {
+                var response = await _pollingClient.PostAsJsonAsync($"{_serverUrl}/v2/maintenance/reset",
+                    new { name });
+                var result = await response.Content.ReadFromJsonAsync<ApiResponse<object>>(_jsonOptions);
+                return result?.Status == "Success";
+            }
+            catch { return false; }
+        }
+
+        // ============================================================
+        // [2026-03-12] 斷電續切 API
+        // ============================================================
+        public async Task<ResumeState?> GetResumeStateAsync()
+        {
+            try
+            {
+                var response = await _pollingClient.GetAsync($"{_serverUrl}/v2/resume/state");
+                var result = await response.Content.ReadFromJsonAsync<ApiResponse<ResumeState>>(_jsonOptions);
+                return result?.Data;
+            }
+            catch { return null; }
+        }
+
+        public async Task<bool> ClearResumeStateAsync()
+        {
+            try
+            {
+                var response = await _pollingClient.PostAsJsonAsync($"{_serverUrl}/v2/resume/clear", new { });
+                var result = await response.Content.ReadFromJsonAsync<ApiResponse<object>>(_jsonOptions);
+                return result?.Status == "Success";
+            }
+            catch { return false; }
+        }
+
+        // [2026-03-12] 從指定行號開始執行 G-Code（斷電續切用）
+        public async Task<bool> RunFromLineAsync(string file, int startLine)
+        {
+            try
+            {
+                var response = await _pollingClient.PostAsJsonAsync($"{_serverUrl}/v2/program/run",
+                    new { file, start_line = startLine });
+                var result = await response.Content.ReadFromJsonAsync<ApiResponse<object>>(_jsonOptions);
+                return result?.Status == "Success";
+            }
+            catch (Exception ex)
+            {
+                AlarmService.Instance.AddLog("API", $"Run from line failed: {ex.Message}");
+                return false;
+            }
         }
     }
 }

@@ -1,0 +1,104 @@
+# ========================================================
+# 核心模組載入
+# ========================================================
+loadrt [KINS]KINEMATICS
+loadrt [EMCMOT]EMCMOT servo_period_nsec=[EMCMOT]SERVO_PERIOD num_joints=[KINS]JOINTS
+loadrt cia402 count=3
+
+# 載入 Bitslice (IO用)
+loadrt bitslice names=slice_x,slice_y,slice_z personality=32,32,32
+
+# ★★★ 關鍵修正：讀取當前目錄下的 XML ★★★
+loadusr -W lcec_conf ./ethercat-conf.xml
+loadrt lcec
+
+# ========================================================
+# 執行緒順序 (Servo Thread)
+# ========================================================
+addf lcec.read-all          servo-thread
+addf slice_x                servo-thread
+addf slice_y                servo-thread
+addf slice_z                servo-thread
+addf cia402.0.read-all      servo-thread
+addf cia402.1.read-all      servo-thread
+addf cia402.2.read-all      servo-thread
+addf motion-command-handler servo-thread
+addf motion-controller      servo-thread
+addf cia402.0.write-all     servo-thread
+addf cia402.1.write-all     servo-thread
+addf cia402.2.write-all     servo-thread
+addf lcec.write-all         servo-thread
+
+# ========================================================
+# 安全與共用訊號
+# ========================================================
+net estop-loop iocontrol.0.user-enable-out => iocontrol.0.emc-enable-in
+net machine-on motion.motion-enabled => cia402.0.fault-reset cia402.1.fault-reset cia402.2.fault-reset
+
+# ========================================================
+# X 軸 (Slave 0: SV660)
+# ========================================================
+net x-enable      joint.0.amp-enable-out  => cia402.0.enable
+net x-control     cia402.0.controlword    => lcec.0.0.control_word_J0
+net x-status      lcec.0.0.status_word_J0 => cia402.0.statusword
+
+setp lcec.0.0.modes_of_operation_J0 8
+net x-opmode-fb   lcec.0.0.modes_of_operation_display_J0 => cia402.0.opmode-display
+setp cia402.0.csp-mode 1
+setp cia402.0.pos-scale [JOINT_0]STEP_SCALE
+
+net x-pos-cmd     joint.0.motor-pos-cmd         => cia402.0.pos-cmd
+net x-drv-cmd     cia402.0.drv-target-position  => lcec.0.0.target_position_J0
+net x-drv-fb      lcec.0.0.position_actual_value_J0 => cia402.0.drv-actual-position
+net x-pos-fb      cia402.0.pos-fb               => joint.0.motor-pos-fb
+
+# IO
+net x-di-raw lcec.0.0.digital_inputs_J0 => slice_x.in
+net x-home-sw   slice_x.out-02 => joint.0.home-sw-in
+
+# ========================================================
+# Y 軸 (Slave 2: EC5621)
+# ========================================================
+net y-enable      joint.1.amp-enable-out  => cia402.1.enable
+net y-control     cia402.1.controlword    => lcec.0.2.control_word_J1
+net y-status      lcec.0.2.status_word_J1 => cia402.1.statusword
+
+setp cia402.1.csp-mode 1
+setp cia402.1.pos-scale [JOINT_1]STEP_SCALE
+
+net y-pos-cmd     joint.1.motor-pos-cmd         => cia402.1.pos-cmd
+net y-drv-cmd     cia402.1.drv-target-position  => lcec.0.2.target_position_J1
+
+# 偽回授 (使用者指定)
+net y-pos-cmd     => joint.1.motor-pos-fb
+net y-drv-fb-real lcec.0.2.position_actual_value_J1 => cia402.1.drv-actual-position
+
+# IO
+net y-di-raw lcec.0.2.digital_inputs_J1 => slice_y.in
+net y-home-sw   slice_y.out-02 => joint.1.home-sw-in
+
+# ========================================================
+# Z 軸 (Slave 3: EC5621)
+# ========================================================
+net z-enable      joint.2.amp-enable-out  => cia402.2.enable
+net z-control     cia402.2.controlword    => lcec.0.3.control_word_J2
+net z-status      lcec.0.3.status_word_J2 => cia402.2.statusword
+
+setp cia402.2.csp-mode 1
+setp cia402.2.pos-scale [JOINT_2]STEP_SCALE
+
+net z-pos-cmd     joint.2.motor-pos-cmd         => cia402.2.pos-cmd
+net z-drv-cmd     cia402.2.drv-target-position  => lcec.0.3.target_position_J2
+
+# 偽回授 (使用者指定)
+net z-pos-cmd     => joint.2.motor-pos-fb
+net z-drv-fb-real lcec.0.3.position_actual_value_J2 => cia402.2.drv-actual-position
+
+# IO
+net z-di-raw lcec.0.3.digital_inputs_J2 => slice_z.in
+net z-home-sw   slice_z.out-02 => joint.2.home-sw-in
+
+# ========================================================
+# 啟動系統
+# ========================================================
+start

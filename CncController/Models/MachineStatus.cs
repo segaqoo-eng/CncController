@@ -106,5 +106,8 @@ namespace CncController.Models
 
         // [2026-03-06] 新增 Probe Input：探針輸入訊號即時狀態（供 ProbingView 指示燈）
         [ObservableProperty] private bool _isProbeInput;
+
+        // [2026-03-12] G-Code 總行數（供加工進度預估）
+        [ObservableProperty] private int _programTotalLines;
     }
 }

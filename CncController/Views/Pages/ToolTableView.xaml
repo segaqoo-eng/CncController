@@ -33,6 +33,16 @@
             <Setter Property="Margin" Value="4,4"/>
             <Setter Property="HorizontalContentAlignment" Value="Center"/>
         </Style>
+
+        <!-- [2026-03-12] 左欄 Tab 切換用 RadioButton 樣式（繼承 BaseRadioBtnStyle） -->
+        <Style x:Key="ToolTabStyle" TargetType="RadioButton" BasedOn="{StaticResource BaseRadioBtnStyle}">
+            <Setter Property="FontSize" Value="{DynamicResource FontSize.Large}"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Height" Value="38"/>
+            <Setter Property="MinWidth" Value="140"/>
+            <Setter Property="Margin" Value="0,0,4,0"/>
+            <Setter Property="Padding" Value="16,6"/>
+        </Style>
     </UserControl.Resources>
 
     <!-- [2026-03-11] 最外層 Grid：移除 TOOL_BACK.png 背景圖，改用自繪刀具 -->
@@ -43,99 +53,221 @@
                 <ColumnDefinition Width="45*"/>
             </Grid.ColumnDefinitions>
 
-            <!-- ========== 左欄：TOOL TABLE (DataGrid) — 半透明深色底，浮在背景圖上 ========== -->
-            <Border Grid.Column="0" Background="#E8252526" BorderBrush="#444" BorderThickness="1"
+            <!-- ========== 左欄：雙分頁 TOOL TABLE / TOOL LIFE ========== -->
+            <!-- [2026-03-12] 改為 Tab 切換：TOOL TABLE + TOOL LIFE -->
+            <Border Grid.Column="0" Background="#E8252526" BorderBrush="{DynamicResource Brush.Border}" BorderThickness="1"
                     CornerRadius="4" Margin="0,0,5,0">
                 <DockPanel Margin="8">
-                    <!-- [2026-03-11] TOOL TABLE 標題字體加大 FontSize.XLarge -->
-                    <!-- [2026-03-11] i18n: TOOL TABLE -->
-                    <TextBlock DockPanel.Dock="Top" Text="{DynamicResource Str.Tool.Table}" Foreground="#AAAAAA"
-                               FontSize="{DynamicResource FontSize.XLarge}" FontWeight="Bold" Margin="0,0,0,6"/>
-
-                    <!-- 底部按鈕列 -->
-                    <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Margin="0,8,0,0"
-                                HorizontalAlignment="Left">
-                        <!-- [2026-03-11] 移除 inline 色彩，統一 BaseBtnStyle 深灰漸層 -->
-                        <!-- [2026-03-11] 按鈕寬度加大配合 FontSize.Large -->
-                        <Button Content="{DynamicResource Str.Btn.Delete}" Style="{StaticResource ToolBtnStyle}"
-                                Command="{Binding DeleteToolCommand}" Width="100"/>
-                        <Button Content="{DynamicResource Str.Btn.AddTool}" Style="{StaticResource ToolBtnStyle}"
-                                Command="{Binding AddToolCommand}" Width="120"/>
-                        <Button Content="{DynamicResource Str.Btn.SaveTable}" Style="{StaticResource ToolBtnStyle}"
-                                Command="{Binding SaveTableCommand}" Width="130"/>
-                        <Button Content="{DynamicResource Str.Btn.ReloadTable}" Style="{StaticResource ToolBtnStyle}"
-                                Command="{Binding ReloadTableCommand}" Width="150"/>
+                    <!-- [2026-03-12] Tab 切換列 -->
+                    <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,6">
+                        <RadioButton Content="{DynamicResource Str.Tool.Table}" Style="{StaticResource ToolTabStyle}"
+                                     IsChecked="{Binding SelectedTab, Converter={StaticResource StringEqualConverter}, ConverterParameter=ToolTable}"
+                                     GroupName="ToolTab"/>
+                        <RadioButton Content="{DynamicResource Str.Tool.Life.Title}" Style="{StaticResource ToolTabStyle}"
+                                     IsChecked="{Binding SelectedTab, Converter={StaticResource StringEqualConverter}, ConverterParameter=ToolLife}"
+                                     GroupName="ToolTab"/>
                     </StackPanel>
 
-                    <!-- DataGrid -->
-                    <DataGrid ItemsSource="{Binding ToolTable}"
-                              SelectedItem="{Binding SelectedTool}"
-                              AutoGenerateColumns="False"
-                              CanUserAddRows="False"
-                              CanUserDeleteRows="False"
-                              SelectionMode="Single"
-                              GridLinesVisibility="Horizontal"
-                              HorizontalGridLinesBrush="#333"
-                              Background="#2D2D2D"
-                              RowBackground="#2D2D2D"
-                              AlternatingRowBackground="#292929"
-                              Foreground="White"
-                              BorderThickness="0"
-                              ColumnHeaderHeight="34"
-                              RowHeight="34">
-                        <DataGrid.ColumnHeaderStyle>
-                            <Style TargetType="DataGridColumnHeader">
-                                <Setter Property="Background" Value="#333"/>
-                                <Setter Property="Foreground" Value="#AAAAAA"/>
-                                <Setter Property="FontWeight" Value="Bold"/>
-                                <!-- [2026-03-11] 欄位標頭字體加大 Small→Large -->
-                                <Setter Property="FontSize" Value="{DynamicResource FontSize.Large}"/>
-                                <Setter Property="HorizontalContentAlignment" Value="Center"/>
-                                <Setter Property="Padding" Value="4"/>
-                            </Style>
-                        </DataGrid.ColumnHeaderStyle>
-                        <DataGrid.CellStyle>
-                            <Style TargetType="DataGridCell">
-                                <Setter Property="Foreground" Value="White"/>
-                                <Setter Property="BorderThickness" Value="0"/>
-                                <!-- [2026-03-11] DataGrid 內容字體加大 FontSize.Large -->
-                                <Setter Property="FontSize" Value="{DynamicResource FontSize.Large}"/>
-                                <Setter Property="Padding" Value="4,2"/>
+                    <!-- ===== Tab 1: TOOL TABLE ===== -->
+                    <DockPanel>
+                        <DockPanel.Style>
+                            <Style TargetType="DockPanel">
+                                <Setter Property="Visibility" Value="Collapsed"/>
                                 <Style.Triggers>
-                                    <Trigger Property="IsSelected" Value="True">
-                                        <Setter Property="Background" Value="#00539C"/>
-                                        <Setter Property="Foreground" Value="White"/>
-                                    </Trigger>
+                                    <DataTrigger Binding="{Binding SelectedTab}" Value="ToolTable">
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                    </DataTrigger>
                                 </Style.Triggers>
                             </Style>
-                        </DataGrid.CellStyle>
-                        <!-- [2026-03-03] 欄位依啟用軸動態顯示：XYZ 永遠顯示，ABC 依 MachineType -->
-                        <DataGrid.Columns>
-                            <DataGridTextColumn Header="TOOL" Binding="{Binding ToolNumber}" Width="50" IsReadOnly="True"/>
-                            <DataGridTextColumn Header="POCKET" Binding="{Binding Pocket}" Width="60"/>
-                            <DataGridTextColumn Header="X OFFSET" Binding="{Binding XOffset, StringFormat=F4}" Width="*"/>
-                            <DataGridTextColumn Header="Y OFFSET" Binding="{Binding YOffset, StringFormat=F4}" Width="*"/>
-                            <DataGridTextColumn Header="Z OFFSET" Binding="{Binding ZOffset, StringFormat=F4}" Width="*"/>
-                            <DataGridTextColumn Header="A OFFSET" Binding="{Binding AOffset, StringFormat=F4}" Width="*"
-                                                Visibility="{Binding Data.IsAxisAEnabled, Source={StaticResource Proxy}, Converter={StaticResource BoolToVis}}"/>
-                            <DataGridTextColumn Header="B OFFSET" Binding="{Binding BOffset, StringFormat=F4}" Width="*"
-                                                Visibility="{Binding Data.IsAxisBEnabled, Source={StaticResource Proxy}, Converter={StaticResource BoolToVis}}"/>
-                            <DataGridTextColumn Header="C OFFSET" Binding="{Binding COffset, StringFormat=F4}" Width="*"
-                                                Visibility="{Binding Data.IsAxisCEnabled, Source={StaticResource Proxy}, Converter={StaticResource BoolToVis}}"/>
-                            <DataGridTextColumn Header="U OFFSET" Binding="{Binding UOffset, StringFormat=F4}" Width="*"
-                                                Visibility="{Binding Data.IsAxisUEnabled, Source={StaticResource Proxy}, Converter={StaticResource BoolToVis}}"/>
-                            <DataGridTextColumn Header="V OFFSET" Binding="{Binding VOffset, StringFormat=F4}" Width="*"
-                                                Visibility="{Binding Data.IsAxisVEnabled, Source={StaticResource Proxy}, Converter={StaticResource BoolToVis}}"/>
-                            <DataGridTextColumn Header="W OFFSET" Binding="{Binding WOffset, StringFormat=F4}" Width="*"
-                                                Visibility="{Binding Data.IsAxisWEnabled, Source={StaticResource Proxy}, Converter={StaticResource BoolToVis}}"/>
-                            <DataGridTextColumn Header="DIAMETER" Binding="{Binding Diameter, StringFormat=F4}" Width="*"/>
-                            <!-- [2026-03-03] 新增 FNT ANG / BAK ANG / ORIENT 欄位（對齊 PB 版 TOOLPARAM） -->
-                            <DataGridTextColumn Header="FNT ANG" Binding="{Binding FrontAngle, StringFormat=F4}" Width="*"/>
-                            <DataGridTextColumn Header="BAK ANG" Binding="{Binding BackAngle, StringFormat=F4}" Width="*"/>
-                            <DataGridTextColumn Header="ORIENT" Binding="{Binding Orientation}" Width="55"/>
-                            <DataGridTextColumn Header="REMARK" Binding="{Binding Remark}" Width="120"/>
-                        </DataGrid.Columns>
-                    </DataGrid>
+                        </DockPanel.Style>
+
+                        <!-- 底部按鈕列 -->
+                        <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Margin="0,8,0,0"
+                                    HorizontalAlignment="Left">
+                            <Button Content="{DynamicResource Str.Btn.Delete}" Style="{StaticResource ToolBtnStyle}"
+                                    Command="{Binding DeleteToolCommand}" Width="100"/>
+                            <Button Content="{DynamicResource Str.Btn.AddTool}" Style="{StaticResource ToolBtnStyle}"
+                                    Command="{Binding AddToolCommand}" Width="120"/>
+                            <Button Content="{DynamicResource Str.Btn.SaveTable}" Style="{StaticResource ToolBtnStyle}"
+                                    Command="{Binding SaveTableCommand}" Width="130"/>
+                            <Button Content="{DynamicResource Str.Btn.ReloadTable}" Style="{StaticResource ToolBtnStyle}"
+                                    Command="{Binding ReloadTableCommand}" Width="150"/>
+                        </StackPanel>
+
+                        <!-- DataGrid -->
+                        <DataGrid ItemsSource="{Binding ToolTable}"
+                                  SelectedItem="{Binding SelectedTool}"
+                                  AutoGenerateColumns="False"
+                                  CanUserAddRows="False"
+                                  CanUserDeleteRows="False"
+                                  SelectionMode="Single"
+                                  GridLinesVisibility="Horizontal"
+                                  HorizontalGridLinesBrush="{DynamicResource Brush.Input.Background}"
+                                  Background="{DynamicResource Brush.PanelBackground}"
+                                  RowBackground="{DynamicResource Brush.PanelBackground}"
+                                  AlternatingRowBackground="#292929"
+                                  Foreground="{DynamicResource Brush.Text.Primary}"
+                                  BorderThickness="0"
+                                  ColumnHeaderHeight="34"
+                                  RowHeight="34">
+                            <DataGrid.ColumnHeaderStyle>
+                                <Style TargetType="DataGridColumnHeader">
+                                    <Setter Property="Background" Value="{DynamicResource Brush.Input.Background}"/>
+                                    <Setter Property="Foreground" Value="{DynamicResource Brush.Text.Muted}"/>
+                                    <Setter Property="FontWeight" Value="Bold"/>
+                                    <Setter Property="FontSize" Value="{DynamicResource FontSize.Large}"/>
+                                    <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                                    <Setter Property="Padding" Value="4"/>
+                                </Style>
+                            </DataGrid.ColumnHeaderStyle>
+                            <DataGrid.CellStyle>
+                                <Style TargetType="DataGridCell">
+                                    <Setter Property="Foreground" Value="{DynamicResource Brush.Text.Primary}"/>
+                                    <Setter Property="BorderThickness" Value="0"/>
+                                    <Setter Property="FontSize" Value="{DynamicResource FontSize.Large}"/>
+                                    <Setter Property="Padding" Value="4,2"/>
+                                    <Style.Triggers>
+                                        <Trigger Property="IsSelected" Value="True">
+                                            <Setter Property="Background" Value="#00539C"/>
+                                            <Setter Property="Foreground" Value="White"/>
+                                        </Trigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </DataGrid.CellStyle>
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="TOOL" Binding="{Binding ToolNumber}" Width="50" IsReadOnly="True"/>
+                                <DataGridTextColumn Header="POCKET" Binding="{Binding Pocket}" Width="60"/>
+                                <DataGridTextColumn Header="X OFFSET" Binding="{Binding XOffset, StringFormat=F4}" Width="*"/>
+                                <DataGridTextColumn Header="Y OFFSET" Binding="{Binding YOffset, StringFormat=F4}" Width="*"/>
+                                <DataGridTextColumn Header="Z OFFSET" Binding="{Binding ZOffset, StringFormat=F4}" Width="*"/>
+                                <DataGridTextColumn Header="A OFFSET" Binding="{Binding AOffset, StringFormat=F4}" Width="*"
+                                                    Visibility="{Binding Data.IsAxisAEnabled, Source={StaticResource Proxy}, Converter={StaticResource BoolToVis}}"/>
+                                <DataGridTextColumn Header="B OFFSET" Binding="{Binding BOffset, StringFormat=F4}" Width="*"
+                                                    Visibility="{Binding Data.IsAxisBEnabled, Source={StaticResource Proxy}, Converter={StaticResource BoolToVis}}"/>
+                                <DataGridTextColumn Header="C OFFSET" Binding="{Binding COffset, StringFormat=F4}" Width="*"
+                                                    Visibility="{Binding Data.IsAxisCEnabled, Source={StaticResource Proxy}, Converter={StaticResource BoolToVis}}"/>
+                                <DataGridTextColumn Header="U OFFSET" Binding="{Binding UOffset, StringFormat=F4}" Width="*"
+                                                    Visibility="{Binding Data.IsAxisUEnabled, Source={StaticResource Proxy}, Converter={StaticResource BoolToVis}}"/>
+                                <DataGridTextColumn Header="V OFFSET" Binding="{Binding VOffset, StringFormat=F4}" Width="*"
+                                                    Visibility="{Binding Data.IsAxisVEnabled, Source={StaticResource Proxy}, Converter={StaticResource BoolToVis}}"/>
+                                <DataGridTextColumn Header="W OFFSET" Binding="{Binding WOffset, StringFormat=F4}" Width="*"
+                                                    Visibility="{Binding Data.IsAxisWEnabled, Source={StaticResource Proxy}, Converter={StaticResource BoolToVis}}"/>
+                                <DataGridTextColumn Header="DIAMETER" Binding="{Binding Diameter, StringFormat=F4}" Width="*"/>
+                                <DataGridTextColumn Header="FNT ANG" Binding="{Binding FrontAngle, StringFormat=F4}" Width="*"/>
+                                <DataGridTextColumn Header="BAK ANG" Binding="{Binding BackAngle, StringFormat=F4}" Width="*"/>
+                                <DataGridTextColumn Header="ORIENT" Binding="{Binding Orientation}" Width="55"/>
+                                <DataGridTextColumn Header="REMARK" Binding="{Binding Remark}" Width="120"/>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </DockPanel>
+
+                    <!-- ===== Tab 2: TOOL LIFE ===== -->
+                    <!-- [2026-03-12] 刀具壽命管理分頁 -->
+                    <DockPanel>
+                        <DockPanel.Style>
+                            <Style TargetType="DockPanel">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding SelectedTab}" Value="ToolLife">
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </DockPanel.Style>
+
+                        <!-- 底部按鈕列 + 壽命設定輸入 -->
+                        <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Margin="0,8,0,0"
+                                    HorizontalAlignment="Left">
+                            <Button Content="{DynamicResource Str.Tool.Life.Load}" Style="{StaticResource ToolBtnStyle}"
+                                    Command="{Binding LoadToolLifeCommand}" Width="120"/>
+                            <Button Content="{DynamicResource Str.Tool.Life.SetLife}" Style="{StaticResource ToolBtnStyle}"
+                                    Command="{Binding SetToolLifeConfigCommand}" Width="130"/>
+                            <Button Content="{DynamicResource Str.Tool.Life.Reset}" Style="{StaticResource ToolBtnStyle}"
+                                    Command="{Binding ResetToolLifeCommand}" Width="120"/>
+
+                            <!-- 壽命設定輸入：最大時間(分) + 最大次數 -->
+                            <TextBlock Text="{DynamicResource Str.Tool.Life.MaxMin}" Foreground="{DynamicResource Brush.Text.Secondary}"
+                                       FontSize="{DynamicResource FontSize.Large}" VerticalAlignment="Center" Margin="16,0,4,0"/>
+                            <Border Background="{DynamicResource Brush.DRO.Background}" CornerRadius="2"
+                                    BorderBrush="{DynamicResource Brush.Btn.Border}" BorderThickness="1" Height="34">
+                                <TextBox Text="{Binding LifeMaxTimeMinutes, UpdateSourceTrigger=PropertyChanged}"
+                                         Background="Transparent" Foreground="{DynamicResource Brush.Code.Foreground}"
+                                         FontSize="{DynamicResource FontSize.Large}" Width="60" TextAlignment="Center"
+                                         BorderThickness="0" VerticalContentAlignment="Center" Padding="2"/>
+                            </Border>
+                            <TextBlock Text="{DynamicResource Str.Tool.Life.MaxCount}" Foreground="{DynamicResource Brush.Text.Secondary}"
+                                       FontSize="{DynamicResource FontSize.Large}" VerticalAlignment="Center" Margin="16,0,4,0"/>
+                            <Border Background="{DynamicResource Brush.DRO.Background}" CornerRadius="2"
+                                    BorderBrush="{DynamicResource Brush.Btn.Border}" BorderThickness="1" Height="34">
+                                <TextBox Text="{Binding LifeMaxCount, UpdateSourceTrigger=PropertyChanged}"
+                                         Background="Transparent" Foreground="{DynamicResource Brush.Code.Foreground}"
+                                         FontSize="{DynamicResource FontSize.Large}" Width="60" TextAlignment="Center"
+                                         BorderThickness="0" VerticalContentAlignment="Center" Padding="2"/>
+                            </Border>
+                        </StackPanel>
+
+                        <!-- DataGrid：刀具壽命列表 -->
+                        <DataGrid ItemsSource="{Binding ToolLifeList}"
+                                  SelectedItem="{Binding SelectedLifeEntry}"
+                                  AutoGenerateColumns="False"
+                                  CanUserAddRows="False"
+                                  CanUserDeleteRows="False"
+                                  SelectionMode="Single"
+                                  GridLinesVisibility="Horizontal"
+                                  HorizontalGridLinesBrush="{DynamicResource Brush.Input.Background}"
+                                  Background="{DynamicResource Brush.PanelBackground}"
+                                  RowBackground="{DynamicResource Brush.PanelBackground}"
+                                  AlternatingRowBackground="#292929"
+                                  Foreground="{DynamicResource Brush.Text.Primary}"
+                                  BorderThickness="0"
+                                  ColumnHeaderHeight="34"
+                                  RowHeight="34">
+                            <DataGrid.ColumnHeaderStyle>
+                                <Style TargetType="DataGridColumnHeader">
+                                    <Setter Property="Background" Value="{DynamicResource Brush.Input.Background}"/>
+                                    <Setter Property="Foreground" Value="{DynamicResource Brush.Text.Muted}"/>
+                                    <Setter Property="FontWeight" Value="Bold"/>
+                                    <Setter Property="FontSize" Value="{DynamicResource FontSize.Large}"/>
+                                    <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                                    <Setter Property="Padding" Value="4"/>
+                                </Style>
+                            </DataGrid.ColumnHeaderStyle>
+                            <DataGrid.CellStyle>
+                                <Style TargetType="DataGridCell">
+                                    <Setter Property="Foreground" Value="{DynamicResource Brush.Text.Primary}"/>
+                                    <Setter Property="BorderThickness" Value="0"/>
+                                    <Setter Property="FontSize" Value="{DynamicResource FontSize.Large}"/>
+                                    <Setter Property="Padding" Value="4,2"/>
+                                    <Style.Triggers>
+                                        <Trigger Property="IsSelected" Value="True">
+                                            <Setter Property="Background" Value="#00539C"/>
+                                            <Setter Property="Foreground" Value="White"/>
+                                        </Trigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </DataGrid.CellStyle>
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="TOOL" Binding="{Binding ToolNumber}" Width="60" IsReadOnly="True"/>
+                                <DataGridTextColumn Header="{DynamicResource Str.Tool.Life.CuttingTime}" Binding="{Binding CuttingTimeDisplay}" Width="120" IsReadOnly="True"/>
+                                <DataGridTextColumn Header="{DynamicResource Str.Tool.Life.Changes}" Binding="{Binding ChangeCount}" Width="80" IsReadOnly="True"/>
+                                <!-- [2026-03-12] 壽命進度條欄 -->
+                                <DataGridTemplateColumn Header="{DynamicResource Str.Tool.Life.Progress}" Width="*" IsReadOnly="True">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Grid Margin="2">
+                                                <ProgressBar Value="{Binding MaxLifePercent, Mode=OneWay}" Minimum="0" Maximum="100"
+                                                             Height="22" Background="#333333" BorderThickness="0"/>
+                                                <TextBlock Text="{Binding MaxLifePercent, StringFormat={}{0:F0}%}" FontSize="{DynamicResource FontSize.Normal}"
+                                                           Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTextColumn Header="{DynamicResource Str.Tool.Life.MaxTimeCol}" Binding="{Binding MaxTimeSeconds}" Width="90" IsReadOnly="True"/>
+                                <DataGridTextColumn Header="{DynamicResource Str.Tool.Life.MaxCountCol}" Binding="{Binding MaxChangeCount}" Width="90" IsReadOnly="True"/>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </DockPanel>
                 </DockPanel>
             </Border>
 
@@ -143,28 +275,30 @@
             <DockPanel Grid.Column="1" Margin="5,0,0,0">
 
                 <!-- ===== 頂部：COMMENT ===== -->
+                <!-- [2026-03-12] hardcoded colors → DynamicResource -->
                 <Border DockPanel.Dock="Top" Background="#DD333333" CornerRadius="3" Padding="6,4" Margin="0,0,0,6"
-                        BorderBrush="#666" BorderThickness="1">
+                        BorderBrush="{DynamicResource Brush.Btn.Border}" BorderThickness="1">
                     <DockPanel>
                         <!-- [2026-03-11] REMARK 標籤和輸入框字體加大 FontSize.Large -->
-                        <TextBlock DockPanel.Dock="Left" Text="{DynamicResource Str.Tool.Remark}" Foreground="#CCC" FontSize="{DynamicResource FontSize.Large}" FontWeight="Bold"
+                        <TextBlock DockPanel.Dock="Left" Text="{DynamicResource Str.Tool.Remark}" Foreground="{DynamicResource Brush.Text.Secondary}" FontSize="{DynamicResource FontSize.Large}" FontWeight="Bold"
                                    VerticalAlignment="Center" Margin="0,0,8,0"/>
                         <TextBox Text="{Binding SelectedTool.Remark, UpdateSourceTrigger=PropertyChanged}"
-                                 Background="White" Foreground="Black" FontSize="{DynamicResource FontSize.Large}" FontWeight="Bold" Padding="6,3"
-                                 BorderBrush="#888" BorderThickness="1"/>
+                                 Background="{DynamicResource Brush.DRO.Background}" Foreground="{DynamicResource Brush.Code.Foreground}" FontSize="{DynamicResource FontSize.Large}" FontWeight="Bold" Padding="6,3"
+                                 BorderBrush="{DynamicResource Brush.Text.Dim}" BorderThickness="1"/>
                     </DockPanel>
                 </Border>
 
                 <!-- ===== 底部：MDI ===== -->
+                <!-- [2026-03-12] hardcoded colors → DynamicResource -->
                 <Border DockPanel.Dock="Bottom" Background="#DD333333" CornerRadius="3" Padding="6,4" Margin="0,6,0,0"
-                        BorderBrush="#666" BorderThickness="1">
+                        BorderBrush="{DynamicResource Brush.Btn.Border}" BorderThickness="1">
                     <DockPanel>
                         <!-- [2026-03-11] MDI 標籤和輸入框字體加大 FontSize.Large -->
-                        <TextBlock DockPanel.Dock="Left" Text="MDI" Foreground="#CCC" FontSize="{DynamicResource FontSize.Large}" FontWeight="Bold"
+                        <TextBlock DockPanel.Dock="Left" Text="MDI" Foreground="{DynamicResource Brush.Text.Secondary}" FontSize="{DynamicResource FontSize.Large}" FontWeight="Bold"
                                    VerticalAlignment="Center" Margin="0,0,6,0"/>
                         <TextBox Text="{Binding MdiInput, UpdateSourceTrigger=PropertyChanged}"
-                                 Background="White" Foreground="Black" FontSize="{DynamicResource FontSize.Large}" Padding="6,3"
-                                 BorderBrush="#888" BorderThickness="1"/>
+                                 Background="{DynamicResource Brush.DRO.Background}" Foreground="{DynamicResource Brush.Code.Foreground}" FontSize="{DynamicResource FontSize.Large}" Padding="6,3"
+                                 BorderBrush="{DynamicResource Brush.Text.Dim}" BorderThickness="1"/>
                     </DockPanel>
                 </Border>
 
@@ -187,17 +321,16 @@
                             <TextBlock Text="{DynamicResource Str.Tool.ChangePanel}" Style="{StaticResource PanelTitleText}"/>
                         </Border>
 
-                        <!-- [2026-03-11] 右側按鈕移除 inline Background/BorderBrush，統一由 BaseBtnStyle 控制 -->
                         <!-- [n] LOAD SPINDLE -->
                         <Grid Margin="0,0,0,4">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="50"/>
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
-                            <Border Grid.Column="0" Background="White" CornerRadius="2" Margin="0,0,4,0"
-                                    BorderBrush="#666" BorderThickness="1">
+                            <Border Grid.Column="0" Background="{DynamicResource Brush.DRO.Background}" CornerRadius="2" Margin="0,0,4,0"
+                                    BorderBrush="{DynamicResource Brush.Btn.Border}" BorderThickness="1">
                                 <TextBox Text="{Binding ChangeToolNumber, UpdateSourceTrigger=PropertyChanged}"
-                                         Background="Transparent" Foreground="Black" FontSize="{DynamicResource FontSize.Large}" FontWeight="Bold"
+                                         Background="Transparent" Foreground="{DynamicResource Brush.Code.Foreground}" FontSize="{DynamicResource FontSize.Large}" FontWeight="Bold"
                                          TextAlignment="Center" BorderThickness="0" VerticalContentAlignment="Center"
                                          Padding="2"/>
                             </Border>
@@ -215,10 +348,10 @@
                                 <ColumnDefinition Width="50"/>
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
-                            <Border Grid.Column="0" Background="White" CornerRadius="2" Margin="0,0,4,0"
-                                    BorderBrush="#666" BorderThickness="1">
+                            <Border Grid.Column="0" Background="{DynamicResource Brush.DRO.Background}" CornerRadius="2" Margin="0,0,4,0"
+                                    BorderBrush="{DynamicResource Brush.Btn.Border}" BorderThickness="1">
                                 <TextBox Text="{Binding ChangeToolNumber, UpdateSourceTrigger=PropertyChanged}"
-                                         Background="Transparent" Foreground="Black" FontSize="{DynamicResource FontSize.Large}" FontWeight="Bold"
+                                         Background="Transparent" Foreground="{DynamicResource Brush.Code.Foreground}" FontSize="{DynamicResource FontSize.Large}" FontWeight="Bold"
                                          TextAlignment="Center" BorderThickness="0" VerticalContentAlignment="Center"
                                          Padding="2"/>
                             </Border>

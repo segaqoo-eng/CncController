@@ -30,6 +30,13 @@ namespace CncController.ViewModels
         // [2026-03-06] 主軸設定 ViewModel
         public SpindleSettingsViewModel SpindleVM { get; } = new();
 
+        // [2026-03-12] 巨集變數監控 ViewModel
+        public MacroVariablesViewModel MacroVM { get; } = new();
+        // [2026-03-12] 備份/還原 ViewModel
+        public BackupViewModel BackupVM { get; } = new();
+        // [2026-03-12] 維護保養 ViewModel
+        public MaintenanceViewModel MaintenanceVM { get; } = new();
+
         // =========================================================
         // ★★★ [新增] IO 映射集合 (綁定到 DataGrid) ★★★
         // =========================================================

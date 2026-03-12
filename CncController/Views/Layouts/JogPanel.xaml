@@ -12,7 +12,7 @@
              d:DesignHeight="400" d:DesignWidth="300">
 
     <UserControl.Resources>
-        <!-- [2026-03-04] JOG 方向按鈕（漸層凸起 + Hover 亮 + Pressed 橙色） -->
+        <!-- [2026-03-12] JOG 方向按鈕：漸層引用主題資源，主題切換時自動生效 -->
         <Style x:Key="JogArrowBtn" TargetType="Button">
             <Setter Property="Width" Value="70"/>
             <Setter Property="Height" Value="70"/>
@@ -24,31 +24,17 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border x:Name="bd" BorderBrush="#555" BorderThickness="2" CornerRadius="6">
-                            <Border.Background>
-                                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                                    <GradientStop Color="#4A4A4E" Offset="0"/>
-                                    <GradientStop Color="#3A3A3E" Offset="0.5"/>
-                                    <GradientStop Color="#2A2A2E" Offset="1"/>
-                                </LinearGradientBrush>
-                            </Border.Background>
+                        <Border x:Name="bd" BorderBrush="{DynamicResource Brush.Btn.Border}" BorderThickness="2" CornerRadius="6"
+                                Background="{DynamicResource Brush.Btn.Gradient}">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Setter TargetName="bd" Property="BorderBrush" Value="{DynamicResource Brush.Hover.Border}"/>
-                                <Setter TargetName="bd" Property="Background">
-                                    <Setter.Value>
-                                        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                                            <GradientStop Color="#5E5E62" Offset="0"/>
-                                            <GradientStop Color="#4E4E52" Offset="0.5"/>
-                                            <GradientStop Color="#3E3E42" Offset="1"/>
-                                        </LinearGradientBrush>
-                                    </Setter.Value>
-                                </Setter>
+                                <Setter TargetName="bd" Property="Background" Value="{DynamicResource Brush.Btn.HoverGradient}"/>
                             </Trigger>
                             <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="bd" Property="Background" Value="#FFAA00"/>
+                                <Setter TargetName="bd" Property="Background" Value="{DynamicResource Brush.Checked}"/>
                                 <Setter TargetName="bd" Property="BorderBrush" Value="White"/>
                                 <Setter Property="Foreground" Value="Black"/>
                             </Trigger>
@@ -152,9 +138,10 @@
                 </i:Interaction.Triggers>
             </Button>
 
+            <!-- [2026-03-12] 十字圓盤中心指示 -->
             <Border Grid.Row="1" Grid.Column="1" Width="70" Height="70" Margin="4"
-                    Background="#1E1E1E" CornerRadius="35" Opacity="0.6">
-                <TextBlock Text="+" Foreground="#555" FontSize="32"
+                    Background="{DynamicResource Brush.WindowBackground}" CornerRadius="35" Opacity="0.6">
+                <TextBlock Text="+" Foreground="{DynamicResource Brush.Text.Muted}" FontSize="32"
                            HorizontalAlignment="Center" VerticalAlignment="Center"/>
             </Border>
 

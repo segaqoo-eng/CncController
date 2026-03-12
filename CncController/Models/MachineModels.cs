@@ -68,6 +68,9 @@ namespace CncController.Models
         // [2026-03-10] 新增主軸方向：0=停止, 1=CW正轉(M3), -1=CCW反轉(M4)
         public int Spindle_Direction { get; set; }
 
+        // [2026-03-12] G-Code 總行數（供加工進度預估）
+        public int Program_Total_Lines { get; set; }
+
         // [2026-03-10] 新增 IO 即時狀態（slave index → { "di": {pin→bool}, "do": {pin→bool} }）
         // 供 IN MAP / OUT MAP 即時指示燈
         public Dictionary<string, Dictionary<string, Dictionary<string, bool>>> IO_Status { get; set; }
@@ -472,6 +475,15 @@ namespace CncController.Models
         public string Content { get; set; } = "";
     }
 
+    // [2026-03-12] 巨集變數條目（#id → value + 名稱）
+    public partial class MacroVariable : ObservableObject
+    {
+        [ObservableProperty] private int _id;
+        [ObservableProperty] private double _value;
+        [ObservableProperty] private string _name = "";
+        [ObservableProperty] private bool _isModified;
+    }
+
     // [2026-03-03] 新增 ToolEntry：刀具表條目（對齊 PB 版 TOOL 分頁 DataGrid）
     public partial class ToolEntry : ObservableObject
     {
@@ -563,5 +575,174 @@ namespace CncController.Models
             "feed-hold",             // 進給暫停按鈕
             "spindle-inhibit"        // 禁止主軸啟動
         };
+    }
+
+    // [2026-03-12] 刀具壽命 JSON 反序列化 DTO
+    public class ToolLifeRaw
+    {
+        [JsonPropertyName("cutting_time_sec")]
+        public double CuttingTimeSec { get; set; }
+        [JsonPropertyName("change_count")]
+        public int ChangeCount { get; set; }
+        [JsonPropertyName("max_time_sec")]
+        public int MaxTimeSec { get; set; }
+        [JsonPropertyName("max_count")]
+        public int MaxCount { get; set; }
+    }
+
+    // [2026-03-12] 刀具壽命資料（前端顯示用）
+    public partial class ToolLifeEntry : ObservableObject
+    {
+        [ObservableProperty] private int _toolNumber;
+        [ObservableProperty] private double _cuttingTimeSeconds;
+        [ObservableProperty] private int _changeCount;
+        [ObservableProperty] private int _maxTimeSeconds;     // 壽命上限（秒），0=不限
+        [ObservableProperty] private int _maxChangeCount;     // 壽命上限（次），0=不限
+
+        // 顯示用：格式化時間
+        public string CuttingTimeDisplay
+        {
+            get
+            {
+                var ts = System.TimeSpan.FromSeconds(CuttingTimeSeconds);
+                return ts.TotalHours >= 1 ? $"{(int)ts.TotalHours}h {ts.Minutes:D2}m" : $"{ts.Minutes}m {ts.Seconds:D2}s";
+            }
+        }
+
+        // 壽命進度百分比（時間）
+        public double LifePercentTime => MaxTimeSeconds > 0
+            ? System.Math.Min(CuttingTimeSeconds / MaxTimeSeconds * 100, 100) : 0;
+        // 壽命進度百分比（次數）
+        public double LifePercentCount => MaxChangeCount > 0
+            ? System.Math.Min((double)ChangeCount / MaxChangeCount * 100, 100) : 0;
+        // 最高進度（取時間/次數中較高者）
+        public double MaxLifePercent => System.Math.Max(LifePercentTime, LifePercentCount);
+        // 是否超壽命
+        public bool IsOverLife => MaxLifePercent >= 100;
+        // 是否接近壽命（>=80%）
+        public bool IsNearLife => MaxLifePercent >= 80 && MaxLifePercent < 100;
+    }
+
+    // [2026-03-12] 備份資訊（前端顯示用）
+    public class BackupInfo
+    {
+        [JsonPropertyName("name")]
+        public string Name { get; set; } = "";
+        [JsonPropertyName("file_count")]
+        public int FileCount { get; set; }
+        [JsonPropertyName("size_bytes")]
+        public long SizeBytes { get; set; }
+        public string DisplaySize => SizeBytes < 1024 ? $"{SizeBytes} B"
+            : SizeBytes < 1048576 ? $"{SizeBytes / 1024.0:F1} KB"
+            : $"{SizeBytes / 1048576.0:F1} MB";
+    }
+
+    // [2026-03-12] 備份建立結果
+    public class BackupCreateResult
+    {
+        [JsonPropertyName("name")]
+        public string Name { get; set; } = "";
+        [JsonPropertyName("file_count")]
+        public int FileCount { get; set; }
+        [JsonPropertyName("size_bytes")]
+        public long SizeBytes { get; set; }
+    }
+
+    // [2026-03-12] 備份還原結果
+    public class BackupRestoreResult
+    {
+        [JsonPropertyName("restored")]
+        public List<string> Restored { get; set; } = new();
+        [JsonPropertyName("frontend_configs")]
+        public Dictionary<string, string> FrontendConfigs { get; set; } = new();
+    }
+
+    // [2026-03-12] 主軸暖機步驟
+    public partial class WarmupStep : ObservableObject
+    {
+        [ObservableProperty] private int _rpm;
+        [ObservableProperty] private int _durationSeconds;
+        [ObservableProperty] private string _stepStatus = "";  // "", "Running", "Done", "Skipped"
+    }
+
+    // [2026-03-12] 主軸暖機設定（持久化至 appsettings.json）
+    public class SpindleWarmupConfig
+    {
+        public List<WarmupStepData> Steps { get; set; } = new()
+        {
+            new() { Rpm = 500,  DurationSeconds = 60 },
+            new() { Rpm = 1000, DurationSeconds = 60 },
+            new() { Rpm = 2000, DurationSeconds = 60 },
+            new() { Rpm = 4000, DurationSeconds = 60 },
+            new() { Rpm = 8000, DurationSeconds = 60 },
+        };
+    }
+
+    // [2026-03-12] 暖機步驟 JSON 序列化用（無 ObservableObject）
+    public class WarmupStepData
+    {
+        public int Rpm { get; set; }
+        public int DurationSeconds { get; set; }
+    }
+
+    // [2026-03-12] 加工統計（後端 machining_stats.json）
+    public class MachiningStats
+    {
+        [JsonPropertyName("total_seconds")]
+        public double TotalSeconds { get; set; }
+        [JsonPropertyName("cycle_count")]
+        public int CycleCount { get; set; }
+        [JsonPropertyName("last_file")]
+        public string LastFile { get; set; } = "";
+
+        public string TotalTimeDisplay
+        {
+            get
+            {
+                var ts = System.TimeSpan.FromSeconds(TotalSeconds);
+                return ts.TotalHours >= 1 ? $"{(int)ts.TotalHours}h {ts.Minutes:D2}m" : $"{ts.Minutes}m {ts.Seconds:D2}s";
+            }
+        }
+    }
+
+    // [2026-03-12] 維護保養項目
+    public partial class MaintenanceItem : ObservableObject
+    {
+        [ObservableProperty] private string _name = "";
+        [ObservableProperty] private double _intervalHours;     // 保養週期（小時）
+        [ObservableProperty] private double _accumulatedHours;  // 累計運轉時數
+        [ObservableProperty] private double _lastResetTime;     // 上次重置時間戳
+
+        public double RemainingHours => System.Math.Max(0, IntervalHours - AccumulatedHours);
+        public double ProgressPercent => IntervalHours > 0
+            ? System.Math.Min(AccumulatedHours / IntervalHours * 100, 100) : 0;
+        public bool IsDue => IntervalHours > 0 && AccumulatedHours >= IntervalHours;
+        public bool IsNearDue => IntervalHours > 0 && ProgressPercent >= 80 && !IsDue;
+
+        public string AccumulatedDisplay
+        {
+            get
+            {
+                if (AccumulatedHours < 1) return $"{AccumulatedHours * 60:F0} min";
+                return $"{AccumulatedHours:F1} hr";
+            }
+        }
+    }
+
+    // [2026-03-12] 斷電續切恢復狀態
+    public class ResumeState
+    {
+        [JsonPropertyName("file")]
+        public string File { get; set; } = "";
+        [JsonPropertyName("line")]
+        public int Line { get; set; }
+        [JsonPropertyName("tool")]
+        public int Tool { get; set; }
+        [JsonPropertyName("wcs")]
+        public int Wcs { get; set; }
+        [JsonPropertyName("timestamp")]
+        public double Timestamp { get; set; }
+
+        public string TimestampDisplay => System.DateTimeOffset.FromUnixTimeSeconds((long)Timestamp).LocalDateTime.ToString("yyyy/MM/dd HH:mm:ss");
     }
 }

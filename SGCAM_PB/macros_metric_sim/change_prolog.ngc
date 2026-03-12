@@ -1,0 +1,4 @@
+o<change_prolog> sub
+(debug, Prolog)
+o<change_prolog> endsub [1]
+m2

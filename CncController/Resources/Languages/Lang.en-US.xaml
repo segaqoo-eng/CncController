@@ -94,6 +94,44 @@
     <sys:String x:Key="Str.Header.LangZhTW">繁體中文</sys:String>
     <sys:String x:Key="Str.Header.LangEnUS">English</sys:String>
 
+    <!-- [2026-03-12] Theme switching menu -->
+    <sys:String x:Key="Str.Header.Theme">Theme</sys:String>
+    <sys:String x:Key="Str.Header.ThemeDefault">Default Dark</sys:String>
+    <sys:String x:Key="Str.Header.ThemeIndustrial">Industrial Teal</sys:String>
+    <sys:String x:Key="Str.Header.ThemeCyber">Cyber-Industrial</sys:String>
+    <!-- [2026-03-12] Tools menu -->
+    <sys:String x:Key="Str.Header.Tools">Tools</sys:String>
+
+    <!-- ===== Macro Variables ===== -->
+    <!-- [2026-03-12] Added -->
+    <sys:String x:Key="Str.Macro.Refresh">Refresh</sys:String>
+    <sys:String x:Key="Str.Macro.Write">Write</sys:String>
+    <sys:String x:Key="Str.Macro.WriteAll">Write All Modified</sys:String>
+    <sys:String x:Key="Str.Macro.ColName">Name</sys:String>
+    <sys:String x:Key="Str.Macro.ColValue">Value</sys:String>
+
+    <!-- ===== Spindle Warmup ===== -->
+    <!-- [2026-03-12] Added -->
+    <sys:String x:Key="Str.Warmup.Title">Spindle Warmup</sys:String>
+    <sys:String x:Key="Str.Warmup.Start">Start Warmup</sys:String>
+    <sys:String x:Key="Str.Warmup.Close">Close</sys:String>
+    <sys:String x:Key="Str.Warmup.Duration">Duration</sys:String>
+    <sys:String x:Key="Str.Warmup.Status">Status</sys:String>
+    <sys:String x:Key="Str.Warmup.Seconds">Sec:</sys:String>
+    <sys:String x:Key="Str.Warmup.AddStep">Add</sys:String>
+    <sys:String x:Key="Str.Warmup.RemoveStep">Remove</sys:String>
+
+    <!-- ===== Backup / Restore ===== -->
+    <!-- [2026-03-12] Added -->
+    <sys:String x:Key="Str.Backup.Title">Backup &amp; Restore</sys:String>
+    <sys:String x:Key="Str.Backup.Create">Create Backup</sys:String>
+    <sys:String x:Key="Str.Backup.Restore">Restore</sys:String>
+    <sys:String x:Key="Str.Backup.Delete">Delete</sys:String>
+    <sys:String x:Key="Str.Backup.Refresh">Refresh</sys:String>
+    <sys:String x:Key="Str.Backup.Name">Backup Name</sys:String>
+    <sys:String x:Key="Str.Backup.FileCount">Files</sys:String>
+    <sys:String x:Key="Str.Backup.Size">Size</sys:String>
+
     <!-- ===== Tool Table ===== -->
     <!-- [2026-03-11] Added -->
     <sys:String x:Key="Str.Tool.Table">Tool Table</sys:String>
@@ -108,6 +146,18 @@
     <sys:String x:Key="Str.Tool.GoToHome">GO TO HOME</sys:String>
     <sys:String x:Key="Str.Tool.Length">Length</sys:String>
     <sys:String x:Key="Str.Tool.Diameter">Diameter</sys:String>
+    <!-- [2026-03-12] Tool Life -->
+    <sys:String x:Key="Str.Tool.Life.Title">Tool Life Management</sys:String>
+    <sys:String x:Key="Str.Tool.Life.Load">Load Life</sys:String>
+    <sys:String x:Key="Str.Tool.Life.SetLife">Set Life</sys:String>
+    <sys:String x:Key="Str.Tool.Life.Reset">Reset Life</sys:String>
+    <sys:String x:Key="Str.Tool.Life.MaxMin">Max (min):</sys:String>
+    <sys:String x:Key="Str.Tool.Life.MaxCount">Max (count):</sys:String>
+    <sys:String x:Key="Str.Tool.Life.CuttingTime">Cutting Time</sys:String>
+    <sys:String x:Key="Str.Tool.Life.Changes">Changes</sys:String>
+    <sys:String x:Key="Str.Tool.Life.Progress">Life Progress</sys:String>
+    <sys:String x:Key="Str.Tool.Life.MaxTimeCol">Max (sec)</sys:String>
+    <sys:String x:Key="Str.Tool.Life.MaxCountCol">Max (count)</sys:String>
 
     <!-- ===== Offsets Table ===== -->
     <!-- [2026-03-11] Added -->
@@ -165,6 +215,12 @@
     <sys:String x:Key="Str.Atc.SlotConfig">Slot Configuration</sys:String>
     <sys:String x:Key="Str.Atc.SlotNumber">Slot</sys:String>
     <sys:String x:Key="Str.Atc.ToolNumber">Tool #</sys:String>
+    <!-- [2026-03-12] ATC sensor status (LED panel, different from ATC IO settings Str.Atc.Di*) -->
+    <sys:String x:Key="Str.Atc.SensorStatus">Sensor Status</sys:String>
+    <sys:String x:Key="Str.Atc.Sensor.CarouselHome">Carousel Home</sys:String>
+    <sys:String x:Key="Str.Atc.Sensor.CarouselOut">Carousel Out</sys:String>
+    <sys:String x:Key="Str.Atc.Sensor.DrawbarClamp">Drawbar Clamp</sys:String>
+    <sys:String x:Key="Str.Atc.Sensor.DrawbarUnclamp">Drawbar Unclamp</sys:String>
 
     <!-- ATC Settings - Basic -->
     <sys:String x:Key="Str.Atc.AtcType">ATC Type</sys:String>
@@ -304,5 +360,32 @@
     <sys:String x:Key="Str.Setting.HomingImmediate">Home at Current Position</sys:String>
     <sys:String x:Key="Str.Setting.HomingHomeSwitch">Use Dedicated Home Switch</sys:String>
     <sys:String x:Key="Str.Setting.HomingLimitSwitch">Use Limit Switch as Home</sys:String>
+
+    <!-- ===== [2026-03-12] Machining Stats Labels ===== -->
+    <sys:String x:Key="Str.Label.TotalTime">TOTAL</sys:String>
+    <sys:String x:Key="Str.Label.CycleCount">CYCLES</sys:String>
+    <sys:String x:Key="Str.Label.Remaining">ETA</sys:String>
+
+    <!-- ===== [2026-03-12] Alarm Statistics ===== -->
+    <sys:String x:Key="Str.History.Stats">STATS</sys:String>
+    <sys:String x:Key="Str.History.ErrorCount">ERROR</sys:String>
+    <sys:String x:Key="Str.History.WarnCount">WARN</sys:String>
+    <sys:String x:Key="Str.History.InfoCount">INFO</sys:String>
+    <sys:String x:Key="Str.History.TopAlarms">TOP 10 MOST FREQUENT ALARMS</sys:String>
+    <sys:String x:Key="Str.History.LastOccur">Last Occurred</sys:String>
+
+    <!-- ===== [2026-03-12] Maintenance ===== -->
+    <sys:String x:Key="Str.Maint.Title">Maintenance Management</sys:String>
+    <sys:String x:Key="Str.Maint.Load">LOAD</sys:String>
+    <sys:String x:Key="Str.Maint.Name">Item</sys:String>
+    <sys:String x:Key="Str.Maint.Interval">Interval(hr)</sys:String>
+    <sys:String x:Key="Str.Maint.Accumulated">Accumulated</sys:String>
+    <sys:String x:Key="Str.Maint.Remaining">Remaining(hr)</sys:String>
+    <sys:String x:Key="Str.Maint.Progress">Progress</sys:String>
+    <sys:String x:Key="Str.Maint.NewName">Name:</sys:String>
+    <sys:String x:Key="Str.Maint.IntervalHr">Interval(hr):</sys:String>
+    <sys:String x:Key="Str.Maint.Add">ADD</sys:String>
+    <sys:String x:Key="Str.Maint.Remove">REMOVE</sys:String>
+    <sys:String x:Key="Str.Maint.Reset">RESET HOURS</sys:String>
 
 </ResourceDictionary>

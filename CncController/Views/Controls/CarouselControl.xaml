@@ -5,7 +5,8 @@
              Width="560" Height="560"
              FontFamily="{DynamicResource FontFamily.Default}">
 
-    <Grid Background="#2D2D2D">
+    <!-- [2026-03-12] 硬編碼色彩改為 DynamicResource -->
+    <Grid Background="{DynamicResource Brush.PanelBackground}">
         <!-- [2026-03-06] 主繪圖 Canvas（500x500 放大版） -->
         <Canvas x:Name="MainCanvas" Width="560" Height="560" ClipToBounds="True">
             <Canvas.RenderTransform>
@@ -18,14 +19,14 @@
 
         <!-- 中央文字區（不隨刀盤旋轉） -->
         <Border HorizontalAlignment="Center" VerticalAlignment="Center"
-                Background="#CC1A1A1A" CornerRadius="8" Padding="12,6"
-                BorderBrush="#555" BorderThickness="1">
+                Background="{DynamicResource Brush.Panel.Overlay}" CornerRadius="8" Padding="12,6"
+                BorderBrush="{DynamicResource Brush.Btn.Border}" BorderThickness="1">
             <Border.Effect>
                 <DropShadowEffect Color="Black" BlurRadius="8" Opacity="0.6" ShadowDepth="0"/>
             </Border.Effect>
             <TextBlock x:Name="CenterTextBlock"
                        Text="UN REFERENCED"
-                       Foreground="#FFDDDDDD"
+                       Foreground="{DynamicResource Brush.Text.Secondary}"
                        FontSize="{DynamicResource FontSize.XLarge}" FontWeight="Bold"
                        HorizontalAlignment="Center" VerticalAlignment="Center"
                        TextAlignment="Center"/>

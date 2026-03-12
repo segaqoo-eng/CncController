@@ -47,13 +47,15 @@
             <BooleanToVisibilityConverter x:Key="BoolToVis"/>
             <!-- [2026-03-11] 檔案大小格式化轉換器 -->
             <conv:FileSizeConverter x:Key="FileSizeConverter"/>
+            <!-- [2026-03-12] 字串比對轉換器（RadioButton Tab 切換用） -->
+            <conv:StringEqualConverter x:Key="StringEqualConverter"/>
 
             <!-- ================================================================ -->
             <!-- [2026-03-04] BaseBtnStyle：全域按鈕基底樣式                       -->
             <!--   漸層凸起 + Hover 變亮 + Pressed 凹入 + Cursor=Hand             -->
             <!--   尺寸預設 Medium，各頁面可用行內或 DynamicResource 覆寫           -->
             <!-- ================================================================ -->
-            <!-- [2026-03-10] 修正：Border.Background 改用 TemplateBinding，讓 DataTrigger 設 Background 能生效 -->
+            <!-- [2026-03-12] BaseBtnStyle：漸層/陰影/邊框全部引用主題資源，切換主題時自動生效 -->
             <Style x:Key="BaseBtnStyle" TargetType="Button">
                 <Setter Property="FontFamily" Value="{DynamicResource FontFamily.Default}"/>
                 <Setter Property="Foreground" Value="White"/>
@@ -62,32 +64,27 @@
                 <Setter Property="Padding" Value="{DynamicResource BtnPadding.Medium}"/>
                 <Setter Property="Margin" Value="2"/>
                 <Setter Property="Cursor" Value="Hand"/>
-                <Setter Property="Background">
-                    <Setter.Value>
-                        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                            <GradientStop Color="#5E5E5E" Offset="0"/>
-                            <GradientStop Color="#4A4A4A" Offset="0.5"/>
-                            <GradientStop Color="#353535" Offset="1"/>
-                        </LinearGradientBrush>
-                    </Setter.Value>
-                </Setter>
+                <Setter Property="Background" Value="{DynamicResource Brush.Btn.Gradient}"/>
                 <Setter Property="Template">
                     <Setter.Value>
                         <ControlTemplate TargetType="Button">
-                            <Border x:Name="bd" CornerRadius="4"
-                                    BorderThickness="1.5" BorderBrush="#666"
-                                    Background="{TemplateBinding Background}"
-                                    Padding="{TemplateBinding Padding}">
-                                <Grid>
-                                    <!-- [2026-03-10] 半透明疊加層：hover/press 時亮/暗，不蓋掉底色（藍色反白保留） -->
-                                    <Border x:Name="overlay" CornerRadius="3" Background="Transparent"/>
-                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                </Grid>
-                            </Border>
+                            <!-- [2026-03-12] 外層：1px 底部深色陰影（實體按鍵感） -->
+                            <Grid>
+                                <Border CornerRadius="4" Background="{DynamicResource Brush.Btn.Shadow}" Margin="0,1,0,-1"/>
+                                <Border x:Name="bd" CornerRadius="4"
+                                        BorderThickness="1" BorderBrush="{DynamicResource Brush.Btn.Border}"
+                                        Background="{TemplateBinding Background}"
+                                        Padding="{TemplateBinding Padding}">
+                                    <Grid>
+                                        <Border x:Name="overlay" CornerRadius="3" Background="Transparent"/>
+                                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Grid>
+                                </Border>
+                            </Grid>
                             <ControlTemplate.Triggers>
                                 <Trigger Property="IsMouseOver" Value="True">
                                     <Setter TargetName="bd" Property="BorderBrush" Value="{DynamicResource Brush.Hover.Border}"/>
-                                    <Setter TargetName="overlay" Property="Background" Value="#30FFFFFF"/>
+                                    <Setter TargetName="overlay" Property="Background" Value="#20FFFFFF"/>
                                 </Trigger>
                                 <Trigger Property="IsPressed" Value="True">
                                     <Setter TargetName="bd" Property="BorderBrush" Value="{DynamicResource Brush.Pressed.Border}"/>
@@ -102,10 +99,10 @@
                 </Setter>
             </Style>
 
-            <!-- [2026-03-04] BaseRadioBtnStyle：全域 RadioButton 基底（Tab / WCS 選擇） -->
+            <!-- [2026-03-12] BaseRadioBtnStyle：漸層/選取色全部引用主題資源 -->
             <Style x:Key="BaseRadioBtnStyle" TargetType="RadioButton">
                 <Setter Property="FontFamily" Value="{DynamicResource FontFamily.Default}"/>
-                <Setter Property="Foreground" Value="#CCC"/>
+                <Setter Property="Foreground" Value="{DynamicResource Brush.Text.Secondary}"/>
                 <Setter Property="FontSize" Value="{DynamicResource FontSize.Body}"/>
                 <Setter Property="FontWeight" Value="Bold"/>
                 <Setter Property="Padding" Value="{DynamicResource BtnPadding.Medium}"/>
@@ -115,46 +112,24 @@
                     <Setter.Value>
                         <ControlTemplate TargetType="RadioButton">
                             <Border x:Name="bd" CornerRadius="4"
-                                    BorderThickness="1.5" BorderBrush="#555"
+                                    BorderThickness="1" BorderBrush="{DynamicResource Brush.Btn.Border}"
+                                    Background="{DynamicResource Brush.Btn.Gradient}"
                                     Padding="{TemplateBinding Padding}">
-                                <Border.Background>
-                                    <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                                        <GradientStop Color="#5E5E5E" Offset="0"/>
-                                        <GradientStop Color="#4A4A4A" Offset="0.5"/>
-                                        <GradientStop Color="#353535" Offset="1"/>
-                                    </LinearGradientBrush>
-                                </Border.Background>
                                 <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </Border>
                             <ControlTemplate.Triggers>
                                 <Trigger Property="IsMouseOver" Value="True">
                                     <Setter TargetName="bd" Property="BorderBrush" Value="{DynamicResource Brush.Hover.Border}"/>
-                                    <Setter TargetName="bd" Property="Background">
-                                        <Setter.Value>
-                                            <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                                                <GradientStop Color="#727272" Offset="0"/>
-                                                <GradientStop Color="#5E5E5E" Offset="0.5"/>
-                                                <GradientStop Color="#484848" Offset="1"/>
-                                            </LinearGradientBrush>
-                                        </Setter.Value>
-                                    </Setter>
+                                    <Setter TargetName="bd" Property="Background" Value="{DynamicResource Brush.Btn.HoverGradient}"/>
                                 </Trigger>
-                                <!-- [2026-03-11] 分頁選取色改為 #00897B 青綠漸層（與按鈕藍 #007ACC 區分） -->
+                                <!-- [2026-03-12] IsChecked Foreground 改用主題資源（Cyber 亮底需深色文字） -->
                                 <Trigger Property="IsChecked" Value="True">
-                                    <Setter TargetName="bd" Property="BorderBrush" Value="#26A69A"/>
-                                    <Setter Property="Foreground" Value="White"/>
-                                    <Setter TargetName="bd" Property="Background">
-                                        <Setter.Value>
-                                            <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                                                <GradientStop Color="#26A69A" Offset="0"/>
-                                                <GradientStop Color="#00897B" Offset="0.5"/>
-                                                <GradientStop Color="#00796B" Offset="1"/>
-                                            </LinearGradientBrush>
-                                        </Setter.Value>
-                                    </Setter>
+                                    <Setter TargetName="bd" Property="BorderBrush" Value="{DynamicResource Brush.Tab.SelectedBorder}"/>
+                                    <Setter Property="Foreground" Value="{DynamicResource Brush.Tab.SelectedForeground}"/>
+                                    <Setter TargetName="bd" Property="Background" Value="{DynamicResource Brush.Tab.Selected}"/>
                                 </Trigger>
                                 <Trigger Property="IsEnabled" Value="False">
-                                    <Setter Property="Foreground" Value="#666"/>
+                                    <Setter Property="Foreground" Value="{DynamicResource Brush.Text.Hint}"/>
                                     <Setter TargetName="bd" Property="Opacity" Value="0.5"/>
                                 </Trigger>
                             </ControlTemplate.Triggers>
@@ -163,7 +138,7 @@
                 </Setter>
             </Style>
 
-            <!-- [2026-03-11] NavBtnStyle：字體加大 Medium→Large（工控觸控） -->
+            <!-- [2026-03-12] NavBtnStyle：漸層/選取色引用主題資源 -->
             <Style x:Key="NavBtnStyle" TargetType="RadioButton">
                 <Setter Property="FontFamily" Value="{DynamicResource FontFamily.Default}"/>
                 <Setter Property="Foreground" Value="{DynamicResource Brush.Text.Primary}"/>
@@ -175,39 +150,16 @@
                 <Setter Property="Template">
                     <Setter.Value>
                         <ControlTemplate TargetType="RadioButton">
-                            <Border x:Name="bd" BorderBrush="#444" BorderThickness="1">
-                                <Border.Background>
-                                    <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                                        <GradientStop Color="#4A4A4A" Offset="0"/>
-                                        <GradientStop Color="#3A3A3A" Offset="0.5"/>
-                                        <GradientStop Color="#2A2A2A" Offset="1"/>
-                                    </LinearGradientBrush>
-                                </Border.Background>
+                            <Border x:Name="bd" BorderBrush="{DynamicResource Brush.Border}" BorderThickness="1"
+                                    Background="{DynamicResource Brush.Btn.Gradient}">
                                 <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </Border>
                             <ControlTemplate.Triggers>
                                 <Trigger Property="IsMouseOver" Value="True">
-                                    <Setter TargetName="bd" Property="Background">
-                                        <Setter.Value>
-                                            <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                                                <GradientStop Color="#5E5E5E" Offset="0"/>
-                                                <GradientStop Color="#4E4E4E" Offset="0.5"/>
-                                                <GradientStop Color="#3E3E3E" Offset="1"/>
-                                            </LinearGradientBrush>
-                                        </Setter.Value>
-                                    </Setter>
+                                    <Setter TargetName="bd" Property="Background" Value="{DynamicResource Brush.Btn.HoverGradient}"/>
                                 </Trigger>
-                                <!-- [2026-03-11] NavBtnStyle 選取色改為青綠 -->
                                 <Trigger Property="IsChecked" Value="True">
-                                    <Setter TargetName="bd" Property="Background">
-                                        <Setter.Value>
-                                            <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                                                <GradientStop Color="#26A69A" Offset="0"/>
-                                                <GradientStop Color="#00897B" Offset="0.5"/>
-                                                <GradientStop Color="#00796B" Offset="1"/>
-                                            </LinearGradientBrush>
-                                        </Setter.Value>
-                                    </Setter>
+                                    <Setter TargetName="bd" Property="Background" Value="{DynamicResource Brush.Tab.Selected}"/>
                                 </Trigger>
                             </ControlTemplate.Triggers>
                         </ControlTemplate>

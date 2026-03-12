@@ -1,10 +1,11 @@
 ﻿<UserControl x:Class="CncController.Views.Pages.HistoryView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:vm="clr-namespace:CncController.ViewModels"
-             mc:Ignorable="d" 
+             xmlns:conv="clr-namespace:CncController.Converters"
+             mc:Ignorable="d"
              d:DesignHeight="600" d:DesignWidth="1024"
              FontFamily="{DynamicResource FontFamily.Default}">
 
@@ -15,11 +16,20 @@
     <UserControl.Resources>
         <!-- [2026-03-04] TabButtonStyle 改繼承 BaseRadioBtnStyle，移除本地 Template -->
         <Style x:Key="TabButtonStyle" TargetType="RadioButton" BasedOn="{StaticResource BaseRadioBtnStyle}">
-            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Foreground" Value="{DynamicResource Brush.Text.Primary}"/>
             <Setter Property="FontSize" Value="{DynamicResource FontSize.Large}"/>
             <Setter Property="Padding" Value="{DynamicResource BtnPadding.Large}"/>
             <Setter Property="Height" Value="45"/>
             <Setter Property="Width" Value="120"/>
+        </Style>
+        <!-- [2026-03-12] 主分頁 Tab（LOG / STATS） -->
+        <Style x:Key="HistoryTabStyle" TargetType="RadioButton" BasedOn="{StaticResource BaseRadioBtnStyle}">
+            <Setter Property="Foreground" Value="{DynamicResource Brush.Text.Primary}"/>
+            <Setter Property="FontSize" Value="{DynamicResource FontSize.Large}"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Padding" Value="16,8"/>
+            <Setter Property="Height" Value="40"/>
+            <Setter Property="Margin" Value="0,0,4,0"/>
         </Style>
     </UserControl.Resources>
 
@@ -29,23 +39,44 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <Border Grid.Row="0" BorderBrush="#444" BorderThickness="0,0,0,1" Padding="10,10,10,0">
+        <!-- [2026-03-12] 上方導航列：LOG/STATS Tab + 過濾器 + CLEAR -->
+        <Border Grid.Row="0" BorderBrush="{DynamicResource Brush.Border}" BorderThickness="0,0,0,1" Padding="10,10,10,0">
             <DockPanel LastChildFill="False">
                 <StackPanel Orientation="Horizontal">
-                    <RadioButton Content="{DynamicResource Str.History.All}" Style="{StaticResource TabButtonStyle}" IsChecked="True"
-                                 Command="{Binding SetFilterCommand}" CommandParameter="ALL"/>
-                    <RadioButton Content="{DynamicResource Str.History.Info}" Style="{StaticResource TabButtonStyle}"
-                                 Command="{Binding SetFilterCommand}" CommandParameter="INFO"/>
-                    <RadioButton Content="{DynamicResource Str.History.Warn}" Style="{StaticResource TabButtonStyle}"
-                                 Command="{Binding SetFilterCommand}" CommandParameter="WARN"/>
-                    <RadioButton Content="{DynamicResource Str.History.Error}" Style="{StaticResource TabButtonStyle}"
-                                 Command="{Binding SetFilterCommand}" CommandParameter="ERROR"/>
-                    <RadioButton Content="{DynamicResource Str.History.Debug}" Style="{StaticResource TabButtonStyle}" Foreground="Gray"
-                                 Command="{Binding SetFilterCommand}" CommandParameter="DEBUG"/>
+                    <!-- 主 Tab 切換 -->
+                    <RadioButton Content="LOG" Style="{StaticResource HistoryTabStyle}" GroupName="HistoryTab"
+                                 IsChecked="{Binding SelectedTab, Converter={StaticResource StringEqualConverter}, ConverterParameter=LOG}"/>
+                    <RadioButton Content="{DynamicResource Str.History.Stats}" Style="{StaticResource HistoryTabStyle}" GroupName="HistoryTab"
+                                 IsChecked="{Binding SelectedTab, Converter={StaticResource StringEqualConverter}, ConverterParameter=STATS}"
+                                 Command="{Binding RefreshStatsCommand}"/>
+                    <Border Width="1" Background="{DynamicResource Brush.Border}" Margin="8,4"/>
+
+                    <!-- LOG 過濾按鈕（僅 LOG Tab 顯示） -->
+                    <StackPanel Orientation="Horizontal">
+                        <StackPanel.Style>
+                            <Style TargetType="StackPanel">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding SelectedTab}" Value="STATS">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </StackPanel.Style>
+                        <RadioButton Content="{DynamicResource Str.History.All}" Style="{StaticResource TabButtonStyle}" IsChecked="True"
+                                     Command="{Binding SetFilterCommand}" CommandParameter="ALL" GroupName="LogFilter"/>
+                        <RadioButton Content="{DynamicResource Str.History.Info}" Style="{StaticResource TabButtonStyle}"
+                                     Command="{Binding SetFilterCommand}" CommandParameter="INFO" GroupName="LogFilter"/>
+                        <RadioButton Content="{DynamicResource Str.History.Warn}" Style="{StaticResource TabButtonStyle}"
+                                     Command="{Binding SetFilterCommand}" CommandParameter="WARN" GroupName="LogFilter"/>
+                        <RadioButton Content="{DynamicResource Str.History.Error}" Style="{StaticResource TabButtonStyle}"
+                                     Command="{Binding SetFilterCommand}" CommandParameter="ERROR" GroupName="LogFilter"/>
+                        <RadioButton Content="{DynamicResource Str.History.Debug}" Style="{StaticResource TabButtonStyle}" Foreground="Gray"
+                                     Command="{Binding SetFilterCommand}" CommandParameter="DEBUG" GroupName="LogFilter"/>
+                    </StackPanel>
                 </StackPanel>
 
-                <Button DockPanel.Dock="Right" Content="{DynamicResource Str.History.ClearAlarms}" Width="160" Height="45" 
-                        Background="#333" Foreground="White" BorderBrush="Gray" Margin="0,0,0,5"
+                <Button DockPanel.Dock="Right" Content="{DynamicResource Str.History.ClearAlarms}" Width="160" Height="45"
+                        Background="{DynamicResource Brush.Button.Static}" Foreground="{DynamicResource Brush.Text.Primary}" BorderBrush="{DynamicResource Brush.Border}" Margin="0,0,0,5"
                         FontSize="{DynamicResource FontSize.Large}" FontWeight="Bold"
                         Command="{Binding ClearActiveAlarmsCommand}">
                     <Button.Resources>
@@ -57,18 +88,28 @@
             </DockPanel>
         </Border>
 
-        <DataGrid Grid.Row="1" ItemsSource="{Binding LogsView}" AutoGenerateColumns="False" 
-                  IsReadOnly="True" 
+        <!-- ===== LOG 分頁內容 ===== -->
+        <DataGrid Grid.Row="1" ItemsSource="{Binding LogsView}" AutoGenerateColumns="False"
+                  IsReadOnly="True"
                   FontSize="{DynamicResource FontSize.XLarge}"
-                  Background="#1E1E1E" 
-                  RowBackground="#1E1E1E"
-                  AlternatingRowBackground="#252525"
-                  Foreground="#E0E0E0"
+                  Background="{DynamicResource Brush.WindowBackground}"
+                  RowBackground="{DynamicResource Brush.Grid.Row}"
+                  AlternatingRowBackground="{DynamicResource Brush.Grid.RowAlt}"
+                  Foreground="{DynamicResource Brush.Text.Primary}"
                   BorderThickness="0"
-                  HeadersVisibility="Column" 
+                  HeadersVisibility="Column"
                   GridLinesVisibility="Horizontal"
-                  HorizontalGridLinesBrush="#444" 
+                  HorizontalGridLinesBrush="{DynamicResource Brush.Border}"
                   ColumnHeaderHeight="40">
+            <DataGrid.Style>
+                <Style TargetType="DataGrid">
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding SelectedTab}" Value="STATS">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </DataGrid.Style>
 
             <DataGrid.Resources>
                 <Style TargetType="DataGridCell">
@@ -86,15 +127,15 @@
                     </Setter>
                     <Style.Triggers>
                         <Trigger Property="IsSelected" Value="True">
-                            <Setter Property="Background" Value="#444"/>
-                            <Setter Property="Foreground" Value="White"/>
+                            <Setter Property="Background" Value="{DynamicResource Brush.Border}"/>
+                            <Setter Property="Foreground" Value="{DynamicResource Brush.Text.Primary}"/>
                         </Trigger>
                     </Style.Triggers>
                 </Style>
 
                 <Style TargetType="DataGridColumnHeader">
-                    <Setter Property="Background" Value="#333"/>
-                    <Setter Property="Foreground" Value="#AAA"/>
+                    <Setter Property="Background" Value="{DynamicResource Brush.Grid.Header}"/>
+                    <Setter Property="Foreground" Value="{DynamicResource Brush.Text.Muted}"/>
                     <Setter Property="FontWeight" Value="Bold"/>
                     <Setter Property="Padding" Value="10,0"/>
                     <Setter Property="HorizontalContentAlignment" Value="Left"/>
@@ -102,8 +143,7 @@
             </DataGrid.Resources>
 
             <DataGrid.Columns>
-                <DataGridTextColumn Header="{DynamicResource Str.History.DateTime}" Binding="{Binding Time, StringFormat='yyyy/MM/dd HH:mm:ss'}" Width="220" Foreground="#AAA"/>
-
+                <DataGridTextColumn Header="{DynamicResource Str.History.DateTime}" Binding="{Binding Time, StringFormat='yyyy/MM/dd HH:mm:ss'}" Width="220" Foreground="{DynamicResource Brush.Text.Muted}"/>
                 <DataGridTextColumn Header="{DynamicResource Str.History.Type}" Binding="{Binding Type}" Width="120">
                     <DataGridTextColumn.ElementStyle>
                         <Style TargetType="TextBlock">
@@ -113,8 +153,7 @@
                         </Style>
                     </DataGridTextColumn.ElementStyle>
                 </DataGridTextColumn>
-
-                <DataGridTextColumn Header="{DynamicResource Str.History.Message}" Binding="{Binding DisplayMessage}" Width="*" >
+                <DataGridTextColumn Header="{DynamicResource Str.History.Message}" Binding="{Binding DisplayMessage}" Width="*">
                     <DataGridTextColumn.ElementStyle>
                         <Style TargetType="TextBlock">
                             <Setter Property="Foreground" Value="{Binding ColorBrush}"/>
@@ -126,5 +165,78 @@
                 </DataGridTextColumn>
             </DataGrid.Columns>
         </DataGrid>
+
+        <!-- ===== STATS 分頁內容 ===== -->
+        <Grid Grid.Row="1" Margin="20">
+            <Grid.Style>
+                <Style TargetType="Grid">
+                    <Setter Property="Visibility" Value="Collapsed"/>
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding SelectedTab}" Value="STATS">
+                            <Setter Property="Visibility" Value="Visible"/>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Grid.Style>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <!-- 統計摘要 -->
+            <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,16">
+                <Border Background="#C62828" CornerRadius="4" Padding="16,10" Margin="0,0,12,0">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="{DynamicResource Str.History.ErrorCount}" Foreground="White" FontSize="{DynamicResource FontSize.Large}" VerticalAlignment="Center"/>
+                        <TextBlock Text="{Binding TotalErrorCount}" Foreground="White" FontSize="{DynamicResource FontSize.XLarge}" FontWeight="Bold" Margin="8,0,0,0" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Border>
+                <Border Background="#E65100" CornerRadius="4" Padding="16,10" Margin="0,0,12,0">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="{DynamicResource Str.History.WarnCount}" Foreground="White" FontSize="{DynamicResource FontSize.Large}" VerticalAlignment="Center"/>
+                        <TextBlock Text="{Binding TotalWarnCount}" Foreground="White" FontSize="{DynamicResource FontSize.XLarge}" FontWeight="Bold" Margin="8,0,0,0" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Border>
+                <Border Background="#1565C0" CornerRadius="4" Padding="16,10">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="{DynamicResource Str.History.InfoCount}" Foreground="White" FontSize="{DynamicResource FontSize.Large}" VerticalAlignment="Center"/>
+                        <TextBlock Text="{Binding TotalInfoCount}" Foreground="White" FontSize="{DynamicResource FontSize.XLarge}" FontWeight="Bold" Margin="8,0,0,0" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+
+            <!-- Top 10 最頻繁報警 -->
+            <Grid Grid.Row="1">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                <Border Grid.Row="0" Style="{StaticResource PanelTitleBorder}" Padding="12,6" Margin="0,0,0,8">
+                    <TextBlock Text="{DynamicResource Str.History.TopAlarms}" Style="{StaticResource PanelTitleText}" FontSize="{DynamicResource FontSize.XLarge}"/>
+                </Border>
+                <DataGrid Grid.Row="1" ItemsSource="{Binding TopAlarms}" AutoGenerateColumns="False" IsReadOnly="True"
+                          CanUserAddRows="False" Background="{DynamicResource Brush.WindowBackground}"
+                          RowBackground="{DynamicResource Brush.Grid.Row}" AlternatingRowBackground="{DynamicResource Brush.Grid.RowAlt}"
+                          Foreground="{DynamicResource Brush.Text.Primary}" BorderThickness="0"
+                          FontSize="{DynamicResource FontSize.Large}" RowHeight="36"
+                          HeadersVisibility="Column" GridLinesVisibility="Horizontal"
+                          HorizontalGridLinesBrush="{DynamicResource Brush.Border}" ColumnHeaderHeight="36">
+                    <DataGrid.Resources>
+                        <Style TargetType="DataGridColumnHeader">
+                            <Setter Property="Background" Value="{DynamicResource Brush.Grid.Header}"/>
+                            <Setter Property="Foreground" Value="{DynamicResource Brush.Text.Muted}"/>
+                            <Setter Property="FontWeight" Value="Bold"/>
+                            <Setter Property="Padding" Value="10,0"/>
+                        </Style>
+                    </DataGrid.Resources>
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="#" Binding="{Binding Count}" Width="60" FontWeight="Bold"/>
+                        <DataGridTextColumn Header="{DynamicResource Str.History.Type}" Binding="{Binding Type}" Width="100"/>
+                        <DataGridTextColumn Header="{DynamicResource Str.History.Message}" Binding="{Binding Message}" Width="*"/>
+                        <DataGridTextColumn Header="{DynamicResource Str.History.LastOccur}" Binding="{Binding LastTime}" Width="140"/>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </Grid>
+        </Grid>
     </Grid>
 </UserControl>

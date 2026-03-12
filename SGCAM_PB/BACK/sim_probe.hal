@@ -1,0 +1,57 @@
+# ==============================================================================
+# [2026-03-05] 探針模擬 HAL（開發/測試用）— 自包含（loadrt + addf + 接線）
+# 改用 near 組件（|position - target| <= difference 時觸發）
+# comp 只能做 >= 比較，向負方向探測會立刻觸發，near 不分正負方向
+#
+# 前端在每次探測前透過 /v2/hal/setp 動態設定觸發位置，
+# 依探測方向計算模擬碰觸點（當前位置 + 方向 * 距離 * 70%）
+#
+# 手動調整（除錯用）：
+#   halcmd sets sim-probe-x-target  50.0
+#   halcmd sets sim-probe-y-target  50.0
+#   halcmd sets sim-probe-z-target -10.0
+#
+# 驗證：
+#   halcmd show sig probe-in
+#   halcmd show pin motion.probe-input
+# ==============================================================================
+
+# --- RT 模組載入（near × 3 + or2 × 2）---
+loadrt near names=sim-probe-x,sim-probe-y,sim-probe-z
+loadrt or2 names=sim-probe-or-xy,sim-probe-or-xyz
+
+# --- 加入 servo-thread ---
+addf sim-probe-x servo-thread
+addf sim-probe-y servo-thread
+addf sim-probe-z servo-thread
+addf sim-probe-or-xy servo-thread
+addf sim-probe-or-xyz servo-thread
+
+# --- X 軸 near 比較器 ---
+# |position - target| <= 0.05 時觸發（預設 target=99999 = 不觸發）
+net sim-probe-x-target => sim-probe-x.in1
+sets sim-probe-x-target 99999.0
+net X-pos-fb-final => sim-probe-x.in2
+setp sim-probe-x.difference 0.05
+
+# --- Y 軸 near 比較器 ---
+net sim-probe-y-target => sim-probe-y.in1
+sets sim-probe-y-target 99999.0
+net Y-pos-fb-final => sim-probe-y.in2
+setp sim-probe-y.difference 0.05
+
+# --- Z 軸 near 比較器 ---
+net sim-probe-z-target => sim-probe-z.in1
+sets sim-probe-z-target 99999.0
+net Z-pos-fb-final => sim-probe-z.in2
+setp sim-probe-z.difference 0.05
+
+# --- OR 閘：任一軸觸發 → probe-in = TRUE ---
+# or2 沒有 or3，用兩級串聯：(X or Y) or Z
+net sim-probe-x-hit sim-probe-x.out => sim-probe-or-xy.in0
+net sim-probe-y-hit sim-probe-y.out => sim-probe-or-xy.in1
+net sim-probe-xy-hit sim-probe-or-xy.out => sim-probe-or-xyz.in0
+net sim-probe-z-hit sim-probe-z.out => sim-probe-or-xyz.in1
+
+# 最終輸出 → motion.probe-input
+net probe-in sim-probe-or-xyz.out => motion.probe-input

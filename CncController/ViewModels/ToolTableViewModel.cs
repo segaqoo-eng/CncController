@@ -27,6 +27,9 @@ namespace CncController.ViewModels
         // [2026-03-03] MDI 輸入欄
         [ObservableProperty] private string _mdiInput = "";
 
+        // [2026-03-12] 左欄分頁切換（TOOL TABLE / TOOL LIFE）
+        [ObservableProperty] private string _selectedTab = "ToolTable";
+
         // [2026-03-03] 軸可見性（依 MachineType 動態顯示 DataGrid 欄位）
         // X/Y/Z 永遠顯示；A/B/C 依機台類型；U/V/W 預設隱藏（極少用到）
         [ObservableProperty] private bool _isAxisAEnabled;
@@ -195,6 +198,83 @@ namespace CncController.ViewModels
             AlarmService.Instance.AddLog("INFO", $"Tool MDI: {MdiInput}");
             await MachineControlService.Instance.SendMdiCommandAsync(MdiInput.Trim());
             MdiInput = "";
+        }
+
+        // ============================================================
+        // [2026-03-12] 刀具壽命管理
+        // ============================================================
+        public ObservableCollection<ToolLifeEntry> ToolLifeList { get; } = new();
+
+        // [2026-03-12] 壽命設定輸入欄
+        [ObservableProperty] private int _lifeMaxTimeMinutes;   // 壽命上限（分鐘）
+        [ObservableProperty] private int _lifeMaxCount;         // 壽命上限（次數）
+        [ObservableProperty] private ToolLifeEntry? _selectedLifeEntry;
+
+        // [2026-03-12] 讀取壽命數據
+        [RelayCommand]
+        private async Task LoadToolLife()
+        {
+            var data = await MachineControlService.Instance.GetToolLifeAsync();
+            if (data == null) return;
+            ToolLifeList.Clear();
+            foreach (var kv in data)
+            {
+                if (int.TryParse(kv.Key, out int toolNum))
+                {
+                    ToolLifeList.Add(new ToolLifeEntry
+                    {
+                        ToolNumber = toolNum,
+                        CuttingTimeSeconds = kv.Value.CuttingTimeSec,
+                        ChangeCount = kv.Value.ChangeCount,
+                        MaxTimeSeconds = kv.Value.MaxTimeSec,
+                        MaxChangeCount = kv.Value.MaxCount
+                    });
+                }
+            }
+            // 依刀號排序
+            var sorted = ToolLifeList.OrderBy(t => t.ToolNumber).ToList();
+            ToolLifeList.Clear();
+            foreach (var t in sorted) ToolLifeList.Add(t);
+
+            AlarmService.Instance.AddLog("INFO", $"Tool life loaded ({ToolLifeList.Count} tools)");
+
+            // 檢查壽命警告
+            foreach (var entry in ToolLifeList)
+            {
+                if (entry.IsOverLife)
+                    AlarmService.Instance.AddLog("WARNING", $"T{entry.ToolNumber} 刀具壽命已到期！（{entry.CuttingTimeDisplay} / {entry.ChangeCount} 次）");
+                else if (entry.IsNearLife)
+                    AlarmService.Instance.AddLog("WARNING", $"T{entry.ToolNumber} 刀具壽命接近上限（{entry.MaxLifePercent:F0}%）");
+            }
+        }
+
+        // [2026-03-12] 設定壽命上限
+        [RelayCommand]
+        private async Task SetToolLifeConfig()
+        {
+            if (SelectedLifeEntry == null && SelectedTool == null) return;
+            int toolNum = SelectedLifeEntry?.ToolNumber ?? SelectedTool?.ToolNumber ?? 0;
+            if (toolNum <= 0) return;
+            int maxTimeSec = LifeMaxTimeMinutes * 60;
+            bool ok = await MachineControlService.Instance.SetToolLifeConfigAsync(toolNum, maxTimeSec, LifeMaxCount);
+            if (ok)
+            {
+                AlarmService.Instance.AddLog("INFO", $"T{toolNum} life config: {LifeMaxTimeMinutes}min / {LifeMaxCount} changes");
+                await LoadToolLife();
+            }
+        }
+
+        // [2026-03-12] 歸零指定刀號壽命（換新刀）
+        [RelayCommand]
+        private async Task ResetToolLife()
+        {
+            if (SelectedLifeEntry == null) return;
+            bool ok = await MachineControlService.Instance.ResetToolLifeAsync(SelectedLifeEntry.ToolNumber);
+            if (ok)
+            {
+                AlarmService.Instance.AddLog("INFO", $"T{SelectedLifeEntry.ToolNumber} life reset");
+                await LoadToolLife();
+            }
         }
     }
 }

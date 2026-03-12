@@ -1,0 +1,186 @@
+<masters>
+  <master idx="0" appTimePeriod="1000000" refClockSyncCycles="1000">
+
+    <slave idx="0" type="fallback_servo" vid="0x00100000" pid="0x000c010d" configPdos="true">
+      <dcConf assignActivate="300" sync0Cycle="*1" sync0Shift="0"/>
+      <syncManager idx="2" dir="out">
+        <pdoEntry idx="6040" subIdx="00" bitLen="16" halPin="ctrl-word"/>
+        <pdoEntry idx="607a" subIdx="00" bitLen="32" halPin="target-pos"/>
+        <pdoEntry idx="6060" subIdx="00" bitLen="8" halPin="op-mode"/>
+      </syncManager>
+      <syncManager idx="3" dir="in">
+        <pdoEntry idx="6041" subIdx="00" bitLen="16" halPin="status-word"/>
+        <pdoEntry idx="6064" subIdx="00" bitLen="32" halPin="actual-pos"/>
+        <pdoEntry idx="60fd" subIdx="00" bitLen="32" halPin="digital-inputs"/>
+      </syncManager>
+    </slave>
+
+
+    <slave idx="1" type="fallback_coupler" vid="0x000001dd" pid="0x00005500" configPdos="false">
+    </slave>
+
+
+    <slave idx="2" type="fallback_servo" vid="0x000001dd" pid="0x00005621" configPdos="true">
+      <dcConf assignActivate="300" sync0Cycle="*1" sync0Shift="0"/>
+      <syncManager idx="2" dir="out">
+        <pdoEntry idx="6040" subIdx="00" bitLen="16" halPin="ctrl-word"/>
+        <pdoEntry idx="607a" subIdx="00" bitLen="32" halPin="target-pos"/>
+        <pdoEntry idx="6060" subIdx="00" bitLen="8" halPin="op-mode"/>
+      </syncManager>
+      <syncManager idx="3" dir="in">
+        <pdoEntry idx="6041" subIdx="00" bitLen="16" halPin="status-word"/>
+        <pdoEntry idx="6064" subIdx="00" bitLen="32" halPin="actual-pos"/>
+        <pdoEntry idx="60fd" subIdx="00" bitLen="32" halPin="digital-inputs"/>
+      </syncManager>
+    </slave>
+
+
+    <slave idx="3" type="fallback_servo" vid="0x000001dd" pid="0x00005621" configPdos="true">
+      <dcConf assignActivate="300" sync0Cycle="*1" sync0Shift="0"/>
+      <syncManager idx="2" dir="out">
+        <pdoEntry idx="6040" subIdx="00" bitLen="16" halPin="ctrl-word"/>
+        <pdoEntry idx="607a" subIdx="00" bitLen="32" halPin="target-pos"/>
+        <pdoEntry idx="6060" subIdx="00" bitLen="8" halPin="op-mode"/>
+      </syncManager>
+      <syncManager idx="3" dir="in">
+        <pdoEntry idx="6041" subIdx="00" bitLen="16" halPin="status-word"/>
+        <pdoEntry idx="6064" subIdx="00" bitLen="32" halPin="actual-pos"/>
+        <pdoEntry idx="60fd" subIdx="00" bitLen="32" halPin="digital-inputs"/>
+      </syncManager>
+    </slave>
+
+
+    <slave idx="4" type="fallback_servo" vid="0x000001dd" pid="0x00005621" configPdos="true">
+      <dcConf assignActivate="300" sync0Cycle="*1" sync0Shift="0"/>
+      <syncManager idx="2" dir="out">
+        <pdoEntry idx="6040" subIdx="00" bitLen="16" halPin="ctrl-word"/>
+        <pdoEntry idx="607a" subIdx="00" bitLen="32" halPin="target-pos"/>
+        <pdoEntry idx="6060" subIdx="00" bitLen="8" halPin="op-mode"/>
+      </syncManager>
+      <syncManager idx="3" dir="in">
+        <pdoEntry idx="6041" subIdx="00" bitLen="16" halPin="status-word"/>
+        <pdoEntry idx="6064" subIdx="00" bitLen="32" halPin="actual-pos"/>
+        <pdoEntry idx="60fd" subIdx="00" bitLen="32" halPin="digital-inputs"/>
+      </syncManager>
+    </slave>
+
+
+    <slave idx="5" type="fallback_servo" vid="0x000001dd" pid="0x00005621" configPdos="true">
+      <dcConf assignActivate="300" sync0Cycle="*1" sync0Shift="0"/>
+      <syncManager idx="2" dir="out">
+        <pdoEntry idx="6040" subIdx="00" bitLen="16" halPin="ctrl-word"/>
+        <pdoEntry idx="607a" subIdx="00" bitLen="32" halPin="target-pos"/>
+        <pdoEntry idx="6060" subIdx="00" bitLen="8" halPin="op-mode"/>
+      </syncManager>
+      <syncManager idx="3" dir="in">
+        <pdoEntry idx="6041" subIdx="00" bitLen="16" halPin="status-word"/>
+        <pdoEntry idx="6064" subIdx="00" bitLen="32" halPin="actual-pos"/>
+        <pdoEntry idx="60fd" subIdx="00" bitLen="32" halPin="digital-inputs"/>
+      </syncManager>
+    </slave>
+
+
+    <slave idx="6" type="fallback_servo" vid="0x000001dd" pid="0x00005621" configPdos="true">
+      <dcConf assignActivate="300" sync0Cycle="*1" sync0Shift="0"/>
+      <syncManager idx="2" dir="out">
+        <pdoEntry idx="6040" subIdx="00" bitLen="16" halPin="ctrl-word"/>
+        <pdoEntry idx="607a" subIdx="00" bitLen="32" halPin="target-pos"/>
+        <pdoEntry idx="6060" subIdx="00" bitLen="8" halPin="op-mode"/>
+      </syncManager>
+      <syncManager idx="3" dir="in">
+        <pdoEntry idx="6041" subIdx="00" bitLen="16" halPin="status-word"/>
+        <pdoEntry idx="6064" subIdx="00" bitLen="32" halPin="actual-pos"/>
+        <pdoEntry idx="60fd" subIdx="00" bitLen="32" halPin="digital-inputs"/>
+      </syncManager>
+    </slave>
+
+
+    <slave idx="7" type="fallback_servo" vid="0x000001dd" pid="0x00005621" configPdos="true">
+      <dcConf assignActivate="300" sync0Cycle="*1" sync0Shift="0"/>
+      <syncManager idx="2" dir="out">
+        <pdoEntry idx="6040" subIdx="00" bitLen="16" halPin="ctrl-word"/>
+        <pdoEntry idx="607a" subIdx="00" bitLen="32" halPin="target-pos"/>
+        <pdoEntry idx="6060" subIdx="00" bitLen="8" halPin="op-mode"/>
+      </syncManager>
+      <syncManager idx="3" dir="in">
+        <pdoEntry idx="6041" subIdx="00" bitLen="16" halPin="status-word"/>
+        <pdoEntry idx="6064" subIdx="00" bitLen="32" halPin="actual-pos"/>
+        <pdoEntry idx="60fd" subIdx="00" bitLen="32" halPin="digital-inputs"/>
+      </syncManager>
+    </slave>
+
+
+    <slave idx="8" type="fallback_servo" vid="0x000001dd" pid="0x00005621" configPdos="true">
+      <dcConf assignActivate="300" sync0Cycle="*1" sync0Shift="0"/>
+      <syncManager idx="2" dir="out">
+        <pdoEntry idx="6040" subIdx="00" bitLen="16" halPin="ctrl-word"/>
+        <pdoEntry idx="607a" subIdx="00" bitLen="32" halPin="target-pos"/>
+        <pdoEntry idx="6060" subIdx="00" bitLen="8" halPin="op-mode"/>
+      </syncManager>
+      <syncManager idx="3" dir="in">
+        <pdoEntry idx="6041" subIdx="00" bitLen="16" halPin="status-word"/>
+        <pdoEntry idx="6064" subIdx="00" bitLen="32" halPin="actual-pos"/>
+        <pdoEntry idx="60fd" subIdx="00" bitLen="32" halPin="digital-inputs"/>
+      </syncManager>
+    </slave>
+
+
+    <slave idx="9" type="fallback_servo" vid="0x000001dd" pid="0x00005621" configPdos="true">
+      <dcConf assignActivate="300" sync0Cycle="*1" sync0Shift="0"/>
+      <syncManager idx="2" dir="out">
+        <pdoEntry idx="6040" subIdx="00" bitLen="16" halPin="ctrl-word"/>
+        <pdoEntry idx="607a" subIdx="00" bitLen="32" halPin="target-pos"/>
+        <pdoEntry idx="6060" subIdx="00" bitLen="8" halPin="op-mode"/>
+      </syncManager>
+      <syncManager idx="3" dir="in">
+        <pdoEntry idx="6041" subIdx="00" bitLen="16" halPin="status-word"/>
+        <pdoEntry idx="6064" subIdx="00" bitLen="32" halPin="actual-pos"/>
+        <pdoEntry idx="60fd" subIdx="00" bitLen="32" halPin="digital-inputs"/>
+      </syncManager>
+    </slave>
+
+
+    <slave idx="10" type="fallback_servo" vid="0x000001dd" pid="0x00005621" configPdos="true">
+      <dcConf assignActivate="300" sync0Cycle="*1" sync0Shift="0"/>
+      <syncManager idx="2" dir="out">
+        <pdoEntry idx="6040" subIdx="00" bitLen="16" halPin="ctrl-word"/>
+        <pdoEntry idx="607a" subIdx="00" bitLen="32" halPin="target-pos"/>
+        <pdoEntry idx="6060" subIdx="00" bitLen="8" halPin="op-mode"/>
+      </syncManager>
+      <syncManager idx="3" dir="in">
+        <pdoEntry idx="6041" subIdx="00" bitLen="16" halPin="status-word"/>
+        <pdoEntry idx="6064" subIdx="00" bitLen="32" halPin="actual-pos"/>
+        <pdoEntry idx="60fd" subIdx="00" bitLen="32" halPin="digital-inputs"/>
+      </syncManager>
+    </slave>
+
+
+    <slave idx="11" type="fallback_ao" vid="0x000001dd" pid="0x00009144" configPdos="true">
+      <syncManager idx="2" dir="out">
+        <pdoEntry idx="7000" subIdx="01" bitLen="16" halPin="ao-ch1"/>
+        <pdoEntry idx="7000" subIdx="02" bitLen="16" halPin="ao-ch2"/>
+        <pdoEntry idx="7000" subIdx="03" bitLen="16" halPin="ao-ch3"/>
+        <pdoEntry idx="7000" subIdx="04" bitLen="16" halPin="ao-ch4"/>
+      </syncManager>
+    </slave>
+
+
+    <slave idx="12" type="fallback_mpg" vid="0x000001dd" pid="0x00005614" configPdos="true">
+      <syncManager idx="3" dir="in">
+        <pdoEntry idx="6000" subIdx="01" bitLen="16" halPin="mpg-buttons"/>
+        <pdoEntry idx="6064" subIdx="00" bitLen="32" halPin="mpg-counts"/>
+      </syncManager>
+    </slave>
+
+
+    <slave idx="13" type="fallback_hybrid_32" vid="0x000001dd" pid="0x00000902" configPdos="true">
+      <syncManager idx="2" dir="out">
+        <pdoEntry idx="7000" subIdx="01" bitLen="32" halPin="dout-32"/>
+      </syncManager>
+      <syncManager idx="3" dir="in">
+        <pdoEntry idx="6000" subIdx="01" bitLen="32" halPin="din-32"/>
+      </syncManager>
+    </slave>
+
+  </master>
+</masters>

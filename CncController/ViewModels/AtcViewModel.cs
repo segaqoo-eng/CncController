@@ -530,5 +530,41 @@ namespace CncController.ViewModels
                 DiDrawbarUnclamp  = status.DI.TryGetValue(_pinDiDrawbarUnclamp.ToString(), out var d4) && d4;
             }
         }
+
+        // [2026-03-12] ATC 模擬模式：是否顯示 SIM 按鈕
+        public bool IsAtcSimulation => ConfigurationService.IsAtcSimulation;
+
+        // [2026-03-12] ATC 模擬：切換指定 DI 信號（透過 /v2/hal/setp）
+        [RelayCommand]
+        private async Task SimToggleCarouselHome()
+        {
+            bool newState = !DiCarouselHome;
+            bool ok = await MachineControlService.Instance.HalSetSignalAsync($"atc-di-carousel-home-in", newState ? 1 : 0);
+            if (ok) DiCarouselHome = newState;
+        }
+
+        [RelayCommand]
+        private async Task SimToggleCarouselOut()
+        {
+            bool newState = !DiCarouselOut;
+            bool ok = await MachineControlService.Instance.HalSetSignalAsync($"atc-di-carousel-out-in", newState ? 1 : 0);
+            if (ok) DiCarouselOut = newState;
+        }
+
+        [RelayCommand]
+        private async Task SimToggleDrawbarClamp()
+        {
+            bool newState = !DiDrawbarClamp;
+            bool ok = await MachineControlService.Instance.HalSetSignalAsync($"atc-di-drawbar-clamp-in", newState ? 1 : 0);
+            if (ok) DiDrawbarClamp = newState;
+        }
+
+        [RelayCommand]
+        private async Task SimToggleDrawbarUnclamp()
+        {
+            bool newState = !DiDrawbarUnclamp;
+            bool ok = await MachineControlService.Instance.HalSetSignalAsync($"atc-di-drawbar-unclamp-in", newState ? 1 : 0);
+            if (ok) DiDrawbarUnclamp = newState;
+        }
     }
 }

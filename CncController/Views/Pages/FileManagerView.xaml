@@ -58,23 +58,23 @@
                     <Style TargetType="ListBoxItem">
                         <Setter Property="Padding" Value="10,8"/>
                         <Setter Property="Margin" Value="0"/>
-                        <Setter Property="Foreground" Value="#DDD"/>
+                        <Setter Property="Foreground" Value="{DynamicResource Brush.Text.Secondary}"/> <!-- [2026-03-12] 替換硬編碼色 #DDD → Brush.Text.Secondary -->
                         <Setter Property="FontSize" Value="{DynamicResource FontSize.Large}"/>
                         <Setter Property="FontFamily" Value="{DynamicResource FontFamily.Default}"/>
                         <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
                         <Setter Property="Template">
                             <Setter.Value>
                                 <ControlTemplate TargetType="ListBoxItem">
-                                    <Border x:Name="Bd" Background="#2D2D30" BorderBrush="#3F3F46"
+                                    <Border x:Name="Bd" Background="{DynamicResource Brush.PanelBackground}" BorderBrush="{DynamicResource Brush.Border}"
                                             BorderThickness="0,0,0,1" Padding="{TemplateBinding Padding}">
                                         <ContentPresenter/>
                                     </Border>
                                     <ControlTemplate.Triggers>
                                         <Trigger Property="IsMouseOver" Value="True">
-                                            <Setter TargetName="Bd" Property="Background" Value="#3E3E42"/>
+                                            <Setter TargetName="Bd" Property="Background" Value="{DynamicResource Brush.Grid.Header}"/> <!-- [2026-03-12] 替換硬編碼色 #3E3E42 → Brush.Grid.Header -->
                                         </Trigger>
                                         <Trigger Property="IsSelected" Value="True">
-                                            <Setter TargetName="Bd" Property="Background" Value="#007ACC"/>
+                                            <Setter TargetName="Bd" Property="Background" Value="{DynamicResource Brush.Accent}"/> <!-- [2026-03-12] 替換硬編碼色 #007ACC → Brush.Accent -->
                                         </Trigger>
                                     </ControlTemplate.Triggers>
                                 </ControlTemplate>
@@ -85,7 +85,7 @@
                 <ListBox.ItemTemplate>
                     <DataTemplate>
                         <DockPanel>
-                            <TextBlock DockPanel.Dock="Right" Foreground="#999"
+                            <TextBlock DockPanel.Dock="Right" Foreground="{DynamicResource Brush.Text.Dim}"
                                        FontSize="{DynamicResource FontSize.Medium}"
                                        VerticalAlignment="Center" Margin="8,0,0,0">
                                 <TextBlock.Text>
@@ -103,7 +103,7 @@
 
             <!-- [2026-03-11] 無檔案提示 -->
             <TextBlock Grid.Row="1" Text="{DynamicResource Str.File.NoFiles}"
-                       Foreground="#888" FontSize="{DynamicResource FontSize.Large}"
+                       Foreground="{DynamicResource Brush.Text.Dim}" FontSize="{DynamicResource FontSize.Large}"
                        HorizontalAlignment="Center" VerticalAlignment="Center"
                        FontWeight="Bold">
                 <TextBlock.Style>
@@ -119,7 +119,7 @@
             </TextBlock>
 
             <!-- [2026-03-11] 重命名輸入列 -->
-            <Border Grid.Row="2" Background="#333" Padding="6"
+            <Border Grid.Row="2" Background="{DynamicResource Brush.Input.Background}" Padding="6"
                     Visibility="{Binding IsRenaming, Converter={StaticResource BoolToVis}}">
                 <DockPanel>
                     <Button DockPanel.Dock="Right" Content="{DynamicResource Str.File.Cancel}"
@@ -175,7 +175,7 @@
             <Border Grid.Row="0" Style="{StaticResource PanelTitleBorder}">
                 <DockPanel>
                     <TextBlock DockPanel.Dock="Right" Text="{Binding PreviewFileName}"
-                               Foreground="#BBB" FontSize="{DynamicResource FontSize.Medium}"
+                               Foreground="{DynamicResource Brush.Text.Secondary}" FontSize="{DynamicResource FontSize.Medium}"
                                VerticalAlignment="Center" Margin="8,0,0,0"/>
                     <TextBlock Style="{StaticResource PanelTitleText}"
                                Text="{DynamicResource Str.File.Preview}"/>
@@ -187,7 +187,7 @@
                      VirtualizingStackPanel.IsVirtualizing="True"
                      VirtualizingStackPanel.VirtualizationMode="Recycling"
                      ScrollViewer.HorizontalScrollBarVisibility="Auto"
-                     Background="White" BorderThickness="0"
+                     Background="{DynamicResource Brush.Input.Background}" BorderThickness="0"
                      HorizontalContentAlignment="Stretch">
                 <ListBox.ItemContainerStyle>
                     <Style TargetType="ListBoxItem">
@@ -205,14 +205,14 @@
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
                             <TextBlock Grid.Column="0" Text="{Binding LineNumber}"
-                                       Foreground="#999" FontFamily="{DynamicResource FontFamily.Mono}"
+                                       Foreground="{DynamicResource Brush.Text.Dim}" FontFamily="{DynamicResource FontFamily.Mono}"
                                        FontSize="{DynamicResource FontSize.Large}"
                                        TextAlignment="Right" Padding="0,1,6,1"
-                                       Background="#F0F0F0"/>
+                                       Background="{DynamicResource Brush.Grid.RowAlt}"/> <!-- [2026-03-12] 替換硬編碼色 #F0F0F0 → Brush.Grid.RowAlt -->
                             <TextBlock Grid.Column="1" Text="{Binding Text}"
                                        FontFamily="{DynamicResource FontFamily.Mono}"
                                        FontSize="{DynamicResource FontSize.Large}"
-                                       Padding="4,1,0,1" Foreground="Black"/>
+                                       Padding="4,1,0,1" Foreground="{DynamicResource Brush.Text.Primary}"/> <!-- [2026-03-12] 替換硬編碼色 Black → Brush.Text.Primary -->
                         </Grid>
                     </DataTemplate>
                 </ListBox.ItemTemplate>
@@ -220,7 +220,7 @@
 
             <!-- [2026-03-11] 空白提示 -->
             <TextBlock Grid.Row="1" Text="{DynamicResource Str.File.NoPreview}"
-                       Foreground="#888" FontSize="{DynamicResource FontSize.XLarge}"
+                       Foreground="{DynamicResource Brush.Text.Dim}" FontSize="{DynamicResource FontSize.XLarge}"
                        HorizontalAlignment="Center" VerticalAlignment="Center"
                        FontWeight="Bold"
                        Visibility="{Binding IsPreviewEmpty, Converter={StaticResource BoolToVis}}"/>

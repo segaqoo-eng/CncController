@@ -25,29 +25,57 @@
                           Padding="10,6">
                     <MenuItem Header="{DynamicResource Str.Header.Exit}"
                               Command="{Binding DataContext.ExitAppCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                              Foreground="#333" FontSize="{DynamicResource FontSize.Large}" Padding="8,4"/>
+                              Foreground="{DynamicResource Brush.Menu.Foreground}" FontSize="{DynamicResource FontSize.Large}" Padding="8,4"/> <!-- [2026-03-12] DynamicResource -->
                 </MenuItem>
                 <MenuItem Header="{DynamicResource Str.Nav.Settings}" Foreground="{DynamicResource Brush.Text.Muted}"
                           Padding="10,6"/>
-                <!-- [2026-03-11] 多語言切換選單 -->
+                <!-- [2026-03-12] 多語言切換選單（IsCheckable + IsChecked 打勾 + 持久化） -->
                 <MenuItem Header="{DynamicResource Str.Header.Language}" Foreground="{DynamicResource Brush.Text.Muted}"
                           Padding="10,6">
                     <MenuItem Header="{DynamicResource Str.Header.LangZhTW}"
+                              IsCheckable="True" IsChecked="{Binding DataContext.IsLangZhTW, RelativeSource={RelativeSource AncestorType=Window}, Mode=OneWay}"
                               Command="{Binding DataContext.SwitchLanguageCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                               CommandParameter="zh-TW"
-                              Foreground="#333" FontSize="{DynamicResource FontSize.Large}" Padding="8,4"/>
+                              Foreground="{DynamicResource Brush.Menu.Foreground}" FontSize="{DynamicResource FontSize.Large}" Padding="8,4"/> <!-- [2026-03-12] DynamicResource -->
                     <MenuItem Header="{DynamicResource Str.Header.LangEnUS}"
+                              IsCheckable="True" IsChecked="{Binding DataContext.IsLangEnUS, RelativeSource={RelativeSource AncestorType=Window}, Mode=OneWay}"
                               Command="{Binding DataContext.SwitchLanguageCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                               CommandParameter="en-US"
-                              Foreground="#333" FontSize="{DynamicResource FontSize.Large}" Padding="8,4"/>
+                              Foreground="{DynamicResource Brush.Menu.Foreground}" FontSize="{DynamicResource FontSize.Large}" Padding="8,4"/> <!-- [2026-03-12] DynamicResource -->
+                </MenuItem>
+                <!-- [2026-03-12] 主題切換選單（IsCheckable + IsChecked 打勾 + 持久化） -->
+                <MenuItem Header="{DynamicResource Str.Header.Theme}" Foreground="{DynamicResource Brush.Text.Muted}"
+                          Padding="10,6">
+                    <MenuItem Header="{DynamicResource Str.Header.ThemeDefault}"
+                              IsCheckable="True" IsChecked="{Binding DataContext.IsThemeDefault, RelativeSource={RelativeSource AncestorType=Window}, Mode=OneWay}"
+                              Command="{Binding DataContext.SwitchThemeCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                              CommandParameter="Default"
+                              Foreground="{DynamicResource Brush.Menu.Foreground}" FontSize="{DynamicResource FontSize.Large}" Padding="8,4"/> <!-- [2026-03-12] DynamicResource -->
+                    <MenuItem Header="{DynamicResource Str.Header.ThemeIndustrial}"
+                              IsCheckable="True" IsChecked="{Binding DataContext.IsThemeIndustrial, RelativeSource={RelativeSource AncestorType=Window}, Mode=OneWay}"
+                              Command="{Binding DataContext.SwitchThemeCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                              CommandParameter="Industrial"
+                              Foreground="{DynamicResource Brush.Menu.Foreground}" FontSize="{DynamicResource FontSize.Large}" Padding="8,4"/> <!-- [2026-03-12] DynamicResource -->
+                    <MenuItem Header="{DynamicResource Str.Header.ThemeCyber}"
+                              IsCheckable="True" IsChecked="{Binding DataContext.IsThemeCyber, RelativeSource={RelativeSource AncestorType=Window}, Mode=OneWay}"
+                              Command="{Binding DataContext.SwitchThemeCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                              CommandParameter="Cyber"
+                              Foreground="{DynamicResource Brush.Menu.Foreground}" FontSize="{DynamicResource FontSize.Large}" Padding="8,4"/> <!-- [2026-03-12] DynamicResource -->
+                </MenuItem>
+                <!-- [2026-03-12] 工具選單：主軸暖機 -->
+                <MenuItem Header="{DynamicResource Str.Header.Tools}" Foreground="{DynamicResource Brush.Text.Muted}"
+                          Padding="10,6">
+                    <MenuItem Header="{DynamicResource Str.Warmup.Title}"
+                              Command="{Binding DataContext.OpenSpindleWarmupCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                              Foreground="{DynamicResource Brush.Menu.Foreground}" FontSize="{DynamicResource FontSize.Large}" Padding="8,4"/>
                 </MenuItem>
             </Menu>
 
             <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
                 <Border Width="18" Height="18" CornerRadius="9" 
                         Background="{Binding SystemStatusBrush}"
-                        BorderBrush="#444" BorderThickness="1"
-                        Margin="0,0,10,0">
+                        BorderBrush="{DynamicResource Brush.Border}" BorderThickness="1"
+                        Margin="0,0,10,0"> <!-- [2026-03-12] DynamicResource -->
                     <Border.Effect>
                         <DropShadowEffect Color="{Binding SystemStatusColor}" 
                                           BlurRadius="10" ShadowDepth="0" Opacity="1.0"/>
@@ -68,7 +96,7 @@
                 <!-- [2026-03-11] RETRY 改用 BaseBtnStyle，移除 inline Background 和自訂 Template -->
                 <Button Content="RETRY" Command="{Binding RetryConnectionCommand}"
                         Visibility="{Binding ShowRetryButton, Converter={StaticResource BoolToVis}}"
-                        Style="{StaticResource BaseBtnStyle}" Foreground="White" FontWeight="Bold"
+                        Style="{StaticResource BaseBtnStyle}" Foreground="{DynamicResource Brush.Text.Primary}" FontWeight="Bold"
                         Padding="12,4" Margin="10,0,0,0" FontSize="{DynamicResource FontSize.Body}"
                         VerticalAlignment="Center" Cursor="Hand"/>
             </StackPanel>
@@ -76,29 +104,31 @@
             <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
 
                 <!-- [2026-03-09] 主軸 / 刀庫 Encoder 即時顯示 -->
-                <Border Background="#1A1A2E" CornerRadius="3" Padding="8,2" Margin="0,0,15,0" VerticalAlignment="Center">
+                <!-- [2026-03-12] Encoder 區塊色彩改用 DynamicResource -->
+                <Border Background="{DynamicResource Brush.Encoder.Background}" CornerRadius="3" Padding="8,2" Margin="0,0,15,0" VerticalAlignment="Center">
                     <StackPanel Orientation="Horizontal">
-                        <TextBlock Foreground="#888" FontSize="{DynamicResource FontSize.Body}" VerticalAlignment="Center">
-                            <Run Text="SPINDLE" FontWeight="Bold" Foreground="#4EC9B0"/>
+                        <TextBlock Foreground="{DynamicResource Brush.Text.Dim}" FontSize="{DynamicResource FontSize.Body}" VerticalAlignment="Center">
+                            <Run Text="SPINDLE" FontWeight="Bold" Foreground="{DynamicResource Brush.Encoder.Spindle}"/>
                         </TextBlock>
                         <TextBlock Text="{Binding Status.SpindlePosition, StringFormat={}{0:F1}°}"
-                                   Foreground="#4EC9B0" FontWeight="Bold" FontFamily="Consolas"
+                                   Foreground="{DynamicResource Brush.Encoder.Spindle}" FontWeight="Bold" FontFamily="Consolas"
                                    FontSize="{DynamicResource FontSize.Body}" VerticalAlignment="Center" Margin="6,0,0,0"/>
-                        <TextBlock Text="|" Foreground="#444" Margin="10,0,10,0" VerticalAlignment="Center"/>
-                        <TextBlock Foreground="#888" FontSize="{DynamicResource FontSize.Body}" VerticalAlignment="Center">
-                            <Run Text="CAROUSEL" FontWeight="Bold" Foreground="#DCDCAA"/>
+                        <TextBlock Text="|" Foreground="{DynamicResource Brush.Text.Hint}" Margin="10,0,10,0" VerticalAlignment="Center"/>
+                        <TextBlock Foreground="{DynamicResource Brush.Text.Dim}" FontSize="{DynamicResource FontSize.Body}" VerticalAlignment="Center">
+                            <Run Text="CAROUSEL" FontWeight="Bold" Foreground="{DynamicResource Brush.Encoder.Carousel}"/>
                         </TextBlock>
                         <TextBlock Text="{Binding Status.CarouselPosition, StringFormat={}{0:F1}°}"
-                                   Foreground="#DCDCAA" FontWeight="Bold" FontFamily="Consolas"
+                                   Foreground="{DynamicResource Brush.Encoder.Carousel}" FontWeight="Bold" FontFamily="Consolas"
                                    FontSize="{DynamicResource FontSize.Body}" VerticalAlignment="Center" Margin="6,0,0,0"/>
                     </StackPanel>
                 </Border>
 
                 <!-- [2026-03-06] 快捷鍵提示 -->
-                <TextBlock Foreground="#888" FontSize="{DynamicResource FontSize.Body}" VerticalAlignment="Center" Margin="0,0,20,0">
-                    <Run Text="ESC" FontWeight="Bold" Foreground="#CCC"/><Run Text="{DynamicResource Str.Header.ShortcutStop}"/>
-                    <Run Text="F1" FontWeight="Bold" Foreground="#CCC"/><Run Text="{DynamicResource Str.Header.ShortcutPower}"/>
-                    <Run Text="F2" FontWeight="Bold" Foreground="#CCC"/><Run Text="{DynamicResource Str.Header.ShortcutEstop}"/>
+                <!-- [2026-03-12] 快捷鍵色彩改用 DynamicResource -->
+                <TextBlock Foreground="{DynamicResource Brush.Text.Dim}" FontSize="{DynamicResource FontSize.Body}" VerticalAlignment="Center" Margin="0,0,20,0">
+                    <Run Text="ESC" FontWeight="Bold" Foreground="{DynamicResource Brush.Text.Secondary}"/><Run Text="{DynamicResource Str.Header.ShortcutStop}"/>
+                    <Run Text="F1" FontWeight="Bold" Foreground="{DynamicResource Brush.Text.Secondary}"/><Run Text="{DynamicResource Str.Header.ShortcutPower}"/>
+                    <Run Text="F2" FontWeight="Bold" Foreground="{DynamicResource Brush.Text.Secondary}"/><Run Text="{DynamicResource Str.Header.ShortcutEstop}"/>
                 </TextBlock>
 
                 <TextBlock Text="{DynamicResource Str.Title}"
@@ -125,7 +155,7 @@
                     </Button.Template>
 
                     <StackPanel Orientation="Horizontal">
-                        <Border Width="32" Height="32" CornerRadius="16" Background="#5E70FF" Margin="0,0,10,0">
+                        <Border Width="32" Height="32" CornerRadius="16" Background="{DynamicResource Brush.Avatar}" Margin="0,0,10,0"> <!-- [2026-03-12] DynamicResource -->
                             <TextBlock Text="{Binding CurrentUser.Username[0]}" 
                                        Foreground="White" FontWeight="Bold" 
                                        HorizontalAlignment="Center" VerticalAlignment="Center" 

@@ -1,68 +1,405 @@
-﻿# CLAUDE.md
+# CLAUDE.md
 
 本檔案提供 Claude Code 在此專案中的開發指引。
-
-
----
-
 See @memory.md for current bugs, progress, and decisions.
+
 ---
 
-## 角色定義
+## 1. Project Overview
 
-你是 **LinuxCNC + EtherCAT 工控專家**，同時精通 WPF/MVVM 前端開發。
+**LinuxCNC EtherCAT CNC Controller** — WPF 前端 + Python Flask 後端，控制 LinuxCNC 機台。
 
-**核心技術棧：**
-- CiA 402 伺服驅動器協議、EtherCAT 拓樸設定
-- LinuxCNC HAL/INI/XML 組件配置、G-code 程式設計
-- WPF + CommunityToolkit.Mvvm（MVVM Source Generator）
-- Python Flask 後端（LinuxCNC NML 整合）
+| 層 | 技術 | 執行環境 |
+|---|---|---|
+| 前端 | WPF (.NET 10) + CommunityToolkit.Mvvm 8.4.0 + HelixToolkit.Wpf 3.1.2 | Windows 觸控工控機 |
+| 後端 | Python 3 Flask + LinuxCNC NML IPC | Ubuntu RT Linux（192.168.0.137:5000） |
+| 通訊 | HTTP REST（500ms 輪詢） | LAN |
+| 驅動 | EtherCAT + CiA 402 伺服 | LinuxCNC HAL |
+
+**核心技術棧：** CiA 402 伺服協議、EtherCAT 拓樸、LinuxCNC HAL/INI/XML、WPF MVVM Source Generator、Python Flask
 
 **語言規則：** 回答一律使用**繁體中文**。
 
 ---
 
-## 程式碼修改規範
+## 2. Directory Structure
 
-每次修改程式碼（前端 & 後端），必須在修改處加上註解：
 ```
-// [YYYY-MM-DD] 說明修改內容
+CncController/                      ← WPF 前端專案根
+├── App.xaml(.cs)                   ← 全域資源/轉換器/啟動
+├── MainWindow.xaml(.cs)            ← 殼層（InputBindings 快捷鍵 ESC/F1/F2）
+├── VersionConfig.cs                ← 版本號常數
+├── Converters/
+│   ├── FileSizeConverter.cs        ← 檔案大小格式化
+│   ├── HexFormatConverter.cs       ← 十六進位顯示
+│   └── StringEqualConverter.cs     ← RadioButton ↔ string 雙向（App.xaml 全域註冊）
+├── Helpers/
+│   ├── BindingProxy.cs             ← DataContext 代理（DataGrid Column 綁定用）
+│   ├── GCodeParser.cs              ← G-Code 刀具號解析（ATC PROGRAM TOOLS）
+│   └── GCodePathParser3D.cs        ← G-Code 3D 路徑解析（G0/G1/G2/G3 → Point3D 線段）
+├── Models/
+│   ├── GCodeLineItem.cs            ← G-Code 逐行模型（LineNumber + IsCurrentLine）
+│   ├── MachineEnums.cs             ← MachineType / AtcType / CarouselControlMode 列舉
+│   ├── MachineModels.cs            ← ~750 行，28+ 類別（MachineConfig/AxisSetting/ToolEntry/ProbeResult/...）
+│   ├── MachineStatus.cs            ← ~200 個 [ObservableProperty]（即時狀態 DTO）
+│   └── UserModels.cs               ← 使用者/權限模型
+├── Services/                       ← 手動 Singleton（Instance 屬性，非 DI）
+│   ├── MachineControlService.cs    ← ~1165 行，HTTP 通訊（70+ 公開方法，4 個 HttpClient）
+│   ├── ConfigurationService.cs     ← ~830 行，INI/HAL/XML/PostGUI/NGC 生成
+│   ├── AlarmService.cs             ← 集中日誌 ≤500 筆 + 跑馬燈 + 每日 log 檔
+│   ├── AppSettings.cs              ← appsettings.json（ServerUrl/Language/Theme）
+│   ├── AuthService.cs              ← 4 級角色權限 + SHA-256 密碼
+│   ├── HardwareScanService.cs      ← EtherCAT 掃描結果快取
+│   ├── LocalizationService.cs      ← 多語言切換（ResourceDictionary）
+│   └── ThemeService.cs             ← 主題切換（3 主題 + 持久化）
+├── ViewModels/                     ← 22 個 ViewModel
+│   ├── MainViewModel.cs            ← ~1330 行，根 VM（輪詢/導航/JOG/電源/急停/統計/斷電續切）
+│   ├── SettingsViewModel.cs        ← 設定頁協調（聚合 6+ 子 VM）
+│   ├── MonitorViewModel.cs         ← ~420 行（G-Code 載入/MDI/3D 路徑/檔案管理）
+│   ├── HistoryViewModel.cs         ← ~112 行（LOG/STATS 雙 Tab + 報警統計）
+│   ├── OffsetsViewModel.cs         ← G54-G59 座標系管理
+│   ├── ToolTableViewModel.cs       ← 刀具表 CRUD + 刀具壽命
+│   ├── AtcViewModel.cs             ← ATC 自動刀庫（MANUAL + AUTOMATIC）
+│   ├── ProbingViewModel.cs         ← ~650 行（27+ 探測命令 + Tool Setter）
+│   ├── MacroVariablesViewModel.cs  ← 巨集變數監控
+│   ├── MaintenanceViewModel.cs     ← ~102 行（維護保養 CRUD）
+│   ├── BackupViewModel.cs          ← 備份/還原
+│   ├── SpindleWarmupViewModel.cs   ← 主軸暖機
+│   ├── FileManagerViewModel.cs     ← 程式檔案管理
+│   ├── AxisMappingViewModel.cs     ← 軸-Slave 對應
+│   ├── AxisParameterViewModel.cs   ← 軸運動/機械參數
+│   ├── IoMonitorViewModel.cs       ← 即時 IO + CiA 402 狀態
+│   ├── HardwareDiscoveryViewModel.cs ← EtherCAT 掃描 UI
+│   ├── MachineConfigViewModel.cs   ← 機台設定 IO MAP
+│   ├── AtcBasicSettingsViewModel.cs ← ATC 基本設定
+│   ├── AtcAxisSettingsViewModel.cs  ← ATC 軸設定
+│   ├── AtcIoSettingsViewModel.cs    ← ATC IO 設定
+│   └── SpindleSettingsViewModel.cs  ← 主軸設定
+├── Views/
+│   ├── MainView.xaml               ← 主頁面（DRO + Dashboard + 內容區）
+│   ├── CachedContentControl.cs     ← 分頁快取（消除切換延遲）
+│   ├── Layouts/
+│   │   ├── HeaderBar.xaml          ← 頂部狀態列 + 選單（Tools/Theme/Language/Exit）
+│   │   ├── DashboardPanel.xaml     ← 底部 5 欄（D_1~D_5）
+│   │   └── JogPanel.xaml           ← 右側 JOG 面板 + MAN/AUTO/MDI 按鈕
+│   ├── Components/
+│   │   ├── DroDisplay.xaml         ← DRO 5 欄（ZERO/G5X WORK/MACHINE/DTG/REF）
+│   │   ├── CycleControl.xaml       ← D_1: CYCLE START/HOLD/STOP + 電源/急停 + 統計
+│   │   ├── SliderControl.xaml      ← D_4: V/F/S/R Override Slider + Spindle Load
+│   │   ├── JogConfig.xaml          ← D_5: JOG 速度/步距 + 主軸 FWD/REV/STOP
+│   │   ├── ToolInfo.xaml           ← D_2: 即時刀具資訊 + GO TO ZERO/G30
+│   │   ├── AxisMappingView.xaml    ← 設定: 軸指派
+│   │   └── MachineConfigView.xaml  ← 設定: IO MAP
+│   ├── Controls/
+│   │   ├── CarouselControl.xaml    ← ATC 轉盤視覺化
+│   │   ├── SpindleToolControl.xaml ← ATC 主軸刀具顯示
+│   │   └── ToolDisplayControl.xaml ← ATC 刀具圖示
+│   ├── Pages/                      ← 主要頁面（12 個）
+│   │   ├── MonitorView.xaml        ← G-Code 編輯器 + 3D HelixViewport3D
+│   │   ├── SettingsView.xaml       ← ~805 行，設定 TabControl（SCAN/MAPPING/AXIS/IO/IN MAP/OUT MAP/SPINDLE/ATC/MACRO VAR/BACKUP/MAINTENANCE）
+│   │   ├── HistoryView.xaml        ← LOG/STATS 雙分頁
+│   │   ├── OffsetsView.xaml        ← G54-G59 表格 + 右欄即時座標
+│   │   ├── ToolTableView.xaml      ← 刀具表 + TOOL LIFE 雙 Tab
+│   │   ├── AtcView.xaml            ← ATC 三欄（MANUAL/中央視覺/AUTOMATIC）
+│   │   ├── ProbingView.xaml        ← 探測 8 分頁（Outside/Inside/Boss/Ridge/Angle/Calibrate/Help/ToolSetter）
+│   │   ├── FileManagerView.xaml    ← 程式檔案列表
+│   │   ├── MacroVariablesView.xaml ← 巨集變數二欄 DataGrid
+│   │   └── Atc*SettingsView.xaml   ← ATC 設定三分頁
+│   └── Windows/
+│       ├── LoginWindow.xaml        ← 登入對話框
+│       └── SpindleWarmupWindow.xaml ← 暖機 Modal
+├── Resources/
+│   ├── Languages/
+│   │   ├── Lang.zh-TW.xaml         ← ~389 個 i18n key（繁中）
+│   │   └── Lang.en-US.xaml         ← ~389 個 i18n key（英文）
+│   └── Themes/
+│       ├── Theme.Dark.xaml          ← 全域 Style（BaseBtnStyle/BaseRadioBtnStyle/NavBtnStyle/...）+ 55+ Brush token
+│       ├── Theme.Industrial.xaml    ← 湖水綠主題
+│       └── Theme.Cyber.xaml         ← 螢光青主題
+└── Images/                         ← 背景圖（ATC_Back/TOOL_BACK/Porbing_BACK/SGCAM_logo/...）
+
+Server/                             ← Python 後端
+├── server.py                       ← ~3200 行，53 Flask 路由 + 33 內部函式 + 5 背景執行緒
+├── guardian.py                     ← 進程守護（Exit Code 42 = API 觸發重啟）
+└── smart_scan.py                   ← EtherCAT 掃描 → frontend_topology.json
+
+SGCAM_PB/                           ← 參考用 ProbotBuild 原始碼（唯讀）
+AIrefPic/                           ← UI 參考圖片（使用者提到參考圖必查此處）
 ```
 
 ---
 
-## UI 樣式規範（必須遵守）
+## 3. Key Classes & Locations
 
-### 分頁選取色
-- **子分頁 / Tab 選取**：統一使用 `BaseRadioBtnStyle`（繼承即可），選取色為 **#5E70FF 藍紫漸層**（#7A8AFF→#5E70FF→#4A5CE0）
-- **按鈕 toggle（開關狀態）**：使用 `Brush.Checked`（#007ACC 藍），如 SINGLE BLOCK / FLOOD / MIST 等
+### ViewModels（22 個）
+
+| ViewModel | 檔案 | 行數 | DataContext 綁定 |
+|-----------|------|------|-----------------|
+| MainViewModel | ViewModels/MainViewModel.cs | ~1330 | MainView.xaml（根 VM） |
+| MonitorViewModel | ViewModels/MonitorViewModel.cs | ~420 | MonitorView.xaml |
+| ProbingViewModel | ViewModels/ProbingViewModel.cs | ~650 | ProbingView.xaml |
+| SettingsViewModel | ViewModels/SettingsViewModel.cs | — | SettingsView.xaml（聚合 6+ 子 VM） |
+| HistoryViewModel | ViewModels/HistoryViewModel.cs | ~112 | HistoryView.xaml |
+| OffsetsViewModel | ViewModels/OffsetsViewModel.cs | — | OffsetsView.xaml |
+| ToolTableViewModel | ViewModels/ToolTableViewModel.cs | — | ToolTableView.xaml |
+| AtcViewModel | ViewModels/AtcViewModel.cs | — | AtcView.xaml |
+| MaintenanceViewModel | ViewModels/MaintenanceViewModel.cs | ~102 | SettingsView MAINTENANCE Tab |
+| BackupViewModel | ViewModels/BackupViewModel.cs | — | SettingsView BACKUP Tab |
+| MacroVariablesViewModel | ViewModels/MacroVariablesViewModel.cs | — | MacroVariablesView.xaml |
+| FileManagerViewModel | ViewModels/FileManagerViewModel.cs | — | FileManagerView.xaml |
+| SpindleWarmupViewModel | ViewModels/SpindleWarmupViewModel.cs | — | SpindleWarmupWindow.xaml |
+
+### Services（8 個，手動 Singleton）
+
+| Service | 說明 | HttpClient Timeout |
+|---------|------|--------------------|
+| MachineControlService | HTTP 通訊（70+ 方法） | polling 3s / estop 2s / atc 60s / probe 120s |
+| ConfigurationService | INI/HAL/XML/PostGUI/NGC 生成 | config 10s / upload 20s |
+| AlarmService | 集中日誌 ≤500 筆 + 跑馬燈 + 每日 log | — |
+| AppSettings | appsettings.json（ServerUrl/Language/Theme） | — |
+| AuthService | 4 級角色權限 + SHA-256 | — |
+| HardwareScanService | EtherCAT 掃描快取 | — |
+| LocalizationService | 多語言 ResourceDictionary | — |
+| ThemeService | 主題切換（3 主題） | — |
+
+### Models
+
+| 類別 | 檔案 | 說明 |
+|------|------|------|
+| MachineConfig | MachineModels.cs | 機台完整設定（axes/IO/type/ATC） |
+| AxisSetting | MachineModels.cs | 單軸（EtherCAT mapping + 運動參數） |
+| MachineStatus | MachineStatus.cs | ~200 個 Observable 屬性（UI 自動綁定） |
+| MachineStatusData | MachineModels.cs | /v2/status JSON DTO |
+| ToolEntry | MachineModels.cs | 刀具表（ObservableObject） |
+| ProbeResult / ProbeParameters | MachineModels.cs | 探測結果/參數 |
+| ToolLifeEntry / ToolLifeRaw | MachineModels.cs | 刀具壽命 |
+| MachiningStats | MachineModels.cs | 加工統計 DTO |
+| MaintenanceItem | MachineModels.cs | 維護保養（ObservableObject） |
+| ResumeState | MachineModels.cs | 斷電續切狀態 |
+| BackupInfo | MachineModels.cs | 備份資訊 |
+| SpindleWarmupConfig / WarmupStep | MachineModels.cs | 暖機設定 |
+| AlarmStatItem | HistoryViewModel.cs | 報警統計（巢狀類別） |
+| GCodeLineItem | GCodeLineItem.cs | G-Code 行（LineNumber + IsCurrentLine） |
+
+### 後端 server.py 關鍵結構
+
+| 區塊 | 行號 | 說明 |
+|------|------|------|
+| Flask routes (53 個) | 全檔 | REST API（見下方 API 端點表） |
+| _probe_* (9 個) | 1253-1750 | 探測內部函式（edge/corner/center/boss/angle/calibrate） |
+| error_sniffer_loop | 321 | 背景：監聽 LinuxCNC 錯誤 |
+| read_servo_raw_data | 347 | 背景：讀取 EtherCAT Servo IO |
+| _machining_stats_tracker | ~2938 | 背景：加工時間統計（1s 輪詢 RUNNING） |
+| _maintenance_tracker | ~3032 | 背景：維護運轉時數（5s 輪詢） |
+| _resume_state_tracker | ~3114 | 背景：斷電續切存檔（5s） |
+
+---
+
+## 4. Architecture & Data Flow
+
+```
+┌─────────────────────────────────────────────────────────┐
+│  WPF 前端（Windows 工控觸控機）                            │
+│                                                          │
+│  MainViewModel (Root)                                    │
+│    ├─ MonitorVM（G-Code/MDI/3D 預覽/檔案管理）            │
+│    ├─ HistoryVM（LOG/STATS）                             │
+│    ├─ OffsetsVM（G54-G59）                               │
+│    ├─ ToolTableVM（刀具表 + 壽命）                        │
+│    ├─ AtcVM（手動/自動刀庫）                              │
+│    ├─ ProbingVM（27 種探測 + Tool Setter）                │
+│    ├─ MacroVariablesVM（#變數讀寫）                       │
+│    ├─ FileManagerVM（程式檔案）                           │
+│    └─ SettingsVM → 聚合子 VM：                           │
+│         HardwareDiscovery / AxisMapping / AxisParameter  │
+│         IoMonitor / MachineConfig / SpindleSettings      │
+│         AtcBasic/Axis/IoSettings / MacroVariables        │
+│         Backup / Maintenance                             │
+│                                                          │
+│  Services（手動 Singleton，非 DI）                        │
+│    ├─ MachineControlService  ← 4 個 HttpClient           │
+│    ├─ ConfigurationService   ← INI/HAL/XML/NGC 生成      │
+│    ├─ AlarmService / AuthService / AppSettings            │
+│    ├─ HardwareScanService / LocalizationService          │
+│    └─ ThemeService                                       │
+└──────────────────────┬───────────────────────────────────┘
+                       │ HTTP REST (500ms 輪詢)
+                       ▼
+┌─────────────────────────────────────────────────────────┐
+│  Flask 後端（LinuxCNC 機台）                               │
+│  53 API routes + 5 背景 daemon threads                   │
+│  9 個 JSON 持久化檔案                                     │
+│  LinuxCNC NML 進程間通訊                                  │
+└─────────────────────────────────────────────────────────┘
+```
+
+**核心資料流（500ms 輪詢）：**
+```
+DispatcherTimer (500ms)
+  → MachineControlService.GetStatusAsync()
+  → GET /v2/status
+  → MainViewModel.UpdateMachineData(MachineStatusData)
+  → MachineStatus : ObservableObject（~200 屬性）
+  → UI Binding 自動刷新
+```
+
+**設定部署流程：**
+```
+硬體掃描 → 軸指派 → 軸參數 → IO 設定
+  → ConfigurationService 生成 INI/HAL/XML/PostGUI/NGC
+  → HTTP POST /api/config/update → 後端寫入檔案
+  → POST /api/machine/restart → 後端重啟 LinuxCNC
+  → 前端輪詢確認重啟完成
+```
+
+**後端 JSON 持久化（9 檔）：**
+`machining_stats.json` / `maintenance.json` / `resume_state.json` / `tool_life.json` / `probe_settings.json` / `MachineConfig.json` / `passwords.json` / `appsettings.json` / `frontend_topology.json`
+
+---
+
+## 5. 後端 API 端點（53 路由）
+
+### 核心控制
+
+| 方法 | 路由 | 功能 |
+|------|------|------|
+| GET | `/v2/status` | 即時狀態（Position/Task_State/Servo_IO/Active_WCS/Homed/Probe_Input/Program_Total_Lines） |
+| GET | `/v2/errors` | 錯誤快取 ≤20 筆 |
+| GET | `/v2/offsets` | G54-G59 偏移值 |
+| POST | `/v2/motion/jog` | JOG 手動移動 |
+| POST | `/v2/program/run` | 執行 G-Code（支援 start_line 參數） |
+| POST | `/v2/program/pause` | Feed Hold |
+| POST | `/v2/program/resume` | 繼續 |
+| POST | `/v2/program/stop` | abort 全停 |
+| POST | `/v2/program/step` | 單節執行 |
+| POST | `/v2/machine/reset` | ESTOP 解除 / ON-OFF |
+| POST | `/v2/machine/estop` | 緊急停止 |
+| POST | `/v2/machine/home` | 原點復歸（-1=全軸, 0~5=單軸） |
+| POST | `/v2/machine/mode` | MAN/AUTO/MDI 切換 |
+| POST | `/v2/mdi` | MDI 指令 |
+| POST | `/v2/override/feed` | Feed Override |
+| POST | `/v2/override/spindle` | Spindle Override |
+| POST | `/v2/program/block_delete` | Block Delete 開關 |
+| POST | `/v2/program/optional_stop` | Optional Stop (M01) |
+
+### 刀具 & 探測
+
+| 方法 | 路由 | 功能 |
+|------|------|------|
+| GET | `/v2/tool/table` | 讀取刀具表 |
+| POST | `/v2/tool/save` | 寫入刀具表 |
+| GET | `/v2/tool/life` | 刀具壽命 |
+| POST | `/v2/tool/life/config` | 壽命設定 |
+| POST | `/v2/tool/life/reset` | 壽命歸零 |
+| POST | `/v2/probe/run` | 探測循環（9 種類型） |
+| POST | `/v2/hal/setp` | HAL 訊號設定 |
+| GET | `/v2/atc/status` | ATC 感測器狀態 |
+
+### 巨集變數
+
+| 方法 | 路由 | 功能 |
+|------|------|------|
+| POST | `/v2/macro/read` | 讀取指定 #id |
+| POST | `/v2/macro/write` | MDI 安全寫入 |
+| POST | `/v2/macro/readall` | 範圍讀取 |
+
+### 統計 & 維護 & 斷電續切
+
+| 方法 | 路由 | 功能 |
+|------|------|------|
+| GET | `/v2/machining/stats` | 加工統計 |
+| POST | `/v2/machining/stats/reset` | 重置統計 |
+| GET | `/v2/maintenance` | 維護保養項目 |
+| POST | `/v2/maintenance` | 儲存維護項目 |
+| POST | `/v2/maintenance/reset` | 歸零項目時數 |
+| GET | `/v2/resume/state` | 斷電續切狀態 |
+| POST | `/v2/resume/clear` | 清除續切狀態 |
+
+### 備份 & 設定 & 檔案
+
+| 方法 | 路由 | 功能 |
+|------|------|------|
+| POST | `/v2/backup/create` | 建立備份 |
+| GET | `/v2/backup/list` | 備份清單 |
+| POST | `/v2/backup/restore` | 還原備份 |
+| POST | `/v2/backup/delete` | 刪除備份 |
+| POST | `/api/config/update` | 更新 INI/HAL/XML/NGC |
+| POST | `/api/machine/restart` | 重啟 LinuxCNC |
+| POST | `/api/files/upload` | 上傳 G-Code |
+| GET/POST | `/api/ethercat/scan` | EtherCAT 掃描 |
+| GET | `/v2/program/list` | 程式檔案清單 |
+| GET | `/v2/program/read` | 讀取程式內容 |
+| POST | `/v2/program/delete` | 刪除程式 |
+| POST | `/v2/program/rename` | 重命名程式 |
+| POST | `/v2/program/load` | 載入程式到 LinuxCNC |
+
+---
+
+## 6. High-Risk Areas
+
+### 最高風險檔案
+
+| 檔案 | 行數 | 風險原因 |
+|------|------|---------|
+| **server.py** | ~3200 | 單體 Flask，53 路由 + 5 背景執行緒 + NML 連線，修改易產生副作用 |
+| **MainViewModel.cs** | ~1330 | 根 VM，500ms 輪詢 + JOG + 電源/急停 + 導航 + 統計，觸及面最廣 |
+| **MachineControlService.cs** | ~1165 | 70+ 公開方法 + 4 個 HttpClient timeout 設定，API 變更必須前後端同步 |
+| **ConfigurationService.cs** | ~830 | INI/HAL/XML/NGC 生成，寫錯 = 機台無法啟動 |
+| **MachineModels.cs** | ~750 | 28+ 類別共用，修改一個影響多處 |
+| **ProbingViewModel.cs** | ~650 | 27+ 探測命令，參數傳遞鏈長（VM → Service → 後端 → G38.2） |
+
+### 高風險操作
+
+| 操作 | 風險 | 防護 |
+|------|------|------|
+| 急停 / abort | 機台立即停止 | `_estopClient` 獨立 2s timeout + 樂觀更新 |
+| JOG 連續移動 | 超行程/碰撞 | VM `CanExecuteMotion()` + Service `ValidateAction()` 雙重守衛 |
+| 設定部署 | 寫錯 INI/HAL = 機台無法啟動 | 部署前生成完整檔案 → 上傳 → 重啟 → 輪詢確認 |
+| G10 寫入 WCS | 座標偏移錯誤 | 後端 `wait_complete()` 等待 MDI 完成 + 前端 300ms 延遲再讀 |
+| 斷電續切 | 從錯誤行恢復 = 撞刀 | 彈窗確認 + 可取消 |
+
+---
+
+## 7. 程式碼修改規範（必須遵守）
+
+### 日期註解
+每次修改程式碼（前端 & 後端），必須在修改處加上：
+```
+// [YYYY-MM-DD] 說明修改內容
+```
+
+### UI 樣式規範
+
+#### 分頁選取色
+- **子分頁 / Tab 選取**：統一使用 `BaseRadioBtnStyle`（繼承即可），選取色 **#5E70FF 藍紫漸層**（#7A8AFF→#5E70FF→#4A5CE0）
+- **按鈕 toggle**：使用 `Brush.Checked`（#007ACC 藍），如 SINGLE BLOCK / FLOOD / MIST
 - **主導航列**：使用 `NavBtnStyle`（已繼承 BaseRadioBtnStyle）
-- **禁止**在新分頁中自訂選取色，一律繼承全域 Style
+- **禁止**在新分頁中自訂選取色
 
-### 區塊標頭
-- **大區塊標題**（如面板標題）：外層 `<Border Style="{StaticResource PanelTitleBorder}">`，內層 `<TextBlock Style="{StaticResource PanelTitleText}"/>`，背景色 = `Brush.PanelTitle.Background`（#1A5276 深藍）
-- **群組標題**（如 GroupBox header、設定分類標題）：使用 `<TextBlock Style="{StaticResource GroupHeaderText}"/>`，前景色 = `Brush.GroupHeader.Foreground`（#5E70FF 藍紫）
-- **禁止**在新元件中 inline 寫死標頭背景色（#444 / #1A5276 / #252526 等）
+#### 區塊標頭
+- **面板標題**：`<Border Style="{StaticResource PanelTitleBorder}">` + `<TextBlock Style="{StaticResource PanelTitleText}"/>`
+- **群組標題**：`<TextBlock Style="{StaticResource GroupHeaderText}"/>`
+- **禁止** inline 寫死標頭背景色
 
-### 按鈕樣式
-- **一般按鈕**：一律繼承 `BaseBtnStyle`（深灰漸層 #5E5E5E→#3A3A3E→#2A2A2E）
-- **禁止** inline 設定任何 `Background="#xxx"` 色碼（一律由 Style 繼承鏈控制）
-- **唯一例外**：狀態指示按鈕（標有 `<!-- KEEP: status -->` 註解），這些按鈕的動態色彩透過 DataTrigger 控制，不可移除
+#### 按鈕樣式
+- 一律繼承 `BaseBtnStyle`（深灰漸層 #5E5E5E→#3A3A3E→#2A2A2E）
+- **禁止** inline `Background="#xxx"`
+- **唯一例外**：`<!-- KEEP: status -->` 標記的狀態按鈕（DataTrigger 動態色彩）
 
-### 按鈕 Style 繼承鏈
+#### 按鈕 Style 繼承鏈
 ```
 BaseBtnStyle (Theme.Dark.xaml 全域)
-├── AtcBtnStyle (AtcView 本地) → PanelBtnStyle (AtcView 本地)
+├── AtcBtnStyle → PanelBtnStyle (AtcView 本地)
 ├── CycleBtnStyle (CycleControl 本地)
-├── ToolBtnStyle (ToolTableView 本地) → PanelBtnStyle (ToolTableView 本地)
+├── ToolBtnStyle → PanelBtnStyle (ToolTableView 本地)
 ├── OffsetBtnStyle (Theme.Dark.xaml 全域) → WcsBtnStyle (OffsetsView 本地)
-├── JogArrowBtn (JogPanel 本地) → JogRotaryBtn (JogPanel 本地)
+├── JogArrowBtn → JogRotaryBtn (JogPanel 本地)
 └── 直接使用：DRO ZERO/REF、Settings SCAN/UPDATE、Monitor SEND、HeaderBar RETRY、Probing SIM
 ```
 
-### KEEP: status 按鈕例外清單
-| 按鈕 | 檔案 | DataTrigger 色彩邏輯 |
-|------|------|---------------------|
+#### KEEP: status 按鈕例外清單
+| 按鈕 | 檔案 | DataTrigger 色彩 |
+|------|------|-----------------|
 | CYCLE START | CycleControl | InterpState=RUNNING → 綠 |
 | FEED HOLD | CycleControl | InterpState=PAUSED → 橘 |
 | STOP | CycleControl | IsPressed → 紅 |
@@ -74,15 +411,55 @@ BaseBtnStyle (Theme.Dark.xaml 全域)
 | 夾刀 / 鬆刀 | AtcView | IsDrawbarOn=True/False → 藍 |
 
 ### 多語言（i18n）— 強制規則
-- **所有新增的 UI 顯示文字**（Content / Text / Header / ToolTip）**必須**使用 `{DynamicResource Str.xxx}` 綁定
-- 對應的 key-value **必須同步新增**至 `Resources/Languages/Lang.zh-TW.xaml`
-- **禁止**在 XAML 中硬編碼中文或任何可翻譯文字
-- Key 命名規範：`Str.Nav.*`（導航）/ `Str.Btn.*`（按鈕）/ `Str.Label.*`（標籤）/ `Str.Atc.*` / `Str.Probe.*` / `Str.Setting.*` / `Str.Tool.*` / `Str.Offset.*` / `Str.Header.*`
-- 英文技術用語（如 MDI / G54 / M6 G43 / X+ / SPINDLE RPM）可保持 inline 不需 i18n
+- **所有新增 UI 文字**必須 `{DynamicResource Str.xxx}`
+- 同步新增至 `Lang.zh-TW.xaml` **和** `Lang.en-US.xaml`
+- **禁止** XAML 硬編碼中文
+- Key 命名：`Str.Nav.*` / `Str.Btn.*` / `Str.Label.*` / `Str.Atc.*` / `Str.Probe.*` / `Str.Setting.*` / `Str.Tool.*` / `Str.Offset.*` / `Str.Header.*` / `Str.History.*` / `Str.Maint.*` / `Str.Macro.*` / `Str.Warmup.*` / `Str.Backup.*`
+- 英文技術用語（MDI / G54 / M6 G43 / X+ / SPINDLE RPM）可保持 inline
 
 ---
 
-## Build & Run
+## 8. 專案特定規則
+
+- `DiscoveredSlave` 的 `Index`、`VendorId`、`ProductCode` **一律顯示原始整數值，禁止轉十六進位**
+- MVVM：ViewModel 用 `[ObservableProperty]` / `[RelayCommand]`，View Code-behind 最小化
+- Service 用手動 Singleton（`Instance` 屬性），非 DI Container
+- 後端 URL 統一從 `AppSettings.Instance.ServerUrl` 取得
+- RadioButton Tab 切換一律用 `StringEqualConverter`（App.xaml 全域註冊）+ `DataTrigger Visibility`
+
+---
+
+## 9. Common Modification Patterns
+
+### 新增一個主頁面
+1. `ViewModels/` 新增 `XxxViewModel.cs`（繼承 `ObservableObject`）
+2. `Views/Pages/` 新增 `XxxView.xaml`（`d:DataContext` 綁定 VM）
+3. `MainViewModel.cs` 新增 VM 屬性 + `Navigate()` case
+4. `MainView.xaml` 新增 `<RadioButton>` 導航 + `CachedContentControl` 內容
+5. `Lang.zh-TW.xaml` + `Lang.en-US.xaml` 新增 `Str.Nav.Xxx`
+
+### 新增一個設定子 Tab
+1. `ViewModels/` 新增 `XxxViewModel.cs`
+2. `SettingsViewModel.cs` 新增 `public XxxViewModel XxxVM { get; } = new();`
+3. `SettingsView.xaml` 的 `<TabControl>` 新增 `<TabItem>`
+4. i18n 新增 `Str.Setting.Xxx`
+
+### 新增後端 API 端點
+1. `server.py` 新增 `@app.route()` + 處理函式
+2. `MachineControlService.cs` 新增 `XxxAsync()` 方法
+3. `MachineModels.cs` 新增 DTO 類別（如需）
+4. ViewModel 呼叫 Service 方法
+5. 更新此 CLAUDE.md API 端點表
+
+### 新增探測類型
+1. `server.py` 新增 `_probe_xxx()` 內部函式 + route mapping
+2. `ProbingViewModel.cs` 新增 `[RelayCommand]` + 按鈕
+3. `ProbingView.xaml` 新增分頁內容
+4. `ProbeResult` / `ProbeParameters` 視需要擴展
+
+---
+
+## 10. Build & Run
 
 ```bash
 # 前端（WPF，需 .NET 10 SDK + Windows）
@@ -90,135 +467,25 @@ dotnet build CncController/CncController.csproj
 dotnet run --project CncController/CncController.csproj
 
 # 後端（LinuxCNC 機台 Ubuntu RT）
-python3 guardian.py   # 正式環境（帶守護）
-python3 server.py     # 除錯用
+python3 guardian.py   # 正式（帶守護，Exit Code 42 = API 觸發重啟）
+python3 server.py     # 除錯用（直接執行）
 ```
+
+**NuGet 套件：**
+- `CommunityToolkit.Mvvm` 8.4.0 — MVVM Source Generator
+- `HelixToolkit.Wpf` 3.1.2 — 3D 視覺化
+- `Microsoft.Xaml.Behaviors.Wpf` 1.1.135 — XAML Behavior/Trigger
 
 ---
 
-## 架構概覽
-
-```
-┌─────────────────────────────────────────────────────┐
-│  WPF 前端（Windows）                                  │
-│  MainViewModel (Root)                                │
-│    ├─ SettingsViewModel（6 子 Tab VM）                │
-│    ├─ MonitorViewModel（G-Code 載入/預覽/MDI）        │
-│    ├─ HistoryViewModel（操作歷史/日誌過濾）            │
-│    └─ OffsetsViewModel（G54-G59 工件座標系）           │
-│                                                      │
-│  Services（手動 Singleton，非 DI）                    │
-│    ├─ MachineControlService  ← HTTP 通訊             │
-│    ├─ ConfigurationService   ← INI/HAL/XML 生成      │
-│    ├─ HardwareScanService    ← EtherCAT 掃描         │
-│    ├─ AlarmService           ← 集中式日誌/警報        │
-│    ├─ AuthService            ← 角色權限（4 級）       │
-│    ├─ LocalizationService    ← 多語言（zh-TW）        │
-│    └─ AppSettings            ← 外部化設定             │
-└──────────────────────┬──────────────────────────────┘
-                       │ HTTP (500ms 輪詢)
-                       ▼
-┌─────────────────────────────────────────────────────┐
-│  Flask 後端（LinuxCNC 機台，192.168.0.137:5000）      │
-│  server.py + guardian.py + smart_scan.py              │
-│  LinuxCNC NML 進程間通訊                              │
-└─────────────────────────────────────────────────────┘
-```
-
-**核心資料流：**
-```
-DispatcherTimer (500ms) → MachineControlService.GetStatusAsync()
-  → GET /v2/status → 更新 MainViewModel.Status (MachineStatus : ObservableObject)
-  → UI Binding 自動刷新
-```
-
-**設定工作流程：**
-硬體掃描 → 軸指派 → 軸參數 → IO 設定 → 儲存 → ConfigurationService 生成 INI/HAL/XML → 上傳 → 後端重啟
-
----
-
-## 專案特定規則
-
-- `DiscoveredSlave` 的 `Index`、`VendorId`、`ProductCode` **一律顯示原始整數值，禁止轉換為十六進位**
-- MVVM 模式：ViewModel 用 `[ObservableProperty]` / `[RelayCommand]`，View Code-behind 最小化
-- Service 用手動 Singleton（`Instance` 屬性），非 DI Container
-- 後端 URL 統一從 `AppSettings.Instance.ServerUrl` 取得
-
----
-
-## 重要檔案速查
-
-### 前端（CncController/）
-
-| 類別 | 檔案 | 說明 |
-|------|------|------|
-| **Service** | `Services/MachineControlService.cs` | HTTP 通訊、狀態輪詢、所有機台命令 |
-| **Service** | `Services/ConfigurationService.cs` | 機台設定 CRUD、生成 INI/HAL/XML/PostGUI HAL |
-| **Service** | `Services/AppSettings.cs` | 外部化設定（`appsettings.json`：`ServerUrl` 等） |
-| **Service** | `Services/AlarmService.cs` | 集中日誌（≤500 筆）+ 跑馬燈 + 每日 log 檔 |
-| **ViewModel** | `ViewModels/MainViewModel.cs` | 根 VM、輪詢、導航、電源/急停、硬體自動驗證 |
-| **ViewModel** | `ViewModels/SettingsViewModel.cs` | 設定頁協調、聚合 6 子 VM、`GenerateAndDeploy` |
-| **ViewModel** | `ViewModels/MonitorViewModel.cs` | G-Code 載入/上傳/預覽、MDI 送出 |
-| **ViewModel** | `ViewModels/OffsetsViewModel.cs` | G54–G59 座標系管理 |
-| **ViewModel** | `ViewModels/HistoryViewModel.cs` | 操作歷史、五級過濾 |
-| **ViewModel** | `ViewModels/AxisMappingViewModel.cs` | 軸與 EtherCAT Slave 對應 |
-| **ViewModel** | `ViewModels/AxisParameterViewModel.cs` | 軸機械/運動/原點復歸參數 |
-| **ViewModel** | `ViewModels/IoMonitorViewModel.cs` | 即時 IO 監控、CiA 402 狀態解析 |
-| **ViewModel** | `ViewModels/ToolTableViewModel.cs` | 刀具表 CRUD、LOAD/UNLOAD/M6G43/TOUCH OFF |
-| **ViewModel** | `ViewModels/AtcViewModel.cs` | ATC 自動刀庫（MANUAL ATC + ATC AUTOMATIC） |
-| **ViewModel** | `ViewModels/ProbingViewModel.cs` | 探測循環（Outside Corners 9 宮格 + 參數/結果） |
-| **Model** | `Models/MachineModels.cs` | MachineConfig、AxisSetting、DiscoveredSlave 等 |
-| **Model** | `Models/MachineStatus.cs` | 機台即時狀態（Observable） |
-| **Model** | `Models/GCodeLineItem.cs` | G-Code 逐行模型（行號 + 高亮標記） |
-| **Helper** | `Helpers/GCodeParser.cs` | G-Code 刀具號解析器（ATC PROGRAM TOOLS） |
-| **Resource** | `Resources/Languages/Lang.zh-TW.xaml` | 全 UI 文字（繁體中文） |
-| **Resource** | `Resources/Themes/Theme.Dark.xaml` | 深色主題 |
-
-### 後端（Server/）
-
-| 檔案 | 說明 |
-|------|------|
-| `server.py` | Flask REST API + LinuxCNC NML 整合 |
-| `guardian.py` | 進程守護（Exit Code 42 = API 重啟） |
-| `smart_scan.py` | EtherCAT 掃描 → `frontend_topology.json` |
-
----
-
-## 後端 API 端點
-
-| 方法 | 路由 | 功能 |
-|------|------|------|
-| GET | `/v2/status` | 機台即時狀態（含 Position、Task_State、Servo_IO、Active_WCS、Homed） |
-| GET | `/v2/errors` | 錯誤快取（≤20 筆） |
-| GET | `/v2/offsets` | G54–G59 工件座標偏移值 |
-| POST | `/v2/motion/jog` | JOG 手動移動（axis, speed, dist） |
-| POST | `/v2/program/run` | 執行 G-Code |
-| POST | `/v2/program/pause` | 暫停 |
-| POST | `/v2/program/resume` | 繼續 |
-| POST | `/v2/program/stop` | 停止 |
-| POST | `/v2/machine/reset` | ESTOP 解除 / ON-OFF 切換 |
-| POST | `/v2/machine/estop` | 緊急停止 |
-| POST | `/v2/machine/home` | 原點復歸（-1=全軸, 0~5=單軸） |
-| POST | `/api/machine/restart` | 完全重啟 LinuxCNC |
-| GET/POST | `/api/ethercat/scan` | 掃描 EtherCAT 拓撲 |
-| POST | `/api/config/update` | 更新 INI/HAL/XML 設定檔 |
-| POST | `/api/files/upload` | 上傳 G-Code 檔案 |
-| GET | `/v2/tool/table` | 讀取刀具表（cnc_stat.tool_table + tool.tbl 註解） |
-| POST | `/v2/tool/save` | 寫入刀具表（tool.tbl + load_tool_table()） |
-| POST | `/v2/probe/run` | 探測循環（edge/outside_corner/center + G38.2） |
-| POST | `/v2/program/block_delete` | 切換 Block Delete 開關 |
-| POST | `/v2/program/optional_stop` | 切換 Optional Stop (M01) 開關 |
-
----
-
-## 工控安全機制（已全部完成）
+## 11. 工控安全機制
 
 | 機制 | 說明 |
 |------|------|
 | 急停獨立通道 | `_estopClient`（2s timeout），觸發後樂觀更新 + 取消 JOG |
-| 雙重運動守衛 | VM 層 `CanExecuteMotion()` + Service 層 `ValidateAction()` |
+| 雙重運動守衛 | VM `CanExecuteMotion()` + Service `ValidateAction()` |
 | 原子狀態更新 | 先計算快照再統一套用，杜絕 UI 中間態 |
-| HttpClient 分離 | polling(3s) / estop(2s) / config(10s) / upload(20s) 各自獨立 |
+| HttpClient 分離 | polling(3s) / estop(2s) / config(10s) / upload(20s) / atc(60s) / probe(120s) |
 | 連續失敗計數 | ≥3 次才判定 Disconnected |
 | 異常處理 | 零空 catch，全部記錄至 AlarmService |
 | 日誌持久化 | 每日滾動 `logs/cnc-yyyy-MM-dd.log` |
@@ -227,339 +494,82 @@ DispatcherTimer (500ms) → MachineControlService.GetStatusAsync()
 
 ---
 
-## 功能實作狀態
+## 12. 功能完成狀態
 
-### ✅ 已完成
+### ✅ 已完成（全部核心 + 應該有 + 加分部分）
 
-- DRO 對齊 PB 版（5 欄：ZERO | G5X WORK | MACHINE | DTG | REF + 單軸歸零/原點復歸 + Homed 紅綠燈）
-- JOG X/Y/Z + A/B/C 旋轉軸（連續 + 寸動）+ 防呆
-- 機台類型定義（MachineType 枚舉：3/4/5/6 軸可配置）
-- 加工循環控制（Cycle Start / Stop / Feed Hold）
-- 電源 / 急停（含樂觀更新 + 獨立通道）
-- MDI 送出（含歷史記錄 ComboBox）
-- 冷卻液 Flood（M8/M9）+ MIST（M7/M9）
-- G-Code 載入/預覽/上傳
-- Offsets Tab（G54–G59 表格 + 詳細面板 + 自動載入）
-- Offsets SET TO ZERO / CLEAR / SAVE（G10 L20/L2 指令送出）
-- Offsets 右欄即時座標（MC Current / Work Coord / Offset 綁定後端真實值）
-- Feed Override 連通（+/- 按鈕、ProgressBar 綁定後端即時百分比）
-- Spindle Override 連通（+/- 按鈕、ProgressBar 綁定後端即時百分比）
-- Single Block 單節執行（CycleStart 切換 run/step，按鈕高亮狀態）
-- GO TO HOME 原點復歸
+<details>
+<summary>展開完整清單（40+ 項）</summary>
+
+- DRO 5 欄對齊 PB 版 + 單軸歸零/原點復歸 + Homed 紅綠燈
+- JOG X/Y/Z + A/B/C 旋轉軸（連續 + 寸動）
+- 機台類型定義（3/4/5/6 軸可配置）+ UI 即時連動
+- 加工循環控制（Cycle Start / Stop / Feed Hold / Single Block）
+- 電源 / 急停（樂觀更新 + 獨立通道）
+- MDI 送出（歷史記錄 ComboBox）
+- 冷卻液 Flood + MIST
+- G-Code 載入/預覽/上傳 + 行號高亮（VirtualizingStackPanel）
+- Offsets G54-G59 表格 + SET TO ZERO / CLEAR / SAVE + 右欄即時座標
+- Feed / Spindle Override（Slider + 後端連通）
+- GO TO HOME / GO TO ZERO / G30
 - 系統狀態顯示 + 警報跑馬燈
 - 使用者登入/登出/角色權限（4 種）
-- 操作歷史（五級過濾）+ 加工計時器
-- 機台設定介面（6 Tab：掃描/軸指派/軸參數/IO 監控/IN MAP/OUT MAP）
-- IO Monitor 卡片連動機台類型（依軸映射過濾 Slave + 卡片標註軸名）
-- 設定檔生成與部署（INI/HAL/XML/PostGUI → 上傳 → 重啟 → 輪詢確認）
+- 操作歷史（五級過濾）+ LOG/STATS 雙 Tab + 報警統計 Top 10
+- 機台設定（11 個子 Tab：SCAN/MAPPING/AXIS/IO/IN MAP/OUT MAP/SPINDLE/ATC×3/MACRO VAR/BACKUP/MAINTENANCE）
+- IO Monitor + IN/OUT MAP 即時 LED
+- 設定檔生成部署（INI/HAL/XML/PostGUI/NGC）+ 重啟
 - 開機硬體自動驗證
 - 全套工控安全重構
-- ToolInfo 版面對齊 PB 版（即時刀具號/刀長/刀徑 + G43/G49 高亮 + GO TO ZERO/G30 按鈕）
-- 機台類型 UI + 即時連動（繁中下拉選單 + DRO/JOG/Offsets/AxisParameters 動態切換）
-- OffsetsView 對齊 PB 版（7 欄表格 + G59.1-G59.3 擴展座標系 + MAN/AUTO/MDI 模式切換）
-- Tool Table 刀具表管理（DataGrid CRUD + LOAD/UNLOAD/M6G43/TOUCH OFF + 後端 /v2/tool/table & /v2/tool/save）
-- ATC 自動刀庫頁面（MANUAL ATC 8 按鈕 + ATC AUTOMATIC 5 按鈕 + 雙模式切換 + ATC_Back.png 背景）
-- MAN/AUTO/MDI 模式切換按鈕移至 JogPanel（全頁面可用）
-- Probing 探測循環（8 分頁完整實作 + PROBE HELP 圖片瀏覽 + 後端 /v2/probe/run + HAL probe-input）
-  - Outside/Inside Corners 九宮格（9 按鈕 WPF 向量繪圖）
-  - Boss & Pocket（DIAM + X/Y 偏移輸入 + boss/pocket 兩種模式）
-  - Ridge & Valley（HINT + X/Y 偏移輸入 + ridge/valley 兩種模式）
-  - Edge Angle 3×3 九宮格 + SET ROTATION WCO + EDGE WIDTH
-  - Calibrate（Ring/Square Inside/Outside + CAL ON AVG/X/Y ERROR）
-  - PROBE HELP（7 張圖片循環瀏覽 PREV/NEXT）
-  - 左面板上中下三段佈局（WORK OFFSETS / PROBING PARAMETERS / 結果）對齊 PB 版
-  - 白底黑字輸入框 + 標籤靠右 + 工控大字體
-- Block Delete / M01 Break（toggle 開關 + 後端 set_block_delete / set_optional_stop + DataTrigger 藍色高亮）
-- G-Code 行號高亮（ItemsControl 逐行顯示 + 行號 + 黃底高亮執行中行 + VirtualizingStackPanel）
-- ATC PROGRAM TOOLS（GCodeParser 解析 T 號 + LOAD TOOLS 按鈕 + 自動載入 + 去重排序）
-- ATC 設定三分頁（ATC BASIC/ATC AXIS/ATC IO + AtcType 三種刀庫 + 伺服/IO/時序/排刀參數 + 即時連動）
-- SPINDLE 設定分頁（EtherCAT Slave + 剛性攻牙 G33.1 + M19 定向 + EncoderPPR/MaxRPM）
-- CachedContentControl 主分頁快取（消除切換延遲）
-- Dashboard 底部五大區塊對齊 PB 版（D_1~D_5 欄寬/按鈕/控件全面對齊）
-  - CycleControl：CLEAR PGM + 按鈕加大 45px
-  - SliderControl：4 條 Slider（V/F/S/R）+ Spindle Load + 重置按鈕
-  - JogConfig：JOG 標籤 + JOG 速度 Slider + FEEDRATE MM/M + SPINDLE RPM + REV/STOP/FWD
-  - 主軸正反轉控制（SpindleFwd/Rev/Stop → M3/M4/M5）
-- 按鈕動態色彩（CYCLE START 綠/FEED HOLD 橘/STOP IsPressed 紅 + 主軸 FWD/REV 藍色回饋）
-- ATC 夾刀/鬆刀完整流程（M24/M25 NGC 生成 + DO ON/OFF 邏輯 + 按鈕高亮修正）
-- ATC 設定三分頁繁中翻譯 + TextBox/ComboBox 左對齊
-- IN/OUT MAP 即時 IO 狀態 LED（EtherCAT slave pin 讀取 + 綠灰指示燈）
-- IO PIN 名稱持久化（_lastConfig 快取 + 自動還原）
-- Settings 進入時自動重載設定檔（丟棄未存檔修改）
+- ToolInfo 對齊 PB 版（即時刀具資訊 + G43/G49 高亮）
+- OffsetsView 對齊 PB 版（7 欄 + G59.1-G59.3 擴展）
+- Tool Table CRUD + TOOL LIFE 雙 Tab
+- ATC 自動刀庫（MANUAL 8 按鈕 + AUTOMATIC 5 按鈕 + 夾刀/鬆刀 M24/M25）
+- ATC 設定三分頁（BASIC/AXIS/IO）+ NGC 巨集生成 + IO 衝突檢查
+- ATC 即時狀態回讀（感測器 LED + sim_atc.hal）
+- Probing 完整 8 分頁（Outside/Inside/Boss&Pocket/Ridge&Valley/EdgeAngle/Calibrate/Help/ToolSetter）
+- Block Delete / M01 Break
+- ATC PROGRAM TOOLS（GCodeParser 解析 T 號）
+- SPINDLE 設定（EtherCAT + 剛性攻牙 + M19）
+- CachedContentControl 分頁快取
+- Dashboard D_1~D_5 對齊 PB 版
+- 主軸正反轉控制 + 按鈕動態色彩
+- 程式檔案管理（列表/預覽/載入/刪除/重命名）
+- 巨集變數監控（#1~#5999 讀寫 + DataGrid）
+- 主軸暖機程式（SpindleWarmupWindow）
+- 備份/還原（後端 + 前端 JSON）
+- 刀具壽命管理（後端 1s 追蹤 + 進度條 + 壽命設定）
+- StringEqualConverter 全域轉換器
+- 加工時間統計（累計/循環次數/預估剩餘）
+- 維護保養提醒（CRUD + 運轉時數追蹤 + 進度條）
+- 3D 刀具路徑預覽（HelixViewport3D + G0/G1/G2/G3）
+- 斷電續切（後端 5s 存檔 + 開機彈窗 + RunFromLine）
+- 主題切換（3 主題 + 持久化）+ 全域 DynamicResource 色彩統一
+- 多語言持久化 + 主題/語言選單打勾
+
+</details>
 
 ### ❌ 尚未實作
 
-#### 必須有（上線前必備）
-
 | 功能 | 說明 | 難度 |
 |------|------|------|
-| 程式檔案管理 | 機台端 NC 檔案列表/刪除/重命名（目前只能上傳，無法瀏覽） | 低 |
-| 巨集變數監控 | #1~#5999 變數讀取/修改（調試換刀巨集、探測參數必備） | 中 |
-| ATC 即時狀態回讀 | 讀 HAL pin 真實 IO → 刀盤位置/感測器/夾刀確認（不能只靠本地模擬） | 中 |
-| 刀具壽命管理 | 累計切削時間/次數 → 到壽命提醒換刀 | 中 |
-| 主軸暖機程式 | M3 逐步升速（冷機直接高速傷軸承） | 低 |
-| 備份/還原 | 一鍵備份 INI/HAL/刀具表/WCS/巨集變數，還原到指定時間點 | 中 |
-
-#### 應該有（提升可靠度）
-
-| 功能 | 說明 | 難度 |
-|------|------|------|
-| 3D 刀具路徑預覽 | 解析 G-Code 畫出刀具路徑（目前 3D 視圖空的） | 高 |
-| 加工時間統計 | 單件時間/累計時間/預估剩餘（生產排程用） | 低 |
-| 維護保養提醒 | 潤滑油/濾網/皮帶 — 依運轉時數提醒（可設定週期） | 中 |
-| 報警履歷分析 | 分類統計（哪個報警最頻繁） | 低 |
-| 斷電續切 | 記錄中斷行號 → 重開機從斷點繼續 | 高 |
-
-#### 加分項（差異化）
-
-| 功能 | 說明 | 難度 |
-|------|------|------|
-| Conversational 對話式加工 | 填參數自動產生 G-Code（鑽孔陣列/面銑/溝槽/螺紋） | 高 |
+| Conversational 對話式加工 | 填參數自動產生 G-Code（鑽孔陣列/面銑/溝槽） | 高 |
 | 遠端監控 | 手機/網頁看機台狀態（WebSocket 推播） | 高 |
 | 能耗監控 | 主軸/伺服功率統計（ESG 節能報表） | 中 |
-| Probing Tool Setter | TOOL SETTER 分頁（基本 UI + 參數面板已完成，待實機測試） | 中 |
-| Probing Rotary Axis | ROTARY AXIS 分頁（目前 disabled） | 中 |
+| Probing Tool Setter | 基本 UI 已完成，待實機測試連通 | 中 |
+| Probing Rotary Axis | 分頁目前 disabled | 中 |
 
 ### ⚠️ 需加強
 
-| 功能 | 待改善 |
-|------|--------|
-| 3D 視圖 | 無刀具路徑模擬 |
+| 項目 | 說明 |
+|------|------|
 | Velocity / Rapid Override | V/R Slider 暫靜態（無後端連動），F/S 已連通 |
 
-### 📋 開發優先順序
-
-1. **程式檔案管理** — NC 檔案列表/刪除/重命名
-2. **巨集變數監控** — #1~#5999 讀寫
-3. **ATC 即時狀態回讀** — HAL pin 真實 IO
-4. **加工時間統計** — 單件/累計/預估
-5. **刀具壽命管理** — 切削時間/次數追蹤
-6. **主軸暖機程式** — 逐步升速
-7. **備份/還原** — 一鍵備份還原
-
 ---
 
-## 開發工作流程
+## 13. 快捷鍵（MainWindow.xaml InputBindings）
 
-每完成一個功能修改後（前端 + 後端）：
-1. 自動執行 `/compact` 壓縮對話
-2. 更新 CLAUDE.md 功能實作狀態表
-3. `git commit` + `git push`
-
----
-
-## NuGet 套件
-
-- `CommunityToolkit.Mvvm` 8.4.0 — MVVM + Source Generator
-- `HelixToolkit.Wpf` 3.1.2 — 3D 視覺化
-- `Microsoft.Xaml.Behaviors.Wpf` 1.1.135 — XAML Behavior/Trigger
-
----
-
-## 每日工作紀錄
-
-### 2026-03-10
-
-| 項目 | 說明 |
-|------|------|
-| **按鈕動態色彩** | CYCLE START 依 InterpState=RUNNING 亮綠、FEED HOLD 依 PAUSED 亮橘、STOP/主軸STOP 改 IsPressed 觸發紅色（放開灰色） |
-| **主軸方向按鈕** | REV 依 SpindleDirection=-1 亮藍、FWD 依 SpindleDirection=1 亮藍 |
-| **後端 Spindle_Direction** | `/v2/status` 新增 `Spindle_Direction`（cnc_stat.spindle[0]['direction']） |
-| **ATC 夾刀/鬆刀邏輯修正** | DO ON=氣壓鬆開=鬆刀、DO OFF=彈簧夾緊=夾刀；樂觀更新 ClampTool→IsDrawbarOn=false、ReleaseTool→true |
-| **AtcView DataTrigger 修正** | 夾刀按鈕 IsDrawbarOn=False 亮藍、鬆刀按鈕 IsDrawbarOn=True 亮藍（原本反了） |
-| **M24/M25 NGC 生成** | GenerateM24Ngc（鬆刀=M64 P{drawbar}）+ GenerateM25Ngc（夾刀=M65 P{drawbar}） |
-| **ATC 三分頁繁中翻譯** | AtcBasicSettingsView/AtcAxisSettingsView/AtcIoSettingsView 全部標籤改繁體中文 |
-| **ATC 三分頁對齊** | TextBox `HorizontalAlignment="Left"` + ComboBox `HorizontalAlignment="Left" Width="200"` |
-| **IO PIN 名稱持久化** | 新增 `_lastConfig` 快取 + `RestorePinSettingsFromConfig()`，`RebuildIoMapsFromScan` 每次重建自動還原 |
-| **IN/OUT MAP 即時狀態 LED** | DataGrid 新增「狀態」欄（Ellipse 綠=ON/灰=OFF），IoPinSetting 新增 IsActive 屬性 |
-| **後端 IO_Status** | 改讀 EtherCAT slave `lcec.0.{si}.din-XX`/`dout-XX`（非 motion.digital），回應結構改為巢狀 dict by slave index |
-| **Settings 進入時重載** | `ReloadFromFileAsync()` 從 MachineConfig.json 重新載入所有設定，丟棄未存檔修改 |
-| **Function Name 空白修正** | `!string.IsNullOrEmpty(savedPin.Function)` 防止空字串覆蓋預設 "Pin N" |
-| **版本號** | `2026.03.10_BTN_COLOR_ATC_FIX_IO` |
-
-### 2026-03-04
-
-| 項目 | 說明 |
-|------|------|
-| **PROBING 探測循環（完整 8 分頁）** | ProbingViewModel + ProbingView：Outside/Inside Corners 九宮格 + Boss & Pocket + Ridge & Valley + Edge Angle + Calibrate + PROBE HELP |
-| **Outside/Inside Corners** | 3×3 九宮格 WPF 向量繪圖（紫球+綠十字+箭頭+灰方塊），9 個探測按鈕 |
-| **Boss & Pocket** | DIAM + X/Y 偏移輸入框 + boss（外→內探測）/ pocket（內→外探測）雙模式 |
-| **Ridge & Valley** | HINT + X/Y 偏移輸入 + ridge（脊）/ valley（谷）雙模式 |
-| **Edge Angle** | 3×3 九宮格 + SET ROTATION WCO 按鈕 + EDGE WIDTH 輸入 + atan2 角度計算 |
-| **Calibrate** | Ring/Square Inside/Outside（2×2 視覺按鈕）+ CAL ON AVG XY/X/Y ERROR（3 按鈕）+ CALIBRATION WIDTH X/Y |
-| **PROBE HELP** | 7 張圖片（Image(1)~(7).png）循環瀏覽 + PREV/NEXT 按鈕 |
-| **左面板佈局（對齊 PB 版）** | 上中下三段：WORK OFFSETS（G54~G59.3 + PROBE POSITION ONLY）/ PROBING PARAMETERS（5 行標籤靠右+白底輸入框）/ 4 按鈕+4×3 結果 |
-| **工控大字體** | WCS 16px / 參數標籤 14px / 輸入框 16px / 結果值 16px / 按鈕 14px / 子頁籤 14px |
-| **後端 /v2/probe/run** | edge / outside_corner / center / boss / pocket / ridge / valley / edge_angle / calibrate 9 種探測類型 |
-| **ProbeResult + ProbeParameters 模型** | Angle / EdgeWidth / WidthX / WidthY / Diameter / OffsetX / OffsetY / EdgeWidth |
-| **HAL probe-input** | ConfigurationService 自動接線 `motion.probe-input` |
-| **版本號** | `2026.03.04_PROBING` |
-
-### 2026-02-23
-
-- Offsets Tab 全新頁面（OffsetsView + OffsetsViewModel）
-- DRO G54–G59 快選列
-- MIST 霧化冷卻（M7/M9）
-- GO TO HOME 原點復歸（後端 /v2/machine/home）
-- HeaderBar EXIT 選單
-- 後端 /v2/offsets 端點 + Active_WCS
-- 版本號 `2026.02.23_OFFSETS_MIST_HOME`
-
-### 2026-02-24
-
-| 項目 | 說明 |
-|------|------|
-| **Offsets SET TO ZERO** | `SetToZeroAxisCommand`（G10 L20 P<n> X0/Y0/Z0/ALL）；選定 WCS 後透過 MDI 歸零 |
-| **Offsets CLEAR SELECTED/ALL** | `ClearSelectedCommand`（G10 L2 P<n> 六軸歸零）；`ClearAllCommand`（遍歷 G54–G59 全部清零） |
-| **Offsets SAVE TABLE** | `SaveTableCommand`（G10 L2 將 DataGrid 編輯值回寫至 LinuxCNC） |
-| **Offsets 右欄連通** | MC Current 綁定 `MachineStatus.X/Y/Z`（機台座標）；Work Coord 綁定 `WorkX/Y/Z`（工件座標）；Offset 綁定 `SelectedRow.X/Y/Z` |
-| **後端 Work_Position** | `/v2/status` 新增 `Work_Position`（= actual_position - g5x - g92 - tool） |
-| **Feed Override 連通** | SliderControl 改為 ProgressBar 綁定 `Status.FeedOverride` + +/- 按鈕（每次 ±10%） |
-| **Spindle Override 連通** | 同上，綁定 `Status.SpindleOverride` + +/- 按鈕 |
-| **後端 Override 端點** | `POST /v2/override/feed` + `POST /v2/override/spindle`（`cnc_cmd.feedrate` / `spindleoverride`） |
-| **Single Block 模式** | `IsSingleBlock` 開關；CycleStart 依此切換 `CycleStartAsync` / `StepProgramAsync` |
-| **後端 Step 端點** | `POST /v2/program/step`（`cnc_cmd.auto(AUTO_STEP)`） |
-| **版本號更新** | `2026.02.24_OFFSETS_OVERRIDE_SINGLEBLOCK` |
-| **修正 GO TO HOME** | 後端加入 `teleop_enable(0)` 切換 Joint Mode，解決 home 指令被忽略 |
-| **修正 Offsets 寫入** | `SelectOffset` 同步 `SelectedRow`，解決 SET TO ZERO 未選擇座標系 |
-| **G10 動態軸數** | G10 指令改依 `EnabledAxes` 動態組合，不再寫死 XYZ |
-| **MachineType 枚舉** | 新增 `MachineType`（ThreeAxis/FourAxisA/FiveAxisTrunnion/SixAxis 等） |
-| **DRO 多軸動態** | A/B/C 軸行依 `IsAxisA/B/CEnabled` 自動顯示/隱藏 |
-| **JOG A/B/C** | JogPanel 新增旋轉軸 JOG 按鈕（axis=3/4/5），依啟用狀態顯示 |
-| **HAL 軸映射修正** | 移除寫死 X→0/Y→2/Z→3，改從 `Mappings.ChannelIndex` 動態取得 Slave Index |
-| **MachineStatus 補齊** | 新增 DtgA/B/C + WorkA/B/C 屬性（六軸完整支援） |
-| **Offsets DataGrid** | 新增 A/B/C 欄位，顯示全部六軸 offset 值 |
-| **IO Monitor 連動** | 卡片依軸映射過濾（3 軸只顯示 3 張）+ 標題標註軸名（例如 "X Axis Slave #0"） |
-| **版本號** | `2026.02.24_IOMONITOR_LINKAGE` |
-| **ToolInfo PB 版** | 版面對齊 PB：T [N] / M6 G43 / G43-G49 高亮 / LENGTH / DIAM 即時綁定後端 |
-| **後端刀具資訊** | `/v2/status` 新增 `Tool_Number`（tool_in_spindle）/ `Tool_Length`（tool_offset[2]）/ `Tool_Diameter`（tool_table） |
-| **GO TO ZERO / G30** | `GoToZeroCommand`（G53 G0 X0 Y0 Z0）、`GoToG30Command`（G30）—— ToolInfo 按鈕 |
-| **版本號** | `2026.02.24_TOOLINFO_PB` |
-| **DRO 對齊 PB 版** | 5 欄佈局：ZERO X/Y/Z | G5X WORK（WorkX）| MACHINE（X）| DTG | REF X/Y/Z；標題動態顯示 G5X；移除 G54–G59 快選列 |
-| **後端 Homed 狀態** | `/v2/status` 新增 `Homed` dict（~~joint[i].homed~~ → `cnc_stat.homed[i]`）|
-| **DRO ZERO 按鈕** | `DroZeroAxisCommand`（G10 L20 單軸歸零）+ `DroZeroAllCommand`（全軸歸零）|
-| **DRO REF 按鈕** | `RefAxisCommand`（單軸原點復歸 + 樂觀更新紅→綠）+ HomeAll 樂觀更新 |
-| **Homed 狀態映射** | `MachineStatus.IsXHomed~IsCHomed + IsAllHomed`；底部按鈕紅/綠切換 |
-| **版本號** | `2026.02.24_DRO_PB` |
-| **修正 Homed 不變綠** | 後端 `cnc_stat.joint[i].homed` → `cnc_stat.homed[i]`（joint 回傳 dict 無屬性），JOG 端點同步修正 |
-| **修正 Offsets SAVE 歸零** | 後端 MDI 加 `wait_complete()` 等待執行完畢 + 前端 ReloadTable 前加 300ms 延遲等待 .var 同步 |
-| **修正 ToolInfo GO TO HOME** | 按鈕 Command 綁定從 `HomeAllCommand` 修正為 `GoToHomeCommand` |
-| **機台類型 UI** | 繁體中文下拉選單 + 設定存讀連通（`bf1b481`） |
-| **機台類型即時連動** | DRO/JOG/Offsets/AxisParameters 依 MachineType 動態顯示/隱藏（`6c97e67`） |
-| **修正雙擊 exe 無法開啟** | BoolToVis 資源移至 App.xaml 全域（`d7b96f2`） |
-| **設定連動延遲** | 所有連動延遲至 UPDATE 按鈕 + 手動 Scan 更新 IO Slave 下拉（`578850e`） |
-| **IO Monitor 修正** | 修正下拉選單過早觸發映射表重建 + IO 卡片改為標註不過濾（`ac6294b`） |
-| **修正 SAVE TABLE 值歸零** | 後端改讀記憶體值（`cnc_stat.g5x_offset`）取代 .var 檔（僅關機寫入）（`c8c1840`） |
-| **OffsetsView 對齊 PB 版** | 7 欄表格（X/Y/Z/A/B/C + Name）+ G59.1-G59.3 擴展座標系 + MAN/AUTO/MDI 模式切換按鈕（`34ff2e7`） |
-| **版本號** | `2026.02.24_OFFSETS_PB` |
-
-### 2026-02-25
-
-| 項目 | 說明 |
-|------|------|
-| **修正 CLEAR ALL/SELECTED → RELOAD 顯示舊值** | 新增 server.py in-memory WCS cache（`_wcs_cache`）；MDI 送出 G10 L2 後即時更新 cache；`read_work_offsets()` 優先級：.var < cache < cnc_stat active WCS（`5a4e14b`） |
-
-### 2026-03-03
-
-| 項目 | 說明 |
-|------|------|
-| **TOOL 分頁（對齊 PB 版）** | ToolTableViewModel + ToolTableView：DataGrid（全軸 offset + FNT/BAK ANG + ORIENT + REMARK）+ CRUD（ADD/DELETE/SAVE/RELOAD）+ 右側 TOOL CHANGE PANEL（LOAD/UNLOAD/M6G43/TOUCH OFF）+ TOOL_BACK.png 背景 |
-| **ToolEntry 模型** | MachineModels.cs 新增 ToolEntry（ObservableObject，全軸 offset + Diameter + FrontAngle/BackAngle/Orientation/Remark） |
-| **後端刀具表端點** | `/v2/tool/table`（GET）讀取 cnc_stat.tool_table + tool.tbl 註解；`/v2/tool/save`（POST）寫入 tool.tbl + cnc_cmd.load_tool_table() |
-| **MachineControlService 擴充** | GetToolTableAsync() + SaveToolTableAsync()（ApiResponse<List<ToolEntry>>） |
-| **ATC 自動刀庫分頁** | AtcViewModel + AtcView：ATC_Back.png 背景 + 三欄佈局（左面板/中央/右面板）；MANUAL ATC（8 按鈕：AIR BLAST / RETR DUST BOOT / CLAMP TOOL / RELEASE TOOL / ORIENT SPINDLE / UNLOCK SPINDLE / HEAD UP / HEAD DOWN）+ PROGRAM TOOLS（預留 ListBox） |
-| **ATC 右面板** | ATC AUTOMATIC CONTROL PANEL：LOAD SPINDLE（T{n} M6）/ UNLOAD SPINDLE（T0 M6）/ STORE TOOL IN RACK / M6 G43（T{n} M6 G43）/ TOUCH OFF CURRENT TOOL（G10 L11 P{n} Z0）+ MDI |
-| **MAN/AUTO/MDI 搬遷** | 模式切換按鈕從 OffsetsView 移至 JogPanel 底部（全頁面可用）；SetModeCommand 從 OffsetsViewModel 移至 MainViewModel |
-| **JogPanel 寬度修正** | 180→250，避免 X+/X- 按鈕被裁切 |
-| **ConfigurationService 修正** | HAL：isServo && !isPulseGen 條件；INI：新增 OFFSET_COLUMNS 動態軸欄位 |
-| **版本號** | `2026.03.03_TOOL_ATC` |
-
-### 2026-03-05
-
-| 項目 | 說明 |
-|------|------|
-| **Dashboard 底部對齊 PB 版（D_1~D_5）** | DashboardPanel 欄寬 350\|250\|490\|430\|*；CycleControl / SliderControl / JogConfig 全面重寫 |
-| **DashboardPanel 欄寬** | 220\|180\|550\|400\|* → 350\|250\|490\|430\|*（ToolInfo 截斷問題一併解決） |
-| **CycleControl 對齊 D_1** | GO TO HOME → CLEAR PGM（ClearProgramCommand）；按鈕高度 38→45px；DesignWidth 220→350 |
-| **SliderControl 完全重寫 D_4** | Spindle Load 顯示 + 4 條 Slider（Velocity/Feed/Spindle/Rapid Override 0~200%）+ V/F/S/R 100% 重置按鈕；ProgressBar 改為 Slider 可拖拉 |
-| **JogConfig 對齊 D_5** | Cont.→JOG 標籤；增量值 10.0/1.0/0.1→0.1/0.01/0.001；新增 JOG 速度 Slider 0~100%；FEEDRATE MM/M + SPINDLE RPM 左右分欄；REV/STOP/FWD 改用 BaseBtnStyle |
-| **主軸控制** | SpindleFwd（M3）/ SpindleRev（M4）/ SpindleStop（M5）+ JogSpindleRpm 參數 |
-| **MainViewModel 新增** | ClearProgramCommand、ResetFeedOverride/SpindleOverride/VelocityOverride/RapidOverride、SpindleFwd/Rev/Stop、JogSpeedPercent、JogSpindleRpm、VelocityOverride、RapidOverride |
-| **MachineStatus 新增** | SpindleLoad（主軸負載百分比） |
-| **版本號** | `2026.03.05_DASHBOARD_PB` |
-| **TOOL SETTER 分頁** | ProbingView 新增 TOOL SETTER 垂直 Tab + TOOL_BACK.png 背景切換 + 兩欄參數面板（6 模式按鈕）|
-| **探針模擬 comp→near** | sim_probe.hal 改用 `near` 組件（`\|pos-target\|<=0.05` 觸發），comp 的 `>=` 比較向負方向立刻觸發 |
-| **探針模擬自包含** | GenerateSimProbeHal(MachineConfig) 動態解析位置訊號名稱 + loadrt/addf/wiring 全部自包含 |
-| **模擬 probe-in 衝突修正** | GenerateHal 模擬模式 skip `net probe-in` 整條接線，避免 OUT pin 衝突 |
-| **後端 threaded** | `app.run(threaded=True)` 探測不再阻塞 status 輪詢 |
-| **Probe timeout 延長** | 前端 RunProbeAsync HTTP timeout 30s→120s |
-| **Probe 錯誤傳播** | 後端 `_probe_send_mdi_and_wait` 回傳 LinuxCNC 錯誤；`_probe_edge` 傳播真實錯誤到前端 |
-| **Probe DEBUG log** | 前端 ExecuteProbe 記錄探測參數+結果到 HISTORY DEBUG |
-
-### 2026-03-04
-
-| 項目 | 說明 |
-|------|------|
-| **Probing 探測循環（Outside Corners）** | ProbingViewModel + ProbingView：9 宮格按鈕（edge/outside_corner/center）+ WPF 向量繪圖（紫球+綠十字+箭頭+灰方塊）+ 左面板 7 參數 + 結果 + MDI |
-| **ProbeResult / ProbeParameters 模型** | MachineModels.cs 新增探測結果（Tripped/X/Y/Z/Error）+ 探測參數（TraverseSpeed~ExtraDepth） |
-| **MachineControlService.RunProbeAsync** | 獨立 30s timeout HttpClient，POST /v2/probe/run |
-| **後端 /v2/probe/run 端點** | _probe_edge（單軸邊緣）+ _probe_outside_corner（雙軸外角）+ _probe_center（4 邊中心）+ G38.2 探測 |
-| **ProbingView 佈局** | 4 列 4 欄：子頁籤（8 個，僅 OUTSIDE CORNERS 啟用）+ WCS 選擇（G54~G57）+ Porbing_BACK.png 底圖 + 垂直 Tab（TOUCH PROBE/TOOL SETTER） |
-| **HAL probe-input** | ConfigurationService：probe-in 訊號自動追加 motion.probe-input 接線 |
-| **Probing Inside Corners** | ProbingViewModel 新增 9 個 InsideCorner RelayCommand + ProbingView INSIDE CORNERS 分頁啟用 + 9 宮格 WPF 向量繪圖（牆壁+口袋+探針內部）+ DataTrigger 切換 Outside/Inside |
-| **後端 Inside Corner 探測** | server.py 新增 `_probe_inside_corner()`（方向反轉：NW→X-,Y+）+ inside_edge 路由映射（N→S, S→N, E→W, W→E）|
-| **Probing Boss & Pocket** | ProbingViewModel 新增 6 個 RelayCommand（BossX/BossY/BossXY + PocketX/PocketY/PocketXY）+ ProbingView BOSS AND POCKET 分頁啟用 + 3×2 WPF 向量繪圖 + Hint 結果面板 |
-| **後端 Boss/Pocket 探測** | server.py `_probe_boss(axes)` 支援 X/Y/XY 軸選擇 + `_probe_center(axes)` 同步支援 + 6 種 route（boss_x/y/xy + pocket_x/y/xy） |
-| **Probing Ridge & Valley** | 6 個 RelayCommand（RidgeX/Y/XY + ValleyX/Y/XY）+ 3×2 向量繪圖 + DIST hint；後端 ridge_x/y/xy 複用 _probe_boss，valley 複用 _probe_center |
-| **Probing Edge Angle** | 6 個 RelayCommand（AngleX+/X-/Y+/Y-/XY-F/XY-B）+ `_probe_edge_angle()`（沿邊 2 點 atan2 計算角度）+ SET ROTATION WCO（G10 L2 R） + EDGE WIDTH hint |
-| **Probing Calibrate** | CalOnXyTurret/CalXEdge/CalXBore + ProbeCalReset + `_probe_calibrate()` + 校正欄位（OffsetX/Y/Diameter/CalibrationWidth）+ 校正環視覺化 |
-| **ProbeResult 擴展** | 新增 Angle / EdgeWidth 欄位（後端 → 前端） |
-| **Block Delete / M01** | MainViewModel ToggleBlockDelete/ToggleOptionalStop + MachineControlService SetBlockDeleteAsync/SetOptionalStopAsync + CycleControl 按鈕 DataTrigger 藍色高亮 |
-| **後端 Block Delete** | /v2/status 新增 Block_Delete/Optional_Stop/Current_Line + POST /v2/program/block_delete + /v2/program/optional_stop |
-| **G-Code 行號高亮** | MonitorViewModel GCodeLines（ObservableCollection<GCodeLineItem>）+ MachineStatus.CurrentLine 訂閱 + MonitorView ItemsControl 逐行（行號+黃底高亮+VirtualizingStackPanel） |
-| **ATC PROGRAM TOOLS** | GCodeParser.ExtractToolNumbers（Regex T\d+ 去重排序）+ AtcViewModel LoadProgramTools + Navigate "Atc" 自動載入 + LOAD TOOLS 按鈕 |
-| **版本號** | `2026.03.04_BLOCKDEL_HIGHLIGHT_ATC` |
-
-### 2026-03-09
-
-| 項目 | 說明 |
-|------|------|
-| **Phase 2 ATC INI/HAL/NGC 生成** | ConfigurationService 新增 INI `[ATC]` 區段（POCKETS/Z 高度/Rack 參數）、`[RS274NGC]` REMAP（M6/M10~M26）、HAL ATC IO 接線（6 DO + 5 DI） |
-| **NGC 巨集生成** | `GenerateAtcNgc()` 依 AtcType 動態生成 toolchange.ngc / m21.ngc / m22.ngc / m13.ngc（Rack/Carousel 分流） |
-| **ATC IO 衝突檢查** | HAL 生成時比對 ATC pin 與 GENERAL IO 同 Slave 有功能的 pin，衝突 → 警告+跳過；`IsRealFunction()` 排除 "Pin N" 預設佔位名 |
-| **ATC IO 預設值倒數** | DO: 31~26、DI: 31~27（從 31 倒數），避免與 coolant/spindle(0~5) 衝突 |
-| **NUM_DIO=32** | INI `[EMCMOT]` + HAL `loadrt motmod num_dio=32`，建立 32 個 digital IO pin 供 M64/M65/M66 使用 |
-| **GENERAL IO skip ATC pin** | 同 Slave 時 GENERAL IO 跳過 ATC 佔用的 DO/DI pin，避免 HAL pin 重複 link |
-| **server.py NGC 部署** | `/api/config/update` 新增 NgcFiles 處理，寫入 `macros_metric_sim/` 目錄 |
-| **全域字體統一重構** | Theme.Dark.xaml 統一變數系統（FontFamily.Default/Mono + FontSize 7 級 + Brush）；26 個 XAML 頁面全面替換 hardcoded 值為 DynamicResource |
-| **ComboBox 顯示站號** | ATC AXIS/SPINDLE/ATC IO 設定頁 ComboBox 改用 `DisplayName`（`#站號: 名稱 (VendorId)`） |
-| **CarouselControl / SpindleToolControl** | 新增 code-behind（轉盤視覺化 + 主軸刀具顯示） |
-| **CarouselControlMode 雙模式** | `Servo`（EtherCAT 伺服定角度）/ `IO`（馬達+感測器計數），AtcConfig.ControlMode 參數切換 |
-| **Carousel Servo HAL 接線** | `M68 E0 Q[angle]` → `limit3`（加減速）→ `cia402` → EtherCAT；獨立 cia402 實例 + XML CiA 402 entry |
-| **Spindle EtherCAT CiA 402 HAL** | 主軸伺服 CSV 速度模式：`spindle.0.speed-out (RPM)` → `scale (÷60)` → `cia402.vel-cmd (RPS)` → EtherCAT；encoder 回讀 → `spindle.0.revs`；`near` at-speed 偵測 |
-| **Spindle XML target_velocity** | 主軸 slave 增加 `target_velocity` (0x60FF) PDO entry（CSV 模式必要） |
-| **INI 新增參數** | `[SPINDLE]` SLAVE_INDEX/ENCODER_PPR、`[ATC]` CAROUSEL_SLAVE_INDEX/CONTROL_MODE |
-| **HeaderBar encoder 顯示** | 上方工具列新增 SPINDLE/CAROUSEL 即時角度（綠/黃色 Consolas 字體） |
-| **NGC 巨集 M10/M11/M12** | Servo 模式用 `M68 E0 Q[angle]`、IO 模式用 `M64/M65 + M66 WAIT` 馬達+感測器 |
-| **server.py encoder 讀取** | `_ini_value()` helper + 多來源主軸 encoder（EtherCAT → spindle.0.revs → spindle.0.pos-fb）+ carousel encoder 回讀 |
-| **ATC FWD/REV 失敗不動畫** | 命令成功後才更新 CarouselAngle，失敗不變動 |
-| **ATC 頁面首次不動畫** | 切換到 ATC 頁面時首次設定角度直接跳轉，不播放從 0° 的旋轉動畫 |
-| **ATC IO 設定頁分區** | Motor FWD/REV + RotationIndex 僅 IO 模式顯示；Carousel Out/Home 兩種模式都顯示 |
-| **移除殘留 carousel-pid** | 清除 `addf carousel-pid.do-pid-calcs`（PID 已改用 cia402） |
-| **版本號** | `2026.03.09_ATC_PHASE2_FONT` |
-
-### 2026-03-06
-
-| 項目 | 說明 |
-|------|------|
-| **探針已觸發修正** | 後端 `_probe_edge()` 執行 G38.2 前先 `cnc_stat.poll()` + 檢查 `probe_val`，避免 "Probe is already tripped" 錯誤 |
-| **Probe Input 即時狀態** | 後端 `/v2/status` 新增 `Probe_Input`（讀取 `cnc_stat.probe_val`）；前端 `MachineStatus.IsProbeInput` + 狀態輪詢映射 |
-| **探針模擬改手動觸發** | 移除自動位置觸發（near/or2），改為手動按鈕 `sets probe-in 0/1`；`GenerateSimProbeHal()` 簡化為 `net probe-in motion.probe-input` + `sets probe-in 0` |
-| **SIM TRIGGER 按鈕** | ProbingView 新增 PROBE INPUT LED 指示燈（綠/灰）+ SIM TRIGGER/SIM RELEASE 按鈕；ProbingViewModel `ToggleProbeInput()` 透過 `/v2/hal/setp` 切換 |
-| **後端非阻塞探測** | `_probe_send_mdi_and_wait()` 從 `wait_complete()` 改為非阻塞輪詢（sleep 0.1s + poll interp_state），解決 Flask 單線程阻塞造成斷線 |
-| **WCS 寫入移至後端** | 探測成功後 G10 L20 直接在 `v2_probe_run()` 內執行，解決前端分離 HTTP 請求造成 "MDI running" 時序錯誤 |
-| **探針參數持久化** | `SaveProbeSettings()` / `LoadProbeSettings()` 儲存至 `probe_settings.json`（TOUCH PROBE + TOOL SETTER 全部參數） |
-| **探測頁面全繁中翻譯** | TOUCH PROBE + TOOL SETTER 所有標籤翻譯為繁體中文 + 單位標註（mm/min、mm）；含結果欄位、子分頁名稱、按鈕文字 |
-| **字體加大** | ParamLbl/ResultLbl 14→16、ParamTxt 高度 30→34、狀態文字 11→15+Bold、TOOL SETTER 按鈕 12→14 |
-| **G38.2 timeout 延長** | 後端探測超時 30s→60s（手動模擬需更多時間） |
-| **版本號** | `2026.03.06_PROBE_MANUAL_SIM` |
+| 按鍵 | Command | 說明 |
+|------|---------|------|
+| ESC | EmergencyAbortCommand | 全機停止（abort + 清除警報） |
+| F1 | TogglePowerCommand | 電源開/關 |
+| F2 | ToggleEstopCommand | 急停 |

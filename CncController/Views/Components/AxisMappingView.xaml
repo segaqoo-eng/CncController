@@ -7,30 +7,32 @@
              d:DesignHeight="400" d:DesignWidth="800"
              FontFamily="{DynamicResource FontFamily.Default}">
 
-    <Grid Background="#1E1E1E">
+    <Grid Background="{DynamicResource Brush.Grid.Background}">
         <DataGrid ItemsSource="{Binding AxisMaps}" 
                   AutoGenerateColumns="False"
                   HeadersVisibility="Column"
                   Background="Transparent"
-                  RowBackground="#252526"
-                  AlternatingRowBackground="#1E1E1E"
-                  Foreground="White"
+                  RowBackground="{DynamicResource Brush.Grid.Row}"
+                  AlternatingRowBackground="{DynamicResource Brush.Grid.RowAlt}"
+                  Foreground="{DynamicResource Brush.Text.Primary}"
                   RowHeight="40"
                   BorderThickness="0"
                   GridLinesVisibility="Horizontal"
-                  HorizontalGridLinesBrush="#333"
+                  HorizontalGridLinesBrush="{DynamicResource Brush.Input.Background}"
                   CanUserAddRows="False">
 
             <DataGrid.Resources>
-                <SolidColorBrush x:Key="{x:Static SystemColors.HighlightBrushKey}" Color="#444444"/>
-                <SolidColorBrush x:Key="{x:Static SystemColors.InactiveSelectionHighlightBrushKey}" Color="#444444"/>
+                <!-- [2026-03-12] 替換硬編碼色 #444444 → DynamicResource Brush.Border -->
+                <StaticResource x:Key="{x:Static SystemColors.HighlightBrushKey}" ResourceKey="Brush.Border"/>
+                <StaticResource x:Key="{x:Static SystemColors.InactiveSelectionHighlightBrushKey}" ResourceKey="Brush.Border"/>
 
                 <Style TargetType="DataGridColumnHeader">
-                    <Setter Property="Background" Value="#333333"/>
-                    <Setter Property="Foreground" Value="White"/>
+                    <!-- [2026-03-12] 替換硬編碼色 #333333 → DynamicResource -->
+                    <Setter Property="Background" Value="{DynamicResource Brush.Grid.Header}"/>
+                    <Setter Property="Foreground" Value="{DynamicResource Brush.Text.Primary}"/> <!-- [2026-03-12] 替換硬編碼色 -->
                     <Setter Property="Padding" Value="10,8"/>
                     <Setter Property="BorderThickness" Value="0,0,1,1"/>  
-                    <Setter Property="BorderBrush" Value="#555"/>
+                    <Setter Property="BorderBrush" Value="{DynamicResource Brush.Btn.Border}"/> <!-- [2026-03-12] 替換硬編碼色 #555 -->
                     <Setter Property="FontWeight" Value="Bold"/>
                 </Style>
 
@@ -47,7 +49,7 @@
                             <Setter Property="VerticalAlignment" Value="Center"/>
                             <Setter Property="Margin" Value="10,0"/>
                             <Setter Property="FontWeight" Value="Bold"/>
-                            <Setter Property="Foreground" Value="#007ACC"/>
+                            <Setter Property="Foreground" Value="{DynamicResource Brush.Accent}"/> <!-- [2026-03-12] 替換硬編碼色 #007ACC -->
                         </Style>
                     </DataGridTextColumn.ElementStyle>
                 </DataGridTextColumn>
@@ -59,7 +61,7 @@
                                       DisplayMemberPath="DisplayName"
                                       SelectedItem="{Binding SelectedSlave, UpdateSourceTrigger=PropertyChanged}"
                                       Margin="2"
-                                      Background="#333" Foreground="Black" BorderThickness="0"/>
+                                      Background="{DynamicResource Brush.Input.Background}" Foreground="{DynamicResource Brush.Menu.Foreground}" BorderThickness="0"/>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>

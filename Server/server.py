@@ -430,7 +430,9 @@ def update_config():
             '3axis.ini': data_lower.get('inicontent'),
             'probe_basic_postgui.hal': data_lower.get('postguicontent'),
             # [2026-03-05] 探針模擬 HAL（前端 IsProbeSimulation=true 時才傳送）
-            'sim_probe.hal': data_lower.get('simprobehalcontent')
+            'sim_probe.hal': data_lower.get('simprobehalcontent'),
+            # [2026-03-12] ATC 模擬 HAL（前端 IsAtcSimulation=true 時才傳送）
+            'sim_atc.hal': data_lower.get('simatchalcontent')
         }
         
         updated = []
@@ -638,10 +640,81 @@ def v2_program_read():
     except Exception as e:
         return error_response(f"Read fail: {e}")
 
+# ============================================================
+# [2026-03-12] 巨集變數 API（#1~#5999 讀寫）
+# ============================================================
+
+@app.route('/v2/macro/read', methods=['POST'])
+def v2_macro_read():
+    """讀取指定巨集變數（從 .var 檔）"""
+    try:
+        data = request.json or {}
+        ids = data.get('ids', [])
+        if not ids:
+            return error_response("Missing 'ids' list", 400)
+        param_ids = set(int(i) for i in ids)
+        params = _read_var_params(param_ids)
+        # 回傳所有請求的 id（未找到的補 0.0）
+        result = {}
+        for pid in sorted(param_ids):
+            result[str(pid)] = params.get(pid, 0.0)
+        return success_response(result)
+    except Exception as e:
+        return error_response(f"Macro read fail: {e}")
+
+
+@app.route('/v2/macro/write', methods=['POST'])
+def v2_macro_write():
+    """透過 MDI 安全寫入巨集變數（#id = value）"""
+    try:
+        data = request.json or {}
+        assignments = data.get('assignments', {})
+        if not assignments:
+            return error_response("Missing 'assignments' dict", 400)
+        # [2026-03-12] 確認機台處於可執行 MDI 的狀態
+        cnc_stat.poll()
+        if cnc_stat.task_mode != linuxcnc.MODE_MDI:
+            cnc_cmd.mode(linuxcnc.MODE_MDI)
+            cnc_cmd.wait_complete(2)
+        errors = []
+        for param_id, value in assignments.items():
+            pid = int(param_id)
+            val = float(value)
+            mdi_cmd = f"#{pid} = {val}"
+            err = _probe_send_mdi_and_wait(mdi_cmd, timeout=5)
+            if err:
+                errors.append(f"#{pid}: {err}")
+        if errors:
+            return error_response("; ".join(errors))
+        return success_response("Variables updated")
+    except Exception as e:
+        return error_response(f"Macro write fail: {e}")
+
+
+@app.route('/v2/macro/readall', methods=['POST'])
+def v2_macro_readall():
+    """讀取指定範圍的所有巨集變數"""
+    try:
+        data = request.json or {}
+        start = int(data.get('start', 1))
+        end = int(data.get('end', 30))
+        if end < start or (end - start) > 1000:
+            return error_response("Invalid range (max 1000)", 400)
+        param_ids = set(range(start, end + 1))
+        params = _read_var_params(param_ids)
+        result = {}
+        for pid in range(start, end + 1):
+            if pid in params:
+                result[str(pid)] = params[pid]
+        return success_response(result)
+    except Exception as e:
+        return error_response(f"Macro readall fail: {e}")
+
+
 @app.route('/v2/status', methods=['GET'])
 def v2_status():
     global cnc_stat
-    
+
     # 這裡不檢查 Process 死活，因為重啟中可能剛死掉
     if not ensure_cnc_connections(): 
         return jsonify({'status': 'Error', 'message': 'NML Disconnected'}), 503
@@ -816,6 +889,14 @@ def v2_status():
             current_line = int(cnc_stat.motion_line)
         except: pass
 
+        # [2026-03-12] 新增 Program_Total_Lines：載入的 G-Code 總行數（供加工進度預估）
+        program_total_lines = 0
+        try:
+            if cnc_stat.file and os.path.exists(cnc_stat.file):
+                with open(cnc_stat.file, 'r', encoding='utf-8', errors='ignore') as pf:
+                    program_total_lines = sum(1 for _ in pf)
+        except: pass
+
         # [2026-03-10] 讀取 EtherCAT IO slave 的 din/dout 即時狀態（供 IN MAP / OUT MAP 指示燈）
         # 格式：io_status = { "13": { "di": {0: true, 1: false, ...}, "do": {0: true, ...} } }
         io_status = {}
@@ -883,6 +964,7 @@ def v2_status():
             "Block_Delete": block_delete,
             "Optional_Stop": optional_stop,
             "Current_Line": current_line,
+            "Program_Total_Lines": program_total_lines,
             "IO_Status": io_status
         })
 
@@ -1070,7 +1152,9 @@ def v2_program_run():
             else:
                 return error_response(f"File not found: {file_name}", 404)
         
-        cnc_cmd.auto(linuxcnc.AUTO_RUN, line)
+        # [2026-03-12] 支援 start_line 參數（斷電續切用）
+        start_line = int(data.get('start_line', line))
+        cnc_cmd.auto(linuxcnc.AUTO_RUN, start_line)
         return success_response("Started")
     except Exception as e: return error_response(f"Run Fail: {e}")
 
@@ -2509,6 +2593,594 @@ def v2_atc_slot():
         return success_response({'slot': slot, 'tool_number': tool_num})
     except Exception as e:
         return error_response(f"ATC slot set failed: {e}")
+
+
+# ============================================================
+# [2026-03-12] 刀具壽命管理（背景 thread 追蹤）
+# ============================================================
+TOOL_LIFE_PATH = os.path.join(CONFIG_DIR, 'tool_life.json')
+_tool_life_data = {}       # { "1": { "cutting_time_sec": 0, "change_count": 0, "max_time_sec": 0, "max_count": 0 } }
+_tool_life_lock = threading.Lock()
+_tool_life_last_save = 0   # 上次存檔時間戳
+_tool_life_last_tool = 0   # 上一次偵測到的刀號（用於偵測 M6）
+
+def _load_tool_life():
+    """[2026-03-12] 從 JSON 載入刀具壽命數據"""
+    global _tool_life_data
+    try:
+        if os.path.exists(TOOL_LIFE_PATH):
+            with open(TOOL_LIFE_PATH, 'r', encoding='utf-8') as f:
+                _tool_life_data = json.load(f)
+            app_log('CMD', f'Tool life loaded: {len(_tool_life_data)} tools')
+    except Exception as e:
+        app_log('ERROR', f'Tool life load failed: {e}')
+        _tool_life_data = {}
+
+def _save_tool_life():
+    """[2026-03-12] 存檔刀具壽命數據"""
+    global _tool_life_last_save
+    try:
+        with open(TOOL_LIFE_PATH, 'w', encoding='utf-8') as f:
+            json.dump(_tool_life_data, f, indent=2)
+        _tool_life_last_save = time.time()
+    except Exception as e:
+        app_log('ERROR', f'Tool life save failed: {e}')
+
+def _tool_life_tracker():
+    """[2026-03-12] 背景 thread：每秒追蹤切削時間 + 偵測 M6 換刀"""
+    global _tool_life_last_tool, _tool_life_last_save
+    _load_tool_life()
+
+    while True:
+        try:
+            time.sleep(1)
+            if cnc_stat is None:
+                continue
+            try:
+                cnc_stat.poll()
+            except:
+                continue
+
+            # 讀取當前刀號和主軸方向
+            current_tool = 0
+            spindle_dir = 0
+            try:
+                current_tool = int(cnc_stat.tool_in_spindle)
+            except:
+                pass
+            try:
+                if hasattr(cnc_stat, 'spindle') and len(cnc_stat.spindle) > 0:
+                    spindle_dir = int(cnc_stat.spindle[0].get('direction', 0))
+            except:
+                pass
+
+            with _tool_life_lock:
+                # 偵測 M6 換刀：刀號改變 → 舊刀 +1 次
+                if _tool_life_last_tool > 0 and current_tool > 0 and current_tool != _tool_life_last_tool:
+                    old_key = str(_tool_life_last_tool)
+                    if old_key not in _tool_life_data:
+                        _tool_life_data[old_key] = {"cutting_time_sec": 0, "change_count": 0, "max_time_sec": 0, "max_count": 0}
+                    _tool_life_data[old_key]["change_count"] += 1
+                    app_log('CMD', f'Tool life: T{_tool_life_last_tool} change_count +1 = {_tool_life_data[old_key]["change_count"]}')
+                    _save_tool_life()  # M6 時立即存檔
+
+                _tool_life_last_tool = current_tool
+
+                # 主軸轉動中 → 累加當前刀號切削時間
+                if current_tool > 0 and spindle_dir != 0:
+                    key = str(current_tool)
+                    if key not in _tool_life_data:
+                        _tool_life_data[key] = {"cutting_time_sec": 0, "change_count": 0, "max_time_sec": 0, "max_count": 0}
+                    _tool_life_data[key]["cutting_time_sec"] += 1
+
+                # 每 30 秒自動存檔
+                if time.time() - _tool_life_last_save >= 30:
+                    _save_tool_life()
+
+        except Exception as e:
+            app_log('ERROR', f'Tool life tracker error: {e}')
+            time.sleep(5)
+
+# 啟動背景追蹤 thread
+_tool_life_thread = threading.Thread(target=_tool_life_tracker, daemon=True)
+_tool_life_thread.start()
+
+@app.route('/v2/tool/life', methods=['GET'])
+def v2_tool_life():
+    """[2026-03-12] 讀取所有刀具壽命數據"""
+    try:
+        with _tool_life_lock:
+            return success_response(_tool_life_data)
+    except Exception as e:
+        return error_response(f"Tool life read failed: {e}")
+
+@app.route('/v2/tool/life/config', methods=['POST'])
+def v2_tool_life_config():
+    """[2026-03-12] 設定刀具壽命上限"""
+    try:
+        data = request.json or {}
+        tool_num = str(data.get('tool_number', 0))
+        max_time = data.get('max_time_sec', 0)
+        max_count = data.get('max_count', 0)
+        if tool_num == '0':
+            return error_response("Missing tool_number", 400)
+        with _tool_life_lock:
+            if tool_num not in _tool_life_data:
+                _tool_life_data[tool_num] = {"cutting_time_sec": 0, "change_count": 0, "max_time_sec": 0, "max_count": 0}
+            _tool_life_data[tool_num]["max_time_sec"] = int(max_time)
+            _tool_life_data[tool_num]["max_count"] = int(max_count)
+            _save_tool_life()
+        app_log('CMD', f'Tool life config: T{tool_num} max_time={max_time}s max_count={max_count}')
+        return success_response({'tool_number': tool_num, 'max_time_sec': max_time, 'max_count': max_count})
+    except Exception as e:
+        return error_response(f"Tool life config failed: {e}")
+
+@app.route('/v2/tool/life/reset', methods=['POST'])
+def v2_tool_life_reset():
+    """[2026-03-12] 歸零指定刀號壽命（換新刀時）"""
+    try:
+        data = request.json or {}
+        tool_num = str(data.get('tool_number', 0))
+        if tool_num == '0':
+            return error_response("Missing tool_number", 400)
+        with _tool_life_lock:
+            if tool_num in _tool_life_data:
+                _tool_life_data[tool_num]["cutting_time_sec"] = 0
+                _tool_life_data[tool_num]["change_count"] = 0
+                _save_tool_life()
+        app_log('CMD', f'Tool life reset: T{tool_num}')
+        return success_response({'tool_number': tool_num})
+    except Exception as e:
+        return error_response(f"Tool life reset failed: {e}")
+
+
+# ============================================================
+# [2026-03-12] 備份/還原 API
+# ============================================================
+BACKUP_DIR = os.path.join(USER_HOME, "linuxcnc/backups")
+BACKUP_FILES = [
+    '3axis.ini', '3axis.hal', 'ethercat-conf.xml',
+    'tool_metric.tbl', 'linuxcnc.var',
+    'probe_basic_postgui.hal', 'sim_probe.hal', 'sim_atc.hal',
+    'custom_config.yml'
+]
+
+@app.route('/v2/backup/create', methods=['POST'])
+def v2_backup_create():
+    """[2026-03-12] 建立備份：複製 CONFIG_DIR 關鍵檔案到時間戳資料夾"""
+    try:
+        import shutil
+        timestamp = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
+        backup_path = os.path.join(BACKUP_DIR, timestamp)
+        os.makedirs(backup_path, exist_ok=True)
+
+        copied = []
+        # 複製單檔
+        for fname in BACKUP_FILES:
+            src = os.path.join(CONFIG_DIR, fname)
+            if os.path.exists(src):
+                shutil.copy2(src, os.path.join(backup_path, fname))
+                copied.append(fname)
+
+        # 複製 NGC 巨集目錄
+        macros_src = os.path.join(CONFIG_DIR, 'macros_metric_sim')
+        if os.path.isdir(macros_src):
+            macros_dst = os.path.join(backup_path, 'macros_metric_sim')
+            shutil.copytree(macros_src, macros_dst)
+            for f in os.listdir(macros_dst):
+                copied.append(f'macros_metric_sim/{f}')
+
+        # 儲存前端上傳的 JSON 設定檔（若有）
+        data = request.json or {}
+        for key in ['MachineConfig', 'AppSettings', 'ProbeSettings', 'ToolLife']:
+            content = data.get(key)
+            if content:
+                with open(os.path.join(backup_path, f'{key}.json'), 'w', encoding='utf-8') as f:
+                    f.write(content)
+                copied.append(f'{key}.json')
+
+        # 寫入 manifest
+        manifest = {
+            'timestamp': timestamp,
+            'created_at': datetime.datetime.now().isoformat(),
+            'files': copied,
+            'file_count': len(copied)
+        }
+        with open(os.path.join(backup_path, 'backup_manifest.json'), 'w', encoding='utf-8') as f:
+            json.dump(manifest, f, indent=2)
+
+        # 計算總大小
+        total_size = sum(
+            os.path.getsize(os.path.join(dp, fn))
+            for dp, _, fns in os.walk(backup_path)
+            for fn in fns
+        )
+        app_log('CMD', f'Backup created: {timestamp} ({len(copied)} files, {total_size} bytes)')
+        return success_response({
+            'name': timestamp,
+            'file_count': len(copied),
+            'size_bytes': total_size
+        })
+    except Exception as e:
+        return error_response(f"Backup create failed: {e}")
+
+@app.route('/v2/backup/list', methods=['GET'])
+def v2_backup_list():
+    """[2026-03-12] 列出所有備份"""
+    try:
+        backups = []
+        if not os.path.isdir(BACKUP_DIR):
+            return success_response(backups)
+
+        for name in sorted(os.listdir(BACKUP_DIR), reverse=True):
+            bpath = os.path.join(BACKUP_DIR, name)
+            if not os.path.isdir(bpath):
+                continue
+            manifest_path = os.path.join(bpath, 'backup_manifest.json')
+            file_count = 0
+            if os.path.exists(manifest_path):
+                with open(manifest_path, 'r', encoding='utf-8') as f:
+                    m = json.load(f)
+                    file_count = m.get('file_count', 0)
+            total_size = sum(
+                os.path.getsize(os.path.join(dp, fn))
+                for dp, _, fns in os.walk(bpath)
+                for fn in fns
+            )
+            backups.append({
+                'name': name,
+                'file_count': file_count,
+                'size_bytes': total_size
+            })
+        return success_response(backups)
+    except Exception as e:
+        return error_response(f"Backup list failed: {e}")
+
+@app.route('/v2/backup/restore', methods=['POST'])
+def v2_backup_restore():
+    """[2026-03-12] 還原指定備份：覆蓋 CONFIG_DIR → 重啟 LinuxCNC"""
+    try:
+        import shutil
+        data = request.json or {}
+        name = data.get('name', '')
+        if not name:
+            return error_response("Missing backup name", 400)
+
+        bpath = os.path.join(BACKUP_DIR, name)
+        if not os.path.isdir(bpath):
+            return error_response(f"Backup not found: {name}", 404)
+
+        restored = []
+        # 還原單檔
+        for fname in BACKUP_FILES:
+            src = os.path.join(bpath, fname)
+            if os.path.exists(src):
+                shutil.copy2(src, os.path.join(CONFIG_DIR, fname))
+                restored.append(fname)
+
+        # 還原 NGC 巨集目錄
+        macros_src = os.path.join(bpath, 'macros_metric_sim')
+        if os.path.isdir(macros_src):
+            macros_dst = os.path.join(CONFIG_DIR, 'macros_metric_sim')
+            if os.path.isdir(macros_dst):
+                shutil.rmtree(macros_dst)
+            shutil.copytree(macros_src, macros_dst)
+            restored.append('macros_metric_sim/')
+
+        app_log('CMD', f'Backup restored: {name} ({len(restored)} items)')
+
+        # 讀取前端 JSON 設定檔回傳（讓前端自行還原）
+        frontend_configs = {}
+        for key in ['MachineConfig', 'AppSettings', 'ProbeSettings', 'ToolLife']:
+            fpath = os.path.join(bpath, f'{key}.json')
+            if os.path.exists(fpath):
+                with open(fpath, 'r', encoding='utf-8') as f:
+                    frontend_configs[key] = f.read()
+
+        # [2026-03-12] 還原後延遲重啟 LinuxCNC（獨立 thread 避免阻塞回應）
+        def _delayed_restart():
+            import time
+            time.sleep(1)
+            perform_hard_restart()
+        threading.Thread(target=_delayed_restart, daemon=True).start()
+
+        return success_response({
+            'restored': restored,
+            'frontend_configs': frontend_configs
+        })
+    except Exception as e:
+        return error_response(f"Backup restore failed: {e}")
+
+@app.route('/v2/backup/delete', methods=['POST'])
+def v2_backup_delete():
+    """[2026-03-12] 刪除指定備份"""
+    try:
+        import shutil
+        data = request.json or {}
+        name = data.get('name', '')
+        if not name:
+            return error_response("Missing backup name", 400)
+
+        bpath = os.path.join(BACKUP_DIR, name)
+        if not os.path.isdir(bpath):
+            return error_response(f"Backup not found: {name}", 404)
+
+        shutil.rmtree(bpath)
+        app_log('CMD', f'Backup deleted: {name}')
+        return success_response({'deleted': name})
+    except Exception as e:
+        return error_response(f"Backup delete failed: {e}")
+
+
+# ============================================================
+# [2026-03-12] 加工時間統計（背景 thread 追蹤）
+# ============================================================
+MACHINING_STATS_PATH = os.path.join(CONFIG_DIR, 'machining_stats.json')
+_machining_stats = {"total_seconds": 0, "cycle_count": 0, "last_file": ""}
+_machining_stats_lock = threading.Lock()
+
+def _load_machining_stats():
+    global _machining_stats
+    try:
+        if os.path.exists(MACHINING_STATS_PATH):
+            with open(MACHINING_STATS_PATH, 'r', encoding='utf-8') as f:
+                _machining_stats = json.load(f)
+    except:
+        pass
+
+def _save_machining_stats():
+    try:
+        with open(MACHINING_STATS_PATH, 'w', encoding='utf-8') as f:
+            json.dump(_machining_stats, f, indent=2)
+    except:
+        pass
+
+def _machining_stats_tracker():
+    """[2026-03-12] 背景 thread：追蹤加工時間與完成件數"""
+    _load_machining_stats()
+    was_running = False
+    last_save = time.time()
+
+    while True:
+        try:
+            time.sleep(1)
+            if cnc_stat is None:
+                continue
+            try:
+                cnc_stat.poll()
+            except:
+                continue
+
+            is_running = False
+            try:
+                is_running = cnc_stat.interp_state in (linuxcnc.INTERP_READING, linuxcnc.INTERP_WAITING) if linuxcnc else False
+            except:
+                pass
+
+            with _machining_stats_lock:
+                if is_running:
+                    _machining_stats["total_seconds"] += 1
+                    try:
+                        if cnc_stat.file:
+                            _machining_stats["last_file"] = os.path.basename(cnc_stat.file)
+                    except:
+                        pass
+
+                # 偵測 RUNNING → IDLE 轉換 = 一件完成
+                if was_running and not is_running:
+                    _machining_stats["cycle_count"] += 1
+                    _save_machining_stats()
+
+                was_running = is_running
+
+                # 每 30 秒自動存檔
+                if time.time() - last_save >= 30:
+                    _save_machining_stats()
+                    last_save = time.time()
+        except Exception as e:
+            app_log('ERROR', f'Machining stats tracker error: {e}')
+            time.sleep(5)
+
+_machining_stats_thread = threading.Thread(target=_machining_stats_tracker, daemon=True)
+_machining_stats_thread.start()
+
+@app.route('/v2/machining/stats', methods=['GET'])
+def v2_machining_stats():
+    """[2026-03-12] 讀取加工統計"""
+    try:
+        with _machining_stats_lock:
+            return success_response(dict(_machining_stats))
+    except Exception as e:
+        return error_response(f"Machining stats read failed: {e}")
+
+@app.route('/v2/machining/stats/reset', methods=['POST'])
+def v2_machining_stats_reset():
+    """[2026-03-12] 重置加工統計"""
+    try:
+        with _machining_stats_lock:
+            _machining_stats["total_seconds"] = 0
+            _machining_stats["cycle_count"] = 0
+            _save_machining_stats()
+        return success_response({'reset': True})
+    except Exception as e:
+        return error_response(f"Machining stats reset failed: {e}")
+
+
+# ============================================================
+# [2026-03-12] 維護保養提醒（持久化 JSON）
+# ============================================================
+MAINTENANCE_PATH = os.path.join(CONFIG_DIR, 'maintenance.json')
+_maintenance_data = []  # [{"name":"潤滑油","interval_hours":500,"last_reset_time":0,"accumulated_hours":0}]
+_maintenance_lock = threading.Lock()
+
+def _load_maintenance():
+    global _maintenance_data
+    try:
+        if os.path.exists(MAINTENANCE_PATH):
+            with open(MAINTENANCE_PATH, 'r', encoding='utf-8') as f:
+                _maintenance_data = json.load(f)
+    except:
+        _maintenance_data = []
+
+def _save_maintenance():
+    try:
+        with open(MAINTENANCE_PATH, 'w', encoding='utf-8') as f:
+            json.dump(_maintenance_data, f, indent=2, ensure_ascii=False)
+    except:
+        pass
+
+def _maintenance_tracker():
+    """[2026-03-12] 背景 thread：追蹤機台運轉時數（Task_State=ON 時累加）"""
+    _load_maintenance()
+    last_save = time.time()
+
+    while True:
+        try:
+            time.sleep(1)
+            if cnc_stat is None:
+                continue
+            try:
+                cnc_stat.poll()
+            except:
+                continue
+
+            is_on = False
+            try:
+                is_on = (cnc_stat.task_state == linuxcnc.STATE_ON) if linuxcnc else False
+            except:
+                pass
+
+            if is_on:
+                with _maintenance_lock:
+                    for item in _maintenance_data:
+                        item["accumulated_hours"] = item.get("accumulated_hours", 0) + (1.0 / 3600.0)
+
+            if time.time() - last_save >= 60:
+                with _maintenance_lock:
+                    _save_maintenance()
+                last_save = time.time()
+        except:
+            time.sleep(5)
+
+_maintenance_thread = threading.Thread(target=_maintenance_tracker, daemon=True)
+_maintenance_thread.start()
+
+@app.route('/v2/maintenance', methods=['GET'])
+def v2_maintenance_get():
+    """[2026-03-12] 讀取維護項目列表"""
+    try:
+        with _maintenance_lock:
+            return success_response(list(_maintenance_data))
+    except Exception as e:
+        return error_response(f"Maintenance read failed: {e}")
+
+@app.route('/v2/maintenance', methods=['POST'])
+def v2_maintenance_post():
+    """[2026-03-12] 新增/更新維護項目"""
+    try:
+        data = request.json or {}
+        items = data.get('items', [])
+        with _maintenance_lock:
+            global _maintenance_data
+            _maintenance_data = items
+            _save_maintenance()
+        return success_response({'saved': len(items)})
+    except Exception as e:
+        return error_response(f"Maintenance save failed: {e}")
+
+@app.route('/v2/maintenance/reset', methods=['POST'])
+def v2_maintenance_reset():
+    """[2026-03-12] 重置指定維護項目的累計時數"""
+    try:
+        data = request.json or {}
+        name = data.get('name', '')
+        with _maintenance_lock:
+            for item in _maintenance_data:
+                if item.get('name') == name:
+                    item['accumulated_hours'] = 0
+                    item['last_reset_time'] = time.time()
+                    break
+            _save_maintenance()
+        return success_response({'reset': name})
+    except Exception as e:
+        return error_response(f"Maintenance reset failed: {e}")
+
+
+# ============================================================
+# [2026-03-12] 斷電續切（加工中定期保存恢復狀態）
+# ============================================================
+RESUME_STATE_PATH = os.path.join(CONFIG_DIR, 'resume_state.json')
+
+def _resume_state_tracker():
+    """[2026-03-12] 背景 thread：加工中每 5 秒保存恢復狀態，完成後清除"""
+    was_running = False
+
+    while True:
+        try:
+            time.sleep(5)
+            if cnc_stat is None:
+                continue
+            try:
+                cnc_stat.poll()
+            except:
+                continue
+
+            is_running = False
+            try:
+                is_running = cnc_stat.interp_state in (linuxcnc.INTERP_READING, linuxcnc.INTERP_WAITING) if linuxcnc else False
+            except:
+                pass
+
+            if is_running:
+                # 保存恢復狀態
+                try:
+                    state = {
+                        "file": os.path.basename(cnc_stat.file) if cnc_stat.file else "",
+                        "line": int(cnc_stat.motion_line),
+                        "tool": int(cnc_stat.tool_in_spindle),
+                        "wcs": cnc_stat.g5x_index,
+                        "timestamp": time.time()
+                    }
+                    with open(RESUME_STATE_PATH, 'w', encoding='utf-8') as f:
+                        json.dump(state, f, indent=2)
+                except:
+                    pass
+            elif was_running and not is_running:
+                # 正常完成 → 清除恢復狀態
+                try:
+                    if os.path.exists(RESUME_STATE_PATH):
+                        os.remove(RESUME_STATE_PATH)
+                except:
+                    pass
+
+            was_running = is_running
+        except:
+            time.sleep(5)
+
+_resume_state_thread = threading.Thread(target=_resume_state_tracker, daemon=True)
+_resume_state_thread.start()
+
+@app.route('/v2/resume/state', methods=['GET'])
+def v2_resume_state():
+    """[2026-03-12] 讀取斷電續切恢復狀態"""
+    try:
+        if os.path.exists(RESUME_STATE_PATH):
+            with open(RESUME_STATE_PATH, 'r', encoding='utf-8') as f:
+                state = json.load(f)
+            return success_response(state)
+        return success_response(None)
+    except Exception as e:
+        return error_response(f"Resume state read failed: {e}")
+
+@app.route('/v2/resume/clear', methods=['POST'])
+def v2_resume_clear():
+    """[2026-03-12] 清除恢復狀態"""
+    try:
+        if os.path.exists(RESUME_STATE_PATH):
+            os.remove(RESUME_STATE_PATH)
+        return success_response({'cleared': True})
+    except Exception as e:
+        return error_response(f"Resume state clear failed: {e}")
 
 
 if __name__ == '__main__':

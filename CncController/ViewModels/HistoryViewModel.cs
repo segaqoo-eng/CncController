@@ -1,12 +1,24 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Linq;
 using System.Windows.Data;
 using CncController.Services;
 using CncController.Models;
 
 namespace CncController.ViewModels
 {
+    // [2026-03-12] 報警統計項目（供 STATS 分頁）
+    public partial class AlarmStatItem : ObservableObject
+    {
+        [ObservableProperty] private string _message = "";
+        [ObservableProperty] private string _type = "";
+        [ObservableProperty] private int _count;
+        [ObservableProperty] private string _lastTime = "";
+    }
+
     public partial class HistoryViewModel : ObservableObject
     {
         // 用於介面綁定的視圖 (支援過濾功能)
@@ -15,6 +27,13 @@ namespace CncController.ViewModels
         // 目前選中的過濾器名稱 (用於控制按鈕狀態)
         [ObservableProperty]
         private string _currentFilter = "ALL";
+
+        // [2026-03-12] 報警統計
+        [ObservableProperty] private int _totalErrorCount;
+        [ObservableProperty] private int _totalWarnCount;
+        [ObservableProperty] private int _totalInfoCount;
+        [ObservableProperty] private ObservableCollection<AlarmStatItem> _topAlarms = new();
+        [ObservableProperty] private string _selectedTab = "LOG";
 
         public HistoryViewModel()
         {
@@ -26,9 +45,6 @@ namespace CncController.ViewModels
 
             // 3. 設定過濾邏輯
             LogsView.Filter = FilterLogs;
-
-            // 4. 依照時間排序 (最新的在上面) - 雖然 Insert(0) 已經是最新，但保險起見可加
-            // LogsView.SortDescriptions.Add(new SortDescription("Time", ListSortDirection.Descending));
         }
 
         // 過濾邏輯核心
@@ -62,9 +78,35 @@ namespace CncController.ViewModels
         {
             // 呼叫 Service 清除抬頭警報
             AlarmService.Instance.ClearActiveAlarms();
+        }
 
-            // 這裡不需要 Refresh，因為 HistoryView 是顯示 AllLogs (歷史紀錄)，
-            // ClearActiveAlarms 只清 ActiveAlarms，歷史紀錄會多一筆 "Reset" Log，會自動出現。
+        // [2026-03-12] 計算報警統計
+        [RelayCommand]
+        private void RefreshStats()
+        {
+            var logs = AlarmService.Instance.AllLogs;
+
+            TotalErrorCount = logs.Count(l => l.Type == LogType.Error);
+            TotalWarnCount = logs.Count(l => l.Type == LogType.Warning);
+            TotalInfoCount = logs.Count(l => l.Type == LogType.Info);
+
+            // Top 10 最頻繁的錯誤/警告訊息
+            var grouped = logs
+                .Where(l => l.Type == LogType.Error || l.Type == LogType.Warning)
+                .GroupBy(l => l.DisplayMessage)
+                .OrderByDescending(g => g.Count())
+                .Take(10)
+                .Select(g => new AlarmStatItem
+                {
+                    Message = g.Key,
+                    Type = g.First().Type.ToString(),
+                    Count = g.Count(),
+                    LastTime = g.Max(l => l.Time).ToString("MM/dd HH:mm")
+                });
+
+            TopAlarms.Clear();
+            foreach (var item in grouped)
+                TopAlarms.Add(item);
         }
     }
 }

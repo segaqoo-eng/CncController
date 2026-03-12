@@ -12,7 +12,8 @@
              mc:Ignorable="d" d:DesignHeight="900" d:DesignWidth="1400"
              FontFamily="{DynamicResource FontFamily.Default}">
 
-    <Grid Background="#1E1E1E">
+    <!-- [2026-03-12] 移除 hardcoded 色碼，改用 DynamicResource 主題變數 -->
+    <Grid Background="{DynamicResource Brush.PanelBackground}">
         <TabControl Background="Transparent" BorderThickness="0">
             <TabControl.Resources>
                 <x:Array x:Key="DiList" Type="sys:Int32">
@@ -40,12 +41,12 @@
                     <Setter Property="Template">
                         <Setter.Value>
                             <ControlTemplate TargetType="TabItem">
-                                <Border x:Name="bd" Background="#333" Padding="20,10" Margin="0,0,2,0">
+                                <Border x:Name="bd" Background="{DynamicResource Brush.Input.Background}" Padding="20,10" Margin="0,0,2,0">
                                     <ContentPresenter ContentSource="Header"/>
                                 </Border>
                                 <ControlTemplate.Triggers>
                                     <Trigger Property="IsSelected" Value="True">
-                                        <Setter TargetName="bd" Property="Background" Value="#5E70FF"/>
+                                        <Setter TargetName="bd" Property="Background" Value="{DynamicResource Brush.Accent}"/>
                                         <Setter Property="Foreground" Value="White"/>
                                     </Trigger>
                                 </ControlTemplate.Triggers>
@@ -55,14 +56,14 @@
                 </Style>
 
                 <Style x:Key="CenterHeaderStyle" TargetType="DataGridColumnHeader">
-                    <Setter Property="Background" Value="#444"/>
+                    <Setter Property="Background" Value="{DynamicResource Brush.Border}"/>
                     <Setter Property="Foreground" Value="#AAA"/>
                     <Setter Property="Padding" Value="5,8"/>
                     <Setter Property="FontSize" Value="{DynamicResource FontSize.Body}"/>
                     <Setter Property="FontWeight" Value="Bold"/>
                     <Setter Property="HorizontalContentAlignment" Value="Center"/>
                     <Setter Property="BorderThickness" Value="0,0,1,1"/>
-                    <Setter Property="BorderBrush" Value="#555"/>
+                    <Setter Property="BorderBrush" Value="{DynamicResource Brush.Btn.Border}"/>
                 </Style>
 
                 <Style x:Key="CenterCellStyle" TargetType="DataGridCell">
@@ -88,7 +89,7 @@
                     <Setter Property="Padding" Value="0"/>
                     <Setter Property="VerticalContentAlignment" Value="Center"/>
                     <Setter Property="HorizontalContentAlignment" Value="Center"/>
-                    <Setter Property="Background" Value="#222"/>
+                    <Setter Property="Background" Value="{DynamicResource Brush.Input.Background}"/>
                     <Setter Property="Foreground" Value="White"/>
                     <Setter Property="BorderThickness" Value="0"/>
                 </Style>
@@ -108,7 +109,7 @@
                     </StackPanel>
 
                     <DataGrid Grid.Row="1" ItemsSource="{Binding HardwareVM.Slaves}" AutoGenerateColumns="False" 
-                              Background="#2D2D2D" RowBackground="#333" Foreground="White" Margin="0,20" CanUserAddRows="False">
+                              Background="#2D2D2D" RowBackground="{DynamicResource Brush.Input.Background}" Foreground="White" Margin="0,20" CanUserAddRows="False">
                         <DataGrid.Resources>
                             <Style TargetType="DataGridColumnHeader" BasedOn="{StaticResource CenterHeaderStyle}"/>
                         </DataGrid.Resources>
@@ -155,8 +156,8 @@
                     <!-- [2026-03-11] 統一 GroupHeader -->
                     <TextBlock Grid.Row="0" Text="1. Mechanical &amp; Motion Settings" Style="{StaticResource GroupHeaderText}" Margin="0,0,0,5"/>
                     <DataGrid Grid.Row="1" ItemsSource="{Binding Axes}" AutoGenerateColumns="False"
-                              Background="#2D2D2D" RowBackground="#333" Foreground="White"
-                              BorderThickness="1" BorderBrush="#555" CanUserAddRows="False" RowHeight="35" 
+                              Background="#2D2D2D" RowBackground="{DynamicResource Brush.Input.Background}" Foreground="White"
+                              BorderThickness="1" BorderBrush="{DynamicResource Brush.Btn.Border}" CanUserAddRows="False" RowHeight="35" 
                               CellStyle="{StaticResource CenterCellStyle}" ColumnHeaderStyle="{StaticResource CenterHeaderStyle}">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="Axis" Binding="{Binding Name}" IsReadOnly="True" Width="60" FontWeight="Bold"/>
@@ -172,8 +173,8 @@
                     <!-- [2026-03-11] 統一 GroupHeader -->
                     <TextBlock Grid.Row="3" Text="2. IO Configuration &amp; Homing Strategy" Style="{StaticResource GroupHeaderText}" Margin="0,0,0,5"/>
                     <DataGrid Grid.Row="4" ItemsSource="{Binding Axes}" AutoGenerateColumns="False"
-                              Background="#2D2D2D" RowBackground="#333" Foreground="White"
-                              BorderThickness="1" BorderBrush="#555" CanUserAddRows="False" RowHeight="35"
+                              Background="#2D2D2D" RowBackground="{DynamicResource Brush.Input.Background}" Foreground="White"
+                              BorderThickness="1" BorderBrush="{DynamicResource Brush.Btn.Border}" CanUserAddRows="False" RowHeight="35"
                               CellStyle="{StaticResource CenterCellStyle}" ColumnHeaderStyle="{StaticResource CenterHeaderStyle}">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="Axis" Binding="{Binding Name}" IsReadOnly="True" Width="60" FontWeight="Bold"/>
@@ -282,18 +283,18 @@
                             </ItemsControl.ItemsPanel>
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
-                                    <Border Background="#2D2D2D" BorderBrush="#444" BorderThickness="1" CornerRadius="4" Margin="0,0,15,15" Width="380" Padding="15">
+                                    <Border Background="#2D2D2D" BorderBrush="{DynamicResource Brush.Border}" BorderThickness="1" CornerRadius="4" Margin="0,0,15,15" Width="380" Padding="15">
                                         <StackPanel>
                                             <!-- [2026-02-24] 卡片標題：軸名 + Slave 編號 -->
                                             <Grid Margin="0,0,0,10">
                                                 <StackPanel Orientation="Horizontal">
-                                                    <TextBlock Text="{Binding Title}" Foreground="#5E70FF" FontWeight="Bold" FontSize="{DynamicResource FontSize.XLarge}"/>
+                                                    <TextBlock Text="{Binding Title}" Foreground="{DynamicResource Brush.GroupHeader.Foreground}" FontWeight="Bold" FontSize="{DynamicResource FontSize.XLarge}"/>
                                                     <TextBlock Text="  Slave #" Foreground="#888" FontSize="{DynamicResource FontSize.Body}" VerticalAlignment="Bottom" Margin="4,0,0,1"/>
                                                     <TextBlock Text="{Binding SlaveIndex}" Foreground="#888" FontSize="{DynamicResource FontSize.Body}" VerticalAlignment="Bottom" Margin="0,0,0,1"/>
                                                 </StackPanel>
                                                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                                                     <TextBlock Text="{Binding StatusHex}" Foreground="#AAA" FontFamily="{DynamicResource FontFamily.Mono}" VerticalAlignment="Center" Margin="0,0,10,0"/>
-                                                    <Border Background="#333" CornerRadius="3" Padding="8,2">
+                                                    <Border Background="{DynamicResource Brush.Input.Background}" CornerRadius="3" Padding="8,2">
                                                         <TextBlock Text="{Binding StatusDesc}" Foreground="White" FontWeight="Bold"/>
                                                         <Border.Style>
                                                             <Style TargetType="Border">
@@ -311,7 +312,7 @@
                                                 </StackPanel>
                                             </Grid>
 
-                                            <Separator Background="#444" Margin="0,0,0,10"/>
+                                            <Separator Background="{DynamicResource Brush.Border}" Margin="0,0,0,10"/>
 
                                             <TextBlock Text="Digital Inputs (0x60FD)" Foreground="#888" Margin="0,0,0,5" FontSize="{DynamicResource FontSize.Body}"/>
                                             <ItemsControl ItemsSource="{Binding Inputs}">
@@ -369,12 +370,12 @@
                         </Grid.RowDefinitions>
                         <!-- [2026-03-05] 改為純列表模式（掃描結果自動填入，不可選設備） -->
                         <!-- [2026-03-05] 移除步驟編號（純列表不需引導） -->
-                        <TextBlock Text="Input Modules" Foreground="#5E70FF" FontWeight="Bold" Margin="0,0,0,5"/>
+                        <TextBlock Text="Input Modules" Foreground="{DynamicResource Brush.GroupHeader.Foreground}" FontWeight="Bold" Margin="0,0,0,5"/>
                         <DataGrid x:Name="InMapGrid"
                                   ItemsSource="{Binding InMaps}"
                                   AutoGenerateColumns="False"
-                                  Background="#2D2D2D" RowBackground="#333" Foreground="White"
-                                  BorderBrush="#555" BorderThickness="1"
+                                  Background="#2D2D2D" RowBackground="{DynamicResource Brush.Input.Background}" Foreground="White"
+                                  BorderBrush="{DynamicResource Brush.Btn.Border}" BorderThickness="1"
                                   CanUserAddRows="False" RowHeight="40"
                                   SelectionMode="Single"
                                   SelectedIndex="{Binding SelectedInMapIndex, Mode=TwoWay}"
@@ -400,7 +401,7 @@
                         </DataGrid>
                     </Grid>
 
-                    <GridSplitter Grid.Column="1" Width="5" HorizontalAlignment="Stretch" Background="#444"/>
+                    <GridSplitter Grid.Column="1" Width="5" HorizontalAlignment="Stretch" Background="{DynamicResource Brush.Border}"/>
 
                     <Grid Grid.Column="2" Margin="10,0,0,0">
                         <Grid.RowDefinitions>
@@ -410,7 +411,7 @@
 
                         <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,5">
                             <!-- [2026-03-05] 移除步驟編號，改用 DisplayName -->
-                            <TextBlock Text="Pin Configuration for: " Foreground="#5E70FF" FontWeight="Bold"/>
+                            <TextBlock Text="Pin Configuration for: " Foreground="{DynamicResource Brush.GroupHeader.Foreground}" FontWeight="Bold"/>
                             <TextBlock Text="{Binding ElementName=InMapGrid, Path=SelectedItem.DisplayName}" Foreground="White" FontWeight="Bold" Margin="5,0,0,0"/>
                         </StackPanel>
 
@@ -418,8 +419,8 @@
                                   DataContext="{Binding ElementName=InMapGrid, Path=SelectedItem, NotifyOnTargetUpdated=True}"
                                   ItemsSource="{Binding PinSettings}"
                                   AutoGenerateColumns="False"
-                                  Background="#1E1E1E" RowBackground="#252526" Foreground="White"
-                                  BorderBrush="#555" BorderThickness="1"
+                                  Background="#1E1E1E" RowBackground="{DynamicResource Brush.Panel.Secondary}" Foreground="White"
+                                  BorderBrush="{DynamicResource Brush.Btn.Border}" BorderThickness="1"
                                   CanUserAddRows="False" RowHeight="32"
                                   CellStyle="{StaticResource CenterCellStyle}" 
                                   ColumnHeaderStyle="{StaticResource CenterHeaderStyle}">
@@ -501,12 +502,12 @@
                         </Grid.RowDefinitions>
                         <!-- [2026-03-05] 改為純列表模式（掃描結果自動填入，不可選設備） -->
                         <!-- [2026-03-05] 移除步驟編號（純列表不需引導） -->
-                        <TextBlock Text="Output Modules" Foreground="#5E70FF" FontWeight="Bold" Margin="0,0,0,5"/>
+                        <TextBlock Text="Output Modules" Foreground="{DynamicResource Brush.GroupHeader.Foreground}" FontWeight="Bold" Margin="0,0,0,5"/>
                         <DataGrid x:Name="OutMapGrid"
                                   ItemsSource="{Binding OutMaps}"
                                   AutoGenerateColumns="False"
-                                  Background="#2D2D2D" RowBackground="#333" Foreground="White"
-                                  BorderBrush="#555" BorderThickness="1"
+                                  Background="#2D2D2D" RowBackground="{DynamicResource Brush.Input.Background}" Foreground="White"
+                                  BorderBrush="{DynamicResource Brush.Btn.Border}" BorderThickness="1"
                                   CanUserAddRows="False" RowHeight="40"
                                   SelectionMode="Single"
                                   SelectedIndex="{Binding SelectedOutMapIndex, Mode=TwoWay}"
@@ -532,7 +533,7 @@
                         </DataGrid>
                     </Grid>
 
-                    <GridSplitter Grid.Column="1" Width="5" HorizontalAlignment="Stretch" Background="#444"/>
+                    <GridSplitter Grid.Column="1" Width="5" HorizontalAlignment="Stretch" Background="{DynamicResource Brush.Border}"/>
 
                     <Grid Grid.Column="2" Margin="10,0,0,0">
                         <Grid.RowDefinitions>
@@ -542,7 +543,7 @@
 
                         <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,5">
                             <!-- [2026-03-05] 移除步驟編號，改用 DisplayName -->
-                            <TextBlock Text="Pin Configuration for: " Foreground="#5E70FF" FontWeight="Bold"/>
+                            <TextBlock Text="Pin Configuration for: " Foreground="{DynamicResource Brush.GroupHeader.Foreground}" FontWeight="Bold"/>
                             <TextBlock Text="{Binding ElementName=OutMapGrid, Path=SelectedItem.DisplayName}" Foreground="White" FontWeight="Bold" Margin="5,0,0,0"/>
                         </StackPanel>
 
@@ -550,8 +551,8 @@
                                   DataContext="{Binding ElementName=OutMapGrid, Path=SelectedItem, NotifyOnTargetUpdated=True}"
                                   ItemsSource="{Binding PinSettings}"
                                   AutoGenerateColumns="False"
-                                  Background="#1E1E1E" RowBackground="#252526" Foreground="White"
-                                  BorderBrush="#555" BorderThickness="1"
+                                  Background="#1E1E1E" RowBackground="{DynamicResource Brush.Panel.Secondary}" Foreground="White"
+                                  BorderBrush="{DynamicResource Brush.Btn.Border}" BorderThickness="1"
                                   CanUserAddRows="False" RowHeight="32"
                                   CellStyle="{StaticResource CenterCellStyle}" 
                                   ColumnHeaderStyle="{StaticResource CenterHeaderStyle}">
@@ -636,6 +637,169 @@
             <!-- [2026-03-06] ATC IO 設定 -->
             <TabItem Header="ATC IO" DataContext="{Binding AtcIoVM}">
                 <pages:AtcIoSettingsView/>
+            </TabItem>
+
+            <!-- [2026-03-12] 巨集變數監控 -->
+            <TabItem Header="MACRO VAR" DataContext="{Binding MacroVM}">
+                <pages:MacroVariablesView/>
+            </TabItem>
+
+            <!-- [2026-03-12] BACKUP 備份/還原分頁 -->
+            <TabItem Header="BACKUP" DataContext="{Binding BackupVM}">
+                <Grid Margin="16">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- 標題 + CREATE 按鈕 -->
+                    <DockPanel Grid.Row="0" Margin="0,0,0,10">
+                        <Border DockPanel.Dock="Left" Style="{StaticResource PanelTitleBorder}" Padding="12,6">
+                            <TextBlock Text="{DynamicResource Str.Backup.Title}" Style="{StaticResource PanelTitleText}"
+                                       FontSize="{DynamicResource FontSize.XLarge}"/>
+                        </Border>
+                        <Button DockPanel.Dock="Right" Content="{DynamicResource Str.Backup.Create}" Style="{StaticResource BaseBtnStyle}"
+                                Command="{Binding CreateBackupCommand}" HorizontalAlignment="Right"
+                                FontSize="{DynamicResource FontSize.Large}" FontWeight="Bold" Padding="20,8"/>
+                        <Button DockPanel.Dock="Right" Content="{DynamicResource Str.Backup.Refresh}" Style="{StaticResource BaseBtnStyle}"
+                                Command="{Binding RefreshListCommand}" HorizontalAlignment="Right"
+                                FontSize="{DynamicResource FontSize.Body}" Padding="12,8" Margin="0,0,8,0"/>
+                    </DockPanel>
+
+                    <!-- 備份清單 DataGrid -->
+                    <DataGrid Grid.Row="1" ItemsSource="{Binding Backups}" SelectedItem="{Binding SelectedBackup}"
+                              AutoGenerateColumns="False" IsReadOnly="True"
+                              CanUserAddRows="False" CanUserDeleteRows="False"
+                              Background="{DynamicResource Brush.PanelBackground}"
+                              Foreground="{DynamicResource Brush.Text.Primary}"
+                              BorderBrush="{DynamicResource Brush.Border}" BorderThickness="1"
+                              RowBackground="{DynamicResource Brush.Panel.Secondary}"
+                              AlternatingRowBackground="{DynamicResource Brush.Panel.Overlay}"
+                              FontSize="{DynamicResource FontSize.Large}"
+                              RowHeight="36" HeadersVisibility="Column"
+                              GridLinesVisibility="Horizontal"
+                              HorizontalGridLinesBrush="{DynamicResource Brush.Border}"
+                              SelectionMode="Single">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="{DynamicResource Str.Backup.Name}" Width="250"
+                                                Binding="{Binding Name}"/>
+                            <DataGridTextColumn Header="{DynamicResource Str.Backup.FileCount}" Width="100"
+                                                Binding="{Binding FileCount}"/>
+                            <DataGridTextColumn Header="{DynamicResource Str.Backup.Size}" Width="120"
+                                                Binding="{Binding DisplaySize}"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+
+                    <!-- 操作按鈕列 -->
+                    <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0">
+                        <Button Content="{DynamicResource Str.Backup.Restore}" Style="{StaticResource BaseBtnStyle}"
+                                Command="{Binding RestoreBackupCommand}"
+                                FontSize="{DynamicResource FontSize.Large}" FontWeight="Bold" Padding="20,8" Margin="0,0,8,0"/>
+                        <Button Content="{DynamicResource Str.Backup.Delete}" Style="{StaticResource BaseBtnStyle}"
+                                Command="{Binding DeleteBackupCommand}"
+                                FontSize="{DynamicResource FontSize.Large}" Padding="20,8"/>
+                    </StackPanel>
+
+                    <!-- 狀態列 -->
+                    <TextBlock Grid.Row="3" Text="{Binding StatusText}" Margin="0,8,0,0"
+                               Foreground="{DynamicResource Brush.Text.Primary}" FontSize="{DynamicResource FontSize.Large}"
+                               FontWeight="Bold"/>
+                </Grid>
+            </TabItem>
+            <!-- [2026-03-12] MAINTENANCE 維護保養分頁 -->
+            <TabItem Header="MAINTENANCE" DataContext="{Binding MaintenanceVM}">
+                <Grid Margin="16">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- 標題 + 按鈕列 -->
+                    <DockPanel Grid.Row="0" Margin="0,0,0,10">
+                        <Border DockPanel.Dock="Left" Style="{StaticResource PanelTitleBorder}" Padding="12,6">
+                            <TextBlock Text="{DynamicResource Str.Maint.Title}" Style="{StaticResource PanelTitleText}"
+                                       FontSize="{DynamicResource FontSize.XLarge}"/>
+                        </Border>
+                        <Button DockPanel.Dock="Right" Content="{DynamicResource Str.Maint.Load}" Style="{StaticResource BaseBtnStyle}"
+                                Command="{Binding LoadItemsCommand}" HorizontalAlignment="Right"
+                                FontSize="{DynamicResource FontSize.Large}" Padding="16,8"/>
+                    </DockPanel>
+
+                    <!-- 保養項目 DataGrid -->
+                    <DataGrid Grid.Row="1" ItemsSource="{Binding Items}" SelectedItem="{Binding SelectedItem}"
+                              AutoGenerateColumns="False" IsReadOnly="True"
+                              CanUserAddRows="False" CanUserDeleteRows="False"
+                              Background="{DynamicResource Brush.PanelBackground}"
+                              Foreground="{DynamicResource Brush.Text.Primary}"
+                              BorderBrush="{DynamicResource Brush.Border}" BorderThickness="1"
+                              RowBackground="{DynamicResource Brush.Panel.Secondary}"
+                              AlternatingRowBackground="{DynamicResource Brush.Panel.Overlay}"
+                              FontSize="{DynamicResource FontSize.Large}"
+                              RowHeight="40" HeadersVisibility="Column"
+                              GridLinesVisibility="Horizontal"
+                              HorizontalGridLinesBrush="{DynamicResource Brush.Border}"
+                              ColumnHeaderHeight="36">
+                        <DataGrid.Resources>
+                            <Style TargetType="DataGridColumnHeader">
+                                <Setter Property="Background" Value="{DynamicResource Brush.Grid.Header}"/>
+                                <Setter Property="Foreground" Value="{DynamicResource Brush.Text.Muted}"/>
+                                <Setter Property="FontWeight" Value="Bold"/>
+                                <Setter Property="Padding" Value="10,0"/>
+                            </Style>
+                        </DataGrid.Resources>
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="{DynamicResource Str.Maint.Name}" Binding="{Binding Name}" Width="200"/>
+                            <DataGridTextColumn Header="{DynamicResource Str.Maint.Interval}" Binding="{Binding IntervalHours, StringFormat='{}{0:F0} hr'}" Width="120"/>
+                            <DataGridTextColumn Header="{DynamicResource Str.Maint.Accumulated}" Binding="{Binding AccumulatedDisplay}" Width="140"/>
+                            <DataGridTextColumn Header="{DynamicResource Str.Maint.Remaining}" Binding="{Binding RemainingHours, StringFormat='{}{0:F1} hr'}" Width="140"/>
+                            <!-- 進度條欄 -->
+                            <DataGridTemplateColumn Header="{DynamicResource Str.Maint.Progress}" Width="200">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Grid>
+                                            <ProgressBar Value="{Binding ProgressPercent, Mode=OneWay}" Maximum="100" Height="20"
+                                                         Background="{DynamicResource Brush.Input.Background}" BorderThickness="0"/>
+                                            <TextBlock Text="{Binding ProgressPercent, StringFormat='{}{0:F0}%'}"
+                                                       HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                       FontSize="{DynamicResource FontSize.Body}" FontWeight="Bold"
+                                                       Foreground="{DynamicResource Brush.Text.Primary}"/>
+                                        </Grid>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+
+                    <!-- 操作按鈕列 -->
+                    <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,10,0,0">
+                        <TextBlock Text="{DynamicResource Str.Maint.NewName}" Foreground="{DynamicResource Brush.Text.Primary}"
+                                   FontSize="{DynamicResource FontSize.Large}" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                        <TextBox Text="{Binding NewName, UpdateSourceTrigger=PropertyChanged}" Width="200" Height="32"
+                                 FontSize="{DynamicResource FontSize.Large}" Margin="0,0,8,0"
+                                 Background="{DynamicResource Brush.Input.Background}" Foreground="{DynamicResource Brush.Input.Foreground}"
+                                 BorderBrush="{DynamicResource Brush.Border}"/>
+                        <TextBlock Text="{DynamicResource Str.Maint.IntervalHr}" Foreground="{DynamicResource Brush.Text.Primary}"
+                                   FontSize="{DynamicResource FontSize.Large}" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                        <TextBox Text="{Binding NewIntervalHours, UpdateSourceTrigger=PropertyChanged}" Width="80" Height="32"
+                                 FontSize="{DynamicResource FontSize.Large}" Margin="0,0,16,0"
+                                 Background="{DynamicResource Brush.Input.Background}" Foreground="{DynamicResource Brush.Input.Foreground}"
+                                 BorderBrush="{DynamicResource Brush.Border}"/>
+                        <Button Content="{DynamicResource Str.Maint.Add}" Style="{StaticResource BaseBtnStyle}"
+                                Command="{Binding AddItemCommand}" FontSize="{DynamicResource FontSize.Large}" Padding="16,8" Margin="0,0,8,0"/>
+                        <Button Content="{DynamicResource Str.Maint.Remove}" Style="{StaticResource BaseBtnStyle}"
+                                Command="{Binding RemoveItemCommand}" FontSize="{DynamicResource FontSize.Large}" Padding="16,8" Margin="0,0,8,0"/>
+                        <Button Content="{DynamicResource Str.Maint.Reset}" Style="{StaticResource BaseBtnStyle}"
+                                Command="{Binding ResetItemCommand}" FontSize="{DynamicResource FontSize.Large}" Padding="16,8"/>
+                    </StackPanel>
+
+                    <!-- 狀態列 -->
+                    <TextBlock Grid.Row="3" Text="{Binding StatusText}" Margin="0,8,0,0"
+                               Foreground="{DynamicResource Brush.Text.Primary}" FontSize="{DynamicResource FontSize.Large}" FontWeight="Bold"/>
+                </Grid>
             </TabItem>
         </TabControl>
     </Grid>

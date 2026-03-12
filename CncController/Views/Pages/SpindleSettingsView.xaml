@@ -10,15 +10,17 @@
 
     <UserControl.Resources>
         <Style x:Key="ParamLabel" TargetType="TextBlock">
-            <Setter Property="Foreground" Value="White"/>
+            <!-- [2026-03-12] White → Brush.Text.Primary -->
+            <Setter Property="Foreground" Value="{DynamicResource Brush.Text.Primary}"/>
             <Setter Property="FontSize" Value="{DynamicResource FontSize.Medium}"/>
             <Setter Property="VerticalAlignment" Value="Center"/>
             <Setter Property="HorizontalAlignment" Value="Right"/>
             <Setter Property="Margin" Value="0,0,10,0"/>
         </Style>
         <Style x:Key="ParamTextBox" TargetType="TextBox">
-            <Setter Property="Background" Value="White"/>
-            <Setter Property="Foreground" Value="Black"/>
+            <!-- [2026-03-12] White/Black → Input.Background/Text.Primary -->
+            <Setter Property="Background" Value="{DynamicResource Brush.Input.Background}"/>
+            <Setter Property="Foreground" Value="{DynamicResource Brush.Text.Primary}"/>
             <Setter Property="FontSize" Value="{DynamicResource FontSize.Medium}"/>
             <Setter Property="FontFamily" Value="{DynamicResource FontFamily.Default}"/>
             <Setter Property="Width" Value="120"/>
@@ -26,28 +28,33 @@
             <Setter Property="TextAlignment" Value="Center"/>
             <Setter Property="VerticalContentAlignment" Value="Center"/>
             <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="BorderBrush" Value="#555"/>
+            <!-- [2026-03-12] #555 → Brush.Btn.Border -->
+            <Setter Property="BorderBrush" Value="{DynamicResource Brush.Btn.Border}"/>
         </Style>
         <Style x:Key="UnitLabel" TargetType="TextBlock">
-            <Setter Property="Foreground" Value="Gray"/>
+            <!-- [2026-03-12] Gray → Brush.Text.Dim -->
+            <Setter Property="Foreground" Value="{DynamicResource Brush.Text.Dim}"/>
             <Setter Property="FontSize" Value="{DynamicResource FontSize.Body}"/>
             <Setter Property="VerticalAlignment" Value="Center"/>
             <Setter Property="Margin" Value="8,0,0,0"/>
         </Style>
         <Style x:Key="SectionHeader" TargetType="TextBlock">
-            <Setter Property="Foreground" Value="#5E70FF"/>
+            <!-- [2026-03-12] #5E70FF → Brush.GroupHeader.Foreground -->
+            <Setter Property="Foreground" Value="{DynamicResource Brush.GroupHeader.Foreground}"/>
             <Setter Property="FontWeight" Value="Bold"/>
             <Setter Property="FontSize" Value="{DynamicResource FontSize.Medium}"/>
         </Style>
         <Style x:Key="SettingsGroupBox" TargetType="GroupBox">
-            <Setter Property="BorderBrush" Value="#555"/>
+            <!-- [2026-03-12] #555 → Brush.Btn.Border -->
+            <Setter Property="BorderBrush" Value="{DynamicResource Brush.Btn.Border}"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="Margin" Value="0,0,0,10"/>
             <Setter Property="Padding" Value="15,10"/>
         </Style>
     </UserControl.Resources>
 
-    <ScrollViewer VerticalScrollBarVisibility="Auto" Background="#1E1E1E">
+    <!-- [2026-03-12] #1E1E1E → Brush.WindowBackground -->
+    <ScrollViewer VerticalScrollBarVisibility="Auto" Background="{DynamicResource Brush.WindowBackground}">
         <StackPanel Margin="20">
 
             <!-- [2026-03-06] SPINDLE SERVO -->
@@ -63,7 +70,8 @@
                         </Grid.ColumnDefinitions>
                         <TextBlock Grid.Column="0" Text="EtherCAT Slave:" Style="{StaticResource ParamLabel}"/>
                         <!-- [2026-03-09] DisplayMemberPath 改為 DisplayName，顯示站號避免選錯 -->
-                        <ComboBox Grid.Column="1" Width="300" FontSize="{DynamicResource FontSize.Medium}" Height="30" Foreground="Black"
+                        <!-- [2026-03-12] Foreground Black → Brush.Menu.Foreground -->
+                        <ComboBox Grid.Column="1" Width="300" FontSize="{DynamicResource FontSize.Medium}" Height="30" Foreground="{DynamicResource Brush.Menu.Foreground}"
                                   ItemsSource="{Binding AvailableSlaves}"
                                   SelectedItem="{Binding SelectedSpindleSlave}"
                                   DisplayMemberPath="DisplayName"/>
@@ -129,7 +137,7 @@
                         </Grid.ColumnDefinitions>
                         <TextBlock Grid.Column="0" Text="Rigid Tapping:" Style="{StaticResource ParamLabel}"/>
                         <CheckBox Grid.Column="1" IsChecked="{Binding RigidTappingEnabled}"
-                                  Content="Enable G33.1" Foreground="White" FontSize="{DynamicResource FontSize.Medium}"
+                                  Content="Enable G33.1" Foreground="{DynamicResource Brush.Text.Primary}" FontSize="{DynamicResource FontSize.Medium}"
                                   VerticalAlignment="Center"/>
                     </Grid>
                     <Grid Margin="0,5">
@@ -153,7 +161,8 @@
                     <TextBlock Text="INFO" Style="{StaticResource SectionHeader}"/>
                 </GroupBox.Header>
                 <StackPanel>
-                    <TextBlock FontSize="{DynamicResource FontSize.Medium}" Foreground="#CCC" Margin="0,4">
+                    <!-- [2026-03-12] #CCC → Brush.Text.Secondary -->
+                    <TextBlock FontSize="{DynamicResource FontSize.Medium}" Foreground="{DynamicResource Brush.Text.Secondary}" Margin="0,4">
                         <TextBlock.Style>
                             <Style TargetType="TextBlock">
                                 <Setter Property="Visibility" Value="Visible"/>
@@ -172,7 +181,8 @@
                             </MultiBinding>
                         </TextBlock.Text>
                     </TextBlock>
-                    <TextBlock Text="No slave selected" FontSize="{DynamicResource FontSize.Medium}" Foreground="#888" Margin="0,4">
+                    <!-- [2026-03-12] #888 → Brush.Text.Dim -->
+                    <TextBlock Text="No slave selected" FontSize="{DynamicResource FontSize.Medium}" Foreground="{DynamicResource Brush.Text.Dim}" Margin="0,4">
                         <TextBlock.Style>
                             <Style TargetType="TextBlock">
                                 <Setter Property="Visibility" Value="Collapsed"/>

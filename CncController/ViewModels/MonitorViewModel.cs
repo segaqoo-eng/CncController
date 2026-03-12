@@ -6,6 +6,9 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Win32;
+using System.Windows.Media;
+using System.Windows.Media.Media3D;
+using CncController.Helpers;
 using CncController.Models;
 using CncController.Services;
 
@@ -33,6 +36,9 @@ namespace CncController.ViewModels
 
         // [2026-03-04] G-Code 逐行集合（供 MonitorView ItemsControl 行號高亮使用）
         public ObservableCollection<GCodeLineItem> GCodeLines { get; } = new();
+
+        // [2026-03-12] 3D 刀具路徑模型（供 HelixViewport3D 綁定）
+        [ObservableProperty] private Model3DGroup _toolPathModel = new();
 
         // [2026-03-11] 機台端程式檔案清單
         public ObservableCollection<ProgramFileInfo> ProgramFiles { get; } = new();
@@ -88,6 +94,49 @@ namespace CncController.ViewModels
                 });
             }
             IsGCodeEmpty = false;
+
+            // [2026-03-12] 同步解析 3D 刀具路徑
+            BuildToolPath3D(value);
+        }
+
+        // [2026-03-12] 生成 3D 刀具路徑模型
+        private void BuildToolPath3D(string gcode)
+        {
+            var group = new Model3DGroup();
+            try
+            {
+                var segments = GCodePathParser3D.Parse(gcode);
+                foreach (var seg in segments)
+                {
+                    var mesh = new MeshGeometry3D();
+                    // 用細長的三角帶模擬線段（HelixToolkit LinesVisual3D 較重，用輕量 mesh）
+                    double t = 0.15; // 線寬
+                    var p1 = seg.Start;
+                    var p2 = seg.End;
+
+                    // 建立一個細方管（4 個三角形面）
+                    mesh.Positions.Add(new Point3D(p1.X - t, p1.Y, p1.Z));
+                    mesh.Positions.Add(new Point3D(p1.X + t, p1.Y, p1.Z));
+                    mesh.Positions.Add(new Point3D(p2.X + t, p2.Y, p2.Z));
+                    mesh.Positions.Add(new Point3D(p2.X - t, p2.Y, p2.Z));
+                    mesh.Positions.Add(new Point3D(p1.X, p1.Y - t, p1.Z));
+                    mesh.Positions.Add(new Point3D(p1.X, p1.Y + t, p1.Z));
+                    mesh.Positions.Add(new Point3D(p2.X, p2.Y + t, p2.Z));
+                    mesh.Positions.Add(new Point3D(p2.X, p2.Y - t, p2.Z));
+
+                    mesh.TriangleIndices.Add(0); mesh.TriangleIndices.Add(1); mesh.TriangleIndices.Add(2);
+                    mesh.TriangleIndices.Add(0); mesh.TriangleIndices.Add(2); mesh.TriangleIndices.Add(3);
+                    mesh.TriangleIndices.Add(4); mesh.TriangleIndices.Add(5); mesh.TriangleIndices.Add(6);
+                    mesh.TriangleIndices.Add(4); mesh.TriangleIndices.Add(6); mesh.TriangleIndices.Add(7);
+
+                    var color = seg.IsRapid ? Colors.Yellow : Colors.LimeGreen;
+                    var material = new DiffuseMaterial(new SolidColorBrush(color));
+                    group.Children.Add(new GeometryModel3D(mesh, material));
+                }
+            }
+            catch { /* 解析失敗靜默，不影響 UI */ }
+
+            ToolPathModel = group;
         }
 
         // [2026-03-04] 當 MachineStatus.CurrentLine 變化時更新高亮行

@@ -552,6 +552,9 @@ namespace CncController.ViewModels
             }
         }
 
+        // [2026-03-12] 探針模擬旗標（供 XAML 綁定，非模擬時隱藏 SIM 區塊）
+        public bool IsProbeSimulation => ConfigurationService.IsProbeSimulation;
+
         // [2026-03-05] 探針模擬：依探測方向計算觸發位置，設定 HAL comp signal
         // 模擬碰觸點 = 當前位置 + 探測方向 * 最大距離 * 70%
         // 非探測軸設為 99999（不觸發）

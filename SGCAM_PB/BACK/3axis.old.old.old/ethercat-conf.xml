@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<masters>
+  <master idx="0" appTimePeriod="1000000" refClockSyncCycles="1000">
+    <slave idx="0" type="generic" vid="0x00100000" pid="0x000c010d" configPdos="true">
+      <dcConf assignActivate="300" sync0Cycle="*1" sync0Shift="0"/>
+      <syncManager idx="2" dir="out">
+        <pdo idx="1600">
+          <pdoEntry idx="6040" subIdx="00" bitLen="16" halPin="control_word_J0" halType="u32"/>
+          <pdoEntry idx="607a" subIdx="00" bitLen="32" halPin="target_position_J0" halType="s32"/>
+          <pdoEntry idx="6060" subIdx="00" bitLen="8" halPin="modes_of_operation_J0" halType="s32"/>
+          <pdoEntry idx="60fd" subIdx="00" bitLen="32" halPin="digital_inputs_J0" halType="u32"/>
+        </pdo>
+      </syncManager>
+      <syncManager idx="3" dir="in">
+        <pdo idx="1a00">
+          <pdoEntry idx="6041" subIdx="00" bitLen="16" halPin="status_word_J0" halType="u32"/>
+          <pdoEntry idx="6064" subIdx="00" bitLen="32" halPin="position_actual_value_J0" halType="s32"/>
+        </pdo>
+      </syncManager>
+    </slave>
+    <slave idx="2" type="generic" vid="0x000001dd" pid="0x00005621" configPdos="true">
+      <dcConf assignActivate="300" sync0Cycle="*1" sync0Shift="0"/>
+      <syncManager idx="2" dir="out">
+        <pdo idx="1600">
+          <pdoEntry idx="6040" subIdx="00" bitLen="16" halPin="control_word_J2" halType="u32"/>
+          <pdoEntry idx="607a" subIdx="00" bitLen="32" halPin="target_position_J2" halType="s32"/>
+          <pdoEntry idx="6060" subIdx="00" bitLen="8" halPin="modes_of_operation_J2" halType="s32"/>
+          <pdoEntry idx="60fd" subIdx="00" bitLen="32" halPin="digital_inputs_J2" halType="u32"/>
+        </pdo>
+      </syncManager>
+      <syncManager idx="3" dir="in">
+        <pdo idx="1a00">
+          <pdoEntry idx="6041" subIdx="00" bitLen="16" halPin="status_word_J2" halType="u32"/>
+          <pdoEntry idx="6064" subIdx="00" bitLen="32" halPin="position_actual_value_J2" halType="s32"/>
+        </pdo>
+      </syncManager>
+    </slave>
+    <slave idx="3" type="generic" vid="0x000001dd" pid="0x00005621" configPdos="true">
+      <dcConf assignActivate="300" sync0Cycle="*1" sync0Shift="0"/>
+      <syncManager idx="2" dir="out">
+        <pdo idx="1600">
+          <pdoEntry idx="6040" subIdx="00" bitLen="16" halPin="control_word_J3" halType="u32"/>
+          <pdoEntry idx="607a" subIdx="00" bitLen="32" halPin="target_position_J3" halType="s32"/>
+          <pdoEntry idx="6060" subIdx="00" bitLen="8" halPin="modes_of_operation_J3" halType="s32"/>
+          <pdoEntry idx="60fd" subIdx="00" bitLen="32" halPin="digital_inputs_J3" halType="u32"/>
+        </pdo>
+      </syncManager>
+      <syncManager idx="3" dir="in">
+        <pdo idx="1a00">
+          <pdoEntry idx="6041" subIdx="00" bitLen="16" halPin="status_word_J3" halType="u32"/>
+          <pdoEntry idx="6064" subIdx="00" bitLen="32" halPin="position_actual_value_J3" halType="s32"/>
+        </pdo>
+      </syncManager>
+    </slave>
+  </master>
+</masters>

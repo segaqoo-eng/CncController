@@ -1,0 +1,159 @@
+{
+  "system_status": "scanned",
+  "topology": [
+    {
+      "Slave": "0",
+      "VendorId": "0x00100000",
+      "ProductCode": "0x000c010d",
+      "Name": "SV660_1Axis_00916",
+      "Group": "InoServo",
+      "Model": "InoSV660N",
+      "Category": "Servo",
+      "Source": "Smart Fallback",
+      "Mapped PDOs": "Default Servo PDOs"
+    },
+    {
+      "Slave": "1",
+      "VendorId": "0x000001dd",
+      "ProductCode": "0x00005500",
+      "Name": "R1-EC5500 EtherCAT to E-BUS adapter Module",
+      "Group": "SystemBk",
+      "Model": "R1-EC5500",
+      "Category": "Coupler",
+      "Source": "Smart Fallback",
+      "Mapped PDOs": "None"
+    },
+    {
+      "Slave": "2",
+      "VendorId": "0x000001dd",
+      "ProductCode": "0x00005621",
+      "Name": "R1-EC5621 1-Axis Pulse Output Motion Control Module",
+      "Group": "Axis",
+      "Model": "R1-EC5621",
+      "Category": "Servo",
+      "Source": "Smart Fallback",
+      "Mapped PDOs": "Default Servo PDOs"
+    },
+    {
+      "Slave": "3",
+      "VendorId": "0x000001dd",
+      "ProductCode": "0x00005621",
+      "Name": "R1-EC5621 1-Axis Pulse Output Motion Control Module",
+      "Group": "Axis",
+      "Model": "R1-EC5621",
+      "Category": "Servo",
+      "Source": "Smart Fallback",
+      "Mapped PDOs": "Default Servo PDOs"
+    },
+    {
+      "Slave": "4",
+      "VendorId": "0x000001dd",
+      "ProductCode": "0x00005621",
+      "Name": "R1-EC5621 1-Axis Pulse Output Motion Control Module",
+      "Group": "Axis",
+      "Model": "R1-EC5621",
+      "Category": "Servo",
+      "Source": "Smart Fallback",
+      "Mapped PDOs": "Default Servo PDOs"
+    },
+    {
+      "Slave": "5",
+      "VendorId": "0x000001dd",
+      "ProductCode": "0x00005621",
+      "Name": "R1-EC5621 1-Axis Pulse Output Motion Control Module",
+      "Group": "Axis",
+      "Model": "R1-EC5621",
+      "Category": "Servo",
+      "Source": "Smart Fallback",
+      "Mapped PDOs": "Default Servo PDOs"
+    },
+    {
+      "Slave": "6",
+      "VendorId": "0x000001dd",
+      "ProductCode": "0x00005621",
+      "Name": "R1-EC5621 1-Axis Pulse Output Motion Control Module",
+      "Group": "Axis",
+      "Model": "R1-EC5621",
+      "Category": "Servo",
+      "Source": "Smart Fallback",
+      "Mapped PDOs": "Default Servo PDOs"
+    },
+    {
+      "Slave": "7",
+      "VendorId": "0x000001dd",
+      "ProductCode": "0x00005621",
+      "Name": "R1-EC5621 1-Axis Pulse Output Motion Control Module",
+      "Group": "Axis",
+      "Model": "R1-EC5621",
+      "Category": "Servo",
+      "Source": "Smart Fallback",
+      "Mapped PDOs": "Default Servo PDOs"
+    },
+    {
+      "Slave": "8",
+      "VendorId": "0x000001dd",
+      "ProductCode": "0x00005621",
+      "Name": "R1-EC5621 1-Axis Pulse Output Motion Control Module",
+      "Group": "Axis",
+      "Model": "R1-EC5621",
+      "Category": "Servo",
+      "Source": "Smart Fallback",
+      "Mapped PDOs": "Default Servo PDOs"
+    },
+    {
+      "Slave": "9",
+      "VendorId": "0x000001dd",
+      "ProductCode": "0x00005621",
+      "Name": "R1-EC5621 1-Axis Pulse Output Motion Control Module",
+      "Group": "Axis",
+      "Model": "R1-EC5621",
+      "Category": "Servo",
+      "Source": "Smart Fallback",
+      "Mapped PDOs": "Default Servo PDOs"
+    },
+    {
+      "Slave": "10",
+      "VendorId": "0x000001dd",
+      "ProductCode": "0x00005621",
+      "Name": "R1-EC5621 1-Axis Pulse Output Motion Control Module",
+      "Group": "Axis",
+      "Model": "R1-EC5621",
+      "Category": "Servo",
+      "Source": "Smart Fallback",
+      "Mapped PDOs": "Default Servo PDOs"
+    },
+    {
+      "Slave": "11",
+      "VendorId": "0x000001dd",
+      "ProductCode": "0x00009144",
+      "Name": "R1-EC9144 4-ch 16-bit Single-ended/Voltage or Current Mode D/A",
+      "Group": "AnaOut",
+      "Model": "R1-EC9144",
+      "Category": "DA",
+      "Source": "Smart Fallback",
+      "Mapped PDOs": "7000:01-04"
+    },
+    {
+      "Slave": "12",
+      "VendorId": "0x000001dd",
+      "ProductCode": "0x00005614",
+      "Name": "R1-EC5614 MPG Module With 4-axis select Functionr Module",
+      "Group": "Measuring",
+      "Model": "R1-EC5614",
+      "Category": "MPG",
+      "Source": "Smart Fallback",
+      "Mapped PDOs": "6000, 6064"
+    },
+    {
+      "Slave": "13",
+      "VendorId": "0x000001dd",
+      "ProductCode": "0x00000902",
+      "Name": "R2-EC0902 32-ch Sink/Source Dl/0.1ms Filter & 32-ch 24VDC/2A/Re",
+      "Group": "DigOut",
+      "Model": "R2-EC0902",
+      "Category": "DI+DO",
+      "Source": "Smart Fallback",
+      "Mapped PDOs": "IN:6000(32b), OUT:7000(32b)"
+    }
+  ]
+}

@@ -90,6 +90,12 @@ namespace CncController.ViewModels
         // [新增] 加工時間顯示 (給 CycleControl 用)
         [ObservableProperty] private string _cycleTimeDisplay = "00:00:00";
 
+        // [2026-03-12] 加工統計顯示（累計時間/循環次數/預估剩餘）
+        [ObservableProperty] private string _totalMachiningTimeDisplay = "--";
+        [ObservableProperty] private int _totalCycleCount;
+        [ObservableProperty] private string _estimatedRemainingDisplay = "--";
+        [ObservableProperty] private double _machiningProgressPercent;
+
         [ObservableProperty]
         private User _currentUser = new User { Username = "Operator", Role = UserRole.Operator };
 
@@ -231,12 +237,45 @@ namespace CncController.ViewModels
             System.Windows.Application.Current.Shutdown();
         }
 
-        // [2026-03-11] 多語言切換：透過 LocalizationService 動態替換 ResourceDictionary
+        // [2026-03-12] 開啟主軸暖機對話框
+        [RelayCommand]
+        private void OpenSpindleWarmup()
+        {
+            var dialog = new Views.Windows.SpindleWarmupWindow
+            {
+                Owner = System.Windows.Application.Current.MainWindow
+            };
+            dialog.ShowDialog();
+        }
+
+        // [2026-03-12] 語言/主題選單打勾狀態
+        [ObservableProperty] private bool _isLangZhTW = true;
+        [ObservableProperty] private bool _isLangEnUS = false;
+        [ObservableProperty] private bool _isThemeDefault = true;
+        [ObservableProperty] private bool _isThemeIndustrial = false;
+        [ObservableProperty] private bool _isThemeCyber = false;
+
+        // [2026-03-12] 多語言切換 + 持久化 + 打勾
         [RelayCommand]
         private void SwitchLanguage(string culture)
         {
             LocalizationService.Instance.SwitchLanguage(culture);
+            AppSettings.Instance.UpdateLanguage(culture);
+            IsLangZhTW = culture == "zh-TW";
+            IsLangEnUS = culture == "en-US";
             AlarmService.Instance.AddLog("INFO", $"Language switched to {culture}");
+        }
+
+        // [2026-03-12] 主題切換 + 持久化 + 打勾
+        [RelayCommand]
+        private void SwitchTheme(string themeName)
+        {
+            ThemeService.Instance.SwitchTheme(themeName);
+            AppSettings.Instance.UpdateTheme(themeName);
+            IsThemeDefault = themeName == "Default";
+            IsThemeIndustrial = themeName == "Industrial";
+            IsThemeCyber = themeName == "Cyber";
+            AlarmService.Instance.AddLog("INFO", $"Theme switched to {themeName}");
         }
 
         // ==============================================================================
@@ -257,6 +296,24 @@ namespace CncController.ViewModels
                     if (IsStartingUp) IsStartingUp = false;
                 });
             });
+
+            // [2026-03-12] 啟動時還原上次的語言 & 主題設定
+            var savedLang = AppSettings.Instance.Language;
+            if (savedLang != "zh-TW")
+            {
+                LocalizationService.Instance.SwitchLanguage(savedLang);
+            }
+            IsLangZhTW = savedLang == "zh-TW";
+            IsLangEnUS = savedLang == "en-US";
+
+            var savedTheme = AppSettings.Instance.Theme;
+            if (savedTheme != "Default")
+            {
+                ThemeService.Instance.SwitchTheme(savedTheme);
+            }
+            IsThemeDefault = savedTheme == "Default";
+            IsThemeIndustrial = savedTheme == "Industrial";
+            IsThemeCyber = savedTheme == "Cyber";
 
             // ★★★ [關鍵修改] 初始化時使用長駐的 MonitorVM ★★★
             CurrentViewModel = MonitorVM;
@@ -331,6 +388,10 @@ namespace CncController.ViewModels
 
             // [新增] 啟動後非同步執行硬體自動驗證（不阻塞 UI）
             _ = AutoValidateHardware();
+
+            // [2026-03-12] 開機延遲 5 秒後檢查斷電續切狀態（等待連線建立）
+            _ = Task.Delay(TimeSpan.FromSeconds(5)).ContinueWith(_ =>
+                System.Windows.Application.Current.Dispatcher.Invoke(async () => await CheckResumeState()));
         }
 
         // ==============================================================================
@@ -442,6 +503,9 @@ namespace CncController.ViewModels
                 {
                     _cycleTimer.Stop();
                 }
+
+                // [2026-03-12] 定期拉取加工統計
+                if (IsConnected) await PollMachiningStats();
 
                 // 3. 抓錯誤 (原有邏輯)
                 if (IsConnected)
@@ -669,6 +733,11 @@ namespace CncController.ViewModels
             IsOptionalStop = data.Optional_Stop;
             Status.IsOptionalStop = data.Optional_Stop;
             Status.CurrentLine = data.Current_Line;
+            // [2026-03-12] 同步 G-Code 總行數（供加工進度預估）
+            Status.ProgramTotalLines = data.Program_Total_Lines;
+
+            // [2026-03-12] 更新加工進度預估
+            UpdateMachiningProgress();
 
             // 更新 InterpState 供計時器判斷
             Status.InterpState = data.Interp_State;
@@ -1204,5 +1273,91 @@ namespace CncController.ViewModels
             UpdateHeaderStatus();
         }
 
+        // [2026-03-12] 更新加工進度預估（由 StatusTimer_Tick 每次輪詢後呼叫）
+        private void UpdateMachiningProgress()
+        {
+            int current = Status.CurrentLine;
+            int total = Status.ProgramTotalLines;
+
+            if (total > 0 && current > 0)
+            {
+                MachiningProgressPercent = Math.Min((double)current / total * 100, 100);
+
+                // 預估剩餘時間 = 已用時間 × (剩餘行數 / 已完成行數)
+                if (Status.InterpState == "RUNNING" && _cycleTimer.IsEnabled)
+                {
+                    var elapsed = DateTime.Now - _cycleStartTime;
+                    if (current > 1 && elapsed.TotalSeconds > 2)
+                    {
+                        double remaining = elapsed.TotalSeconds * (total - current) / current;
+                        var ts = TimeSpan.FromSeconds(remaining);
+                        EstimatedRemainingDisplay = ts.TotalHours >= 1
+                            ? $"{(int)ts.TotalHours}h {ts.Minutes:D2}m"
+                            : $"{ts.Minutes}m {ts.Seconds:D2}s";
+                    }
+                }
+            }
+            else
+            {
+                MachiningProgressPercent = 0;
+                EstimatedRemainingDisplay = "--";
+            }
+        }
+
+        // [2026-03-12] 定期從後端拉取加工統計（每 10 秒，不阻塞主輪詢）
+        private int _statsCounter;
+        private async Task PollMachiningStats()
+        {
+            _statsCounter++;
+            if (_statsCounter % 20 != 0) return; // 每 20 次輪詢（~10s @500ms）
+
+            try
+            {
+                var stats = await MachineControlService.Instance.GetMachiningStatsAsync();
+                if (stats != null)
+                {
+                    TotalMachiningTimeDisplay = stats.TotalTimeDisplay;
+                    TotalCycleCount = stats.CycleCount;
+                }
+            }
+            catch { /* 非關鍵，靜默 */ }
+        }
+
+        // [2026-03-12] 開機檢查斷電續切狀態
+        private async Task CheckResumeState()
+        {
+            try
+            {
+                var state = await MachineControlService.Instance.GetResumeStateAsync();
+                if (state != null && !string.IsNullOrEmpty(state.File) && state.Line > 0)
+                {
+                    var fileName = System.IO.Path.GetFileName(state.File);
+                    var msg = $"偵測到中斷的加工作業：\n\n" +
+                              $"檔案：{fileName}\n" +
+                              $"中斷行號：{state.Line}\n" +
+                              $"刀具：T{state.Tool}\n" +
+                              $"時間：{state.TimestampDisplay}\n\n" +
+                              $"是否從行號 {state.Line} 繼續加工？";
+
+                    var result = System.Windows.MessageBox.Show(msg, "斷電續切",
+                        System.Windows.MessageBoxButton.YesNo, System.Windows.MessageBoxImage.Question);
+
+                    if (result == System.Windows.MessageBoxResult.Yes)
+                    {
+                        AlarmService.Instance.AddLog("INFO", $"斷電續切：從 {fileName} 第 {state.Line} 行恢復");
+                        await MachineControlService.Instance.RunFromLineAsync(state.File, state.Line);
+                    }
+                    else
+                    {
+                        await MachineControlService.Instance.ClearResumeStateAsync();
+                        AlarmService.Instance.AddLog("INFO", "使用者取消斷電續切");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                AlarmService.Instance.AddLog("DEBUG", $"Resume check: {ex.Message}");
+            }
+        }
     }
 }

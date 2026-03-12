@@ -23,7 +23,7 @@
             <Setter Property="VerticalContentAlignment" Value="Center"/>
             <Setter Property="Padding" Value="4,0"/>
             <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="BorderBrush" Value="#555"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource Brush.Btn.Border}"/>
         </Style>
         <Style x:Key="ParamLabel" TargetType="TextBlock">
             <Setter Property="Foreground" Value="White"/>
@@ -40,11 +40,11 @@
         </Style>
     </UserControl.Resources>
 
-    <ScrollViewer VerticalScrollBarVisibility="Auto" Background="#1E1E1E">
+    <ScrollViewer VerticalScrollBarVisibility="Auto" Background="{DynamicResource Brush.Grid.Background}">
         <StackPanel Margin="20">
 
             <!-- [2026-03-06] CAROUSEL ROTATION SERVO -->
-            <GroupBox BorderBrush="#555" BorderThickness="1" Margin="0,0,0,10" Padding="15,10">
+            <GroupBox BorderBrush="{DynamicResource Brush.Btn.Border}" BorderThickness="1" Margin="0,0,0,10" Padding="15,10">
                 <GroupBox.Header>
                     <TextBlock Text="{DynamicResource Str.Atc.CarouselRotationServo}" Style="{StaticResource GroupHeaderText}"/>
                 </GroupBox.Header>
@@ -63,7 +63,7 @@
             </GroupBox>
 
             <!-- [2026-03-06] MECHANICAL PARAMETERS -->
-            <GroupBox BorderBrush="#555" BorderThickness="1" Margin="0,0,0,10" Padding="15,10">
+            <GroupBox BorderBrush="{DynamicResource Brush.Btn.Border}" BorderThickness="1" Margin="0,0,0,10" Padding="15,10">
                 <GroupBox.Header>
                     <TextBlock Text="{DynamicResource Str.Atc.MechanicalParams}" Style="{StaticResource GroupHeaderText}"/>
                 </GroupBox.Header>
@@ -96,7 +96,7 @@
             </GroupBox>
 
             <!-- [2026-03-06] MOTION PARAMETERS -->
-            <GroupBox BorderBrush="#555" BorderThickness="1" Margin="0,0,0,10" Padding="15,10">
+            <GroupBox BorderBrush="{DynamicResource Brush.Btn.Border}" BorderThickness="1" Margin="0,0,0,10" Padding="15,10">
                 <GroupBox.Header>
                     <TextBlock Text="{DynamicResource Str.Atc.MotionParams}" Style="{StaticResource GroupHeaderText}"/>
                 </GroupBox.Header>
@@ -129,12 +129,12 @@
             </GroupBox>
 
             <!-- [2026-03-06] INFO -->
-            <GroupBox BorderBrush="#555" BorderThickness="1" Margin="0,0,0,10" Padding="15,10">
+            <GroupBox BorderBrush="{DynamicResource Brush.Btn.Border}" BorderThickness="1" Margin="0,0,0,10" Padding="15,10">
                 <GroupBox.Header>
                     <TextBlock Text="{DynamicResource Str.Atc.Info}" Style="{StaticResource GroupHeaderText}"/>
                 </GroupBox.Header>
                 <StackPanel>
-                    <TextBlock FontSize="{DynamicResource FontSize.Medium}" Foreground="#CCC" Margin="0,4">
+                    <TextBlock FontSize="{DynamicResource FontSize.Medium}" Foreground="{DynamicResource Brush.Text.Secondary}" Margin="0,4">
                         <TextBlock.Style>
                             <Style TargetType="TextBlock">
                                 <Setter Property="Visibility" Value="Visible"/>
@@ -153,7 +153,7 @@
                             </MultiBinding>
                         </TextBlock.Text>
                     </TextBlock>
-                    <TextBlock Text="{DynamicResource Str.Atc.NoSlaveSelected}" FontSize="{DynamicResource FontSize.Medium}" Foreground="#888" Margin="0,4">
+                    <TextBlock Text="{DynamicResource Str.Atc.NoSlaveSelected}" FontSize="{DynamicResource FontSize.Medium}" Foreground="{DynamicResource Brush.Text.Dim}" Margin="0,4">
                         <TextBlock.Style>
                             <Style TargetType="TextBlock">
                                 <Setter Property="Visibility" Value="Collapsed"/>

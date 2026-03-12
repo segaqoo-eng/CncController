@@ -31,7 +31,7 @@
             <Setter Property="VerticalContentAlignment" Value="Center"/>
             <Setter Property="Padding" Value="4,0"/>
             <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="BorderBrush" Value="#555"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource Brush.Btn.Border}"/>
         </Style>
         <Style x:Key="UnitLabel" TargetType="TextBlock">
             <Setter Property="Foreground" Value="Gray"/>
@@ -40,14 +40,14 @@
             <Setter Property="Margin" Value="8,0,0,0"/>
         </Style>
         <Style x:Key="SettingsGroupBox" TargetType="GroupBox">
-            <Setter Property="BorderBrush" Value="#555"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource Brush.Btn.Border}"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="Margin" Value="0,0,0,10"/>
             <Setter Property="Padding" Value="15,10"/>
         </Style>
     </UserControl.Resources>
 
-    <ScrollViewer VerticalScrollBarVisibility="Auto" Background="#1E1E1E">
+    <ScrollViewer VerticalScrollBarVisibility="Auto" Background="{DynamicResource Brush.Grid.Background}">
         <StackPanel Margin="20">
 
             <!-- [2026-03-06] ATC TYPE section -->

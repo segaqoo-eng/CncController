@@ -35,7 +35,7 @@
             <TextBlock Grid.Row="0" Grid.Column="0" Text="{DynamicResource Str.Label.Axis}" Foreground="{DynamicResource Brush.Text.Muted}" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="{DynamicResource FontSize.Large}" FontWeight="Bold"/>
             <!-- [2026-02-24] Work 欄標題動態顯示 G5X（如 "G54 WORK"） -->
             <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
-                <TextBlock Text="{Binding DataContext.Status.ActiveCoordSystem, RelativeSource={RelativeSource AncestorType=Window}}" Foreground="#007ACC" FontWeight="Bold" FontSize="{DynamicResource FontSize.Large}"/>
+                <TextBlock Text="{Binding DataContext.Status.ActiveCoordSystem, RelativeSource={RelativeSource AncestorType=Window}}" Foreground="{DynamicResource Brush.Accent}" FontWeight="Bold" FontSize="{DynamicResource FontSize.Large}"/>
                 <TextBlock Text="{DynamicResource Str.Label.Work}" Foreground="{DynamicResource Brush.Text.Muted}" FontSize="{DynamicResource FontSize.Large}" FontWeight="Bold"/>
             </StackPanel>
             <TextBlock Grid.Row="0" Grid.Column="2" Text="{DynamicResource Str.Label.Machine}" Foreground="{DynamicResource Brush.Text.Muted}" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="{DynamicResource FontSize.Large}" FontWeight="Bold"/>
@@ -52,23 +52,24 @@
                     Command="{Binding DataContext.DroZeroAxisCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                     CommandParameter="X"/>
             <!-- Work X -->
-            <Border Grid.Row="1" Grid.Column="1" Background="{DynamicResource Brush.DRO.Background}" Margin="2" CornerRadius="2">
+            <Border Grid.Row="1" Grid.Column="1" Background="{DynamicResource Brush.DRO.Background}" BorderBrush="{DynamicResource Brush.DRO.Border}" BorderThickness="1" Margin="2" CornerRadius="2">
                 <TextBlock Text="{Binding DataContext.Status.WorkX, RelativeSource={RelativeSource AncestorType=Window}, StringFormat=F3}"
                            Foreground="{DynamicResource Brush.DRO.Foreground}" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="5" FontSize="{DynamicResource FontSize.DRO}" FontWeight="Bold" FontFamily="{DynamicResource FontFamily.Mono}"/>
             </Border>
             <!-- Machine X -->
-            <Border Grid.Row="1" Grid.Column="2" Background="{DynamicResource Brush.DRO.Background}" Margin="2" CornerRadius="2">
+            <Border Grid.Row="1" Grid.Column="2" Background="{DynamicResource Brush.DRO.Background}" BorderBrush="{DynamicResource Brush.DRO.Border}" BorderThickness="1" Margin="2" CornerRadius="2">
                 <TextBlock Text="{Binding DataContext.Status.X, RelativeSource={RelativeSource AncestorType=Window}, StringFormat=F3}"
                            Foreground="{DynamicResource Brush.DRO.Foreground}" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="5" FontSize="{DynamicResource FontSize.DRO}" FontWeight="Bold" FontFamily="{DynamicResource FontFamily.Mono}"/>
             </Border>
             <!-- DTG X -->
-            <Border Grid.Row="1" Grid.Column="3" Background="{DynamicResource Brush.DRO.Background}" Margin="2" CornerRadius="2">
+            <Border Grid.Row="1" Grid.Column="3" Background="{DynamicResource Brush.DRO.Background}" BorderBrush="{DynamicResource Brush.DRO.Border}" BorderThickness="1" Margin="2" CornerRadius="2">
                 <TextBlock Text="{Binding DataContext.Status.DtgX, RelativeSource={RelativeSource AncestorType=Window}, StringFormat=F3}"
                            Foreground="{DynamicResource Brush.DRO.Foreground}" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="5" FontSize="{DynamicResource FontSize.DRO}" FontWeight="Bold" FontFamily="{DynamicResource FontFamily.Mono}"/>
             </Border>
             <!-- REF X -->
+            <!-- [2026-03-12] Foreground="White" → DynamicResource -->
             <Button Grid.Row="1" Grid.Column="4" Content="REF X" Margin="2" FontSize="{DynamicResource FontSize.Medium}" FontWeight="Bold"
-                    Foreground="White" BorderThickness="1"
+                    Foreground="{DynamicResource Brush.Text.Primary}" BorderThickness="1"
                     Command="{Binding DataContext.RefAxisCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                     CommandParameter="X">
                 <Button.Style>
@@ -90,20 +91,21 @@
                     Style="{StaticResource BaseBtnStyle}"
                     Command="{Binding DataContext.DroZeroAxisCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                     CommandParameter="Y"/>
-            <Border Grid.Row="2" Grid.Column="1" Background="{DynamicResource Brush.DRO.Background}" Margin="2" CornerRadius="2">
+            <Border Grid.Row="2" Grid.Column="1" Background="{DynamicResource Brush.DRO.Background}" BorderBrush="{DynamicResource Brush.DRO.Border}" BorderThickness="1" Margin="2" CornerRadius="2">
                 <TextBlock Text="{Binding DataContext.Status.WorkY, RelativeSource={RelativeSource AncestorType=Window}, StringFormat=F3}"
                            Foreground="{DynamicResource Brush.DRO.Foreground}" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="5" FontSize="{DynamicResource FontSize.DRO}" FontWeight="Bold" FontFamily="{DynamicResource FontFamily.Mono}"/>
             </Border>
-            <Border Grid.Row="2" Grid.Column="2" Background="{DynamicResource Brush.DRO.Background}" Margin="2" CornerRadius="2">
+            <Border Grid.Row="2" Grid.Column="2" Background="{DynamicResource Brush.DRO.Background}" BorderBrush="{DynamicResource Brush.DRO.Border}" BorderThickness="1" Margin="2" CornerRadius="2">
                 <TextBlock Text="{Binding DataContext.Status.Y, RelativeSource={RelativeSource AncestorType=Window}, StringFormat=F3}"
                            Foreground="{DynamicResource Brush.DRO.Foreground}" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="5" FontSize="{DynamicResource FontSize.DRO}" FontWeight="Bold" FontFamily="{DynamicResource FontFamily.Mono}"/>
             </Border>
-            <Border Grid.Row="2" Grid.Column="3" Background="{DynamicResource Brush.DRO.Background}" Margin="2" CornerRadius="2">
+            <Border Grid.Row="2" Grid.Column="3" Background="{DynamicResource Brush.DRO.Background}" BorderBrush="{DynamicResource Brush.DRO.Border}" BorderThickness="1" Margin="2" CornerRadius="2">
                 <TextBlock Text="{Binding DataContext.Status.DtgY, RelativeSource={RelativeSource AncestorType=Window}, StringFormat=F3}"
                            Foreground="{DynamicResource Brush.DRO.Foreground}" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="5" FontSize="{DynamicResource FontSize.DRO}" FontWeight="Bold" FontFamily="{DynamicResource FontFamily.Mono}"/>
             </Border>
+            <!-- [2026-03-12] Foreground="White" → DynamicResource -->
             <Button Grid.Row="2" Grid.Column="4" Content="REF Y" Margin="2" FontSize="{DynamicResource FontSize.Medium}" FontWeight="Bold"
-                    Foreground="White" BorderThickness="1"
+                    Foreground="{DynamicResource Brush.Text.Primary}" BorderThickness="1"
                     Command="{Binding DataContext.RefAxisCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                     CommandParameter="Y">
                 <Button.Style>
@@ -125,20 +127,21 @@
                     Style="{StaticResource BaseBtnStyle}"
                     Command="{Binding DataContext.DroZeroAxisCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                     CommandParameter="Z"/>
-            <Border Grid.Row="3" Grid.Column="1" Background="{DynamicResource Brush.DRO.Background}" Margin="2" CornerRadius="2">
+            <Border Grid.Row="3" Grid.Column="1" Background="{DynamicResource Brush.DRO.Background}" BorderBrush="{DynamicResource Brush.DRO.Border}" BorderThickness="1" Margin="2" CornerRadius="2">
                 <TextBlock Text="{Binding DataContext.Status.WorkZ, RelativeSource={RelativeSource AncestorType=Window}, StringFormat=F3}"
                            Foreground="{DynamicResource Brush.DRO.Foreground}" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="5" FontSize="{DynamicResource FontSize.DRO}" FontWeight="Bold" FontFamily="{DynamicResource FontFamily.Mono}"/>
             </Border>
-            <Border Grid.Row="3" Grid.Column="2" Background="{DynamicResource Brush.DRO.Background}" Margin="2" CornerRadius="2">
+            <Border Grid.Row="3" Grid.Column="2" Background="{DynamicResource Brush.DRO.Background}" BorderBrush="{DynamicResource Brush.DRO.Border}" BorderThickness="1" Margin="2" CornerRadius="2">
                 <TextBlock Text="{Binding DataContext.Status.Z, RelativeSource={RelativeSource AncestorType=Window}, StringFormat=F3}"
                            Foreground="{DynamicResource Brush.DRO.Foreground}" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="5" FontSize="{DynamicResource FontSize.DRO}" FontWeight="Bold" FontFamily="{DynamicResource FontFamily.Mono}"/>
             </Border>
-            <Border Grid.Row="3" Grid.Column="3" Background="{DynamicResource Brush.DRO.Background}" Margin="2" CornerRadius="2">
+            <Border Grid.Row="3" Grid.Column="3" Background="{DynamicResource Brush.DRO.Background}" BorderBrush="{DynamicResource Brush.DRO.Border}" BorderThickness="1" Margin="2" CornerRadius="2">
                 <TextBlock Text="{Binding DataContext.Status.DtgZ, RelativeSource={RelativeSource AncestorType=Window}, StringFormat=F3}"
                            Foreground="{DynamicResource Brush.DRO.Foreground}" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="5" FontSize="{DynamicResource FontSize.DRO}" FontWeight="Bold" FontFamily="{DynamicResource FontFamily.Mono}"/>
             </Border>
+            <!-- [2026-03-12] Foreground="White" → DynamicResource -->
             <Button Grid.Row="3" Grid.Column="4" Content="REF Z" Margin="2" FontSize="{DynamicResource FontSize.Medium}" FontWeight="Bold"
-                    Foreground="White" BorderThickness="1"
+                    Foreground="{DynamicResource Brush.Text.Primary}" BorderThickness="1"
                     Command="{Binding DataContext.RefAxisCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                     CommandParameter="Z">
                 <Button.Style>
@@ -161,23 +164,24 @@
                     Visibility="{Binding DataContext.IsAxisAEnabled, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVis}}"
                     Command="{Binding DataContext.DroZeroAxisCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                     CommandParameter="A"/>
-            <Border Grid.Row="4" Grid.Column="1" Background="{DynamicResource Brush.DRO.Background}" Margin="2" CornerRadius="2" Height="36"
+            <Border Grid.Row="4" Grid.Column="1" Background="{DynamicResource Brush.DRO.Background}" BorderBrush="{DynamicResource Brush.DRO.Border}" BorderThickness="1" Margin="2" CornerRadius="2" Height="36"
                     Visibility="{Binding DataContext.IsAxisAEnabled, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVis}}">
                 <TextBlock Text="{Binding DataContext.Status.WorkA, RelativeSource={RelativeSource AncestorType=Window}, StringFormat=F3}"
                            Foreground="{DynamicResource Brush.DRO.Foreground}" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="5" FontSize="{DynamicResource FontSize.DRO}" FontWeight="Bold" FontFamily="{DynamicResource FontFamily.Mono}"/>
             </Border>
-            <Border Grid.Row="4" Grid.Column="2" Background="{DynamicResource Brush.DRO.Background}" Margin="2" CornerRadius="2" Height="36"
+            <Border Grid.Row="4" Grid.Column="2" Background="{DynamicResource Brush.DRO.Background}" BorderBrush="{DynamicResource Brush.DRO.Border}" BorderThickness="1" Margin="2" CornerRadius="2" Height="36"
                     Visibility="{Binding DataContext.IsAxisAEnabled, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVis}}">
                 <TextBlock Text="{Binding DataContext.Status.A, RelativeSource={RelativeSource AncestorType=Window}, StringFormat=F3}"
                            Foreground="{DynamicResource Brush.DRO.Foreground}" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="5" FontSize="{DynamicResource FontSize.DRO}" FontWeight="Bold" FontFamily="{DynamicResource FontFamily.Mono}"/>
             </Border>
-            <Border Grid.Row="4" Grid.Column="3" Background="{DynamicResource Brush.DRO.Background}" Margin="2" CornerRadius="2" Height="36"
+            <Border Grid.Row="4" Grid.Column="3" Background="{DynamicResource Brush.DRO.Background}" BorderBrush="{DynamicResource Brush.DRO.Border}" BorderThickness="1" Margin="2" CornerRadius="2" Height="36"
                     Visibility="{Binding DataContext.IsAxisAEnabled, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVis}}">
                 <TextBlock Text="{Binding DataContext.Status.DtgA, RelativeSource={RelativeSource AncestorType=Window}, StringFormat=F3}"
                            Foreground="{DynamicResource Brush.DRO.Foreground}" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="5" FontSize="{DynamicResource FontSize.DRO}" FontWeight="Bold" FontFamily="{DynamicResource FontFamily.Mono}"/>
             </Border>
+            <!-- [2026-03-12] Foreground="White" → DynamicResource -->
             <Button Grid.Row="4" Grid.Column="4" Content="REF A" Margin="2" FontSize="{DynamicResource FontSize.Medium}" FontWeight="Bold" Height="36"
-                    Foreground="White" BorderThickness="1"
+                    Foreground="{DynamicResource Brush.Text.Primary}" BorderThickness="1"
                     Visibility="{Binding DataContext.IsAxisAEnabled, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVis}}"
                     Command="{Binding DataContext.RefAxisCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                     CommandParameter="A">
@@ -201,23 +205,24 @@
                     Visibility="{Binding DataContext.IsAxisBEnabled, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVis}}"
                     Command="{Binding DataContext.DroZeroAxisCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                     CommandParameter="B"/>
-            <Border Grid.Row="5" Grid.Column="1" Background="{DynamicResource Brush.DRO.Background}" Margin="2" CornerRadius="2" Height="36"
+            <Border Grid.Row="5" Grid.Column="1" Background="{DynamicResource Brush.DRO.Background}" BorderBrush="{DynamicResource Brush.DRO.Border}" BorderThickness="1" Margin="2" CornerRadius="2" Height="36"
                     Visibility="{Binding DataContext.IsAxisBEnabled, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVis}}">
                 <TextBlock Text="{Binding DataContext.Status.WorkB, RelativeSource={RelativeSource AncestorType=Window}, StringFormat=F3}"
                            Foreground="{DynamicResource Brush.DRO.Foreground}" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="5" FontSize="{DynamicResource FontSize.DRO}" FontWeight="Bold" FontFamily="{DynamicResource FontFamily.Mono}"/>
             </Border>
-            <Border Grid.Row="5" Grid.Column="2" Background="{DynamicResource Brush.DRO.Background}" Margin="2" CornerRadius="2" Height="36"
+            <Border Grid.Row="5" Grid.Column="2" Background="{DynamicResource Brush.DRO.Background}" BorderBrush="{DynamicResource Brush.DRO.Border}" BorderThickness="1" Margin="2" CornerRadius="2" Height="36"
                     Visibility="{Binding DataContext.IsAxisBEnabled, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVis}}">
                 <TextBlock Text="{Binding DataContext.Status.B, RelativeSource={RelativeSource AncestorType=Window}, StringFormat=F3}"
                            Foreground="{DynamicResource Brush.DRO.Foreground}" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="5" FontSize="{DynamicResource FontSize.DRO}" FontWeight="Bold" FontFamily="{DynamicResource FontFamily.Mono}"/>
             </Border>
-            <Border Grid.Row="5" Grid.Column="3" Background="{DynamicResource Brush.DRO.Background}" Margin="2" CornerRadius="2" Height="36"
+            <Border Grid.Row="5" Grid.Column="3" Background="{DynamicResource Brush.DRO.Background}" BorderBrush="{DynamicResource Brush.DRO.Border}" BorderThickness="1" Margin="2" CornerRadius="2" Height="36"
                     Visibility="{Binding DataContext.IsAxisBEnabled, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVis}}">
                 <TextBlock Text="{Binding DataContext.Status.DtgB, RelativeSource={RelativeSource AncestorType=Window}, StringFormat=F3}"
                            Foreground="{DynamicResource Brush.DRO.Foreground}" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="5" FontSize="{DynamicResource FontSize.DRO}" FontWeight="Bold" FontFamily="{DynamicResource FontFamily.Mono}"/>
             </Border>
+            <!-- [2026-03-12] Foreground="White" → DynamicResource -->
             <Button Grid.Row="5" Grid.Column="4" Content="REF B" Margin="2" FontSize="{DynamicResource FontSize.Medium}" FontWeight="Bold" Height="36"
-                    Foreground="White" BorderThickness="1"
+                    Foreground="{DynamicResource Brush.Text.Primary}" BorderThickness="1"
                     Visibility="{Binding DataContext.IsAxisBEnabled, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVis}}"
                     Command="{Binding DataContext.RefAxisCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                     CommandParameter="B">
@@ -241,23 +246,24 @@
                     Visibility="{Binding DataContext.IsAxisCEnabled, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVis}}"
                     Command="{Binding DataContext.DroZeroAxisCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                     CommandParameter="C"/>
-            <Border Grid.Row="6" Grid.Column="1" Background="{DynamicResource Brush.DRO.Background}" Margin="2" CornerRadius="2" Height="36"
+            <Border Grid.Row="6" Grid.Column="1" Background="{DynamicResource Brush.DRO.Background}" BorderBrush="{DynamicResource Brush.DRO.Border}" BorderThickness="1" Margin="2" CornerRadius="2" Height="36"
                     Visibility="{Binding DataContext.IsAxisCEnabled, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVis}}">
                 <TextBlock Text="{Binding DataContext.Status.WorkC, RelativeSource={RelativeSource AncestorType=Window}, StringFormat=F3}"
                            Foreground="{DynamicResource Brush.DRO.Foreground}" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="5" FontSize="{DynamicResource FontSize.DRO}" FontWeight="Bold" FontFamily="{DynamicResource FontFamily.Mono}"/>
             </Border>
-            <Border Grid.Row="6" Grid.Column="2" Background="{DynamicResource Brush.DRO.Background}" Margin="2" CornerRadius="2" Height="36"
+            <Border Grid.Row="6" Grid.Column="2" Background="{DynamicResource Brush.DRO.Background}" BorderBrush="{DynamicResource Brush.DRO.Border}" BorderThickness="1" Margin="2" CornerRadius="2" Height="36"
                     Visibility="{Binding DataContext.IsAxisCEnabled, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVis}}">
                 <TextBlock Text="{Binding DataContext.Status.C, RelativeSource={RelativeSource AncestorType=Window}, StringFormat=F3}"
                            Foreground="{DynamicResource Brush.DRO.Foreground}" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="5" FontSize="{DynamicResource FontSize.DRO}" FontWeight="Bold" FontFamily="{DynamicResource FontFamily.Mono}"/>
             </Border>
-            <Border Grid.Row="6" Grid.Column="3" Background="{DynamicResource Brush.DRO.Background}" Margin="2" CornerRadius="2" Height="36"
+            <Border Grid.Row="6" Grid.Column="3" Background="{DynamicResource Brush.DRO.Background}" BorderBrush="{DynamicResource Brush.DRO.Border}" BorderThickness="1" Margin="2" CornerRadius="2" Height="36"
                     Visibility="{Binding DataContext.IsAxisCEnabled, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVis}}">
                 <TextBlock Text="{Binding DataContext.Status.DtgC, RelativeSource={RelativeSource AncestorType=Window}, StringFormat=F3}"
                            Foreground="{DynamicResource Brush.DRO.Foreground}" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="5" FontSize="{DynamicResource FontSize.DRO}" FontWeight="Bold" FontFamily="{DynamicResource FontFamily.Mono}"/>
             </Border>
+            <!-- [2026-03-12] Foreground="White" → DynamicResource -->
             <Button Grid.Row="6" Grid.Column="4" Content="REF C" Margin="2" FontSize="{DynamicResource FontSize.Medium}" FontWeight="Bold" Height="36"
-                    Foreground="White" BorderThickness="1"
+                    Foreground="{DynamicResource Brush.Text.Primary}" BorderThickness="1"
                     Visibility="{Binding DataContext.IsAxisCEnabled, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVis}}"
                     Command="{Binding DataContext.RefAxisCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                     CommandParameter="C">
@@ -283,8 +289,9 @@
                     Command="{Binding DataContext.DroZeroAllCommand, RelativeSource={RelativeSource AncestorType=Window}}"/>
 
             <!-- [2026-02-24] 原點復歸 ALL：未復歸→紅色（原點復歸 ALL）/ 已復歸→綠色（已復歸），仍可再次點擊 -->
+            <!-- [2026-03-12] Foreground="White" → DynamicResource -->
             <Button Grid.Row="7" Grid.Column="2" Grid.ColumnSpan="3" Margin="2,5"
-                    FontSize="{DynamicResource FontSize.Large}" FontWeight="Bold" Foreground="White" BorderThickness="1"
+                    FontSize="{DynamicResource FontSize.Large}" FontWeight="Bold" Foreground="{DynamicResource Brush.Text.Primary}" BorderThickness="1"
                     Command="{Binding DataContext.HomeAllCommand, RelativeSource={RelativeSource AncestorType=Window}}">
                 <Button.Style>
                     <Style TargetType="Button" BasedOn="{StaticResource BaseBtnStyle}">

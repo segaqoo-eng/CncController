@@ -94,6 +94,44 @@
     <sys:String x:Key="Str.Header.LangZhTW">繁體中文</sys:String>
     <sys:String x:Key="Str.Header.LangEnUS">English</sys:String>
 
+    <!-- [2026-03-12] 主題切換選單 -->
+    <sys:String x:Key="Str.Header.Theme">主題</sys:String>
+    <!-- [2026-03-12] 工具選單 -->
+    <sys:String x:Key="Str.Header.Tools">工具</sys:String>
+    <sys:String x:Key="Str.Header.ThemeDefault">預設深灰</sys:String>
+    <sys:String x:Key="Str.Header.ThemeIndustrial">工業湖水綠</sys:String>
+    <sys:String x:Key="Str.Header.ThemeCyber">Cyber-Industrial</sys:String>
+
+    <!-- ===== 巨集變數 ===== -->
+    <!-- [2026-03-12] 新增 -->
+    <sys:String x:Key="Str.Macro.Refresh">讀取</sys:String>
+    <sys:String x:Key="Str.Macro.Write">寫入</sys:String>
+    <sys:String x:Key="Str.Macro.WriteAll">批次寫入已修改</sys:String>
+    <sys:String x:Key="Str.Macro.ColName">名稱</sys:String>
+    <sys:String x:Key="Str.Macro.ColValue">值</sys:String>
+
+    <!-- ===== 主軸暖機 ===== -->
+    <!-- [2026-03-12] 新增 -->
+    <sys:String x:Key="Str.Warmup.Title">主軸暖機</sys:String>
+    <sys:String x:Key="Str.Warmup.Start">開始暖機</sys:String>
+    <sys:String x:Key="Str.Warmup.Close">關閉</sys:String>
+    <sys:String x:Key="Str.Warmup.Duration">秒數</sys:String>
+    <sys:String x:Key="Str.Warmup.Status">狀態</sys:String>
+    <sys:String x:Key="Str.Warmup.Seconds">秒:</sys:String>
+    <sys:String x:Key="Str.Warmup.AddStep">新增</sys:String>
+    <sys:String x:Key="Str.Warmup.RemoveStep">移除</sys:String>
+
+    <!-- ===== 備份/還原 ===== -->
+    <!-- [2026-03-12] 新增 -->
+    <sys:String x:Key="Str.Backup.Title">備份與還原</sys:String>
+    <sys:String x:Key="Str.Backup.Create">建立備份</sys:String>
+    <sys:String x:Key="Str.Backup.Restore">還原備份</sys:String>
+    <sys:String x:Key="Str.Backup.Delete">刪除</sys:String>
+    <sys:String x:Key="Str.Backup.Refresh">重新整理</sys:String>
+    <sys:String x:Key="Str.Backup.Name">備份名稱</sys:String>
+    <sys:String x:Key="Str.Backup.FileCount">檔案數</sys:String>
+    <sys:String x:Key="Str.Backup.Size">大小</sys:String>
+
     <!-- ===== 刀具表 ===== -->
     <!-- [2026-03-11] 新增 -->
     <sys:String x:Key="Str.Tool.Table">刀具表</sys:String>
@@ -108,6 +146,18 @@
     <sys:String x:Key="Str.Tool.GoToHome">移至原點</sys:String>
     <sys:String x:Key="Str.Tool.Length">刀長</sys:String>
     <sys:String x:Key="Str.Tool.Diameter">刀徑</sys:String>
+    <!-- [2026-03-12] 刀具壽命 -->
+    <sys:String x:Key="Str.Tool.Life.Title">刀具壽命管理</sys:String>
+    <sys:String x:Key="Str.Tool.Life.Load">讀取壽命</sys:String>
+    <sys:String x:Key="Str.Tool.Life.SetLife">設定壽命</sys:String>
+    <sys:String x:Key="Str.Tool.Life.Reset">歸零壽命</sys:String>
+    <sys:String x:Key="Str.Tool.Life.MaxMin">上限(分):</sys:String>
+    <sys:String x:Key="Str.Tool.Life.MaxCount">上限(次):</sys:String>
+    <sys:String x:Key="Str.Tool.Life.CuttingTime">切削時間</sys:String>
+    <sys:String x:Key="Str.Tool.Life.Changes">換刀次數</sys:String>
+    <sys:String x:Key="Str.Tool.Life.Progress">壽命進度</sys:String>
+    <sys:String x:Key="Str.Tool.Life.MaxTimeCol">上限(秒)</sys:String>
+    <sys:String x:Key="Str.Tool.Life.MaxCountCol">上限(次)</sys:String>
 
     <!-- ===== 補正表 ===== -->
     <!-- [2026-03-11] 新增 -->
@@ -165,6 +215,12 @@
     <sys:String x:Key="Str.Atc.SlotConfig">刀位設定</sys:String>
     <sys:String x:Key="Str.Atc.SlotNumber">刀位</sys:String>
     <sys:String x:Key="Str.Atc.ToolNumber">刀號</sys:String>
+    <!-- [2026-03-12] ATC 感測器狀態（LED 面板用，與 ATC IO 設定頁的 Str.Atc.Di* 不同） -->
+    <sys:String x:Key="Str.Atc.SensorStatus">感測器狀態</sys:String>
+    <sys:String x:Key="Str.Atc.Sensor.CarouselHome">刀盤歸位</sys:String>
+    <sys:String x:Key="Str.Atc.Sensor.CarouselOut">刀盤到位</sys:String>
+    <sys:String x:Key="Str.Atc.Sensor.DrawbarClamp">夾刀確認</sys:String>
+    <sys:String x:Key="Str.Atc.Sensor.DrawbarUnclamp">鬆刀確認</sys:String>
 
     <!-- ATC 設定 — 基本 -->
     <sys:String x:Key="Str.Atc.AtcType">刀庫類型</sys:String>
@@ -304,5 +360,32 @@
     <sys:String x:Key="Str.Setting.HomingImmediate">原地歸零</sys:String>
     <sys:String x:Key="Str.Setting.HomingHomeSwitch">使用獨立原點開關</sys:String>
     <sys:String x:Key="Str.Setting.HomingLimitSwitch">使用極限開關當原點</sys:String>
+
+    <!-- ===== [2026-03-12] 加工統計標籤 ===== -->
+    <sys:String x:Key="Str.Label.TotalTime">累計時間</sys:String>
+    <sys:String x:Key="Str.Label.CycleCount">循環次數</sys:String>
+    <sys:String x:Key="Str.Label.Remaining">預估剩餘</sys:String>
+
+    <!-- ===== [2026-03-12] 報警統計 ===== -->
+    <sys:String x:Key="Str.History.Stats">統計分析</sys:String>
+    <sys:String x:Key="Str.History.ErrorCount">錯誤</sys:String>
+    <sys:String x:Key="Str.History.WarnCount">警告</sys:String>
+    <sys:String x:Key="Str.History.InfoCount">資訊</sys:String>
+    <sys:String x:Key="Str.History.TopAlarms">最頻繁報警 TOP 10</sys:String>
+    <sys:String x:Key="Str.History.LastOccur">最後發生</sys:String>
+
+    <!-- ===== [2026-03-12] 維護保養 ===== -->
+    <sys:String x:Key="Str.Maint.Title">維護保養管理</sys:String>
+    <sys:String x:Key="Str.Maint.Load">讀取</sys:String>
+    <sys:String x:Key="Str.Maint.Name">保養項目</sys:String>
+    <sys:String x:Key="Str.Maint.Interval">週期(小時)</sys:String>
+    <sys:String x:Key="Str.Maint.Accumulated">累計運轉</sys:String>
+    <sys:String x:Key="Str.Maint.Remaining">剩餘(小時)</sys:String>
+    <sys:String x:Key="Str.Maint.Progress">進度</sys:String>
+    <sys:String x:Key="Str.Maint.NewName">項目名稱：</sys:String>
+    <sys:String x:Key="Str.Maint.IntervalHr">週期(hr)：</sys:String>
+    <sys:String x:Key="Str.Maint.Add">新增</sys:String>
+    <sys:String x:Key="Str.Maint.Remove">移除</sys:String>
+    <sys:String x:Key="Str.Maint.Reset">歸零時數</sys:String>
 
 </ResourceDictionary>

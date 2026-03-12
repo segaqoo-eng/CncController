@@ -10,7 +10,6 @@
 
     <!-- ================================================================ -->
     <!-- [2026-03-09] 統一 FontSize（全域 7 級）                           -->
-    <!--   各頁面可在 UserControl.Resources 中覆蓋（DynamicResource 就近取值） -->
     <!-- ================================================================ -->
     <sys:Double x:Key="FontSize.XSmall">9</sys:Double>
     <sys:Double x:Key="FontSize.Small">10</sys:Double>
@@ -37,33 +36,121 @@
     <Thickness x:Key="BtnPadding.XSmall">6,3</Thickness>
 
     <!-- ================================================================ -->
-    <!-- 色彩系統                                                         -->
+    <!-- [2026-03-12] 色彩系統 — 主題 1：Default（原始深灰）               -->
     <!-- ================================================================ -->
+
+    <!-- === 背景層次 === -->
     <SolidColorBrush x:Key="Brush.WindowBackground" Color="#1E1E1E"/>
     <SolidColorBrush x:Key="Brush.PanelBackground" Color="#2D2D2D"/>
+    <SolidColorBrush x:Key="Brush.Panel.Secondary" Color="#252526"/>
+    <SolidColorBrush x:Key="Brush.Panel.Overlay" Color="#DD333333"/>
     <SolidColorBrush x:Key="Brush.Border" Color="#444444"/>
+    <SolidColorBrush x:Key="Brush.Separator" Color="#444444"/>
 
+    <!-- === 按鈕 === -->
     <SolidColorBrush x:Key="Brush.Button.Static" Color="#333333"/>
-    <!-- [2026-03-11] 分頁選取色改為青綠（與按鈕藍 #007ACC 區分） -->
     <SolidColorBrush x:Key="Brush.Button.Active" Color="#00897B"/>
     <SolidColorBrush x:Key="Brush.Button.Danger" Color="#CC0000"/>
-    <SolidColorBrush x:Key="Brush.Text.Primary" Color="White"/>
-    <SolidColorBrush x:Key="Brush.Text.Muted" Color="#AAAAAA"/>
 
+    <!-- === 警告/錯誤 === -->
+    <SolidColorBrush x:Key="Brush.Alert.Warning" Color="#FFA726"/>
+    <SolidColorBrush x:Key="Brush.Alert.Fatal" Color="#FF0000"/>
+    <SolidColorBrush x:Key="Brush.Alert.Banner" Color="#D80000"/>
+
+    <!-- === 文字 === -->
+    <SolidColorBrush x:Key="Brush.Text.Primary" Color="White"/>
+    <SolidColorBrush x:Key="Brush.Text.Secondary" Color="#CCCCCC"/>
+    <SolidColorBrush x:Key="Brush.Text.Muted" Color="#AAAAAA"/>
+    <SolidColorBrush x:Key="Brush.Text.Dim" Color="#888888"/>
+    <SolidColorBrush x:Key="Brush.Text.Hint" Color="#666666"/>
+
+    <!-- === DRO 數值顯示 === -->
     <SolidColorBrush x:Key="Brush.DRO.Background" Color="White"/>
     <SolidColorBrush x:Key="Brush.DRO.Foreground" Color="Black"/>
+    <SolidColorBrush x:Key="Brush.DRO.Border" Color="#CCCCCC"/>
     <SolidColorBrush x:Key="Brush.DRO.Label" Color="#333333"/>
 
-    <!-- [2026-03-09] 統一互動色 -->
-    <SolidColorBrush x:Key="Brush.Checked" Color="#007ACC"/>
-    <SolidColorBrush x:Key="Brush.Hover.Border" Color="#0090FF"/>
-    <SolidColorBrush x:Key="Brush.Pressed.Border" Color="#40B0FF"/>
+    <!-- === 輸入框 === -->
+    <SolidColorBrush x:Key="Brush.Input.Background" Color="#333333"/>
+    <SolidColorBrush x:Key="Brush.Input.Foreground" Color="White"/>
+    <SolidColorBrush x:Key="Brush.Input.Border" Color="#666666"/>
+    <SolidColorBrush x:Key="Brush.Input.Placeholder" Color="#888888"/>
 
-    <!-- [2026-03-11] PanelTitle 區塊標題統一色 -->
+    <!-- === DataGrid === -->
+    <SolidColorBrush x:Key="Brush.Grid.Background" Color="#1E1E1E"/>
+    <SolidColorBrush x:Key="Brush.Grid.Row" Color="#252526"/>
+    <SolidColorBrush x:Key="Brush.Grid.RowAlt" Color="#1E1E1E"/>
+    <SolidColorBrush x:Key="Brush.Grid.Header" Color="#333333"/>
+    <SolidColorBrush x:Key="Brush.Grid.Line" Color="#333333"/>
+
+    <!-- [2026-03-12] Offset 座標顯示色（WC/MC/Offset/G92/Tool） -->
+    <SolidColorBrush x:Key="Brush.Offset.Work.Background" Color="#1A2E1A"/>
+    <SolidColorBrush x:Key="Brush.Offset.Work.Foreground" Color="#90EE90"/>
+    <SolidColorBrush x:Key="Brush.Offset.Machine.Background" Color="#1A1A2E"/>
+    <SolidColorBrush x:Key="Brush.Offset.Machine.Foreground" Color="#00BFFF"/>
+    <SolidColorBrush x:Key="Brush.Offset.Value.Background" Color="#2A2A2A"/>
+    <SolidColorBrush x:Key="Brush.Offset.Value.Foreground" Color="#AAAAAA"/>
+    <SolidColorBrush x:Key="Brush.Offset.G92.Background" Color="#2A2A22"/>
+    <SolidColorBrush x:Key="Brush.Offset.G92.Foreground" Color="#CCCC88"/>
+    <SolidColorBrush x:Key="Brush.Offset.Tool.Background" Color="#2A222A"/>
+    <SolidColorBrush x:Key="Brush.Offset.Tool.Foreground" Color="#CC88CC"/>
+
+    <!-- === G-Code 顯示 === -->
+    <SolidColorBrush x:Key="Brush.Code.Background" Color="White"/>
+    <SolidColorBrush x:Key="Brush.Code.Foreground" Color="Black"/>
+    <SolidColorBrush x:Key="Brush.Code.LineNum" Color="#999999"/>
+    <SolidColorBrush x:Key="Brush.Code.LineNumBg" Color="#F0F0F0"/>
+
+    <!-- === 強調色 / 動作觸發色 === -->
+    <SolidColorBrush x:Key="Brush.Accent" Color="#007ACC"/>
+    <!-- [2026-03-12] Hover/Pressed 修正為青綠色系（與 Checked 同家族） -->
+    <SolidColorBrush x:Key="Brush.Checked" Color="#00897B"/>
+    <SolidColorBrush x:Key="Brush.Hover.Border" Color="#26B5A5"/>
+    <SolidColorBrush x:Key="Brush.Pressed.Border" Color="#4DD0C0"/>
+    <SolidColorBrush x:Key="Brush.StatusOn" Color="#007ACC"/>
+    <SolidColorBrush x:Key="Brush.StatusOn.Border" Color="#005A9E"/>
+
+    <!-- === Encoder / 即時值顯示 === -->
+    <SolidColorBrush x:Key="Brush.Encoder.Spindle" Color="#4EC9B0"/>
+    <SolidColorBrush x:Key="Brush.Encoder.Carousel" Color="#DCDCAA"/>
+    <SolidColorBrush x:Key="Brush.Encoder.Background" Color="#1A1A2E"/>
+
+    <!-- === 使用者頭像 === -->
+    <SolidColorBrush x:Key="Brush.Avatar" Color="#5E70FF"/>
+
+    <!-- === 分頁選取 === -->
+    <LinearGradientBrush x:Key="Brush.Tab.Selected" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Color="#26A69A" Offset="0"/>
+        <GradientStop Color="#00897B" Offset="0.5"/>
+        <GradientStop Color="#00796B" Offset="1"/>
+    </LinearGradientBrush>
+    <SolidColorBrush x:Key="Brush.Tab.SelectedBorder" Color="#26A69A"/>
+    <SolidColorBrush x:Key="Brush.Tab.SelectedForeground" Color="White"/>
+
+    <!-- === 按鈕漸層 === -->
+    <LinearGradientBrush x:Key="Brush.Btn.Gradient" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Color="#5E5E5E" Offset="0"/>
+        <GradientStop Color="#4A4A4A" Offset="0.5"/>
+        <GradientStop Color="#353535" Offset="1"/>
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="Brush.Btn.HoverGradient" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Color="#727272" Offset="0"/>
+        <GradientStop Color="#5E5E5E" Offset="0.5"/>
+        <GradientStop Color="#484848" Offset="1"/>
+    </LinearGradientBrush>
+    <SolidColorBrush x:Key="Brush.Btn.Border" Color="#666"/>
+    <SolidColorBrush x:Key="Brush.Btn.Shadow" Color="#1A1A1A"/>
+
+    <!-- === 區塊標題 === -->
     <SolidColorBrush x:Key="Brush.PanelTitle.Background" Color="#1A5276"/>
     <SolidColorBrush x:Key="Brush.PanelTitle.Border" Color="#2980B9"/>
-
-    <!-- [2026-03-11] GroupHeader 群組標題統一色 -->
     <SolidColorBrush x:Key="Brush.GroupHeader.Foreground" Color="#00897B"/>
+
+    <!-- === 3D 視圖 === -->
+    <SolidColorBrush x:Key="Brush.Viewport.Background" Color="Black"/>
+    <SolidColorBrush x:Key="Brush.Viewport.Grid" Color="#333333"/>
+
+    <!-- === MenuItem 下拉 === -->
+    <SolidColorBrush x:Key="Brush.Menu.Foreground" Color="#333333"/>
 
 </ResourceDictionary>

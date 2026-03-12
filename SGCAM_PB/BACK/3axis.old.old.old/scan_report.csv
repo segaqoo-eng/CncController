@@ -1,0 +1,15 @@
+﻿Slave,VendorId,ProductCode,Name,Group,Model,Category,Source,Mapped PDOs
+0,0x00100000,0x000c010d,SV660_1Axis_00916,InoServo,InoSV660N,Servo,Smart Fallback,Default Servo PDOs
+1,0x000001dd,0x00005500,R1-EC5500 EtherCAT to E-BUS adapter Module,SystemBk,R1-EC5500,Coupler,Smart Fallback,None
+2,0x000001dd,0x00005621,R1-EC5621 1-Axis Pulse Output Motion Control Module,Axis,R1-EC5621,Servo,Smart Fallback,Default Servo PDOs
+3,0x000001dd,0x00005621,R1-EC5621 1-Axis Pulse Output Motion Control Module,Axis,R1-EC5621,Servo,Smart Fallback,Default Servo PDOs
+4,0x000001dd,0x00005621,R1-EC5621 1-Axis Pulse Output Motion Control Module,Axis,R1-EC5621,Servo,Smart Fallback,Default Servo PDOs
+5,0x000001dd,0x00005621,R1-EC5621 1-Axis Pulse Output Motion Control Module,Axis,R1-EC5621,Servo,Smart Fallback,Default Servo PDOs
+6,0x000001dd,0x00005621,R1-EC5621 1-Axis Pulse Output Motion Control Module,Axis,R1-EC5621,Servo,Smart Fallback,Default Servo PDOs
+7,0x000001dd,0x00005621,R1-EC5621 1-Axis Pulse Output Motion Control Module,Axis,R1-EC5621,Servo,Smart Fallback,Default Servo PDOs
+8,0x000001dd,0x00005621,R1-EC5621 1-Axis Pulse Output Motion Control Module,Axis,R1-EC5621,Servo,Smart Fallback,Default Servo PDOs
+9,0x000001dd,0x00005621,R1-EC5621 1-Axis Pulse Output Motion Control Module,Axis,R1-EC5621,Servo,Smart Fallback,Default Servo PDOs
+10,0x000001dd,0x00005621,R1-EC5621 1-Axis Pulse Output Motion Control Module,Axis,R1-EC5621,Servo,Smart Fallback,Default Servo PDOs
+11,0x000001dd,0x00009144,R1-EC9144 4-ch 16-bit Single-ended/Voltage or Current Mode D/A,AnaOut,R1-EC9144,DA,Smart Fallback,7000:01-04
+12,0x000001dd,0x00005614,R1-EC5614 MPG Module With 4-axis select Functionr Module,Measuring,R1-EC5614,MPG,Smart Fallback,"6000, 6064"
+13,0x000001dd,0x00000902,R2-EC0902 32-ch Sink/Source Dl/0.1ms Filter & 32-ch 24VDC/2A/Re,DigOut,R2-EC0902,DI+DO,Smart Fallback,"IN:6000(32b), OUT:7000(32b)"

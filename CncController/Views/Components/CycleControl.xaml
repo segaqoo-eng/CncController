@@ -24,10 +24,11 @@
         <!-- [2026-03-10] StartBtnStyle/StopBtnStyle/HoldBtnStyle 已移除，改為按鈕行內 DataTrigger 動態變色 -->
     </UserControl.Resources>
 
-    <Border Background="#252526" BorderBrush="#444" BorderThickness="1" CornerRadius="0" Padding="5">
+    <Border Background="{DynamicResource Brush.Panel.Secondary}" BorderBrush="{DynamicResource Brush.Border}" BorderThickness="1" CornerRadius="0" Padding="5">
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="50"/>
             </Grid.RowDefinitions>
@@ -105,7 +106,7 @@
                             <Style.Triggers>
                                 <DataTrigger Binding="{Binding IsSingleBlock}" Value="True">
                                     <Setter Property="Background" Value="{DynamicResource Brush.Checked}"/>
-                                    <Setter Property="BorderBrush" Value="#005A9E"/>
+                                    <Setter Property="BorderBrush" Value="{DynamicResource Brush.StatusOn.Border}"/>
                                 </DataTrigger>
                             </Style.Triggers>
                         </Style>
@@ -117,7 +118,7 @@
                             <Style.Triggers>
                                 <DataTrigger Binding="{Binding IsFloodOn}" Value="True">
                                     <Setter Property="Background" Value="{DynamicResource Brush.Checked}"/>
-                                    <Setter Property="BorderBrush" Value="#005A9E"/>
+                                    <Setter Property="BorderBrush" Value="{DynamicResource Brush.StatusOn.Border}"/>
                                     <Setter Property="Foreground" Value="White"/>
                                 </DataTrigger>
                             </Style.Triggers>
@@ -131,7 +132,7 @@
                             <Style.Triggers>
                                 <DataTrigger Binding="{Binding IsBlockDelete}" Value="True">
                                     <Setter Property="Background" Value="{DynamicResource Brush.Checked}"/>
-                                    <Setter Property="BorderBrush" Value="#005A9E"/>
+                                    <Setter Property="BorderBrush" Value="{DynamicResource Brush.StatusOn.Border}"/>
                                 </DataTrigger>
                             </Style.Triggers>
                         </Style>
@@ -144,7 +145,7 @@
                             <Style.Triggers>
                                 <DataTrigger Binding="{Binding IsMistOn}" Value="True">
                                     <Setter Property="Background" Value="{DynamicResource Brush.Checked}"/>
-                                    <Setter Property="BorderBrush" Value="#005A9E"/>
+                                    <Setter Property="BorderBrush" Value="{DynamicResource Brush.StatusOn.Border}"/>
                                 </DataTrigger>
                             </Style.Triggers>
                         </Style>
@@ -157,7 +158,7 @@
                             <Style.Triggers>
                                 <DataTrigger Binding="{Binding IsOptionalStop}" Value="True">
                                     <Setter Property="Background" Value="{DynamicResource Brush.Checked}"/>
-                                    <Setter Property="BorderBrush" Value="#005A9E"/>
+                                    <Setter Property="BorderBrush" Value="{DynamicResource Brush.StatusOn.Border}"/>
                                 </DataTrigger>
                             </Style.Triggers>
                         </Style>
@@ -165,9 +166,30 @@
                 </Button>
             </UniformGrid>
 
-            <Separator Grid.Row="1" Background="#444" Margin="0,5"/>
+            <Separator Grid.Row="1" Background="{DynamicResource Brush.Separator}" Margin="0,3"/>
 
-            <Grid Grid.Row="2">
+            <!-- [2026-03-12] 加工統計資訊列（累計/循環次數/預估剩餘） -->
+            <Grid Grid.Row="2" Margin="2,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel Grid.Column="0" HorizontalAlignment="Center">
+                    <TextBlock Text="{DynamicResource Str.Label.TotalTime}" Foreground="{DynamicResource Brush.Text.Muted}" FontSize="{DynamicResource FontSize.Small}" HorizontalAlignment="Center"/>
+                    <TextBlock Text="{Binding TotalMachiningTimeDisplay}" Foreground="{DynamicResource Brush.Text.Primary}" FontSize="{DynamicResource FontSize.Body}" FontFamily="{DynamicResource FontFamily.Mono}" HorizontalAlignment="Center"/>
+                </StackPanel>
+                <StackPanel Grid.Column="1" HorizontalAlignment="Center">
+                    <TextBlock Text="{DynamicResource Str.Label.CycleCount}" Foreground="{DynamicResource Brush.Text.Muted}" FontSize="{DynamicResource FontSize.Small}" HorizontalAlignment="Center"/>
+                    <TextBlock Text="{Binding TotalCycleCount}" Foreground="{DynamicResource Brush.Text.Primary}" FontSize="{DynamicResource FontSize.Body}" FontFamily="{DynamicResource FontFamily.Mono}" HorizontalAlignment="Center"/>
+                </StackPanel>
+                <StackPanel Grid.Column="2" HorizontalAlignment="Center">
+                    <TextBlock Text="{DynamicResource Str.Label.Remaining}" Foreground="{DynamicResource Brush.Text.Muted}" FontSize="{DynamicResource FontSize.Small}" HorizontalAlignment="Center"/>
+                    <TextBlock Text="{Binding EstimatedRemainingDisplay}" Foreground="#FFA726" FontSize="{DynamicResource FontSize.Body}" FontFamily="{DynamicResource FontFamily.Mono}" HorizontalAlignment="Center"/>
+                </StackPanel>
+            </Grid>
+
+            <Grid Grid.Row="3">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="1.2*"/>
@@ -177,7 +199,7 @@
                 <!-- KEEP: status — POWER 綠色(IsPower=True) -->
                 <!-- [2026-03-11] 還原字體層級 Large→Body（base 已全域加大） -->
                 <Button Grid.Column="0" Command="{Binding TogglePowerCommand}" Margin="2" Content="{DynamicResource Str.Btn.Power}" Cursor="Hand"
-                        Height="45" FontSize="{DynamicResource FontSize.Large}" FontWeight="Bold" Foreground="White">
+                        Height="45" FontSize="{DynamicResource FontSize.Large}" FontWeight="Bold" Foreground="{DynamicResource Brush.Text.Primary}"> <!-- [2026-03-12] Foreground → DynamicResource -->
                     <Button.Style>
                         <Style TargetType="Button">
                             <Setter Property="Template">
@@ -199,15 +221,10 @@
                                     </ControlTemplate>
                                 </Setter.Value>
                             </Setter>
-                            <Setter Property="Background">
-                                <Setter.Value>
-                                    <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                                        <GradientStop Color="#5E5E5E" Offset="0"/>
-                                        <GradientStop Color="#353535" Offset="1"/>
-                                    </LinearGradientBrush>
-                                </Setter.Value>
-                            </Setter>
-                            <Setter Property="BorderBrush" Value="#555"/>
+                            <!-- [2026-03-12] Background gradient → DynamicResource -->
+                            <Setter Property="Background" Value="{DynamicResource Brush.Btn.Gradient}"/>
+                            <!-- [2026-03-12] BorderBrush → DynamicResource -->
+                            <Setter Property="BorderBrush" Value="{DynamicResource Brush.Btn.Border}"/>
                             <Style.Triggers>
                                 <DataTrigger Binding="{Binding IsEstop}" Value="True">
                                     <Setter Property="IsEnabled" Value="False"/>
@@ -222,14 +239,14 @@
                     </Button.Style>
                 </Button>
 
-                <Border Grid.Column="1" Background="#DDDDDD" CornerRadius="3" Margin="2" Height="45" VerticalAlignment="Center">
-                    <TextBlock Text="{Binding CycleTimeDisplay}" Foreground="Black" FontWeight="Bold" FontFamily="{DynamicResource FontFamily.Mono}" FontSize="{DynamicResource FontSize.Large}"
+                <Border Grid.Column="1" Background="{DynamicResource Brush.Input.Background}" CornerRadius="3" Margin="2" Height="45" VerticalAlignment="Center">
+                    <TextBlock Text="{Binding CycleTimeDisplay}" Foreground="{DynamicResource Brush.Input.Foreground}" FontWeight="Bold" FontFamily="{DynamicResource FontFamily.Mono}" FontSize="{DynamicResource FontSize.Large}"
                                VerticalAlignment="Center" HorizontalAlignment="Center"/>
                 </Border>
 
                 <!-- KEEP: status — E-STOP 紅色(IsEstop=False) -->
                 <Button Grid.Column="2" Command="{Binding ToggleEstopCommand}" Margin="2" Content="{DynamicResource Str.Btn.Estop}" Cursor="Hand"
-                        Height="45" FontSize="{DynamicResource FontSize.Large}" FontWeight="Bold" Foreground="White">
+                        Height="45" FontSize="{DynamicResource FontSize.Large}" FontWeight="Bold" Foreground="{DynamicResource Brush.Text.Primary}"> <!-- [2026-03-12] Foreground → DynamicResource -->
                     <Button.Style>
                         <Style TargetType="Button">
                             <Setter Property="Template">
@@ -248,15 +265,10 @@
                                     </ControlTemplate>
                                 </Setter.Value>
                             </Setter>
-                            <Setter Property="Background">
-                                <Setter.Value>
-                                    <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                                        <GradientStop Color="#5E5E5E" Offset="0"/>
-                                        <GradientStop Color="#353535" Offset="1"/>
-                                    </LinearGradientBrush>
-                                </Setter.Value>
-                            </Setter>
-                            <Setter Property="BorderBrush" Value="#555"/>
+                            <!-- [2026-03-12] Background gradient → DynamicResource -->
+                            <Setter Property="Background" Value="{DynamicResource Brush.Btn.Gradient}"/>
+                            <!-- [2026-03-12] BorderBrush → DynamicResource -->
+                            <Setter Property="BorderBrush" Value="{DynamicResource Brush.Btn.Border}"/>
                             <Style.Triggers>
                                 <DataTrigger Binding="{Binding IsEstop}" Value="False">
                                     <Setter Property="Background" Value="#FF0000"/>

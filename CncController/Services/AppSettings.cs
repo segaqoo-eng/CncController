@@ -21,6 +21,10 @@ namespace CncController.Services
         /// <summary>UI 全域縮放比例（1.0=預設，1.2=放大 20%）</summary>
         public double UiScale { get; private set; } = 1.0;
 
+        // [2026-03-12] 語言 & 主題持久化
+        public string Language { get; private set; } = "zh-TW";
+        public string Theme { get; private set; } = "Default";
+
         private readonly JsonSerializerOptions _jsonOpts = new() { WriteIndented = true };
 
         private AppSettings()
@@ -48,6 +52,17 @@ namespace CncController.Services
                         double s = scaleProp.GetDouble();
                         if (s >= 0.5 && s <= 2.0) UiScale = s;
                     }
+                    // [2026-03-12] 讀取語言 & 主題
+                    if (doc.RootElement.TryGetProperty("Language", out var langProp))
+                    {
+                        string? lang = langProp.GetString();
+                        if (!string.IsNullOrWhiteSpace(lang)) Language = lang;
+                    }
+                    if (doc.RootElement.TryGetProperty("Theme", out var themeProp))
+                    {
+                        string? theme = themeProp.GetString();
+                        if (!string.IsNullOrWhiteSpace(theme)) Theme = theme;
+                    }
                 }
                 else
                 {
@@ -66,8 +81,8 @@ namespace CncController.Services
         {
             try
             {
-                // [2026-03-04] Save 時包含 UiScale
-                var data = new { ServerUrl, UiScale };
+                // [2026-03-12] Save 時包含 UiScale + Language + Theme
+                var data = new { ServerUrl, UiScale, Language, Theme };
                 string json = JsonSerializer.Serialize(data, _jsonOpts);
                 File.WriteAllText(FileName, json);
             }
@@ -94,6 +109,26 @@ namespace CncController.Services
             if (newScale >= 0.5 && newScale <= 2.0)
             {
                 UiScale = newScale;
+                Save();
+            }
+        }
+
+        // [2026-03-12] 更新語言並持久化
+        public void UpdateLanguage(string lang)
+        {
+            if (!string.IsNullOrWhiteSpace(lang))
+            {
+                Language = lang;
+                Save();
+            }
+        }
+
+        // [2026-03-12] 更新主題並持久化
+        public void UpdateTheme(string theme)
+        {
+            if (!string.IsNullOrWhiteSpace(theme))
+            {
+                Theme = theme;
                 Save();
             }
         }

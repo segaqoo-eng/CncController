@@ -15,12 +15,14 @@
                 <RowDefinition Height="*"/>
                 <RowDefinition Height="40"/>
             </Grid.RowDefinitions>
-            <Border Grid.Row="0" Background="#444" CornerRadius="2,2,0,0">
-                <TextBlock Text="G-CODE" Foreground="White" VerticalAlignment="Center" Margin="5,0"/>
+            <!-- [2026-03-12] 替換 hardcoded 色碼為 DynamicResource -->
+            <Border Grid.Row="0" Background="{DynamicResource Brush.Border}" CornerRadius="2,2,0,0">
+                <TextBlock Text="G-CODE" Foreground="{DynamicResource Brush.Text.Primary}" VerticalAlignment="Center" Margin="5,0"/>
             </Border>
-            <Border Grid.Row="1" Background="White" BorderBrush="#444" BorderThickness="1">
+            <!-- [2026-03-12] 替換 hardcoded 色碼為 DynamicResource -->
+            <Border Grid.Row="1" Background="{DynamicResource Brush.Input.Background}" BorderBrush="{DynamicResource Brush.Border}" BorderThickness="1">
                 <ScrollViewer>
-                    <TextBlock Text="N100 G20..." Foreground="Black" FontFamily="{DynamicResource FontFamily.Mono}" Margin="5"/>
+                    <TextBlock Text="N100 G20..." Foreground="{DynamicResource Brush.Text.Primary}" FontFamily="{DynamicResource FontFamily.Mono}" Margin="5"/>
                 </ScrollViewer>
             </Border>
             <Grid Grid.Row="2" Margin="0,2,0,0">
@@ -28,7 +30,8 @@
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="60"/>
                 </Grid.ColumnDefinitions>
-                <TextBox Text="MDI..." VerticalContentAlignment="Center" Background="White"/>
+                <!-- [2026-03-12] 替換 hardcoded 色碼為 DynamicResource -->
+                <TextBox Text="MDI..." VerticalContentAlignment="Center" Background="{DynamicResource Brush.Input.Background}"/>
                 <Button Grid.Column="1" Content="MDI" Margin="2,0,0,0"/>
             </Grid>
         </Grid>
@@ -39,7 +42,8 @@
             <Button Content="FRONT" Height="40" Margin="0,0,0,3"/>
         </StackPanel>
 
-        <Border Grid.Column="2" Background="Black">
+        <!-- [2026-03-12] 替換 hardcoded 色碼為 DynamicResource -->
+        <Border Grid.Column="2" Background="{DynamicResource Brush.WindowBackground}">
             <hx:HelixViewport3D ZoomExtentsWhenLoaded="True" ShowCoordinateSystem="True">
                 <hx:SunLight/>
                 <hx:GridLinesVisual3D Width="300" Length="300" Thickness="0.5" Fill="#333"/>

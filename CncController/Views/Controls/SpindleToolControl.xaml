@@ -86,11 +86,12 @@
         <!-- ============================================ -->
         <!-- 文字標籤（上方） -->
         <!-- ============================================ -->
+        <!-- [2026-03-12] Foreground White → Brush.Text.Primary -->
         <TextBlock x:Name="LabelText"
                    Canvas.Left="0" Canvas.Top="0"
                    Width="160" TextAlignment="Center"
                    FontSize="{DynamicResource FontSize.Body}" FontWeight="Bold"
-                   Foreground="White">
+                   Foreground="{DynamicResource Brush.Text.Primary}">
             <TextBlock.Style>
                 <Style TargetType="TextBlock">
                     <Setter Property="Text" Value="{Binding ToolLabel, RelativeSource={RelativeSource AncestorType=local:SpindleToolControl}}"/>
@@ -147,15 +148,15 @@
                    Fill="{StaticResource FlangeBrush}"
                    Stroke="#1A1A1A" StrokeThickness="0.8"/>
 
-        <!-- 法蘭盤螺栓裝飾（左右各 2 個小圓） -->
+        <!-- [2026-03-12] 法蘭盤螺栓裝飾 Fill #3A3A3A → Brush.Border -->
         <Ellipse Canvas.Left="32" Canvas.Top="99" Width="7" Height="7"
-                 Fill="#3A3A3A" Stroke="#555" StrokeThickness="0.5"/>
+                 Fill="{DynamicResource Brush.Border}" Stroke="#555" StrokeThickness="0.5"/>
         <Ellipse Canvas.Left="46" Canvas.Top="99" Width="7" Height="7"
-                 Fill="#3A3A3A" Stroke="#555" StrokeThickness="0.5"/>
+                 Fill="{DynamicResource Brush.Border}" Stroke="#555" StrokeThickness="0.5"/>
         <Ellipse Canvas.Left="107" Canvas.Top="99" Width="7" Height="7"
-                 Fill="#3A3A3A" Stroke="#555" StrokeThickness="0.5"/>
+                 Fill="{DynamicResource Brush.Border}" Stroke="#555" StrokeThickness="0.5"/>
         <Ellipse Canvas.Left="121" Canvas.Top="99" Width="7" Height="7"
-                 Fill="#3A3A3A" Stroke="#555" StrokeThickness="0.5"/>
+                 Fill="{DynamicResource Brush.Border}" Stroke="#555" StrokeThickness="0.5"/>
 
         <!-- 法蘭盤高光 -->
         <Rectangle Canvas.Left="26" Canvas.Top="95"
@@ -298,10 +299,11 @@
         <!-- 無刀具時顯示文字（ToolNumber == 0 時可見） -->
         <!-- ============================================ -->
         <!-- [2026-03-06] 用 NonZeroToVisibilityConverter + Invert 參數：0→Visible, >0→Collapsed -->
+        <!-- [2026-03-12] Foreground #AA888888 → Brush.Text.Dim -->
         <TextBlock Canvas.Left="0" Canvas.Top="190"
                    Width="160" TextAlignment="Center"
                    FontSize="{DynamicResource FontSize.Body}" FontWeight="SemiBold"
-                   Foreground="#AA888888"
+                   Foreground="{DynamicResource Brush.Text.Dim}"
                    Text="NO TOOL LOADED"
                    Visibility="{Binding ToolNumber, RelativeSource={RelativeSource AncestorType=local:SpindleToolControl}, Converter={StaticResource NonZeroToVisConverter}, ConverterParameter=Invert}"/>
 

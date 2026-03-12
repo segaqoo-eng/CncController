@@ -72,7 +72,8 @@
             </Grid.ColumnDefinitions>
 
             <!-- [2026-03-04] 紅色警告列：加入 RE-SCAN 按鈕 -->
-            <Border Grid.Row="0" Grid.ColumnSpan="2" Background="#D80000" Padding="5">
+            <!-- [2026-03-12] 移除 hardcoded 色碼，改用 DynamicResource 主題變數 -->
+            <Border Grid.Row="0" Grid.ColumnSpan="2" Background="{DynamicResource Brush.Alert.Banner}" Padding="5">
                 <!-- [2026-03-04] 啟動階段隱藏紅色列：需 IsSystemReady=False 且 IsStartingUp=False 才顯示 -->
                 <Border.Style>
                     <Style TargetType="Border">
@@ -94,7 +95,8 @@
                             Command="{Binding RescanHardwareCommand}"
                             Style="{StaticResource BaseBtnStyle}"
                             Padding="15,3" FontSize="{DynamicResource FontSize.Medium}" VerticalAlignment="Center"/>
-                    <TextBlock Text="{Binding SystemStatus}" Foreground="White" FontWeight="Bold"
+                    <!-- [2026-03-12] 移除 hardcoded Foreground="White"，改用 DynamicResource -->
+                    <TextBlock Text="{Binding SystemStatus}" Foreground="{DynamicResource Brush.Text.Primary}" FontWeight="Bold"
                                HorizontalAlignment="Center" FontSize="{DynamicResource FontSize.XLarge}" VerticalAlignment="Center"/>
                 </DockPanel>
             </Border>

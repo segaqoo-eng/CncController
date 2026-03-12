@@ -38,7 +38,7 @@
     </UserControl.Resources>
 
     <!-- [2026-03-06] 最外層：純色深色背景（不使用 ATC_Back.png） -->
-    <Grid Background="#252526" ClipToBounds="True">
+    <Grid Background="{DynamicResource Brush.Panel.Secondary}" ClipToBounds="True">
         <Grid.RowDefinitions>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
@@ -60,9 +60,9 @@
             <DockPanel Grid.Column="0">
 
                 <!-- Left vertical label -->
-                <Border DockPanel.Dock="Left" Background="#DD333333" Width="22" CornerRadius="3,0,0,3"
-                        BorderBrush="#555" BorderThickness="1,1,0,1">
-                    <TextBlock Text="{DynamicResource Str.Atc.UmbrellaAtc}" Foreground="#AAA" FontSize="{DynamicResource FontSize.Small}" FontWeight="Bold"
+                <Border DockPanel.Dock="Left" Background="{DynamicResource Brush.Panel.Overlay}" Width="22" CornerRadius="3,0,0,3"
+                        BorderBrush="{DynamicResource Brush.Btn.Border}" BorderThickness="1,1,0,1">
+                    <TextBlock Text="{DynamicResource Str.Atc.UmbrellaAtc}" Foreground="{DynamicResource Brush.Text.Muted}" FontSize="{DynamicResource FontSize.Small}" FontWeight="Bold"
                                HorizontalAlignment="Center" VerticalAlignment="Center">
                         <TextBlock.LayoutTransform>
                             <RotateTransform Angle="-90"/>
@@ -90,7 +90,7 @@
                     </UniformGrid>
 
                     <!-- ===== MANUAL ATC (UN_BIG4: top 8 btns 2-col + bottom 3 full-width) ===== -->
-                    <Border Grid.Row="1" Background="#DD2D2D2D" BorderBrush="#444" BorderThickness="1"
+                    <Border Grid.Row="1" Background="{DynamicResource Brush.Panel.Overlay}" BorderBrush="{DynamicResource Brush.Border}" BorderThickness="1"
                             CornerRadius="4" Padding="10"
                             Visibility="{Binding IsManualMode, Converter={StaticResource BoolToVis}}">
                         <Grid>
@@ -108,7 +108,7 @@
                                         <Style TargetType="Button" BasedOn="{StaticResource AtcBtnStyle}">
                                             <Style.Triggers>
                                                 <DataTrigger Binding="{Binding IsMotorRev}" Value="True">
-                                                    <Setter Property="Background" Value="#2196F3"/>
+                                                    <Setter Property="Background" Value="{DynamicResource Brush.StatusOn}"/>
                                                 </DataTrigger>
                                             </Style.Triggers>
                                         </Style>
@@ -121,7 +121,7 @@
                                         <Style TargetType="Button" BasedOn="{StaticResource AtcBtnStyle}">
                                             <Style.Triggers>
                                                 <DataTrigger Binding="{Binding IsMotorFwd}" Value="True">
-                                                    <Setter Property="Background" Value="#2196F3"/>
+                                                    <Setter Property="Background" Value="{DynamicResource Brush.StatusOn}"/>
                                                 </DataTrigger>
                                             </Style.Triggers>
                                         </Style>
@@ -134,7 +134,7 @@
                                         <Style TargetType="Button" BasedOn="{StaticResource AtcBtnStyle}">
                                             <Style.Triggers>
                                                 <DataTrigger Binding="{Binding IsCarouselHome}" Value="True">
-                                                    <Setter Property="Background" Value="#2196F3"/>
+                                                    <Setter Property="Background" Value="{DynamicResource Brush.StatusOn}"/>
                                                 </DataTrigger>
                                             </Style.Triggers>
                                         </Style>
@@ -147,7 +147,7 @@
                                         <Style TargetType="Button" BasedOn="{StaticResource AtcBtnStyle}">
                                             <Style.Triggers>
                                                 <DataTrigger Binding="{Binding IsCarouselOut}" Value="True">
-                                                    <Setter Property="Background" Value="#2196F3"/>
+                                                    <Setter Property="Background" Value="{DynamicResource Brush.StatusOn}"/>
                                                 </DataTrigger>
                                             </Style.Triggers>
                                         </Style>
@@ -160,7 +160,7 @@
                                         <Style TargetType="Button" BasedOn="{StaticResource AtcBtnStyle}">
                                             <Style.Triggers>
                                                 <DataTrigger Binding="{Binding IsDrawbarOn}" Value="False">
-                                                    <Setter Property="Background" Value="#2196F3"/>
+                                                    <Setter Property="Background" Value="{DynamicResource Brush.StatusOn}"/>
                                                 </DataTrigger>
                                             </Style.Triggers>
                                         </Style>
@@ -173,7 +173,7 @@
                                         <Style TargetType="Button" BasedOn="{StaticResource AtcBtnStyle}">
                                             <Style.Triggers>
                                                 <DataTrigger Binding="{Binding IsDrawbarOn}" Value="True">
-                                                    <Setter Property="Background" Value="#2196F3"/>
+                                                    <Setter Property="Background" Value="{DynamicResource Brush.StatusOn}"/>
                                                 </DataTrigger>
                                             </Style.Triggers>
                                         </Style>
@@ -203,7 +203,7 @@
                     </Border>
 
                     <!-- ===== PROGRAM TOOLS (UN_BIG3: title + list fills height + REF at bottom) ===== -->
-                    <Border Grid.Row="1" Background="#DD2D2D2D" BorderBrush="#444" BorderThickness="1"
+                    <Border Grid.Row="1" Background="{DynamicResource Brush.Panel.Overlay}" BorderBrush="{DynamicResource Brush.Border}" BorderThickness="1"
                             CornerRadius="4" Padding="10"
                             Visibility="{Binding IsProgramMode, Converter={StaticResource BoolToVis}}">
                         <Grid>
@@ -220,8 +220,8 @@
 
                             <!-- [2026-03-06] Tool list (fills remaining space) -->
                             <ListBox Grid.Row="1" ItemsSource="{Binding ProgramTools}"
-                                     Background="#2D2D2D" Foreground="White"
-                                     BorderBrush="#555" BorderThickness="1"
+                                     Background="{DynamicResource Brush.PanelBackground}" Foreground="White"
+                                     BorderBrush="{DynamicResource Brush.Btn.Border}" BorderThickness="1"
                                      FontSize="{DynamicResource FontSize.Large}" FontWeight="Bold" FontFamily="Consolas"
                                      ScrollViewer.VerticalScrollBarVisibility="Auto"/>
 
@@ -259,7 +259,15 @@
             <!-- ======================================================================
                  Col 3：ATC AUTOMATIC CONTROL PANEL
                  ====================================================================== -->
-            <StackPanel Grid.Column="3" VerticalAlignment="Top">
+            <!-- [2026-03-12] Col 3 改用 Grid（上半捲動區 + 下半固定感測器），避免感測器被擠出畫面 -->
+            <Grid Grid.Column="3">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <!-- [2026-03-12] 上半：原有按鈕區 -->
+                <StackPanel Grid.Row="0">
 
                 <!-- [2026-03-11] ATC AUTOMATIC CONTROL PANEL 標題（統一 PanelTitle） -->
                 <Border Style="{StaticResource PanelTitleBorder}" Margin="0,0,0,6">
@@ -274,7 +282,7 @@
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
                     <Border Grid.Column="0" Background="White" CornerRadius="2" Margin="0,0,4,0"
-                            BorderBrush="#666" BorderThickness="1">
+                            BorderBrush="{DynamicResource Brush.Btn.Border}" BorderThickness="1">
                         <TextBox Text="{Binding ChangeToolNumber, UpdateSourceTrigger=PropertyChanged}"
                                  Background="Transparent" Foreground="Black" FontSize="{DynamicResource FontSize.Medium}" FontWeight="Bold"
                                  TextAlignment="Center" BorderThickness="0" VerticalContentAlignment="Center"
@@ -290,7 +298,7 @@
                 <Button Content="{DynamicResource Str.Atc.UnloadSpindle}" Style="{StaticResource PanelBtnStyle}"
                         Command="{Binding UnloadSpindleCommand}"/>
 
-                <Separator Background="#444" Margin="0,6"/>
+                <Separator Background="{DynamicResource Brush.Separator}" Margin="0,6"/>
 
                 <!-- [2026-03-06] 方向鍵面板（上下左右） -->
                 <Grid Margin="4,4" HorizontalAlignment="Center">
@@ -319,7 +327,7 @@
                             Command="{Binding HeadDownCommand}" FontSize="{DynamicResource FontSize.Large}" Height="40" Width="50"/>
                 </Grid>
 
-                <Separator Background="#444" Margin="0,6"/>
+                <Separator Background="{DynamicResource Brush.Separator}" Margin="0,6"/>
 
                 <!-- [2026-03-06] ELECTRONIC TOOL SETTER -->
                 <!-- [2026-03-11] 移除 inline Background -->
@@ -331,7 +339,7 @@
                 <Button Content="{DynamicResource Str.Atc.TouchOffCurrentTool}" Style="{StaticResource PanelBtnStyle}"
                         Command="{Binding TouchOffCurrentToolCommand}"/>
 
-                <Separator Background="#444" Margin="0,6"/>
+                <Separator Background="{DynamicResource Brush.Separator}" Margin="0,6"/>
 
                 <!-- [2026-03-11] 刀位設定區塊（統一 PanelTitle） -->
                 <Border Style="{StaticResource PanelTitleBorder}" Margin="0,0,0,4">
@@ -346,16 +354,16 @@
                         <ColumnDefinition Width="Auto"/>
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
-                    <TextBlock Grid.Column="0" Text="{DynamicResource Str.Atc.SlotNumber}" Foreground="#CCC" FontSize="{DynamicResource FontSize.Small}"
+                    <TextBlock Grid.Column="0" Text="{DynamicResource Str.Atc.SlotNumber}" Foreground="{DynamicResource Brush.Text.Secondary}" FontSize="{DynamicResource FontSize.Small}"
                                VerticalAlignment="Center" Margin="0,0,4,0"/>
-                    <Border Grid.Column="1" Background="White" CornerRadius="2" BorderBrush="#666" BorderThickness="1" Margin="0,0,6,0">
+                    <Border Grid.Column="1" Background="White" CornerRadius="2" BorderBrush="{DynamicResource Brush.Btn.Border}" BorderThickness="1" Margin="0,0,6,0">
                         <TextBox Text="{Binding SelectedSlotNumber, UpdateSourceTrigger=PropertyChanged}"
                                  Background="Transparent" Foreground="Black" FontSize="{DynamicResource FontSize.Medium}" FontWeight="Bold"
                                  TextAlignment="Center" BorderThickness="0" VerticalContentAlignment="Center" Padding="2"/>
                     </Border>
-                    <TextBlock Grid.Column="2" Text="{DynamicResource Str.Atc.ToolNumber}" Foreground="#CCC" FontSize="{DynamicResource FontSize.Small}"
+                    <TextBlock Grid.Column="2" Text="{DynamicResource Str.Atc.ToolNumber}" Foreground="{DynamicResource Brush.Text.Secondary}" FontSize="{DynamicResource FontSize.Small}"
                                VerticalAlignment="Center" Margin="0,0,4,0"/>
-                    <Border Grid.Column="3" Background="White" CornerRadius="2" BorderBrush="#666" BorderThickness="1">
+                    <Border Grid.Column="3" Background="White" CornerRadius="2" BorderBrush="{DynamicResource Brush.Btn.Border}" BorderThickness="1">
                         <TextBox Text="{Binding SetSlotToolNumber, UpdateSourceTrigger=PropertyChanged}"
                                  Background="Transparent" Foreground="Black" FontSize="{DynamicResource FontSize.Medium}" FontWeight="Bold"
                                  TextAlignment="Center" BorderThickness="0" VerticalContentAlignment="Center" Padding="2"/>
@@ -372,7 +380,7 @@
                             Command="{Binding ClearAllSlotsCommand}" Margin="2,0,0,0"/>
                 </UniformGrid>
 
-                <Separator Background="#444" Margin="0,2"/>
+                <Separator Background="{DynamicResource Brush.Separator}" Margin="0,2"/>
 
                 <!-- [2026-03-06] [n] M6 G43 -->
                 <Grid Margin="0,4,0,0">
@@ -381,7 +389,7 @@
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
                     <Border Grid.Column="0" Background="White" CornerRadius="2" Margin="0,0,4,0"
-                            BorderBrush="#666" BorderThickness="1">
+                            BorderBrush="{DynamicResource Brush.Btn.Border}" BorderThickness="1">
                         <TextBox Text="{Binding ChangeToolNumber, UpdateSourceTrigger=PropertyChanged}"
                                  Background="Transparent" Foreground="Black" FontSize="{DynamicResource FontSize.Medium}" FontWeight="Bold"
                                  TextAlignment="Center" BorderThickness="0" VerticalContentAlignment="Center"
@@ -391,23 +399,139 @@
                     <Button Grid.Column="1" Content="M6 G43" Style="{StaticResource PanelBtnStyle}"
                             Command="{Binding M6G43Command}"/>
                 </Grid>
-            </StackPanel>
+
+                </StackPanel>
+
+                <!-- [2026-03-12] 下半：DI 感測器即時狀態（僅模擬模式顯示，非模擬時隱藏） -->
+                <StackPanel Grid.Row="1" Margin="0,6,0,0"
+                            Visibility="{Binding IsAtcSimulation, Converter={StaticResource BoolToVis}}">
+
+                <Border Style="{StaticResource PanelTitleBorder}" Margin="0,0,0,4">
+                    <TextBlock Text="{DynamicResource Str.Atc.SensorStatus}" Style="{StaticResource PanelTitleText}"/>
+                </Border>
+
+                <!-- 刀盤歸位 -->
+                <Grid Margin="2,2">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="16"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <Ellipse Grid.Column="0" Width="12" Height="12" VerticalAlignment="Center">
+                        <Ellipse.Style>
+                            <Style TargetType="Ellipse">
+                                <Setter Property="Fill" Value="Gray"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding DiCarouselHome}" Value="True">
+                                        <Setter Property="Fill" Value="Lime"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Ellipse.Style>
+                    </Ellipse>
+                    <TextBlock Grid.Column="1" Text="{DynamicResource Str.Atc.Sensor.CarouselHome}" Foreground="{DynamicResource Brush.Text.Secondary}"
+                               FontSize="{DynamicResource FontSize.Small}" VerticalAlignment="Center" Margin="6,0"/>
+                    <Button Grid.Column="2" Content="SIM" Style="{StaticResource AtcBtnStyle}" FontSize="10" Padding="6,2" Margin="0"
+                            Command="{Binding SimToggleCarouselHomeCommand}"
+                            Visibility="{Binding IsAtcSimulation, Converter={StaticResource BoolToVis}}"/>
+                </Grid>
+
+                <!-- 刀盤到位 -->
+                <Grid Margin="2,2">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="16"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <Ellipse Grid.Column="0" Width="12" Height="12" VerticalAlignment="Center">
+                        <Ellipse.Style>
+                            <Style TargetType="Ellipse">
+                                <Setter Property="Fill" Value="Gray"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding DiCarouselOut}" Value="True">
+                                        <Setter Property="Fill" Value="Lime"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Ellipse.Style>
+                    </Ellipse>
+                    <TextBlock Grid.Column="1" Text="{DynamicResource Str.Atc.Sensor.CarouselOut}" Foreground="{DynamicResource Brush.Text.Secondary}"
+                               FontSize="{DynamicResource FontSize.Small}" VerticalAlignment="Center" Margin="6,0"/>
+                    <Button Grid.Column="2" Content="SIM" Style="{StaticResource AtcBtnStyle}" FontSize="10" Padding="6,2" Margin="0"
+                            Command="{Binding SimToggleCarouselOutCommand}"
+                            Visibility="{Binding IsAtcSimulation, Converter={StaticResource BoolToVis}}"/>
+                </Grid>
+
+                <!-- 夾刀確認 -->
+                <Grid Margin="2,2">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="16"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <Ellipse Grid.Column="0" Width="12" Height="12" VerticalAlignment="Center">
+                        <Ellipse.Style>
+                            <Style TargetType="Ellipse">
+                                <Setter Property="Fill" Value="Gray"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding DiDrawbarClamp}" Value="True">
+                                        <Setter Property="Fill" Value="Lime"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Ellipse.Style>
+                    </Ellipse>
+                    <TextBlock Grid.Column="1" Text="{DynamicResource Str.Atc.Sensor.DrawbarClamp}" Foreground="{DynamicResource Brush.Text.Secondary}"
+                               FontSize="{DynamicResource FontSize.Small}" VerticalAlignment="Center" Margin="6,0"/>
+                    <Button Grid.Column="2" Content="SIM" Style="{StaticResource AtcBtnStyle}" FontSize="10" Padding="6,2" Margin="0"
+                            Command="{Binding SimToggleDrawbarClampCommand}"
+                            Visibility="{Binding IsAtcSimulation, Converter={StaticResource BoolToVis}}"/>
+                </Grid>
+
+                <!-- 鬆刀確認 -->
+                <Grid Margin="2,2">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="16"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <Ellipse Grid.Column="0" Width="12" Height="12" VerticalAlignment="Center">
+                        <Ellipse.Style>
+                            <Style TargetType="Ellipse">
+                                <Setter Property="Fill" Value="Gray"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding DiDrawbarUnclamp}" Value="True">
+                                        <Setter Property="Fill" Value="Lime"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Ellipse.Style>
+                    </Ellipse>
+                    <TextBlock Grid.Column="1" Text="{DynamicResource Str.Atc.Sensor.DrawbarUnclamp}" Foreground="{DynamicResource Brush.Text.Secondary}"
+                               FontSize="{DynamicResource FontSize.Small}" VerticalAlignment="Center" Margin="6,0"/>
+                    <Button Grid.Column="2" Content="SIM" Style="{StaticResource AtcBtnStyle}" FontSize="10" Padding="6,2" Margin="0"
+                            Command="{Binding SimToggleDrawbarUnclampCommand}"
+                            Visibility="{Binding IsAtcSimulation, Converter={StaticResource BoolToVis}}"/>
+                </Grid>
+
+                </StackPanel>
+            </Grid>
         </Grid>
 
         <!-- ======================================================================
              底部 MDI 欄
              ====================================================================== -->
-        <Border Grid.Row="1" Background="#DD333333" CornerRadius="3" Padding="6,4"
-                Margin="10,0,10,10" BorderBrush="#666" BorderThickness="1">
+        <Border Grid.Row="1" Background="{DynamicResource Brush.Panel.Overlay}" CornerRadius="3" Padding="6,4"
+                Margin="10,0,10,10" BorderBrush="{DynamicResource Brush.Btn.Border}" BorderThickness="1">
             <DockPanel>
-                <TextBlock DockPanel.Dock="Left" Text="MDI" Foreground="#CCC"
+                <TextBlock DockPanel.Dock="Left" Text="MDI" Foreground="{DynamicResource Brush.Text.Secondary}"
                            FontSize="{DynamicResource FontSize.Body}" FontWeight="Bold" VerticalAlignment="Center"
                            Margin="0,0,6,0"/>
                 <Button DockPanel.Dock="Right" Content="{DynamicResource Str.Btn.Send}" Style="{StaticResource AtcBtnStyle}"
                         Command="{Binding SendMdiCommand}" Width="60" Margin="4,0,0,0"/>
                 <TextBox Text="{Binding MdiInput, UpdateSourceTrigger=PropertyChanged}"
                          Background="White" Foreground="Black" FontSize="{DynamicResource FontSize.Body}" Padding="6,3"
-                         BorderBrush="#888" BorderThickness="1">
+                         BorderBrush="{DynamicResource Brush.Btn.Border}" BorderThickness="1">
                     <TextBox.InputBindings>
                         <KeyBinding Key="Return" Command="{Binding SendMdiCommand}"/>
                     </TextBox.InputBindings>

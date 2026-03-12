@@ -86,8 +86,9 @@
         </Style>
 
         <!-- [2026-03-04] 參數標籤 -->
+        <!-- [2026-03-12] Foreground="#DDD" → DynamicResource -->
         <Style x:Key="ParamLbl" TargetType="TextBlock">
-            <Setter Property="Foreground" Value="#DDD"/>
+            <Setter Property="Foreground" Value="{DynamicResource Brush.Text.Secondary}"/>
             <Setter Property="FontSize" Value="{DynamicResource FontSize.Large}"/>
             <Setter Property="FontWeight" Value="Bold"/>
             <Setter Property="VerticalAlignment" Value="Center"/>
@@ -95,12 +96,13 @@
         </Style>
 
         <!-- [2026-03-04] 參數輸入框（白底黑字） -->
+        <!-- [2026-03-12] hardcoded colors → DynamicResource -->
         <Style x:Key="ParamTxt" TargetType="TextBox">
             <Setter Property="Background" Value="#F0F0F0"/>
             <Setter Property="Foreground" Value="#111"/>
             <Setter Property="FontSize" Value="{DynamicResource FontSize.Large}"/>
             <Setter Property="FontFamily" Value="Consolas"/>
-            <Setter Property="BorderBrush" Value="#888"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource Brush.Text.Dim}"/>
             <Setter Property="BorderThickness" Value="1.5"/>
             <Setter Property="Padding" Value="6,3"/>
             <Setter Property="Margin" Value="0,2"/>
@@ -110,8 +112,9 @@
         </Style>
 
         <!-- [2026-03-04] 結果標籤 -->
+        <!-- [2026-03-12] Foreground="#DDD" → DynamicResource -->
         <Style x:Key="ResultLbl" TargetType="TextBlock">
-            <Setter Property="Foreground" Value="#DDD"/>
+            <Setter Property="Foreground" Value="{DynamicResource Brush.Text.Secondary}"/>
             <Setter Property="FontSize" Value="{DynamicResource FontSize.Large}"/>
             <Setter Property="FontWeight" Value="Bold"/>
             <Setter Property="VerticalAlignment" Value="Center"/>
@@ -252,9 +255,10 @@
                     <StackPanel>
 
                         <!-- ====== 上：WORK OFFSETS ====== -->
-                        <Border Background="#333" CornerRadius="5,5,0,0" Padding="6,4">
+                        <!-- [2026-03-12] hardcoded colors → DynamicResource -->
+                        <Border Background="{DynamicResource Brush.Input.Background}" CornerRadius="5,5,0,0" Padding="6,4">
                             <StackPanel>
-                                <TextBlock Text="{DynamicResource Str.Probe.WorkCoordSystem}" Foreground="#FFF" FontSize="{DynamicResource FontSize.Large}"
+                                <TextBlock Text="{DynamicResource Str.Probe.WorkCoordSystem}" Foreground="{DynamicResource Brush.Text.Primary}" FontSize="{DynamicResource FontSize.Large}"
                                            FontWeight="Bold" Margin="0,0,0,4"/>
                                 <!-- Row 1: G54~G59 -->
                                 <UniformGrid Rows="1" Columns="6" Margin="0,0,0,2">
@@ -294,14 +298,16 @@
                                     <RadioButton Grid.Column="2" Content="G59.3" Style="{StaticResource WcsSelectStyle}"
                                                  GroupName="WcsSelect"
                                                  Command="{Binding SelectWcsCommand}" CommandParameter="G59.3"/>
+                                    <!-- [2026-03-12] Foreground="#FFF" → DynamicResource -->
                                     <ToggleButton Grid.Column="3" Content="{DynamicResource Str.Probe.PositionOnly}"
                                                   IsChecked="{Binding IsProbePositionOnly}"
-                                                  Foreground="#FFF" FontSize="{DynamicResource FontSize.Medium}" FontWeight="Bold"
+                                                  Foreground="{DynamicResource Brush.Text.Primary}" FontSize="{DynamicResource FontSize.Medium}" FontWeight="Bold"
                                                   Background="#3A3A3A" Margin="2,0" Padding="6,3" Cursor="Hand">
                                         <ToggleButton.Template>
                                             <ControlTemplate TargetType="ToggleButton">
+                                                <!-- [2026-03-12] BorderBrush="#555" → DynamicResource -->
                                                 <Border x:Name="bd" Background="{TemplateBinding Background}"
-                                                        BorderBrush="#555" BorderThickness="1" CornerRadius="3"
+                                                        BorderBrush="{DynamicResource Brush.Btn.Border}" BorderThickness="1" CornerRadius="3"
                                                         Padding="{TemplateBinding Padding}">
                                                     <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                                 </Border>
@@ -335,7 +341,8 @@
                         <!-- ====== 中：PROBING PARAMETERS ====== -->
                         <Border Background="#3A3A3ACC" Padding="6,4" Margin="0,2,0,0">
                             <StackPanel>
-                                <TextBlock Text="{DynamicResource Str.Probe.ProbeParams}" Foreground="#FFF" FontSize="{DynamicResource FontSize.Large}"
+                                <!-- [2026-03-12] Foreground="#FFF" → DynamicResource -->
+                                <TextBlock Text="{DynamicResource Str.Probe.ProbeParams}" Foreground="{DynamicResource Brush.Text.Primary}" FontSize="{DynamicResource FontSize.Large}"
                                            FontWeight="Bold" Margin="0,0,0,4"/>
                                 <!-- 5 行參數：標籤靠右 + 白底輸入框 -->
                                 <Grid>
@@ -1037,27 +1044,29 @@
                                 <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="Auto"/>
                             </Grid.RowDefinitions>
-                            <TextBlock Grid.Row="0" Grid.Column="0" Text="DIAM" Foreground="#AAA"
+                            <!-- [2026-03-12] Foreground="#AAA" → DynamicResource -->
+                            <TextBlock Grid.Row="0" Grid.Column="0" Text="DIAM" Foreground="{DynamicResource Brush.Text.Muted}"
                                        FontSize="{DynamicResource FontSize.Small}" FontWeight="Bold" HorizontalAlignment="Center"/>
-                            <TextBlock Grid.Row="0" Grid.Column="2" Text="X" Foreground="#AAA"
+                            <TextBlock Grid.Row="0" Grid.Column="2" Text="X" Foreground="{DynamicResource Brush.Text.Muted}"
                                        FontSize="{DynamicResource FontSize.Small}" FontWeight="Bold" HorizontalAlignment="Center"/>
-                            <TextBlock Grid.Row="0" Grid.Column="4" Text="Y" Foreground="#AAA"
+                            <TextBlock Grid.Row="0" Grid.Column="4" Text="Y" Foreground="{DynamicResource Brush.Text.Muted}"
                                        FontSize="{DynamicResource FontSize.Small}" FontWeight="Bold" HorizontalAlignment="Center"/>
                             <!-- [2026-03-04] DIAM：近似直徑 -->
+                            <!-- [2026-03-12] hardcoded colors → DynamicResource -->
                             <TextBox Grid.Row="1" Grid.Column="0" FontFamily="Consolas" FontSize="{DynamicResource FontSize.Body}"
-                                     Foreground="#FFF" Background="#333" BorderBrush="#555"
+                                     Foreground="{DynamicResource Brush.Text.Primary}" Background="{DynamicResource Brush.Input.Background}" BorderBrush="{DynamicResource Brush.Btn.Border}"
                                      HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
                                      Height="24" Margin="2,1"
                                      Text="{Binding BossPocketDiam, UpdateSourceTrigger=PropertyChanged}"/>
                             <!-- [2026-03-04] X：特徵中心 X 偏移量 -->
                             <TextBox Grid.Row="1" Grid.Column="2" FontFamily="Consolas" FontSize="{DynamicResource FontSize.Body}"
-                                     Foreground="#FFF" Background="#333" BorderBrush="#555"
+                                     Foreground="{DynamicResource Brush.Text.Primary}" Background="{DynamicResource Brush.Input.Background}" BorderBrush="{DynamicResource Brush.Btn.Border}"
                                      HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
                                      Height="24" Margin="2,1"
                                      Text="{Binding BossPocketOffsetX, UpdateSourceTrigger=PropertyChanged}"/>
                             <!-- [2026-03-04] Y：特徵中心 Y 偏移量 -->
                             <TextBox Grid.Row="1" Grid.Column="4" FontFamily="Consolas" FontSize="{DynamicResource FontSize.Body}"
-                                     Foreground="#FFF" Background="#333" BorderBrush="#555"
+                                     Foreground="{DynamicResource Brush.Text.Primary}" Background="{DynamicResource Brush.Input.Background}" BorderBrush="{DynamicResource Brush.Btn.Border}"
                                      HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
                                      Height="24" Margin="2,1"
                                      Text="{Binding BossPocketOffsetY, UpdateSourceTrigger=PropertyChanged}"/>
@@ -1190,16 +1199,17 @@
                     <!-- [2026-03-04] HINT 面板：X / Y 輸入框（特徵中心偏移） -->
                     <Border Background="#1A1A1ACC" CornerRadius="4" Padding="8,4" Margin="0,6,0,0">
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                            <Border Background="#444" CornerRadius="3" Padding="10,3" Margin="0,0,10,0">
-                                <TextBlock Text="{DynamicResource Str.Probe.Hint}" Foreground="#FFF" FontSize="{DynamicResource FontSize.Body}" FontWeight="Bold"/>
+                            <!-- [2026-03-12] hardcoded colors → DynamicResource -->
+                            <Border Background="{DynamicResource Brush.Border}" CornerRadius="3" Padding="10,3" Margin="0,0,10,0">
+                                <TextBlock Text="{DynamicResource Str.Probe.Hint}" Foreground="{DynamicResource Brush.Text.Primary}" FontSize="{DynamicResource FontSize.Body}" FontWeight="Bold"/>
                             </Border>
-                            <TextBlock Text="X :" Foreground="#AAA" FontSize="{DynamicResource FontSize.Body}" FontWeight="Bold"
+                            <TextBlock Text="X :" Foreground="{DynamicResource Brush.Text.Muted}" FontSize="{DynamicResource FontSize.Body}" FontWeight="Bold"
                                        VerticalAlignment="Center" Margin="0,0,4,0"/>
                             <TextBox FontFamily="Consolas" FontSize="{DynamicResource FontSize.Body}" Width="70" Height="24"
                                      Foreground="#000" Background="#FFF" BorderBrush="#999"
                                      HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
                                      Text="{Binding RidgeValleyOffsetX, UpdateSourceTrigger=PropertyChanged}"/>
-                            <TextBlock Text="Y :" Foreground="#AAA" FontSize="{DynamicResource FontSize.Body}" FontWeight="Bold"
+                            <TextBlock Text="Y :" Foreground="{DynamicResource Brush.Text.Muted}" FontSize="{DynamicResource FontSize.Body}" FontWeight="Bold"
                                        VerticalAlignment="Center" Margin="10,0,4,0"/>
                             <TextBox FontFamily="Consolas" FontSize="{DynamicResource FontSize.Body}" Width="70" Height="24"
                                      Foreground="#000" Background="#FFF" BorderBrush="#999"
@@ -1386,7 +1396,8 @@
                                     Style="{StaticResource ProbeBtnStyle}"
                                     Command="{Binding SetRotationWcoCommand}" Padding="10,4"/>
                             <StackPanel Grid.Column="1"/>
-                            <TextBlock Grid.Column="2" Text="{DynamicResource Str.Probe.EdgeWidth}" Foreground="#AAA"
+                            <!-- [2026-03-12] Foreground="#AAA" → DynamicResource -->
+                            <TextBlock Grid.Column="2" Text="{DynamicResource Str.Probe.EdgeWidth}" Foreground="{DynamicResource Brush.Text.Muted}"
                                        FontSize="{DynamicResource FontSize.Small}" FontWeight="Bold" VerticalAlignment="Center" Margin="0,0,6,0"/>
                             <TextBox Grid.Column="3" FontFamily="Consolas" FontSize="{DynamicResource FontSize.Body}"
                                      Foreground="#000" Background="#FFF" BorderBrush="#999"
@@ -1423,7 +1434,8 @@
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
-                            <TextBlock Grid.Column="0" Text="PROBE CALIBRATION OFFSET:" Foreground="White"
+                            <!-- [2026-03-12] Foreground="White" → DynamicResource -->
+                            <TextBlock Grid.Column="0" Text="PROBE CALIBRATION OFFSET:" Foreground="{DynamicResource Brush.Text.Primary}"
                                        FontSize="{DynamicResource FontSize.Body}" FontWeight="Bold" VerticalAlignment="Center" Margin="0,0,8,0"/>
                             <TextBox Grid.Column="1" FontFamily="Consolas" FontSize="{DynamicResource FontSize.Body}"
                                      Foreground="#000" Background="#FFF" BorderBrush="#999"
@@ -1483,9 +1495,10 @@
                             </Button>
                             <!-- CALIBRATION DIAMETER -->
                             <StackPanel Grid.Column="3" VerticalAlignment="Center" Margin="10,0,0,0">
-                                <TextBlock Text="{DynamicResource Str.Probe.CalLabel}" Foreground="#AAA" FontSize="{DynamicResource FontSize.Small}"
+                                <!-- [2026-03-12] Foreground="#AAA" → DynamicResource -->
+                                <TextBlock Text="{DynamicResource Str.Probe.CalLabel}" Foreground="{DynamicResource Brush.Text.Muted}" FontSize="{DynamicResource FontSize.Small}"
                                            FontWeight="Bold" HorizontalAlignment="Center"/>
-                                <TextBlock Text="{DynamicResource Str.Probe.Diameter}" Foreground="#AAA" FontSize="{DynamicResource FontSize.Small}"
+                                <TextBlock Text="{DynamicResource Str.Probe.Diameter}" Foreground="{DynamicResource Brush.Text.Muted}" FontSize="{DynamicResource FontSize.Small}"
                                            FontWeight="Bold" HorizontalAlignment="Center" Margin="0,0,0,4"/>
                                 <TextBox FontFamily="Consolas" FontSize="{DynamicResource FontSize.Body}" Width="100"
                                          Foreground="#000" Background="#FFF" BorderBrush="#999"
@@ -1504,13 +1517,14 @@
                                 <ColumnDefinition Width="6"/>
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
+                            <!-- [2026-03-12] hardcoded colors → DynamicResource -->
                             <Button Grid.Column="0" Content="{DynamicResource Str.Probe.CalXYAvgError}" Padding="4,6"
-                                    Background="#0078D4" Foreground="White" FontSize="{DynamicResource FontSize.XSmall}" FontWeight="Bold"
+                                    Background="{DynamicResource Brush.Accent}" Foreground="{DynamicResource Brush.Text.Primary}" FontSize="{DynamicResource FontSize.XSmall}" FontWeight="Bold"
                                     Cursor="Hand" Command="{Binding CalOnAvgXyErrorCommand}">
                                 <Button.Template>
                                     <ControlTemplate TargetType="Button">
                                         <Border Background="{TemplateBinding Background}" CornerRadius="4"
-                                                Padding="{TemplateBinding Padding}" BorderBrush="#555" BorderThickness="1">
+                                                Padding="{TemplateBinding Padding}" BorderBrush="{DynamicResource Brush.Btn.Border}" BorderThickness="1">
                                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                         </Border>
                                     </ControlTemplate>
@@ -1579,10 +1593,12 @@
                             </Button>
                             <!-- CALIBRATION WIDTH X / Y -->
                             <StackPanel Grid.Column="3" VerticalAlignment="Center" Margin="10,0,0,0">
-                                <TextBlock Text="{DynamicResource Str.Probe.CalWidth}" Foreground="#AAA" FontSize="{DynamicResource FontSize.Small}"
+                                <!-- [2026-03-12] Foreground="#AAA" → DynamicResource -->
+                                <TextBlock Text="{DynamicResource Str.Probe.CalWidth}" Foreground="{DynamicResource Brush.Text.Muted}" FontSize="{DynamicResource FontSize.Small}"
                                            FontWeight="Bold" HorizontalAlignment="Center" Margin="0,0,0,6"/>
+                                <!-- [2026-03-12] Foreground="#AAA" → DynamicResource -->
                                 <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
-                                    <TextBlock Text="X :" Foreground="#AAA" FontSize="{DynamicResource FontSize.Body}" FontWeight="Bold"
+                                    <TextBlock Text="X :" Foreground="{DynamicResource Brush.Text.Muted}" FontSize="{DynamicResource FontSize.Body}" FontWeight="Bold"
                                                VerticalAlignment="Center" Margin="0,0,4,0"/>
                                     <TextBox FontFamily="Consolas" FontSize="{DynamicResource FontSize.Body}" Width="80"
                                              Foreground="#000" Background="#FFF" BorderBrush="#999"
@@ -1591,7 +1607,7 @@
                                              Text="{Binding CalibrationWidthX, StringFormat='{}{0:F6}', UpdateSourceTrigger=PropertyChanged}"/>
                                 </StackPanel>
                                 <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="Y :" Foreground="#AAA" FontSize="{DynamicResource FontSize.Body}" FontWeight="Bold"
+                                    <TextBlock Text="Y :" Foreground="{DynamicResource Brush.Text.Muted}" FontSize="{DynamicResource FontSize.Body}" FontWeight="Bold"
                                                VerticalAlignment="Center" Margin="0,0,4,0"/>
                                     <TextBox FontFamily="Consolas" FontSize="{DynamicResource FontSize.Body}" Width="80"
                                              Foreground="#000" Background="#FFF" BorderBrush="#999"
@@ -1637,8 +1653,9 @@
                                     <TextBlock Text="{DynamicResource Str.Probe.PrevPage}" FontSize="{DynamicResource FontSize.Body}" FontWeight="Bold"/>
                                 </StackPanel>
                             </Button>
+                            <!-- [2026-03-12] Foreground="#AAA" → DynamicResource -->
                             <TextBlock Grid.Column="2" VerticalAlignment="Center" HorizontalAlignment="Center"
-                                       Foreground="#AAA" FontSize="{DynamicResource FontSize.Body}" FontFamily="Consolas" Margin="8,0">
+                                       Foreground="{DynamicResource Brush.Text.Muted}" FontSize="{DynamicResource FontSize.Body}" FontFamily="Consolas" Margin="8,0">
                                 <TextBlock.Text>
                                     <MultiBinding StringFormat="{}{0} / 7">
                                         <Binding Path="HelpPageIndex"/>
@@ -1662,21 +1679,27 @@
                 </Border>
 
 <!-- [2026-03-06] 探針輸入訊號指示燈（九宮格下方） -->
+                <!-- [2026-03-12] 非模擬模式隱藏整個 PROBE INPUT 區塊 -->
                 <Border VerticalAlignment="Bottom" HorizontalAlignment="Center"
                         Margin="0,0,0,8" Padding="10,4" CornerRadius="4"
                         Background="#44000000">
                     <Border.Style>
                         <Style TargetType="Border">
-                            <Setter Property="Visibility" Value="Visible"/>
+                            <Setter Property="Visibility" Value="Collapsed"/>
                             <Style.Triggers>
-                                <DataTrigger Binding="{Binding SelectedProbeMode}" Value="ToolSetter">
-                                    <Setter Property="Visibility" Value="Collapsed"/>
-                                </DataTrigger>
+                                <MultiDataTrigger>
+                                    <MultiDataTrigger.Conditions>
+                                        <Condition Binding="{Binding IsProbeSimulation}" Value="True"/>
+                                        <Condition Binding="{Binding SelectedProbeMode}" Value="TouchProbe"/>
+                                    </MultiDataTrigger.Conditions>
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </MultiDataTrigger>
                             </Style.Triggers>
                         </Style>
                     </Border.Style>
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                        <TextBlock Text="PROBE INPUT" Foreground="White" FontSize="{DynamicResource FontSize.Body}"
+                        <!-- [2026-03-12] Foreground="White" → DynamicResource -->
+                        <TextBlock Text="PROBE INPUT" Foreground="{DynamicResource Brush.Text.Primary}" FontSize="{DynamicResource FontSize.Body}"
                                    FontWeight="Bold" VerticalAlignment="Center" Margin="0,0,8,0"/>
                         <Ellipse Width="20" Height="20" StrokeThickness="1.5" Stroke="#888"
                                  VerticalAlignment="Center">
@@ -1731,8 +1754,9 @@
                     <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                     <StackPanel>
                         <!-- 標題列 -->
-                        <Border Background="#555" CornerRadius="4" Padding="8,4" Margin="0,0,0,6">
-                            <TextBlock Text="{DynamicResource Str.Probe.ToolSetterParams}" Foreground="White"
+                        <!-- [2026-03-12] hardcoded colors → DynamicResource -->
+                        <Border Background="{DynamicResource Brush.Btn.Border}" CornerRadius="4" Padding="8,4" Margin="0,0,0,6">
+                            <TextBlock Text="{DynamicResource Str.Probe.ToolSetterParams}" Foreground="{DynamicResource Brush.Text.Primary}"
                                        FontSize="{DynamicResource FontSize.Large}" FontWeight="Bold"/>
                         </Border>
 
@@ -1817,9 +1841,10 @@
                                             <TextBlock Text="{DynamicResource Str.Probe.DirBack}" FontSize="{DynamicResource FontSize.Small}"/>
                                         </StackPanel>
                                     </Button>
+                                    <!-- [2026-03-12] Background="#0078D4" Foreground="White" → DynamicResource -->
                                     <Button Grid.Row="1" Grid.Column="0" Style="{StaticResource ProbeBtnStyle}"
                                             Command="{Binding TsSetOffsetDirectionCommand}" CommandParameter="LEFT"
-                                            Padding="2,3" FontSize="{DynamicResource FontSize.Small}" Margin="2" Background="#0078D4" Foreground="White">
+                                            Padding="2,3" FontSize="{DynamicResource FontSize.Small}" Margin="2" Background="{DynamicResource Brush.Accent}" Foreground="{DynamicResource Brush.Text.Primary}">
                                         <StackPanel Orientation="Horizontal">
                                             <TextBlock Text="◄" FontSize="{DynamicResource FontSize.XSmall}" Margin="0,0,2,0"/>
                                             <TextBlock Text="{DynamicResource Str.Probe.DirLeft}" FontSize="{DynamicResource FontSize.Small}"/>
@@ -1923,12 +1948,13 @@
                 <!-- ======================================================== -->
                 <StackPanel Grid.Column="3" VerticalAlignment="Center">
                     <!-- TOUCH PROBE（藍色 when active） -->
+                    <!-- [2026-03-12] Background="#444" → DynamicResource -->
                     <Border CornerRadius="0,4,4,0" Padding="3,16"
                             Margin="0,4" Cursor="Hand"
                             MouseLeftButtonDown="TouchProbeTab_Click">
                         <Border.Style>
                             <Style TargetType="Border">
-                                <Setter Property="Background" Value="#444"/>
+                                <Setter Property="Background" Value="{DynamicResource Brush.Border}"/>
                                 <Style.Triggers>
                                     <DataTrigger Binding="{Binding SelectedProbeMode}" Value="TouchProbe">
                                         <Setter Property="Background" Value="#0078D4"/>
@@ -1936,19 +1962,20 @@
                                 </Style.Triggers>
                             </Style>
                         </Border.Style>
-                        <TextBlock Text="TOUCH PROBE" Foreground="White" FontSize="{DynamicResource FontSize.Body}" FontWeight="Bold">
+                        <TextBlock Text="TOUCH PROBE" Foreground="{DynamicResource Brush.Text.Primary}" FontSize="{DynamicResource FontSize.Body}" FontWeight="Bold">
                             <TextBlock.LayoutTransform>
                                 <RotateTransform Angle="90"/>
                             </TextBlock.LayoutTransform>
                         </TextBlock>
                     </Border>
                     <!-- [2026-03-05] TOOL SETTER（啟用，點擊切換） -->
+                    <!-- [2026-03-12] Background="#444" → DynamicResource -->
                     <Border CornerRadius="0,4,4,0" Padding="3,16"
                             Margin="0,4" Cursor="Hand"
                             MouseLeftButtonDown="ToolSetterTab_Click">
                         <Border.Style>
                             <Style TargetType="Border">
-                                <Setter Property="Background" Value="#444"/>
+                                <Setter Property="Background" Value="{DynamicResource Brush.Border}"/>
                                 <Style.Triggers>
                                     <DataTrigger Binding="{Binding SelectedProbeMode}" Value="ToolSetter">
                                         <Setter Property="Background" Value="#0078D4"/>
@@ -1956,7 +1983,7 @@
                                 </Style.Triggers>
                             </Style>
                         </Border.Style>
-                        <TextBlock Text="TOOL SETTER" Foreground="White" FontSize="{DynamicResource FontSize.Body}" FontWeight="Bold">
+                        <TextBlock Text="TOOL SETTER" Foreground="{DynamicResource Brush.Text.Primary}" FontSize="{DynamicResource FontSize.Body}" FontWeight="Bold">
                             <TextBlock.LayoutTransform>
                                 <RotateTransform Angle="90"/>
                             </TextBlock.LayoutTransform>
@@ -1978,9 +2005,10 @@
                     </Grid.ColumnDefinitions>
                     <TextBlock Grid.Column="0" Text="MDI" Foreground="#0AF"
                                FontSize="{DynamicResource FontSize.Body}" FontWeight="Bold" VerticalAlignment="Center"/>
+                    <!-- [2026-03-12] BorderBrush="#555" → DynamicResource -->
                     <TextBox Grid.Column="1" Text="{Binding MdiInput, UpdateSourceTrigger=PropertyChanged}"
                              Background="#1A1A1A" Foreground="#0F0" FontFamily="Consolas" FontSize="{DynamicResource FontSize.Body}"
-                             BorderBrush="#555" BorderThickness="1" Padding="6,3"
+                             BorderBrush="{DynamicResource Brush.Btn.Border}" BorderThickness="1" Padding="6,3"
                              VerticalContentAlignment="Center" Margin="4,0">
                         <TextBox.InputBindings>
                             <KeyBinding Key="Return" Command="{Binding SendMdiCommand}"/>

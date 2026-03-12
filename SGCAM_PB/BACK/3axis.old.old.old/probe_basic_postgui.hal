@@ -1,0 +1,16 @@
+# Auto-generated PostGUI HAL
+# 這裡只負責接線，元件都已經在 3axis.hal 載入好了
+
+# --- Probe Basic Cycle Timer (加工時間計時器) ---
+# 使用 not.1 (因為 not.0 用於 EtherCAT 報警)
+
+# 邏輯: 程式閒置(True) -> 反相(False) -> 停止計時
+net prog-running not.1.in <= halui.program.is-idle
+net cycle-timer time.0.start <= not.1.out
+
+net cycle-seconds qtpyvcp.timerseconds.in <= time.0.seconds
+net cycle-minutes qtpyvcp.timerminutes.in <= time.0.minutes
+net cycle-hours   qtpyvcp.timerhours.in   <= time.0.hours
+
+# --- Spindle RPM Display ---
+net spindle-vel => qtpyvcp.spindle-encoder-rpm.in

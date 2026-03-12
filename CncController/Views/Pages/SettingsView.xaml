@@ -1,4 +1,4 @@
-﻿<UserControl x:Class="CncController.Views.Pages.SettingsView"
+<UserControl x:Class="CncController.Views.Pages.SettingsView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -12,138 +12,185 @@
              mc:Ignorable="d" d:DesignHeight="900" d:DesignWidth="1400"
              FontFamily="{DynamicResource FontFamily.Default}">
 
-    <!-- [2026-03-12] 移除 hardcoded 色碼，改用 DynamicResource 主題變數 -->
+    <!-- [2026-03-12] TabControl → RadioButton + StringEqualConverter 統一 -->
     <Grid Background="{DynamicResource Brush.PanelBackground}">
-        <TabControl Background="Transparent" BorderThickness="0">
-            <TabControl.Resources>
-                <x:Array x:Key="DiList" Type="sys:Int32">
-                    <sys:Int32>0</sys:Int32>
-                    <sys:Int32>1</sys:Int32>
-                    <sys:Int32>2</sys:Int32>
-                    <sys:Int32>3</sys:Int32>
-                    <sys:Int32>4</sys:Int32>
-                    <sys:Int32>5</sys:Int32>
-                    <sys:Int32>6</sys:Int32>
-                    <sys:Int32>7</sys:Int32>
-                    <sys:Int32>8</sys:Int32>
-                    <sys:Int32>9</sys:Int32>
-                    <sys:Int32>10</sys:Int32>
-                    <sys:Int32>11</sys:Int32>
-                    <sys:Int32>12</sys:Int32>
-                    <sys:Int32>13</sys:Int32>
-                    <sys:Int32>14</sys:Int32>
-                    <sys:Int32>15</sys:Int32>
-                </x:Array>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
 
-                <Style TargetType="TabItem">
-                    <Setter Property="FontSize" Value="{DynamicResource FontSize.Large}"/>
-                    <Setter Property="Foreground" Value="Gray"/>
-                    <Setter Property="Template">
-                        <Setter.Value>
-                            <ControlTemplate TargetType="TabItem">
-                                <Border x:Name="bd" Background="{DynamicResource Brush.Input.Background}" Padding="20,10" Margin="0,0,2,0">
-                                    <ContentPresenter ContentSource="Header"/>
-                                </Border>
-                                <ControlTemplate.Triggers>
-                                    <Trigger Property="IsSelected" Value="True">
-                                        <Setter TargetName="bd" Property="Background" Value="{DynamicResource Brush.Accent}"/>
-                                        <Setter Property="Foreground" Value="White"/>
-                                    </Trigger>
-                                </ControlTemplate.Triggers>
-                            </ControlTemplate>
-                        </Setter.Value>
-                    </Setter>
-                </Style>
+        <Grid.Resources>
+            <x:Array x:Key="DiList" Type="sys:Int32">
+                <sys:Int32>0</sys:Int32><sys:Int32>1</sys:Int32><sys:Int32>2</sys:Int32><sys:Int32>3</sys:Int32>
+                <sys:Int32>4</sys:Int32><sys:Int32>5</sys:Int32><sys:Int32>6</sys:Int32><sys:Int32>7</sys:Int32>
+                <sys:Int32>8</sys:Int32><sys:Int32>9</sys:Int32><sys:Int32>10</sys:Int32><sys:Int32>11</sys:Int32>
+                <sys:Int32>12</sys:Int32><sys:Int32>13</sys:Int32><sys:Int32>14</sys:Int32><sys:Int32>15</sys:Int32>
+            </x:Array>
 
-                <Style x:Key="CenterHeaderStyle" TargetType="DataGridColumnHeader">
-                    <Setter Property="Background" Value="{DynamicResource Brush.Border}"/>
-                    <Setter Property="Foreground" Value="#AAA"/>
-                    <Setter Property="Padding" Value="5,8"/>
-                    <Setter Property="FontSize" Value="{DynamicResource FontSize.Body}"/>
-                    <Setter Property="FontWeight" Value="Bold"/>
-                    <Setter Property="HorizontalContentAlignment" Value="Center"/>
-                    <Setter Property="BorderThickness" Value="0,0,1,1"/>
-                    <Setter Property="BorderBrush" Value="{DynamicResource Brush.Btn.Border}"/>
-                </Style>
+            <!-- [2026-03-12] SettingsTabStyle 繼承 BaseRadioBtnStyle（選取色 #5E70FF 藍紫漸層） -->
+            <Style x:Key="SettingsTabStyle" TargetType="RadioButton" BasedOn="{StaticResource BaseRadioBtnStyle}">
+                <Setter Property="Foreground" Value="{DynamicResource Brush.Text.Primary}"/>
+                <Setter Property="FontSize" Value="{DynamicResource FontSize.Large}"/>
+                <Setter Property="Padding" Value="20,10"/>
+                <Setter Property="Margin" Value="0,0,2,0"/>
+            </Style>
 
-                <Style x:Key="CenterCellStyle" TargetType="DataGridCell">
-                    <Setter Property="TextBlock.TextAlignment" Value="Center"/>
-                    <Setter Property="Template">
-                        <Setter.Value>
-                            <ControlTemplate TargetType="DataGridCell">
-                                <Border Padding="2,0" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}">
-                                    <ContentPresenter VerticalAlignment="Center"/>
-                                </Border>
-                            </ControlTemplate>
-                        </Setter.Value>
-                    </Setter>
-                    <Style.Triggers>
-                        <Trigger Property="IsSelected" Value="True">
-                            <Setter Property="Background" Value="#007ACC"/>
-                            <Setter Property="Foreground" Value="White"/>
-                        </Trigger>
-                    </Style.Triggers>
-                </Style>
+            <Style x:Key="CenterHeaderStyle" TargetType="DataGridColumnHeader">
+                <Setter Property="Background" Value="{DynamicResource Brush.Border}"/>
+                <Setter Property="Foreground" Value="#AAA"/>
+                <Setter Property="Padding" Value="5,8"/>
+                <Setter Property="FontSize" Value="{DynamicResource FontSize.Body}"/>
+                <Setter Property="FontWeight" Value="Bold"/>
+                <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                <Setter Property="BorderThickness" Value="0,0,1,1"/>
+                <Setter Property="BorderBrush" Value="{DynamicResource Brush.Btn.Border}"/>
+            </Style>
 
-                <Style TargetType="TextBox">
-                    <Setter Property="Padding" Value="0"/>
-                    <Setter Property="VerticalContentAlignment" Value="Center"/>
-                    <Setter Property="HorizontalContentAlignment" Value="Center"/>
-                    <Setter Property="Background" Value="{DynamicResource Brush.Input.Background}"/>
-                    <Setter Property="Foreground" Value="White"/>
-                    <Setter Property="BorderThickness" Value="0"/>
-                </Style>
-            </TabControl.Resources>
+            <Style x:Key="CenterCellStyle" TargetType="DataGridCell">
+                <Setter Property="TextBlock.TextAlignment" Value="Center"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="DataGridCell">
+                            <Border Padding="2,0" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}">
+                                <ContentPresenter VerticalAlignment="Center"/>
+                            </Border>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+                <Style.Triggers>
+                    <Trigger Property="IsSelected" Value="True">
+                        <Setter Property="Background" Value="#007ACC"/>
+                        <Setter Property="Foreground" Value="White"/>
+                    </Trigger>
+                </Style.Triggers>
+            </Style>
 
-            <TabItem Header="HARDWARE SCAN">
-                <Grid Margin="20" IsEnabled="{Binding CanEditHardware}">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="60"/>
-                        <RowDefinition Height="*"/>
-                    </Grid.RowDefinitions>
-                    <StackPanel Orientation="Horizontal">
-                        <!-- [2026-03-11] 移除 inline Background，改用 BaseBtnStyle -->
-                        <Button Command="{Binding HardwareVM.StartScanCommand}" Content="SCAN BUS" Width="150" Height="40"
-                                Style="{StaticResource BaseBtnStyle}" Foreground="White" FontWeight="Bold"/>
-                        <TextBlock Text="{Binding HardwareVM.StatusMessage}" Foreground="White" VerticalAlignment="Center" Margin="20,0"/>
-                    </StackPanel>
+            <Style TargetType="TextBox">
+                <Setter Property="Padding" Value="0"/>
+                <Setter Property="VerticalContentAlignment" Value="Center"/>
+                <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                <Setter Property="Background" Value="{DynamicResource Brush.Input.Background}"/>
+                <Setter Property="Foreground" Value="White"/>
+                <Setter Property="BorderThickness" Value="0"/>
+            </Style>
+        </Grid.Resources>
 
-                    <DataGrid Grid.Row="1" ItemsSource="{Binding HardwareVM.Slaves}" AutoGenerateColumns="False" 
-                              Background="#2D2D2D" RowBackground="{DynamicResource Brush.Input.Background}" Foreground="White" Margin="0,20" CanUserAddRows="False">
-                        <DataGrid.Resources>
-                            <Style TargetType="DataGridColumnHeader" BasedOn="{StaticResource CenterHeaderStyle}"/>
-                        </DataGrid.Resources>
-                        <DataGrid.Columns>
-                            <DataGridTextColumn Header="Slave" Binding="{Binding Index}" Width="50"/>
-                            <DataGridTextColumn Header="VendorId" Binding="{Binding VendorId}" Width="90"/>
-                            <DataGridTextColumn Header="ProductCode" Binding="{Binding ProductCode}" Width="90"/>
-                            <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="200"/>
-                            <DataGridTextColumn Header="Group" Binding="{Binding VendorGroup}" Width="100"/>
-                            <DataGridTextColumn Header="Model" Binding="{Binding ProductModel}" Width="150"/>
-                            <DataGridTextColumn Header="Mapped PDOs" Binding="{Binding Pdos}" Width="*"/>
-                        </DataGrid.Columns>
-                    </DataGrid>
-                </Grid>
-            </TabItem>
+        <!-- ================================================================ -->
+        <!-- Row 0: Tab 導航列（13 個 RadioButton） -->
+        <!-- ================================================================ -->
+        <Border Grid.Row="0" BorderBrush="{DynamicResource Brush.Border}" BorderThickness="0,0,0,1" Padding="4">
+            <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+                <WrapPanel>
+                    <RadioButton Content="HARDWARE SCAN" GroupName="SettingsTab" Style="{StaticResource SettingsTabStyle}"
+                                 IsChecked="{Binding SelectedTab, Converter={StaticResource StringEqualConverter}, ConverterParameter=HARDWARE_SCAN}"/>
+                    <RadioButton Content="AXIS MAPPING" GroupName="SettingsTab" Style="{StaticResource SettingsTabStyle}"
+                                 IsChecked="{Binding SelectedTab, Converter={StaticResource StringEqualConverter}, ConverterParameter=AXIS_MAPPING}"/>
+                    <RadioButton Content="AXIS PARAMETERS" GroupName="SettingsTab" Style="{StaticResource SettingsTabStyle}"
+                                 IsChecked="{Binding SelectedTab, Converter={StaticResource StringEqualConverter}, ConverterParameter=AXIS_PARAMETERS}"/>
+                    <RadioButton Content="IO MONITOR" GroupName="SettingsTab" Style="{StaticResource SettingsTabStyle}"
+                                 IsChecked="{Binding SelectedTab, Converter={StaticResource StringEqualConverter}, ConverterParameter=IO_MONITOR}"/>
+                    <RadioButton Content="IN MAP" GroupName="SettingsTab" Style="{StaticResource SettingsTabStyle}"
+                                 IsChecked="{Binding SelectedTab, Converter={StaticResource StringEqualConverter}, ConverterParameter=IN_MAP}"/>
+                    <RadioButton Content="OUT MAP" GroupName="SettingsTab" Style="{StaticResource SettingsTabStyle}"
+                                 IsChecked="{Binding SelectedTab, Converter={StaticResource StringEqualConverter}, ConverterParameter=OUT_MAP}"/>
+                    <RadioButton Content="SPINDLE" GroupName="SettingsTab" Style="{StaticResource SettingsTabStyle}"
+                                 IsChecked="{Binding SelectedTab, Converter={StaticResource StringEqualConverter}, ConverterParameter=SPINDLE}"/>
+                    <RadioButton Content="ATC BASIC" GroupName="SettingsTab" Style="{StaticResource SettingsTabStyle}"
+                                 IsChecked="{Binding SelectedTab, Converter={StaticResource StringEqualConverter}, ConverterParameter=ATC_BASIC}"/>
+                    <RadioButton Content="ATC AXIS" GroupName="SettingsTab" Style="{StaticResource SettingsTabStyle}"
+                                 IsChecked="{Binding SelectedTab, Converter={StaticResource StringEqualConverter}, ConverterParameter=ATC_AXIS}"/>
+                    <RadioButton Content="ATC IO" GroupName="SettingsTab" Style="{StaticResource SettingsTabStyle}"
+                                 IsChecked="{Binding SelectedTab, Converter={StaticResource StringEqualConverter}, ConverterParameter=ATC_IO}"/>
+                    <RadioButton Content="MACRO VAR" GroupName="SettingsTab" Style="{StaticResource SettingsTabStyle}"
+                                 IsChecked="{Binding SelectedTab, Converter={StaticResource StringEqualConverter}, ConverterParameter=MACRO_VAR}"/>
+                    <RadioButton Content="BACKUP" GroupName="SettingsTab" Style="{StaticResource SettingsTabStyle}"
+                                 IsChecked="{Binding SelectedTab, Converter={StaticResource StringEqualConverter}, ConverterParameter=BACKUP}"/>
+                    <RadioButton Content="MAINTENANCE" GroupName="SettingsTab" Style="{StaticResource SettingsTabStyle}"
+                                 IsChecked="{Binding SelectedTab, Converter={StaticResource StringEqualConverter}, ConverterParameter=MAINTENANCE}"/>
+                </WrapPanel>
+            </ScrollViewer>
+        </Border>
 
-            <TabItem Header="AXIS MAPPING">
-                <Grid Margin="20" IsEnabled="{Binding CanEditHardware}">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="280"/>
-                        <ColumnDefinition Width="*"/>
-                    </Grid.ColumnDefinitions>
-                    <StackPanel Grid.Column="0" Margin="0,0,20,0">
-                        <comp:MachineConfigView DataContext="{Binding MachineConfigVM}"/>
-                        <!-- [2026-03-11] 移除 inline Background，改用 BaseBtnStyle -->
-                        <Button Content="UPDATE MAPPING TABLE" Command="{Binding ApplyMachineConfigCommand}" Height="45" Margin="0,20,0,0"
-                                Style="{StaticResource BaseBtnStyle}" Foreground="White" FontWeight="Bold"/>
-                    </StackPanel>
-                    <comp:AxisMappingView Grid.Column="1" DataContext="{Binding MappingVM}"/>
-                </Grid>
-            </TabItem>
+        <!-- ================================================================ -->
+        <!-- Row 1: Tab 內容區（DataTrigger 控制 Visibility） -->
+        <!-- ================================================================ -->
+        <Grid Grid.Row="1">
 
-            <TabItem Header="AXIS PARAMETERS" DataContext="{Binding AxisVM}">
-                <Grid Margin="20">
+            <!-- ======== HARDWARE SCAN ======== -->
+            <Grid Margin="20" IsEnabled="{Binding CanEditHardware}">
+                <Grid.Style>
+                    <Style TargetType="Grid">
+                        <Setter Property="Visibility" Value="Collapsed"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding SelectedTab}" Value="HARDWARE_SCAN">
+                                <Setter Property="Visibility" Value="Visible"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Grid.Style>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="60"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                <StackPanel Orientation="Horizontal">
+                    <Button Command="{Binding HardwareVM.StartScanCommand}" Content="SCAN BUS" Width="150" Height="40"
+                            Style="{StaticResource BaseBtnStyle}" Foreground="White" FontWeight="Bold"/>
+                    <TextBlock Text="{Binding HardwareVM.StatusMessage}" Foreground="White" VerticalAlignment="Center" Margin="20,0"/>
+                </StackPanel>
+                <DataGrid Grid.Row="1" ItemsSource="{Binding HardwareVM.Slaves}" AutoGenerateColumns="False"
+                          Background="#2D2D2D" RowBackground="{DynamicResource Brush.Input.Background}" Foreground="White" Margin="0,20" CanUserAddRows="False">
+                    <DataGrid.Resources>
+                        <Style TargetType="DataGridColumnHeader" BasedOn="{StaticResource CenterHeaderStyle}"/>
+                    </DataGrid.Resources>
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Slave" Binding="{Binding Index}" Width="50"/>
+                        <DataGridTextColumn Header="VendorId" Binding="{Binding VendorId}" Width="90"/>
+                        <DataGridTextColumn Header="ProductCode" Binding="{Binding ProductCode}" Width="90"/>
+                        <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="200"/>
+                        <DataGridTextColumn Header="Group" Binding="{Binding VendorGroup}" Width="100"/>
+                        <DataGridTextColumn Header="Model" Binding="{Binding ProductModel}" Width="150"/>
+                        <DataGridTextColumn Header="Mapped PDOs" Binding="{Binding Pdos}" Width="*"/>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </Grid>
+
+            <!-- ======== AXIS MAPPING ======== -->
+            <Grid Margin="20" IsEnabled="{Binding CanEditHardware}">
+                <Grid.Style>
+                    <Style TargetType="Grid">
+                        <Setter Property="Visibility" Value="Collapsed"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding SelectedTab}" Value="AXIS_MAPPING">
+                                <Setter Property="Visibility" Value="Visible"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Grid.Style>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="280"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel Grid.Column="0" Margin="0,0,20,0">
+                    <comp:MachineConfigView DataContext="{Binding MachineConfigVM}"/>
+                    <Button Content="UPDATE MAPPING TABLE" Command="{Binding ApplyMachineConfigCommand}" Height="45" Margin="0,20,0,0"
+                            Style="{StaticResource BaseBtnStyle}" Foreground="White" FontWeight="Bold"/>
+                </StackPanel>
+                <comp:AxisMappingView Grid.Column="1" DataContext="{Binding MappingVM}"/>
+            </Grid>
+
+            <!-- ======== AXIS PARAMETERS ======== -->
+            <Border>
+                <Border.Style>
+                    <Style TargetType="Border">
+                        <Setter Property="Visibility" Value="Collapsed"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding SelectedTab}" Value="AXIS_PARAMETERS">
+                                <Setter Property="Visibility" Value="Visible"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Border.Style>
+                <Grid Margin="20" DataContext="{Binding AxisVM}">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
@@ -153,11 +200,10 @@
                         <RowDefinition Height="60"/>
                     </Grid.RowDefinitions>
 
-                    <!-- [2026-03-11] 統一 GroupHeader -->
                     <TextBlock Grid.Row="0" Text="1. Mechanical &amp; Motion Settings" Style="{StaticResource GroupHeaderText}" Margin="0,0,0,5"/>
                     <DataGrid Grid.Row="1" ItemsSource="{Binding Axes}" AutoGenerateColumns="False"
                               Background="#2D2D2D" RowBackground="{DynamicResource Brush.Input.Background}" Foreground="White"
-                              BorderThickness="1" BorderBrush="{DynamicResource Brush.Btn.Border}" CanUserAddRows="False" RowHeight="35" 
+                              BorderThickness="1" BorderBrush="{DynamicResource Brush.Btn.Border}" CanUserAddRows="False" RowHeight="35"
                               CellStyle="{StaticResource CenterCellStyle}" ColumnHeaderStyle="{StaticResource CenterHeaderStyle}">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="Axis" Binding="{Binding Name}" IsReadOnly="True" Width="60" FontWeight="Bold"/>
@@ -170,7 +216,6 @@
                         </DataGrid.Columns>
                     </DataGrid>
 
-                    <!-- [2026-03-11] 統一 GroupHeader -->
                     <TextBlock Grid.Row="3" Text="2. IO Configuration &amp; Homing Strategy" Style="{StaticResource GroupHeaderText}" Margin="0,0,0,5"/>
                     <DataGrid Grid.Row="4" ItemsSource="{Binding Axes}" AutoGenerateColumns="False"
                               Background="#2D2D2D" RowBackground="{DynamicResource Brush.Input.Background}" Foreground="White"
@@ -261,19 +306,29 @@
                         </DataGrid.Columns>
                     </DataGrid>
 
-                    <StackPanel Grid.Row="5" Orientation="Horizontal" HorizontalAlignment="Right" 
+                    <StackPanel Grid.Row="5" Orientation="Horizontal" HorizontalAlignment="Right"
                                 DataContext="{Binding DataContext, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                 IsEnabled="{Binding CanEditHardware}">
                         <TextBlock Text="{Binding DeployStatus}" Foreground="#AAA" VerticalAlignment="Center" Margin="0,0,10,0"/>
-                        <!-- [2026-03-11] 移除 inline 綠色，統一深灰 -->
                         <Button Command="{Binding GenerateAndDeployCommand}" Content="GENERATE &amp; RESTART" Width="200" Height="40"
                                 Style="{StaticResource BaseBtnStyle}"/>
                     </StackPanel>
                 </Grid>
-            </TabItem>
+            </Border>
 
-            <TabItem Header="IO MONITOR" DataContext="{Binding IoMonitorVM}">
-                <Grid Margin="20">
+            <!-- ======== IO MONITOR ======== -->
+            <Border>
+                <Border.Style>
+                    <Style TargetType="Border">
+                        <Setter Property="Visibility" Value="Collapsed"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding SelectedTab}" Value="IO_MONITOR">
+                                <Setter Property="Visibility" Value="Visible"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Border.Style>
+                <Grid Margin="20" DataContext="{Binding IoMonitorVM}">
                     <ScrollViewer VerticalScrollBarVisibility="Auto">
                         <ItemsControl ItemsSource="{Binding Cards}">
                             <ItemsControl.ItemsPanel>
@@ -285,7 +340,6 @@
                                 <DataTemplate>
                                     <Border Background="#2D2D2D" BorderBrush="{DynamicResource Brush.Border}" BorderThickness="1" CornerRadius="4" Margin="0,0,15,15" Width="380" Padding="15">
                                         <StackPanel>
-                                            <!-- [2026-02-24] 卡片標題：軸名 + Slave 編號 -->
                                             <Grid Margin="0,0,0,10">
                                                 <StackPanel Orientation="Horizontal">
                                                     <TextBlock Text="{Binding Title}" Foreground="{DynamicResource Brush.GroupHeader.Foreground}" FontWeight="Bold" FontSize="{DynamicResource FontSize.XLarge}"/>
@@ -311,9 +365,7 @@
                                                     </Border>
                                                 </StackPanel>
                                             </Grid>
-
                                             <Separator Background="{DynamicResource Brush.Border}" Margin="0,0,0,10"/>
-
                                             <TextBlock Text="Digital Inputs (0x60FD)" Foreground="#888" Margin="0,0,0,5" FontSize="{DynamicResource FontSize.Body}"/>
                                             <ItemsControl ItemsSource="{Binding Inputs}">
                                                 <ItemsControl.ItemsPanel>
@@ -353,308 +405,338 @@
                         </ItemsControl>
                     </ScrollViewer>
                 </Grid>
-            </TabItem>
+            </Border>
 
-            <TabItem Header="IN MAP">
-                <Grid Margin="10">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="4*"/>
-                        <ColumnDefinition Width="5"/>
-                        <ColumnDefinition Width="6*"/>
-                    </Grid.ColumnDefinitions>
-
-                    <Grid Grid.Column="0">
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="*"/>
-                        </Grid.RowDefinitions>
-                        <!-- [2026-03-05] 改為純列表模式（掃描結果自動填入，不可選設備） -->
-                        <!-- [2026-03-05] 移除步驟編號（純列表不需引導） -->
-                        <TextBlock Text="Input Modules" Foreground="{DynamicResource Brush.GroupHeader.Foreground}" FontWeight="Bold" Margin="0,0,0,5"/>
-                        <DataGrid x:Name="InMapGrid"
-                                  ItemsSource="{Binding InMaps}"
-                                  AutoGenerateColumns="False"
-                                  Background="#2D2D2D" RowBackground="{DynamicResource Brush.Input.Background}" Foreground="White"
-                                  BorderBrush="{DynamicResource Brush.Btn.Border}" BorderThickness="1"
-                                  CanUserAddRows="False" RowHeight="40"
-                                  SelectionMode="Single"
-                                  SelectedIndex="{Binding SelectedInMapIndex, Mode=TwoWay}"
-                                  CellStyle="{StaticResource CenterCellStyle}"
-                                  ColumnHeaderStyle="{StaticResource CenterHeaderStyle}">
-                            <DataGrid.Columns>
-                                <!-- [2026-03-05] 啟用勾選 -->
-                                <DataGridTemplateColumn Header="&#x2713;" Width="40">
-                                    <DataGridTemplateColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <CheckBox IsChecked="{Binding IsEnabled, UpdateSourceTrigger=PropertyChanged}"
-                                                      HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                        </DataTemplate>
-                                    </DataGridTemplateColumn.CellTemplate>
-                                </DataGridTemplateColumn>
-                                <!-- [2026-03-05] 站號 -->
-                                <DataGridTextColumn Header="#" Binding="{Binding SelectedSlave.Index}"
-                                                    IsReadOnly="True" Width="40"/>
-                                <!-- [2026-03-05] 設備名稱（純文字） -->
-                                <DataGridTextColumn Header="Device" Binding="{Binding DisplayName}"
-                                                    IsReadOnly="True" Width="*"/>
-                            </DataGrid.Columns>
-                        </DataGrid>
-                    </Grid>
-
-                    <GridSplitter Grid.Column="1" Width="5" HorizontalAlignment="Stretch" Background="{DynamicResource Brush.Border}"/>
-
-                    <Grid Grid.Column="2" Margin="10,0,0,0">
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="*"/>
-                        </Grid.RowDefinitions>
-
-                        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,5">
-                            <!-- [2026-03-05] 移除步驟編號，改用 DisplayName -->
-                            <TextBlock Text="Pin Configuration for: " Foreground="{DynamicResource Brush.GroupHeader.Foreground}" FontWeight="Bold"/>
-                            <TextBlock Text="{Binding ElementName=InMapGrid, Path=SelectedItem.DisplayName}" Foreground="White" FontWeight="Bold" Margin="5,0,0,0"/>
-                        </StackPanel>
-
-                        <DataGrid Grid.Row="1" 
-                                  DataContext="{Binding ElementName=InMapGrid, Path=SelectedItem, NotifyOnTargetUpdated=True}"
-                                  ItemsSource="{Binding PinSettings}"
-                                  AutoGenerateColumns="False"
-                                  Background="#1E1E1E" RowBackground="{DynamicResource Brush.Panel.Secondary}" Foreground="White"
-                                  BorderBrush="{DynamicResource Brush.Btn.Border}" BorderThickness="1"
-                                  CanUserAddRows="False" RowHeight="32"
-                                  CellStyle="{StaticResource CenterCellStyle}" 
-                                  ColumnHeaderStyle="{StaticResource CenterHeaderStyle}">
-                            <DataGrid.Columns>
-                                <DataGridTextColumn Header="Pin" Binding="{Binding PinIndex}" IsReadOnly="True" Width="50"/>
-                                <!-- [2026-03-10] 即時狀態指示燈（綠=ON, 灰=OFF） -->
-                                <DataGridTemplateColumn Header="{DynamicResource Str.Label.Status}" Width="45">
-                                    <DataGridTemplateColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <Ellipse Width="14" Height="14" HorizontalAlignment="Center" VerticalAlignment="Center"
-                                                     Stroke="#555" StrokeThickness="1">
-                                                <Ellipse.Style>
-                                                    <Style TargetType="Ellipse">
-                                                        <Setter Property="Fill" Value="#555"/>
-                                                        <Style.Triggers>
-                                                            <DataTrigger Binding="{Binding IsActive}" Value="True">
-                                                                <Setter Property="Fill" Value="#4CAF50"/>
-                                                            </DataTrigger>
-                                                        </Style.Triggers>
-                                                    </Style>
-                                                </Ellipse.Style>
-                                            </Ellipse>
-                                        </DataTemplate>
-                                    </DataGridTemplateColumn.CellTemplate>
-                                </DataGridTemplateColumn>
-                                <DataGridTemplateColumn Header="Function Name" Width="*">
-                                    <DataGridTemplateColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <ComboBox ItemsSource="{Binding DataContext.CommonInputSignals, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                                      Text="{Binding FunctionName, UpdateSourceTrigger=PropertyChanged}"
-                                                      IsEditable="True"
-                                                      StaysOpenOnEdit="True"
-                                                      Foreground="Black"
-                                                      Margin="2"/>
-                                        </DataTemplate>
-                                    </DataGridTemplateColumn.CellTemplate>
-                                </DataGridTemplateColumn>
-                                <DataGridTextColumn Header="HAL Signal" Binding="{Binding HalSignalName}" IsReadOnly="True" Width="100" Foreground="#AAA"/>
-                                <DataGridTemplateColumn Header="Type (NC?)" Width="80">
-                                    <DataGridTemplateColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <CheckBox IsChecked="{Binding IsInverted, UpdateSourceTrigger=PropertyChanged}"
-                                                      HorizontalAlignment="Center" VerticalAlignment="Center" Content="NC" Foreground="White"/>
-                                        </DataTemplate>
-                                    </DataGridTemplateColumn.CellTemplate>
-                                </DataGridTemplateColumn>
-                            </DataGrid.Columns>
-                        </DataGrid>
-
-                        <TextBlock Grid.Row="1" Text="Select a module on the left to configure pins." 
-                                   Foreground="#888" VerticalAlignment="Center" HorizontalAlignment="Center" IsHitTestVisible="False">
-                            <TextBlock.Style>
-                                <Style TargetType="TextBlock">
-                                    <Setter Property="Visibility" Value="Collapsed"/>
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding ElementName=InMapGrid, Path=SelectedItem}" Value="{x:Null}">
-                                            <Setter Property="Visibility" Value="Visible"/>
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </TextBlock.Style>
-                        </TextBlock>
-                    </Grid>
+            <!-- ======== IN MAP ======== -->
+            <Grid Margin="10">
+                <Grid.Style>
+                    <Style TargetType="Grid">
+                        <Setter Property="Visibility" Value="Collapsed"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding SelectedTab}" Value="IN_MAP">
+                                <Setter Property="Visibility" Value="Visible"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Grid.Style>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="4*"/>
+                    <ColumnDefinition Width="5"/>
+                    <ColumnDefinition Width="6*"/>
+                </Grid.ColumnDefinitions>
+                <Grid Grid.Column="0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    <TextBlock Text="Input Modules" Foreground="{DynamicResource Brush.GroupHeader.Foreground}" FontWeight="Bold" Margin="0,0,0,5"/>
+                    <DataGrid x:Name="InMapGrid"
+                              ItemsSource="{Binding InMaps}" AutoGenerateColumns="False"
+                              Background="#2D2D2D" RowBackground="{DynamicResource Brush.Input.Background}" Foreground="White"
+                              BorderBrush="{DynamicResource Brush.Btn.Border}" BorderThickness="1"
+                              CanUserAddRows="False" RowHeight="40" SelectionMode="Single"
+                              SelectedIndex="{Binding SelectedInMapIndex, Mode=TwoWay}"
+                              CellStyle="{StaticResource CenterCellStyle}" ColumnHeaderStyle="{StaticResource CenterHeaderStyle}">
+                        <DataGrid.Columns>
+                            <DataGridTemplateColumn Header="&#x2713;" Width="40">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <CheckBox IsChecked="{Binding IsEnabled, UpdateSourceTrigger=PropertyChanged}"
+                                                  HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTextColumn Header="#" Binding="{Binding SelectedSlave.Index}" IsReadOnly="True" Width="40"/>
+                            <DataGridTextColumn Header="Device" Binding="{Binding DisplayName}" IsReadOnly="True" Width="*"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
                 </Grid>
-            </TabItem>
-
-            <TabItem Header="OUT MAP">
-                <Grid Margin="10">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="4*"/>
-                        <ColumnDefinition Width="5"/>
-                        <ColumnDefinition Width="6*"/>
-                    </Grid.ColumnDefinitions>
-
-                    <Grid Grid.Column="0">
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="*"/>
-                        </Grid.RowDefinitions>
-                        <!-- [2026-03-05] 改為純列表模式（掃描結果自動填入，不可選設備） -->
-                        <!-- [2026-03-05] 移除步驟編號（純列表不需引導） -->
-                        <TextBlock Text="Output Modules" Foreground="{DynamicResource Brush.GroupHeader.Foreground}" FontWeight="Bold" Margin="0,0,0,5"/>
-                        <DataGrid x:Name="OutMapGrid"
-                                  ItemsSource="{Binding OutMaps}"
-                                  AutoGenerateColumns="False"
-                                  Background="#2D2D2D" RowBackground="{DynamicResource Brush.Input.Background}" Foreground="White"
-                                  BorderBrush="{DynamicResource Brush.Btn.Border}" BorderThickness="1"
-                                  CanUserAddRows="False" RowHeight="40"
-                                  SelectionMode="Single"
-                                  SelectedIndex="{Binding SelectedOutMapIndex, Mode=TwoWay}"
-                                  CellStyle="{StaticResource CenterCellStyle}"
-                                  ColumnHeaderStyle="{StaticResource CenterHeaderStyle}">
-                            <DataGrid.Columns>
-                                <!-- [2026-03-05] 啟用勾選 -->
-                                <DataGridTemplateColumn Header="&#x2713;" Width="40">
-                                    <DataGridTemplateColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <CheckBox IsChecked="{Binding IsEnabled, UpdateSourceTrigger=PropertyChanged}"
-                                                      HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                        </DataTemplate>
-                                    </DataGridTemplateColumn.CellTemplate>
-                                </DataGridTemplateColumn>
-                                <!-- [2026-03-05] 站號 -->
-                                <DataGridTextColumn Header="#" Binding="{Binding SelectedSlave.Index}"
-                                                    IsReadOnly="True" Width="40"/>
-                                <!-- [2026-03-05] 設備名稱（純文字） -->
-                                <DataGridTextColumn Header="Device" Binding="{Binding DisplayName}"
-                                                    IsReadOnly="True" Width="*"/>
-                            </DataGrid.Columns>
-                        </DataGrid>
-                    </Grid>
-
-                    <GridSplitter Grid.Column="1" Width="5" HorizontalAlignment="Stretch" Background="{DynamicResource Brush.Border}"/>
-
-                    <Grid Grid.Column="2" Margin="10,0,0,0">
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="*"/>
-                        </Grid.RowDefinitions>
-
-                        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,5">
-                            <!-- [2026-03-05] 移除步驟編號，改用 DisplayName -->
-                            <TextBlock Text="Pin Configuration for: " Foreground="{DynamicResource Brush.GroupHeader.Foreground}" FontWeight="Bold"/>
-                            <TextBlock Text="{Binding ElementName=OutMapGrid, Path=SelectedItem.DisplayName}" Foreground="White" FontWeight="Bold" Margin="5,0,0,0"/>
-                        </StackPanel>
-
-                        <DataGrid Grid.Row="1" 
-                                  DataContext="{Binding ElementName=OutMapGrid, Path=SelectedItem, NotifyOnTargetUpdated=True}"
-                                  ItemsSource="{Binding PinSettings}"
-                                  AutoGenerateColumns="False"
-                                  Background="#1E1E1E" RowBackground="{DynamicResource Brush.Panel.Secondary}" Foreground="White"
-                                  BorderBrush="{DynamicResource Brush.Btn.Border}" BorderThickness="1"
-                                  CanUserAddRows="False" RowHeight="32"
-                                  CellStyle="{StaticResource CenterCellStyle}" 
-                                  ColumnHeaderStyle="{StaticResource CenterHeaderStyle}">
-                            <DataGrid.Columns>
-                                <DataGridTextColumn Header="Pin" Binding="{Binding PinIndex}" IsReadOnly="True" Width="50"/>
-                                <!-- [2026-03-10] 即時狀態指示燈（綠=ON, 灰=OFF） -->
-                                <DataGridTemplateColumn Header="{DynamicResource Str.Label.Status}" Width="45">
-                                    <DataGridTemplateColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <Ellipse Width="14" Height="14" HorizontalAlignment="Center" VerticalAlignment="Center"
-                                                     Stroke="#555" StrokeThickness="1">
-                                                <Ellipse.Style>
-                                                    <Style TargetType="Ellipse">
-                                                        <Setter Property="Fill" Value="#555"/>
-                                                        <Style.Triggers>
-                                                            <DataTrigger Binding="{Binding IsActive}" Value="True">
-                                                                <Setter Property="Fill" Value="#4CAF50"/>
-                                                            </DataTrigger>
-                                                        </Style.Triggers>
-                                                    </Style>
-                                                </Ellipse.Style>
-                                            </Ellipse>
-                                        </DataTemplate>
-                                    </DataGridTemplateColumn.CellTemplate>
-                                </DataGridTemplateColumn>
-                                <DataGridTemplateColumn Header="Function Name" Width="*">
-                                    <DataGridTemplateColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <ComboBox ItemsSource="{Binding DataContext.CommonOutputSignals, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                                      Text="{Binding FunctionName, UpdateSourceTrigger=PropertyChanged}"
-                                                      IsEditable="True"
-                                                      StaysOpenOnEdit="True"
-                                                      Foreground="Black"
-                                                      Margin="2"/>
-                                        </DataTemplate>
-                                    </DataGridTemplateColumn.CellTemplate>
-                                </DataGridTemplateColumn>
-                                <DataGridTextColumn Header="HAL Signal" Binding="{Binding HalSignalName}" IsReadOnly="True" Width="100" Foreground="#AAA"/>
-                                <DataGridTemplateColumn Header="Active Low" Width="80">
-                                    <DataGridTemplateColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <CheckBox IsChecked="{Binding IsInverted, UpdateSourceTrigger=PropertyChanged}"
-                                                      HorizontalAlignment="Center" VerticalAlignment="Center" Content="Inv" Foreground="White"/>
-                                        </DataTemplate>
-                                    </DataGridTemplateColumn.CellTemplate>
-                                </DataGridTemplateColumn>
-                            </DataGrid.Columns>
-                        </DataGrid>
-
-                        <TextBlock Grid.Row="1" Text="Select a module on the left to configure output pins." 
-                                   Foreground="#888" VerticalAlignment="Center" HorizontalAlignment="Center" IsHitTestVisible="False">
-                            <TextBlock.Style>
-                                <Style TargetType="TextBlock">
-                                    <Setter Property="Visibility" Value="Collapsed"/>
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding ElementName=OutMapGrid, Path=SelectedItem}" Value="{x:Null}">
-                                            <Setter Property="Visibility" Value="Visible"/>
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </TextBlock.Style>
-                        </TextBlock>
-                    </Grid>
+                <GridSplitter Grid.Column="1" Width="5" HorizontalAlignment="Stretch" Background="{DynamicResource Brush.Border}"/>
+                <Grid Grid.Column="2" Margin="10,0,0,0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,5">
+                        <TextBlock Text="Pin Configuration for: " Foreground="{DynamicResource Brush.GroupHeader.Foreground}" FontWeight="Bold"/>
+                        <TextBlock Text="{Binding ElementName=InMapGrid, Path=SelectedItem.DisplayName}" Foreground="White" FontWeight="Bold" Margin="5,0,0,0"/>
+                    </StackPanel>
+                    <DataGrid Grid.Row="1"
+                              DataContext="{Binding ElementName=InMapGrid, Path=SelectedItem, NotifyOnTargetUpdated=True}"
+                              ItemsSource="{Binding PinSettings}" AutoGenerateColumns="False"
+                              Background="#1E1E1E" RowBackground="{DynamicResource Brush.Panel.Secondary}" Foreground="White"
+                              BorderBrush="{DynamicResource Brush.Btn.Border}" BorderThickness="1"
+                              CanUserAddRows="False" RowHeight="32"
+                              CellStyle="{StaticResource CenterCellStyle}" ColumnHeaderStyle="{StaticResource CenterHeaderStyle}">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Pin" Binding="{Binding PinIndex}" IsReadOnly="True" Width="50"/>
+                            <DataGridTemplateColumn Header="{DynamicResource Str.Label.Status}" Width="45">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Ellipse Width="14" Height="14" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                 Stroke="#555" StrokeThickness="1">
+                                            <Ellipse.Style>
+                                                <Style TargetType="Ellipse">
+                                                    <Setter Property="Fill" Value="#555"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsActive}" Value="True">
+                                                            <Setter Property="Fill" Value="#4CAF50"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Ellipse.Style>
+                                        </Ellipse>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Header="Function Name" Width="*">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <ComboBox ItemsSource="{Binding DataContext.CommonInputSignals, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                  Text="{Binding FunctionName, UpdateSourceTrigger=PropertyChanged}"
+                                                  IsEditable="True" StaysOpenOnEdit="True" Foreground="Black" Margin="2"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTextColumn Header="HAL Signal" Binding="{Binding HalSignalName}" IsReadOnly="True" Width="100" Foreground="#AAA"/>
+                            <DataGridTemplateColumn Header="Type (NC?)" Width="80">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <CheckBox IsChecked="{Binding IsInverted, UpdateSourceTrigger=PropertyChanged}"
+                                                  HorizontalAlignment="Center" VerticalAlignment="Center" Content="NC" Foreground="White"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                    <TextBlock Grid.Row="1" Text="Select a module on the left to configure pins."
+                               Foreground="#888" VerticalAlignment="Center" HorizontalAlignment="Center" IsHitTestVisible="False">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding ElementName=InMapGrid, Path=SelectedItem}" Value="{x:Null}">
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
                 </Grid>
-            </TabItem>
+            </Grid>
 
-            <!-- [2026-03-06] 主軸設定 -->
-            <TabItem Header="SPINDLE" DataContext="{Binding SpindleVM}">
-                <pages:SpindleSettingsView/>
-            </TabItem>
+            <!-- ======== OUT MAP ======== -->
+            <Grid Margin="10">
+                <Grid.Style>
+                    <Style TargetType="Grid">
+                        <Setter Property="Visibility" Value="Collapsed"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding SelectedTab}" Value="OUT_MAP">
+                                <Setter Property="Visibility" Value="Visible"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Grid.Style>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="4*"/>
+                    <ColumnDefinition Width="5"/>
+                    <ColumnDefinition Width="6*"/>
+                </Grid.ColumnDefinitions>
+                <Grid Grid.Column="0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    <TextBlock Text="Output Modules" Foreground="{DynamicResource Brush.GroupHeader.Foreground}" FontWeight="Bold" Margin="0,0,0,5"/>
+                    <DataGrid x:Name="OutMapGrid"
+                              ItemsSource="{Binding OutMaps}" AutoGenerateColumns="False"
+                              Background="#2D2D2D" RowBackground="{DynamicResource Brush.Input.Background}" Foreground="White"
+                              BorderBrush="{DynamicResource Brush.Btn.Border}" BorderThickness="1"
+                              CanUserAddRows="False" RowHeight="40" SelectionMode="Single"
+                              SelectedIndex="{Binding SelectedOutMapIndex, Mode=TwoWay}"
+                              CellStyle="{StaticResource CenterCellStyle}" ColumnHeaderStyle="{StaticResource CenterHeaderStyle}">
+                        <DataGrid.Columns>
+                            <DataGridTemplateColumn Header="&#x2713;" Width="40">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <CheckBox IsChecked="{Binding IsEnabled, UpdateSourceTrigger=PropertyChanged}"
+                                                  HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTextColumn Header="#" Binding="{Binding SelectedSlave.Index}" IsReadOnly="True" Width="40"/>
+                            <DataGridTextColumn Header="Device" Binding="{Binding DisplayName}" IsReadOnly="True" Width="*"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+                <GridSplitter Grid.Column="1" Width="5" HorizontalAlignment="Stretch" Background="{DynamicResource Brush.Border}"/>
+                <Grid Grid.Column="2" Margin="10,0,0,0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,5">
+                        <TextBlock Text="Pin Configuration for: " Foreground="{DynamicResource Brush.GroupHeader.Foreground}" FontWeight="Bold"/>
+                        <TextBlock Text="{Binding ElementName=OutMapGrid, Path=SelectedItem.DisplayName}" Foreground="White" FontWeight="Bold" Margin="5,0,0,0"/>
+                    </StackPanel>
+                    <DataGrid Grid.Row="1"
+                              DataContext="{Binding ElementName=OutMapGrid, Path=SelectedItem, NotifyOnTargetUpdated=True}"
+                              ItemsSource="{Binding PinSettings}" AutoGenerateColumns="False"
+                              Background="#1E1E1E" RowBackground="{DynamicResource Brush.Panel.Secondary}" Foreground="White"
+                              BorderBrush="{DynamicResource Brush.Btn.Border}" BorderThickness="1"
+                              CanUserAddRows="False" RowHeight="32"
+                              CellStyle="{StaticResource CenterCellStyle}" ColumnHeaderStyle="{StaticResource CenterHeaderStyle}">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Pin" Binding="{Binding PinIndex}" IsReadOnly="True" Width="50"/>
+                            <DataGridTemplateColumn Header="{DynamicResource Str.Label.Status}" Width="45">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Ellipse Width="14" Height="14" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                 Stroke="#555" StrokeThickness="1">
+                                            <Ellipse.Style>
+                                                <Style TargetType="Ellipse">
+                                                    <Setter Property="Fill" Value="#555"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsActive}" Value="True">
+                                                            <Setter Property="Fill" Value="#4CAF50"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Ellipse.Style>
+                                        </Ellipse>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Header="Function Name" Width="*">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <ComboBox ItemsSource="{Binding DataContext.CommonOutputSignals, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                  Text="{Binding FunctionName, UpdateSourceTrigger=PropertyChanged}"
+                                                  IsEditable="True" StaysOpenOnEdit="True" Foreground="Black" Margin="2"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTextColumn Header="HAL Signal" Binding="{Binding HalSignalName}" IsReadOnly="True" Width="100" Foreground="#AAA"/>
+                            <DataGridTemplateColumn Header="Active Low" Width="80">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <CheckBox IsChecked="{Binding IsInverted, UpdateSourceTrigger=PropertyChanged}"
+                                                  HorizontalAlignment="Center" VerticalAlignment="Center" Content="Inv" Foreground="White"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                    <TextBlock Grid.Row="1" Text="Select a module on the left to configure output pins."
+                               Foreground="#888" VerticalAlignment="Center" HorizontalAlignment="Center" IsHitTestVisible="False">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding ElementName=OutMapGrid, Path=SelectedItem}" Value="{x:Null}">
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                </Grid>
+            </Grid>
 
-            <!-- [2026-03-06] ATC 基本設定 -->
-            <TabItem Header="ATC BASIC" DataContext="{Binding AtcBasicVM}">
-                <pages:AtcBasicSettingsView/>
-            </TabItem>
+            <!-- ======== SPINDLE ======== -->
+            <Border>
+                <Border.Style>
+                    <Style TargetType="Border">
+                        <Setter Property="Visibility" Value="Collapsed"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding SelectedTab}" Value="SPINDLE">
+                                <Setter Property="Visibility" Value="Visible"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Border.Style>
+                <pages:SpindleSettingsView DataContext="{Binding SpindleVM}"/>
+            </Border>
 
-            <!-- [2026-03-06] ATC 軸設定（僅 Umbrella 有意義，但 Tab 永遠顯示） -->
-            <TabItem Header="ATC AXIS" DataContext="{Binding AtcAxisVM}">
-                <pages:AtcAxisSettingsView/>
-            </TabItem>
+            <!-- ======== ATC BASIC ======== -->
+            <Border>
+                <Border.Style>
+                    <Style TargetType="Border">
+                        <Setter Property="Visibility" Value="Collapsed"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding SelectedTab}" Value="ATC_BASIC">
+                                <Setter Property="Visibility" Value="Visible"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Border.Style>
+                <pages:AtcBasicSettingsView DataContext="{Binding AtcBasicVM}"/>
+            </Border>
 
-            <!-- [2026-03-06] ATC IO 設定 -->
-            <TabItem Header="ATC IO" DataContext="{Binding AtcIoVM}">
-                <pages:AtcIoSettingsView/>
-            </TabItem>
+            <!-- ======== ATC AXIS ======== -->
+            <Border>
+                <Border.Style>
+                    <Style TargetType="Border">
+                        <Setter Property="Visibility" Value="Collapsed"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding SelectedTab}" Value="ATC_AXIS">
+                                <Setter Property="Visibility" Value="Visible"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Border.Style>
+                <pages:AtcAxisSettingsView DataContext="{Binding AtcAxisVM}"/>
+            </Border>
 
-            <!-- [2026-03-12] 巨集變數監控 -->
-            <TabItem Header="MACRO VAR" DataContext="{Binding MacroVM}">
-                <pages:MacroVariablesView/>
-            </TabItem>
+            <!-- ======== ATC IO ======== -->
+            <Border>
+                <Border.Style>
+                    <Style TargetType="Border">
+                        <Setter Property="Visibility" Value="Collapsed"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding SelectedTab}" Value="ATC_IO">
+                                <Setter Property="Visibility" Value="Visible"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Border.Style>
+                <pages:AtcIoSettingsView DataContext="{Binding AtcIoVM}"/>
+            </Border>
 
-            <!-- [2026-03-12] BACKUP 備份/還原分頁 -->
-            <TabItem Header="BACKUP" DataContext="{Binding BackupVM}">
-                <Grid Margin="16">
+            <!-- ======== MACRO VAR ======== -->
+            <Border>
+                <Border.Style>
+                    <Style TargetType="Border">
+                        <Setter Property="Visibility" Value="Collapsed"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding SelectedTab}" Value="MACRO_VAR">
+                                <Setter Property="Visibility" Value="Visible"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Border.Style>
+                <pages:MacroVariablesView DataContext="{Binding MacroVM}"/>
+            </Border>
+
+            <!-- ======== BACKUP ======== -->
+            <Border>
+                <Border.Style>
+                    <Style TargetType="Border">
+                        <Setter Property="Visibility" Value="Collapsed"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding SelectedTab}" Value="BACKUP">
+                                <Setter Property="Visibility" Value="Visible"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Border.Style>
+                <Grid Margin="16" DataContext="{Binding BackupVM}">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
-
-                    <!-- 標題 + CREATE 按鈕 -->
                     <DockPanel Grid.Row="0" Margin="0,0,0,10">
                         <Border DockPanel.Dock="Left" Style="{StaticResource PanelTitleBorder}" Padding="12,6">
                             <TextBlock Text="{DynamicResource Str.Backup.Title}" Style="{StaticResource PanelTitleText}"
@@ -667,8 +749,6 @@
                                 Command="{Binding RefreshListCommand}" HorizontalAlignment="Right"
                                 FontSize="{DynamicResource FontSize.Body}" Padding="12,8" Margin="0,0,8,0"/>
                     </DockPanel>
-
-                    <!-- 備份清單 DataGrid -->
                     <DataGrid Grid.Row="1" ItemsSource="{Binding Backups}" SelectedItem="{Binding SelectedBackup}"
                               AutoGenerateColumns="False" IsReadOnly="True"
                               CanUserAddRows="False" CanUserDeleteRows="False"
@@ -683,16 +763,11 @@
                               HorizontalGridLinesBrush="{DynamicResource Brush.Border}"
                               SelectionMode="Single">
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="{DynamicResource Str.Backup.Name}" Width="250"
-                                                Binding="{Binding Name}"/>
-                            <DataGridTextColumn Header="{DynamicResource Str.Backup.FileCount}" Width="100"
-                                                Binding="{Binding FileCount}"/>
-                            <DataGridTextColumn Header="{DynamicResource Str.Backup.Size}" Width="120"
-                                                Binding="{Binding DisplaySize}"/>
+                            <DataGridTextColumn Header="{DynamicResource Str.Backup.Name}" Width="250" Binding="{Binding Name}"/>
+                            <DataGridTextColumn Header="{DynamicResource Str.Backup.FileCount}" Width="100" Binding="{Binding FileCount}"/>
+                            <DataGridTextColumn Header="{DynamicResource Str.Backup.Size}" Width="120" Binding="{Binding DisplaySize}"/>
                         </DataGrid.Columns>
                     </DataGrid>
-
-                    <!-- 操作按鈕列 -->
                     <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0">
                         <Button Content="{DynamicResource Str.Backup.Restore}" Style="{StaticResource BaseBtnStyle}"
                                 Command="{Binding RestoreBackupCommand}"
@@ -701,24 +776,30 @@
                                 Command="{Binding DeleteBackupCommand}"
                                 FontSize="{DynamicResource FontSize.Large}" Padding="20,8"/>
                     </StackPanel>
-
-                    <!-- 狀態列 -->
                     <TextBlock Grid.Row="3" Text="{Binding StatusText}" Margin="0,8,0,0"
-                               Foreground="{DynamicResource Brush.Text.Primary}" FontSize="{DynamicResource FontSize.Large}"
-                               FontWeight="Bold"/>
+                               Foreground="{DynamicResource Brush.Text.Primary}" FontSize="{DynamicResource FontSize.Large}" FontWeight="Bold"/>
                 </Grid>
-            </TabItem>
-            <!-- [2026-03-12] MAINTENANCE 維護保養分頁 -->
-            <TabItem Header="MAINTENANCE" DataContext="{Binding MaintenanceVM}">
-                <Grid Margin="16">
+            </Border>
+
+            <!-- ======== MAINTENANCE ======== -->
+            <Border>
+                <Border.Style>
+                    <Style TargetType="Border">
+                        <Setter Property="Visibility" Value="Collapsed"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding SelectedTab}" Value="MAINTENANCE">
+                                <Setter Property="Visibility" Value="Visible"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Border.Style>
+                <Grid Margin="16" DataContext="{Binding MaintenanceVM}">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
-
-                    <!-- 標題 + 按鈕列 -->
                     <DockPanel Grid.Row="0" Margin="0,0,0,10">
                         <Border DockPanel.Dock="Left" Style="{StaticResource PanelTitleBorder}" Padding="12,6">
                             <TextBlock Text="{DynamicResource Str.Maint.Title}" Style="{StaticResource PanelTitleText}"
@@ -728,8 +809,6 @@
                                 Command="{Binding LoadItemsCommand}" HorizontalAlignment="Right"
                                 FontSize="{DynamicResource FontSize.Large}" Padding="16,8"/>
                     </DockPanel>
-
-                    <!-- 保養項目 DataGrid -->
                     <DataGrid Grid.Row="1" ItemsSource="{Binding Items}" SelectedItem="{Binding SelectedItem}"
                               AutoGenerateColumns="False" IsReadOnly="True"
                               CanUserAddRows="False" CanUserDeleteRows="False"
@@ -756,7 +835,6 @@
                             <DataGridTextColumn Header="{DynamicResource Str.Maint.Interval}" Binding="{Binding IntervalHours, StringFormat='{}{0:F0} hr'}" Width="120"/>
                             <DataGridTextColumn Header="{DynamicResource Str.Maint.Accumulated}" Binding="{Binding AccumulatedDisplay}" Width="140"/>
                             <DataGridTextColumn Header="{DynamicResource Str.Maint.Remaining}" Binding="{Binding RemainingHours, StringFormat='{}{0:F1} hr'}" Width="140"/>
-                            <!-- 進度條欄 -->
                             <DataGridTemplateColumn Header="{DynamicResource Str.Maint.Progress}" Width="200">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
@@ -773,8 +851,6 @@
                             </DataGridTemplateColumn>
                         </DataGrid.Columns>
                     </DataGrid>
-
-                    <!-- 操作按鈕列 -->
                     <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,10,0,0">
                         <TextBlock Text="{DynamicResource Str.Maint.NewName}" Foreground="{DynamicResource Brush.Text.Primary}"
                                    FontSize="{DynamicResource FontSize.Large}" VerticalAlignment="Center" Margin="0,0,8,0"/>
@@ -795,12 +871,11 @@
                         <Button Content="{DynamicResource Str.Maint.Reset}" Style="{StaticResource BaseBtnStyle}"
                                 Command="{Binding ResetItemCommand}" FontSize="{DynamicResource FontSize.Large}" Padding="16,8"/>
                     </StackPanel>
-
-                    <!-- 狀態列 -->
                     <TextBlock Grid.Row="3" Text="{Binding StatusText}" Margin="0,8,0,0"
                                Foreground="{DynamicResource Brush.Text.Primary}" FontSize="{DynamicResource FontSize.Large}" FontWeight="Bold"/>
                 </Grid>
-            </TabItem>
-        </TabControl>
+            </Border>
+
+        </Grid>
     </Grid>
 </UserControl>

@@ -45,6 +45,9 @@ namespace CncController.ViewModels
 
         // [2026-03-05] 移除 AvailableInputSlaves / AvailableOutputSlaves（改為純列表模式，不再需要下拉選單）
 
+        // [2026-03-12] Tab 切換統一（RadioButton + StringEqualConverter）
+        [ObservableProperty] private string _selectedTab = "HARDWARE_SCAN";
+
         [ObservableProperty]
         private string _deployStatus = "Ready";
 

@@ -31,11 +31,23 @@ namespace CncController.Services
         private static MachineControlService _instance;
         public static MachineControlService Instance => _instance ??= new MachineControlService();
 
+        // [2026-03-12] 集中管理所有 HttpClient Timeout 常數
+        private static class ClientTimeouts
+        {
+            public static readonly TimeSpan Polling = TimeSpan.FromSeconds(3);
+            public static readonly TimeSpan Estop   = TimeSpan.FromSeconds(2);
+            public static readonly TimeSpan Upload  = TimeSpan.FromSeconds(20);
+            public static readonly TimeSpan Atc     = TimeSpan.FromSeconds(60);
+            public static readonly TimeSpan Probe   = TimeSpan.FromSeconds(120);
+        }
+
         // [安全] 各用途使用獨立 HttpClient，Timeout 互不影響
-        private readonly HttpClient _pollingClient;  // 輪詢 + 一般指令（3s）
-        private readonly HttpClient _estopClient;    // 急停專用（2s），最高優先
-        // [2026-03-10] ATC 專用（30s）：歸零/換刀/旋轉等長時間操作，避免阻塞輪詢通道
-        private readonly HttpClient _atcClient;
+        private readonly HttpClient _pollingClient;  // 輪詢 + 一般指令
+        private readonly HttpClient _estopClient;    // 急停專用，最高優先
+        private readonly HttpClient _atcClient;      // ATC 歸零/換刀
+        // [2026-03-12] 長效 HttpClient 取代 ad-hoc new HttpClient()
+        private readonly HttpClient _uploadClient;   // 上傳/設定部署
+        private readonly HttpClient _probeClient;    // 探測循環
         // [Item 11] 伺服器 URL 從 AppSettings 讀取，不再硬寫；可於 appsettings.json 修改
         private string _serverUrl = AppSettings.Instance.ServerUrl;
         private readonly JsonSerializerOptions _jsonOptions;
@@ -134,10 +146,12 @@ namespace CncController.Services
 
         public MachineControlService()
         {
-            _pollingClient = new HttpClient { Timeout = TimeSpan.FromSeconds(3) };
-            _estopClient   = new HttpClient { Timeout = TimeSpan.FromSeconds(2) };
-            // [2026-03-10] ATC 專用 HttpClient：歸零/換刀可能耗時 30 秒以上
-            _atcClient     = new HttpClient { Timeout = TimeSpan.FromSeconds(60) };
+            // [2026-03-12] 統一使用 ClientTimeouts 常數
+            _pollingClient = new HttpClient { Timeout = ClientTimeouts.Polling };
+            _estopClient   = new HttpClient { Timeout = ClientTimeouts.Estop };
+            _atcClient     = new HttpClient { Timeout = ClientTimeouts.Atc };
+            _uploadClient  = new HttpClient { Timeout = ClientTimeouts.Upload };
+            _probeClient   = new HttpClient { Timeout = ClientTimeouts.Probe };
             _jsonOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
         }
 
@@ -269,16 +283,10 @@ namespace CncController.Services
 
             try
             {
-                // ★★★ 修正點：建立一個全新的臨時 HttpClient ★★★
-                // 因為 _pollingClient 已經被狀態輪詢使用過，Timeout 屬性被鎖定不可修改。
-                // 且上傳需要較長的 Timeout (例如 10秒)，不能用全域的 3秒。
-                using (var uploadClient = new HttpClient())
-                {
-                    uploadClient.Timeout = TimeSpan.FromSeconds(20); // 設定充裕的時間
-
-                    var response = await uploadClient.PostAsJsonAsync($"{_serverUrl}/api/files/upload", payload);
-                    return response.IsSuccessStatusCode;
-                }
+                // [2026-03-12] 改用長效 _uploadClient（取代 ad-hoc new HttpClient）
+                // [2026-03-12] 路由統一：/api/ → /v2/
+                var response = await _uploadClient.PostAsJsonAsync($"{_serverUrl}/v2/program/upload", payload);
+                return response.IsSuccessStatusCode;
             }
             catch (Exception ex)
             {
@@ -591,9 +599,8 @@ namespace CncController.Services
             var payload = new { axes = axes };
             string url = $"{_serverUrl}/api/machine/save_config";
 
-            // [安全] 使用獨立 HttpClient，避免修改全域 _pollingClient.Timeout 而影響輪詢
-            using var configClient = new HttpClient { Timeout = TimeSpan.FromSeconds(10) };
-            var response = await configClient.PostAsJsonAsync(url, payload);
+            // [2026-03-12] 改用長效 _uploadClient（取代 ad-hoc new HttpClient）
+            var response = await _uploadClient.PostAsJsonAsync(url, payload);
 
             if (!response.IsSuccessStatusCode)
             {
@@ -806,8 +813,7 @@ namespace CncController.Services
         {
             try
             {
-                // [2026-03-05] timeout 30s→120s：探測涉及多段慢速移動，30s 不夠
-                using var probeClient = new HttpClient { Timeout = TimeSpan.FromSeconds(120) };
+                // [2026-03-12] 改用長效 _probeClient（取代 ad-hoc new HttpClient）
                 var payload = new
                 {
                     probe_type = probeType,
@@ -827,7 +833,7 @@ namespace CncController.Services
                     wcs = wcs,                          // [2026-03-06] 目標座標系（G54~G59.3）
                     probe_position_only = probePositionOnly  // [2026-03-06] 僅顯示結果
                 };
-                var response = await probeClient.PostAsJsonAsync(
+                var response = await _probeClient.PostAsJsonAsync(
                     $"{_serverUrl}/v2/probe/run", payload);
                 if (response.IsSuccessStatusCode)
                 {

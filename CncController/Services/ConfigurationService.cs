@@ -85,8 +85,9 @@ namespace CncController.Services
                 };
 
                 // 3. 傳送至後端並重啟
-                await _http.PostAsJsonAsync("/api/config/update", payload);
-                await _http.PostAsync("/api/machine/restart", null);
+                // [2026-03-12] 路由統一：/api/ → /v2/
+                await _http.PostAsJsonAsync("/v2/config/update", payload);
+                await _http.PostAsync("/v2/config/restart", null);
             }
             catch (Exception ex)
             {

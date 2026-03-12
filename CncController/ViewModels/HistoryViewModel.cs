@@ -10,14 +10,7 @@ using CncController.Models;
 
 namespace CncController.ViewModels
 {
-    // [2026-03-12] 報警統計項目（供 STATS 分頁）
-    public partial class AlarmStatItem : ObservableObject
-    {
-        [ObservableProperty] private string _message = "";
-        [ObservableProperty] private string _type = "";
-        [ObservableProperty] private int _count;
-        [ObservableProperty] private string _lastTime = "";
-    }
+    // [2026-03-12] AlarmStatItem 已搬至 Models/OperationalModels.cs
 
     public partial class HistoryViewModel : ObservableObject
     {

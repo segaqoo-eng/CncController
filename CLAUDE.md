@@ -37,14 +37,23 @@ CncController/                      ← WPF 前端專案根
 │   ├── BindingProxy.cs             ← DataContext 代理（DataGrid Column 綁定用）
 │   ├── GCodeParser.cs              ← G-Code 刀具號解析（ATC PROGRAM TOOLS）
 │   └── GCodePathParser3D.cs        ← G-Code 3D 路徑解析（G0/G1/G2/G3 → Point3D 線段）
-├── Models/
+├── Models/                         ← [2026-03-12] 已拆分為領域檔案
 │   ├── GCodeLineItem.cs            ← G-Code 逐行模型（LineNumber + IsCurrentLine）
-│   ├── MachineEnums.cs             ← MachineType / AtcType / CarouselControlMode 列舉
-│   ├── MachineModels.cs            ← ~750 行，28+ 類別（MachineConfig/AxisSetting/ToolEntry/ProbeResult/...）
+│   ├── MachineEnums.cs             ← MachineType / AtcType / CarouselControlMode / LogType 列舉
 │   ├── MachineStatus.cs            ← ~200 個 [ObservableProperty]（即時狀態 DTO）
-│   └── UserModels.cs               ← 使用者/權限模型
+│   ├── UserModels.cs               ← 使用者/權限模型
+│   ├── StatusModels.cs             ← MachineStatusData（/v2/status JSON DTO）、ServoIoRawData
+│   ├── EtherCatModels.cs           ← DiscoveredSlave / HardwareMapping / PinConfig / DeviceCategory
+│   ├── ConfigModels.cs             ← MachineConfig / AxisSetting / SpindleConfig / AtcConfig
+│   ├── AtcModels.cs                ← AtcStatus / AtcSlotInfo
+│   ├── IoModels.cs                 ← IoMapItem / IoPinSetting / StandardSignals
+│   ├── ToolModels.cs               ← ToolEntry / ToolLifeEntry / ToolLifeRaw
+│   ├── ProbeModels.cs              ← ProbeResult / ProbeParameters
+│   ├── ProgramModels.cs            ← ProgramFileInfo / ProgramReadResult / MacroVariable
+│   ├── OperationalModels.cs        ← MachiningStats / MaintenanceItem / ResumeState / BackupInfo / AlarmStatItem
+│   └── WarmupModels.cs             ← WarmupStep / SpindleWarmupConfig / WarmupStepData
 ├── Services/                       ← 手動 Singleton（Instance 屬性，非 DI）
-│   ├── MachineControlService.cs    ← ~1165 行，HTTP 通訊（70+ 公開方法，4 個 HttpClient）
+│   ├── MachineControlService.cs    ← ~1165 行，HTTP 通訊（70+ 公開方法，5 個長駐 HttpClient）
 │   ├── ConfigurationService.cs     ← ~830 行，INI/HAL/XML/PostGUI/NGC 生成
 │   ├── AlarmService.cs             ← 集中日誌 ≤500 筆 + 跑馬燈 + 每日 log 檔
 │   ├── AppSettings.cs              ← appsettings.json（ServerUrl/Language/Theme）
@@ -53,7 +62,15 @@ CncController/                      ← WPF 前端專案根
 │   ├── LocalizationService.cs      ← 多語言切換（ResourceDictionary）
 │   └── ThemeService.cs             ← 主題切換（3 主題 + 持久化）
 ├── ViewModels/                     ← 22 個 ViewModel
-│   ├── MainViewModel.cs            ← ~1330 行，根 VM（輪詢/導航/JOG/電源/急停/統計/斷電續切）
+│   ├── MainViewModel.cs            ← [2026-03-12] 已拆分為 8 個 partial class：
+│   │   ├── MainViewModel.cs            ← Core（屬性/建構子/硬體驗證）~210 行
+│   │   ├── MainViewModel.Navigation.cs ← 頁面導航 Navigate()
+│   │   ├── MainViewModel.Polling.cs    ← 500ms 輪詢（StatusTimer/PollErrors/UpdateMachineData/Header）
+│   │   ├── MainViewModel.Jog.cs        ← JOG 手動移動 + 主軸正反轉
+│   │   ├── MainViewModel.Safety.cs     ← 電源/急停/重連/全機停止
+│   │   ├── MainViewModel.CycleControl.cs ← 加工循環/冷卻/Override
+│   │   ├── MainViewModel.Dro.cs        ← DRO 歸零/原點復歸/機台類型連動
+│   │   └── MainViewModel.Stats.cs      ← 統計/斷電續切/語言主題切換
 │   ├── SettingsViewModel.cs        ← 設定頁協調（聚合 6+ 子 VM）
 │   ├── MonitorViewModel.cs         ← ~420 行（G-Code 載入/MDI/3D 路徑/檔案管理）
 │   ├── HistoryViewModel.cs         ← ~112 行（LOG/STATS 雙 Tab + 報警統計）
@@ -153,7 +170,7 @@ AIrefPic/                           ← UI 參考圖片（使用者提到參考�
 
 | Service | 說明 | HttpClient Timeout |
 |---------|------|--------------------|
-| MachineControlService | HTTP 通訊（70+ 方法） | polling 3s / estop 2s / atc 60s / probe 120s |
+| MachineControlService | HTTP 通訊（70+ 方法） | polling 3s / estop 2s / upload 20s / atc 60s / probe 120s |
 | ConfigurationService | INI/HAL/XML/PostGUI/NGC 生成 | config 10s / upload 20s |
 | AlarmService | 集中日誌 ≤500 筆 + 跑馬燈 + 每日 log | — |
 | AppSettings | appsettings.json（ServerUrl/Language/Theme） | — |
@@ -162,23 +179,23 @@ AIrefPic/                           ← UI 參考圖片（使用者提到參考�
 | LocalizationService | 多語言 ResourceDictionary | — |
 | ThemeService | 主題切換（3 主題） | — |
 
-### Models
+### Models（[2026-03-12] 已按領域拆分）
 
 | 類別 | 檔案 | 說明 |
 |------|------|------|
-| MachineConfig | MachineModels.cs | 機台完整設定（axes/IO/type/ATC） |
-| AxisSetting | MachineModels.cs | 單軸（EtherCAT mapping + 運動參數） |
+| MachineConfig / AxisSetting | ConfigModels.cs | 機台設定 + 單軸參數 |
+| SpindleConfig / AtcConfig | ConfigModels.cs | 主軸/ATC 設定 |
 | MachineStatus | MachineStatus.cs | ~200 個 Observable 屬性（UI 自動綁定） |
-| MachineStatusData | MachineModels.cs | /v2/status JSON DTO |
-| ToolEntry | MachineModels.cs | 刀具表（ObservableObject） |
-| ProbeResult / ProbeParameters | MachineModels.cs | 探測結果/參數 |
-| ToolLifeEntry / ToolLifeRaw | MachineModels.cs | 刀具壽命 |
-| MachiningStats | MachineModels.cs | 加工統計 DTO |
-| MaintenanceItem | MachineModels.cs | 維護保養（ObservableObject） |
-| ResumeState | MachineModels.cs | 斷電續切狀態 |
-| BackupInfo | MachineModels.cs | 備份資訊 |
-| SpindleWarmupConfig / WarmupStep | MachineModels.cs | 暖機設定 |
-| AlarmStatItem | HistoryViewModel.cs | 報警統計（巢狀類別） |
+| MachineStatusData / ServoIoRawData | StatusModels.cs | /v2/status JSON DTO |
+| DiscoveredSlave / HardwareMapping | EtherCatModels.cs | EtherCAT 掃描/映射 |
+| AtcStatus / AtcSlotInfo | AtcModels.cs | ATC 刀庫狀態 |
+| IoMapItem / IoPinSetting | IoModels.cs | IO 映射設定（ObservableObject） |
+| ToolEntry / ToolLifeEntry | ToolModels.cs | 刀具表 + 壽命 |
+| ProbeResult / ProbeParameters | ProbeModels.cs | 探測結果/參數 |
+| ProgramFileInfo / MacroVariable | ProgramModels.cs | 程式檔案 + 巨集變數 |
+| MachiningStats / MaintenanceItem | OperationalModels.cs | 統計/維護/續切/備份 |
+| ResumeState / BackupInfo / AlarmStatItem | OperationalModels.cs | 續切/備份/報警統計 |
+| WarmupStep / SpindleWarmupConfig | WarmupModels.cs | 暖機設定 |
 | GCodeLineItem | GCodeLineItem.cs | G-Code 行（LineNumber + IsCurrentLine） |
 
 ### 後端 server.py 關鍵結構
@@ -217,7 +234,7 @@ AIrefPic/                           ← UI 參考圖片（使用者提到參考�
 │         Backup / Maintenance                             │
 │                                                          │
 │  Services（手動 Singleton，非 DI）                        │
-│    ├─ MachineControlService  ← 4 個 HttpClient           │
+│    ├─ MachineControlService  ← 5 個長駐 HttpClient        │
 │    ├─ ConfigurationService   ← INI/HAL/XML/NGC 生成      │
 │    ├─ AlarmService / AuthService / AppSettings            │
 │    ├─ HardwareScanService / LocalizationService          │
@@ -342,10 +359,9 @@ DispatcherTimer (500ms)
 | 檔案 | 行數 | 風險原因 |
 |------|------|---------|
 | **server.py** | ~3200 | 單體 Flask，53 路由 + 5 背景執行緒 + NML 連線，修改易產生副作用 |
-| **MainViewModel.cs** | ~1330 | 根 VM，500ms 輪詢 + JOG + 電源/急停 + 導航 + 統計，觸及面最廣 |
-| **MachineControlService.cs** | ~1165 | 70+ 公開方法 + 4 個 HttpClient timeout 設定，API 變更必須前後端同步 |
+| **MainViewModel.*.cs** | ~1330(8檔) | 根 VM（partial class），500ms 輪詢 + JOG + 電源/急停，觸及面最廣 |
+| **MachineControlService.cs** | ~1165 | 70+ 公開方法 + 5 個長駐 HttpClient，API 變更必須前後端同步 |
 | **ConfigurationService.cs** | ~830 | INI/HAL/XML/NGC 生成，寫錯 = 機台無法啟動 |
-| **MachineModels.cs** | ~750 | 28+ 類別共用，修改一個影響多處 |
 | **ProbingViewModel.cs** | ~650 | 27+ 探測命令，參數傳遞鏈長（VM → Service → 後端 → G38.2） |
 
 ### 高風險操作
@@ -429,25 +445,77 @@ BaseBtnStyle (Theme.Dark.xaml 全域)
 
 ---
 
-## 9. Common Modification Patterns
+## 9. 程式碼放置規則（新增 Class / 方法 / 屬性）
+
+### 9.1 新增 Model 類別 — 依領域選擇檔案
+
+| 新 Class 的用途 | 放置檔案 |
+|----------------|---------|
+| 後端 JSON DTO（/v2/status 回傳） | `StatusModels.cs` |
+| EtherCAT 掃描/映射/PDO | `EtherCatModels.cs` |
+| 機台設定（INI/HAL 參數） | `ConfigModels.cs` |
+| ATC 刀庫狀態/刀位 | `AtcModels.cs` |
+| IO 映射/Pin 設定 | `IoModels.cs` |
+| 刀具表/刀具壽命 | `ToolModels.cs` |
+| 探測結果/探測參數 | `ProbeModels.cs` |
+| 程式檔案/巨集變數 | `ProgramModels.cs` |
+| 統計/維護/續切/備份 | `OperationalModels.cs` |
+| 暖機/主軸預熱 | `WarmupModels.cs` |
+| 列舉（MachineType/LogType 等） | `MachineEnums.cs` |
+| 使用者/權限 | `UserModels.cs` |
+| **以上都不符合** | **建立新檔案** `Models/XxxModels.cs`，**禁止**塞進既有檔案 |
+
+### 9.2 新增 MainViewModel 方法/屬性 — 依職責選擇 partial 檔案
+
+| 新方法的職責 | 放置檔案 |
+|-------------|---------|
+| 頁面導航 | `MainViewModel.Navigation.cs` |
+| 輪詢邏輯 / 後端狀態映射 / 跑馬燈 | `MainViewModel.Polling.cs` |
+| JOG 移動 / 主軸 FWD/REV/STOP | `MainViewModel.Jog.cs` |
+| 急停 / 電源 / 重連 / ESC 全停 | `MainViewModel.Safety.cs` |
+| 加工循環 / 冷卻 / Override / Feed Hold | `MainViewModel.CycleControl.cs` |
+| DRO 歸零 / HomeAll / G30 / 軸映射連動 | `MainViewModel.Dro.cs` |
+| 統計 / 斷電續切 / 語言主題 / 暖機 | `MainViewModel.Stats.cs` |
+| 子 VM 屬性 / 建構子 / 核心狀態 | `MainViewModel.cs`（Core） |
+| **全新獨立功能區塊** | **建立新 partial** `MainViewModel.Xxx.cs` |
+
+### 9.3 新增 HttpClient（MachineControlService）
+
+- **禁止** `new HttpClient()` per-call（socket 耗盡風險）
+- 在 `ClientTimeouts` 內部類別新增 timeout 常數
+- 在建構子中建立長駐 `_xxxClient` 欄位
+- 方法內使用 `_xxxClient`，不用 `using`
+
+### 9.4 新增 Tab 切換（所有頁面統一）
+
+- **禁止** `<TabControl>` + `<TabItem>`
+- 一律使用 `RadioButton` + `StringEqualConverter` + `DataTrigger Visibility`
+- RadioButton 樣式繼承 `BaseRadioBtnStyle`（選取色 #5E70FF）
+- ViewModel 新增 `[ObservableProperty] private string _selectedTab = "DEFAULT_TAB";`
+
+---
+
+## 10. Common Modification Patterns
 
 ### 新增一個主頁面
 1. `ViewModels/` 新增 `XxxViewModel.cs`（繼承 `ObservableObject`）
 2. `Views/Pages/` 新增 `XxxView.xaml`（`d:DataContext` 綁定 VM）
-3. `MainViewModel.cs` 新增 VM 屬性 + `Navigate()` case
+3. `MainViewModel.cs` 新增 VM 屬性（Core）+ `MainViewModel.Navigation.cs` 新增 `Navigate()` case
 4. `MainView.xaml` 新增 `<RadioButton>` 導航 + `CachedContentControl` 內容
 5. `Lang.zh-TW.xaml` + `Lang.en-US.xaml` 新增 `Str.Nav.Xxx`
 
 ### 新增一個設定子 Tab
 1. `ViewModels/` 新增 `XxxViewModel.cs`
 2. `SettingsViewModel.cs` 新增 `public XxxViewModel XxxVM { get; } = new();`
-3. `SettingsView.xaml` 的 `<TabControl>` 新增 `<TabItem>`
+3. `SettingsView.xaml` 新增：
+   - 導航列：`<RadioButton Content="XXX" GroupName="SettingsTab" Style="{StaticResource SettingsTabStyle}" IsChecked="{Binding SelectedTab, Converter={StaticResource StringEqualConverter}, ConverterParameter=XXX}"/>`
+   - 內容區：`<Border>` + DataTrigger Visibility + 內容 View
 4. i18n 新增 `Str.Setting.Xxx`
 
 ### 新增後端 API 端點
 1. `server.py` 新增 `@app.route()` + 處理函式
-2. `MachineControlService.cs` 新增 `XxxAsync()` 方法
-3. `MachineModels.cs` 新增 DTO 類別（如需）
+2. `MachineControlService.cs` 新增 `XxxAsync()` 方法（使用既有長駐 HttpClient）
+3. 依領域選擇 `Models/*.cs` 新增 DTO 類別（見 §9.1）
 4. ViewModel 呼叫 Service 方法
 5. 更新此 CLAUDE.md API 端點表
 
@@ -455,11 +523,11 @@ BaseBtnStyle (Theme.Dark.xaml 全域)
 1. `server.py` 新增 `_probe_xxx()` 內部函式 + route mapping
 2. `ProbingViewModel.cs` 新增 `[RelayCommand]` + 按鈕
 3. `ProbingView.xaml` 新增分頁內容
-4. `ProbeResult` / `ProbeParameters` 視需要擴展
+4. `ProbeModels.cs` 擴展 `ProbeResult` / `ProbeParameters`（如需）
 
 ---
 
-## 10. Build & Run
+## 11. Build & Run
 
 ```bash
 # 前端（WPF，需 .NET 10 SDK + Windows）
@@ -478,7 +546,7 @@ python3 server.py     # 除錯用（直接執行）
 
 ---
 
-## 11. 工控安全機制
+## 12. 工控安全機制
 
 | 機制 | 說明 |
 |------|------|
@@ -494,7 +562,7 @@ python3 server.py     # 除錯用（直接執行）
 
 ---
 
-## 12. 功能完成狀態
+## 13. 功能完成狀態
 
 ### ✅ 已完成（全部核心 + 應該有 + 加分部分）
 
@@ -566,7 +634,7 @@ python3 server.py     # 除錯用（直接執行）
 
 ---
 
-## 13. 快捷鍵（MainWindow.xaml InputBindings）
+## 14. 快捷鍵（MainWindow.xaml InputBindings）
 
 | 按鍵 | Command | 說明 |
 |------|---------|------|

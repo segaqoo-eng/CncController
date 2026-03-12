@@ -64,7 +64,8 @@ namespace CncController.Services
             try
             {
                 // 發送掃描指令到後端 API
-                var response = await _http.PostAsync("/api/ethercat/scan", null);
+                // [2026-03-12] 路由統一：/api/ → /v2/
+                var response = await _http.PostAsync("/v2/config/scan", null);
                 
                 if (response.IsSuccessStatusCode)
                 {

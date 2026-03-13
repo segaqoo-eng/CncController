@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -120,6 +121,12 @@ namespace CncController.ViewModels
             IsThemeCyber = savedTheme == "Cyber";
 
             CurrentViewModel = MonitorVM;
+
+            // [2026-03-13] 接收 FILE 頁「載入」後自動切回 MAIN
+            WeakReferenceMessenger.Default.Register<NavigateToMainMessage>(this, (r, m) =>
+            {
+                CurrentViewModel = MonitorVM;
+            });
 
             // [2026-03-04] 將 Status 傳遞給各 VM
             MonitorVM.MachineStatus = Status;

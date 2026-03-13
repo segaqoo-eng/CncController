@@ -178,6 +178,11 @@
     <!-- [2026-03-11] Added -->
     <sys:String x:Key="Str.Monitor.NoProgramLoaded">No program loaded</sys:String>
     <sys:String x:Key="Str.Monitor.LoadHint">Press "Upload" to open a G-Code file</sys:String>
+    <!-- [2026-03-13] Edit mode -->
+    <sys:String x:Key="Str.Monitor.Edit">EDIT</sys:String>
+    <sys:String x:Key="Str.Monitor.Save">SAVE &amp; UPLOAD</sys:String>
+    <sys:String x:Key="Str.Monitor.Discard">DISCARD</sys:String>
+    <sys:String x:Key="Str.File.Load">LOAD</sys:String>
 
     <!-- ===== History ===== -->
     <!-- [2026-03-11] Added -->

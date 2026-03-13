@@ -1,6 +1,7 @@
 // [2026-03-11] 新增 FileManagerViewModel：FILE 分頁 — 後端檔案管理
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
 using System;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
@@ -95,16 +96,32 @@ namespace CncController.ViewModels
             }
         }
 
-        // [2026-03-11] 設定為加工程式（load 到 LinuxCNC）
+        // [2026-03-13] 載入遠端程式 → 回讀內容 → 通知 MonitorVM → 自動切 MAIN 頁
         [RelayCommand]
         private async Task LoadProgram()
         {
             if (SelectedFile == null) return;
-            bool success = await MachineControlService.Instance.LoadProgramAsync(SelectedFile.Name);
+            string fileName = SelectedFile.Name;
+
+            // 1. 回讀內容（先讀再 load，確保內容可顯示）
+            var content = await MachineControlService.Instance.ReadProgramAsync(fileName);
+
+            // 2. 載入到 LinuxCNC
+            bool success = await MachineControlService.Instance.LoadProgramAsync(fileName);
             if (success)
-                AlarmService.Instance.AddLog("INFO", $"Program Set: {SelectedFile.Name}");
-            else
-                AlarmService.Instance.AddLog("ERR", $"Program Load Failed: {SelectedFile.Name}");
+            {
+                AlarmService.Instance.AddLog("INFO", $"Program Loaded: {fileName}");
+            }
+
+            // 3. 通知 MonitorVM 顯示內容（即使 load 失敗也顯示預覽）
+            if (content != null)
+            {
+                WeakReferenceMessenger.Default.Send(
+                    new ProgramLoadedMessage(fileName, content, isRemote: true));
+            }
+
+            // 4. 自動切換到 MAIN 頁面
+            WeakReferenceMessenger.Default.Send(new NavigateToMainMessage());
         }
 
         // [2026-03-11] 刪除

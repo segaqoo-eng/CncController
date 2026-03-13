@@ -13,6 +13,7 @@
 
     <UserControl.Resources>
         <!-- [2026-03-12] JOG 方向按鈕：漸層引用主題資源，主題切換時自動生效 -->
+        <!-- [2026-03-13] 修正：Background 改用 TemplateBinding，讓外層 DataTrigger 可覆蓋 -->
         <Style x:Key="JogArrowBtn" TargetType="Button">
             <Setter Property="Width" Value="70"/>
             <Setter Property="Height" Value="70"/>
@@ -20,12 +21,13 @@
             <Setter Property="FontSize" Value="{DynamicResource FontSize.DRO}"/>
             <Setter Property="FontWeight" Value="Black"/>
             <Setter Property="Foreground" Value="#E0E0E0"/>
+            <Setter Property="Background" Value="{DynamicResource Brush.Btn.Gradient}"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
                         <Border x:Name="bd" BorderBrush="{DynamicResource Brush.Btn.Border}" BorderThickness="2" CornerRadius="6"
-                                Background="{DynamicResource Brush.Btn.Gradient}">
+                                Background="{TemplateBinding Background}">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <ControlTemplate.Triggers>
@@ -272,6 +274,7 @@
 
         <!-- [2026-03-11] MAN/AUTO/MDI 模式切換按鈕：靠底部 + 10px 留白 + 平均欄寬 -->
         <UniformGrid Grid.Row="6" Rows="1" Columns="3" HorizontalAlignment="Stretch" Margin="5,0,5,10">
+            <!-- [2026-03-13] MAN/AUTO/MDI 選取色改用 StatusOn 藍（區分頁籤青綠） -->
             <Button Content="MAN" Command="{Binding SetModeCommand}" CommandParameter="MANUAL">
                 <Button.Style>
                     <Style TargetType="Button" BasedOn="{StaticResource JogRotaryBtn}">
@@ -279,8 +282,8 @@
                         <Setter Property="FontSize" Value="{DynamicResource FontSize.Large}"/>
                         <Style.Triggers>
                             <DataTrigger Binding="{Binding Status.TaskMode}" Value="MANUAL">
-                                <Setter Property="Background" Value="{DynamicResource Brush.Checked}"/>
-                                <Setter Property="BorderBrush" Value="#005A9E"/>
+                                <Setter Property="Background" Value="{DynamicResource Brush.StatusOn}"/>
+                                <Setter Property="BorderBrush" Value="{DynamicResource Brush.StatusOn.Border}"/>
                             </DataTrigger>
                         </Style.Triggers>
                     </Style>
@@ -293,8 +296,8 @@
                         <Setter Property="FontSize" Value="{DynamicResource FontSize.Large}"/>
                         <Style.Triggers>
                             <DataTrigger Binding="{Binding Status.TaskMode}" Value="AUTO">
-                                <Setter Property="Background" Value="{DynamicResource Brush.Checked}"/>
-                                <Setter Property="BorderBrush" Value="#005A9E"/>
+                                <Setter Property="Background" Value="{DynamicResource Brush.StatusOn}"/>
+                                <Setter Property="BorderBrush" Value="{DynamicResource Brush.StatusOn.Border}"/>
                             </DataTrigger>
                         </Style.Triggers>
                     </Style>
@@ -307,8 +310,8 @@
                         <Setter Property="FontSize" Value="{DynamicResource FontSize.Large}"/>
                         <Style.Triggers>
                             <DataTrigger Binding="{Binding Status.TaskMode}" Value="MDI">
-                                <Setter Property="Background" Value="{DynamicResource Brush.Checked}"/>
-                                <Setter Property="BorderBrush" Value="#005A9E"/>
+                                <Setter Property="Background" Value="{DynamicResource Brush.StatusOn}"/>
+                                <Setter Property="BorderBrush" Value="{DynamicResource Brush.StatusOn.Border}"/>
                             </DataTrigger>
                         </Style.Triggers>
                     </Style>

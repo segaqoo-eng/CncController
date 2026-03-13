@@ -108,13 +108,13 @@
     <!-- === 使用者頭像 === -->
     <SolidColorBrush x:Key="Brush.Avatar" Color="#00A896"/>
 
-    <!-- === 分頁選取：湖水綠漸層 === -->
+    <!-- [2026-03-13] 分頁選取：藍紫色（與狀態按鈕青綠區分） -->
     <LinearGradientBrush x:Key="Brush.Tab.Selected" StartPoint="0,0" EndPoint="0,1">
-        <GradientStop Color="#00C8AA" Offset="0"/>
-        <GradientStop Color="#00A896" Offset="0.5"/>
-        <GradientStop Color="#008878" Offset="1"/>
+        <GradientStop Color="#7A8AFF" Offset="0"/>
+        <GradientStop Color="#5E70FF" Offset="0.5"/>
+        <GradientStop Color="#4A5CE0" Offset="1"/>
     </LinearGradientBrush>
-    <SolidColorBrush x:Key="Brush.Tab.SelectedBorder" Color="#00C8AA"/>
+    <SolidColorBrush x:Key="Brush.Tab.SelectedBorder" Color="#7A8AFF"/>
     <SolidColorBrush x:Key="Brush.Tab.SelectedForeground" Color="White"/>
 
     <!-- === 按鈕漸層（帶微量青綠色調，與 Default 明顯區隔） === -->

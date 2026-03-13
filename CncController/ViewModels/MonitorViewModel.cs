@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
 using System;
 using System.Collections.ObjectModel;
 using System.IO;
@@ -14,7 +15,7 @@ using CncController.Services;
 
 namespace CncController.ViewModels
 {
-    public partial class MonitorViewModel : ObservableObject
+    public partial class MonitorViewModel : ObservableObject, IRecipient<ProgramLoadedMessage>
     {
         // G-Code 預覽文字
         [ObservableProperty]
@@ -26,6 +27,14 @@ namespace CncController.ViewModels
         // 目前載入的檔名 (用於顯示與記錄)
         [ObservableProperty]
         private string _currentFileName = "";
+
+        // [2026-03-13] 編輯模式相關
+        [ObservableProperty] private bool _isEditMode = false;
+        [ObservableProperty] private string _editText = "";
+        [ObservableProperty] private bool _isGCodeEditable = true; // 預設開啟，開發完成再確認
+
+        // [2026-03-13] 記住本機檔案完整路徑（開啟舊檔/上傳時記錄，供儲存回寫用）
+        private string _localFilePath = "";
 
         // MDI 輸入框文字
         [ObservableProperty]
@@ -61,6 +70,8 @@ namespace CncController.ViewModels
                 _machineStatus = value;
                 if (_machineStatus != null)
                     _machineStatus.PropertyChanged += OnMachineStatusChanged;
+                // [2026-03-13] 通知 View 重新訂閱（修正時序：MachineStatus 晚於 DataContext 設定）
+                OnPropertyChanged(nameof(MachineStatus));
             }
         }
 
@@ -69,7 +80,20 @@ namespace CncController.ViewModels
 
         public MonitorViewModel()
         {
-            // 初始化邏輯
+            // [2026-03-13] 註冊 Messenger 接收遠端檔案載入訊息
+            WeakReferenceMessenger.Default.Register<ProgramLoadedMessage>(this);
+        }
+
+        // [2026-03-13] 接收 FILE 頁載入的遠端程式內容
+        public void Receive(ProgramLoadedMessage message)
+        {
+            GCodeText = message.Content;
+            CurrentFileName = message.IsRemote
+                ? $"{message.FileName} (遠端)"
+                : message.FileName;
+            _localFilePath = ""; // 遠端檔案，無本機路徑
+            IsEditMode = false;
+            AlarmService.Instance.AddLog("INFO", $"Program Display: {message.FileName}");
         }
 
         // [2026-03-04] GCodeText 變更時同步解析為 GCodeLines 集合
@@ -182,6 +206,8 @@ namespace CncController.ViewModels
 
                     GCodeText = content;
                     CurrentFileName = fileName;
+                    _localFilePath = localPath; // [2026-03-13] 記住本機路徑
+                    IsEditMode = false;
                     AlarmService.Instance.AddLog("INFO", $"File Opened (Local): {fileName}");
                 }
                 catch (Exception ex)
@@ -209,9 +235,11 @@ namespace CncController.ViewModels
                     string fileName = Path.GetFileName(localPath);
                     string content = await File.ReadAllTextAsync(localPath);
 
-                    // 1. 顯示在 UI (僅預覽，記憶體不落地原則是指 Server 端不存檔，這裡只是前端顯示)
+                    // 1. 顯示在 UI
                     GCodeText = content;
                     CurrentFileName = fileName;
+                    _localFilePath = localPath; // [2026-03-13] 記住本機路徑
+                    IsEditMode = false;
 
                     // 2. 上傳到 Server (記憶體不落地，直接發送內容)
                     // 這裡呼叫 Service 的上傳方法
@@ -313,7 +341,7 @@ namespace CncController.ViewModels
             }
         }
 
-        // 選取檔案 → 載入到 LinuxCNC
+        // [2026-03-13] 選取檔案 → 載入到 LinuxCNC + 回讀內容顯示
         [RelayCommand]
         private async Task SelectProgramFile()
         {
@@ -323,9 +351,19 @@ namespace CncController.ViewModels
             bool success = await MachineControlService.Instance.LoadProgramAsync(fileName);
             if (success)
             {
-                CurrentFileName = fileName;
-                // [2026-03-11] 清空預覽（A 模式不回讀內容）
-                GCodeText = "";
+                // [2026-03-13] 回讀內容顯示在 G-Code 區 + CAD 3D
+                var content = await MachineControlService.Instance.ReadProgramAsync(fileName);
+                if (content != null)
+                {
+                    GCodeText = content;
+                    CurrentFileName = $"{fileName} (遠端)";
+                }
+                else
+                {
+                    GCodeText = "";
+                    CurrentFileName = fileName;
+                }
+                IsEditMode = false;
                 AlarmService.Instance.AddLog("INFO", $"Program Loaded: {fileName}");
             }
             else
@@ -413,6 +451,70 @@ namespace CncController.ViewModels
             if (bytes < 1024) return $"{bytes} B";
             if (bytes < 1024 * 1024) return $"{bytes / 1024.0:F1} KB";
             return $"{bytes / (1024.0 * 1024.0):F1} MB";
+        }
+
+        // =========================================================
+        // [2026-03-13] G-Code 編輯模式（雙面板切換）
+        // =========================================================
+
+        // [2026-03-13] 進入編輯模式：將 GCodeText 複製到 EditText
+        [RelayCommand]
+        private void ToggleEditMode()
+        {
+            EditText = GCodeText;
+            IsEditMode = true;
+        }
+
+        // [2026-03-13] 放棄編輯：恢復原檔內容
+        [RelayCommand]
+        private void DiscardEdit()
+        {
+            EditText = "";
+            IsEditMode = false;
+        }
+
+        // [2026-03-13] 儲存編輯並上傳（本機回寫 + 遠端上傳）
+        [RelayCommand]
+        private async Task SaveAndUpload()
+        {
+            if (string.IsNullOrEmpty(EditText)) return;
+
+            // 取得純檔名（去掉 "(遠端)" 標記）
+            string fileName = CurrentFileName.Replace(" (遠端)", "").Trim();
+            if (string.IsNullOrEmpty(fileName))
+                fileName = "edited_program.ngc";
+
+            // 1. 先更新顯示
+            GCodeText = EditText;
+            IsEditMode = false;
+
+            // 2. 若有本機路徑，回寫本機檔案
+            if (!string.IsNullOrEmpty(_localFilePath))
+            {
+                try
+                {
+                    await File.WriteAllTextAsync(_localFilePath, EditText);
+                    AlarmService.Instance.AddLog("INFO", $"File Saved (Local): {_localFilePath}");
+                }
+                catch (Exception ex)
+                {
+                    AlarmService.Instance.AddLog("ERR", $"Local Save Failed: {ex.Message}");
+                }
+            }
+
+            // 3. 上傳到後端
+            bool success = await MachineControlService.Instance.UploadGCodeAsync(fileName, EditText);
+            if (success)
+            {
+                AlarmService.Instance.AddLog("INFO", $"File Uploaded: {fileName}");
+                // 4. 重新載入到 LinuxCNC
+                await MachineControlService.Instance.LoadProgramAsync(fileName);
+                await RefreshProgramList();
+            }
+            else
+            {
+                AlarmService.Instance.AddLog("ERR", $"Upload Failed: {fileName}");
+            }
         }
     }
 }

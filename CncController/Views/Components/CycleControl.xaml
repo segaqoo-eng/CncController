@@ -35,23 +35,30 @@
 
             <UniformGrid Grid.Row="0" Columns="2" Rows="5">
                 <!-- [2026-03-04] 關鍵操作色彩分層：綠=啟動、紅=停止、橙=暫停 -->
-                <!-- KEEP: status — CYCLE START 綠色(RUNNING) -->
+                <!-- KEEP: status — CYCLE START 綠色(AUTO+RUNNING) -->
+                <!-- [2026-03-13] 只有 AUTO 模式下 RUNNING 才變綠（避免 MDI 指令閃綠） -->
                 <Button Content="{DynamicResource Str.Btn.CycleStart}" Command="{Binding CycleStartCommand}">
                     <Button.Style>
                         <Style TargetType="Button" BasedOn="{StaticResource CycleBtnStyle}">
                             <Style.Triggers>
-                                <DataTrigger Binding="{Binding Status.InterpState}" Value="RUNNING">
-                                    <Setter Property="Background">
-                                        <Setter.Value>
-                                            <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                                                <GradientStop Color="#4CAF50" Offset="0"/>
-                                                <GradientStop Color="#2E7D32" Offset="1"/>
-                                            </LinearGradientBrush>
-                                        </Setter.Value>
-                                    </Setter>
-                                    <Setter Property="BorderBrush" Value="#1B5E20"/>
-                                    <Setter Property="Foreground" Value="White"/>
-                                </DataTrigger>
+                                <MultiDataTrigger>
+                                    <MultiDataTrigger.Conditions>
+                                        <Condition Binding="{Binding Status.InterpState}" Value="RUNNING"/>
+                                        <Condition Binding="{Binding Status.TaskMode}" Value="AUTO"/>
+                                    </MultiDataTrigger.Conditions>
+                                    <MultiDataTrigger.Setters>
+                                        <Setter Property="Background">
+                                            <Setter.Value>
+                                                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                                    <GradientStop Color="#4CAF50" Offset="0"/>
+                                                    <GradientStop Color="#2E7D32" Offset="1"/>
+                                                </LinearGradientBrush>
+                                            </Setter.Value>
+                                        </Setter>
+                                        <Setter Property="BorderBrush" Value="#1B5E20"/>
+                                        <Setter Property="Foreground" Value="White"/>
+                                    </MultiDataTrigger.Setters>
+                                </MultiDataTrigger>
                             </Style.Triggers>
                         </Style>
                     </Button.Style>

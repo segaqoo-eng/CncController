@@ -8,22 +8,11 @@
     <UseWPF>true</UseWPF>
   </PropertyGroup>
 
-  <ItemGroup>
-    <Compile Remove="Views\Components\JogConfig.xaml.xaml.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Page Remove="Views\Components\JogConfig.xaml.xaml" />
-  </ItemGroup>
-
+  <!-- [2026-03-13] 清理死碼：移除 JogConfig.xaml.xaml.cs Remove + Converters 空 Folder hint -->
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
     <PackageReference Include="HelixToolkit.Wpf" Version="3.1.2" />
     <PackageReference Include="Microsoft.Xaml.Behaviors.Wpf" Version="1.1.135" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Converters\" />
   </ItemGroup>
 
   <!-- [2026-03-03] 將 TOOL_BACK.png 標記為嵌入資源，供 ToolTableView 顯示刀具圖 -->

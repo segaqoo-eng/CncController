@@ -19,18 +19,23 @@
         </Grid.RowDefinitions>
 
         <!-- Row 0: JOG 模式選擇（JOG + 0.1 / 0.01 / 0.001） -->
+        <!-- [2026-03-16] 按鈕防呆 -->
         <UniformGrid Grid.Row="0" Columns="4" Margin="0,0,0,10">
             <!-- [2026-03-05] Cont. → JOG（藍色標籤），增量值改為 0.1/0.01/0.001 -->
             <RadioButton Content="JOG" GroupName="JogMode" Style="{StaticResource NavBtnStyle}" IsChecked="True"
+                         IsEnabled="{Binding CanJog}"
                          Command="{Binding SetJogModeCommand}" CommandParameter="0"/>
 
             <RadioButton Content="0.1" GroupName="JogMode" Style="{StaticResource NavBtnStyle}"
+                         IsEnabled="{Binding CanJog}"
                          Command="{Binding SetJogModeCommand}" CommandParameter="0.1"/>
 
             <RadioButton Content="0.01" GroupName="JogMode" Style="{StaticResource NavBtnStyle}"
+                         IsEnabled="{Binding CanJog}"
                          Command="{Binding SetJogModeCommand}" CommandParameter="0.01"/>
 
             <RadioButton Content="0.001" GroupName="JogMode" Style="{StaticResource NavBtnStyle}"
+                         IsEnabled="{Binding CanJog}"
                          Command="{Binding SetJogModeCommand}" CommandParameter="0.001"/>
         </UniformGrid>
 
@@ -41,7 +46,9 @@
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="90"/>
             </Grid.ColumnDefinitions>
+            <!-- [2026-03-16] 按鈕防呆 -->
             <Slider Grid.Column="0" Minimum="0" Maximum="100" Value="{Binding JogSpeedPercent, Mode=TwoWay}"
+                    IsEnabled="{Binding CanJog}"
                     TickFrequency="10" Height="25" VerticalAlignment="Center" Foreground="{DynamicResource Brush.Accent}"/>
             <Border Grid.Column="1" Background="{DynamicResource Brush.Input.Background}" Margin="3,0,0,0" CornerRadius="2">
                 <TextBlock Text="{Binding JogSpeedPercent, StringFormat={}{0:F0}%}"
@@ -84,7 +91,9 @@
         <UniformGrid Grid.Row="4" Columns="3" Margin="0,4,0,0">
             <!-- [2026-03-05] 改用 BaseBtnStyle 對齊 PB 版 -->
             <!-- [2026-03-10] REV 按鈕：主軸反轉中(SpindleDirection=-1)時藍色高亮 -->
+            <!-- [2026-03-16] 按鈕防呆 -->
             <Button Content="{DynamicResource Str.Btn.Rev}" Height="40" FontSize="{DynamicResource FontSize.Body}" Margin="2"
+                    IsEnabled="{Binding CanSpindle}"
                     Command="{Binding SpindleRevCommand}">
                 <Button.Style>
                     <Style TargetType="Button" BasedOn="{StaticResource BaseBtnStyle}">
@@ -97,7 +106,9 @@
                 </Button.Style>
             </Button>
             <!-- [2026-03-10] 主軸 STOP：MouseDown 紅色，放開灰色 -->
+            <!-- [2026-03-16] 按鈕防呆 -->
             <Button Content="{DynamicResource Str.Btn.Stop}" Height="40" FontSize="{DynamicResource FontSize.Body}" Margin="2"
+                    IsEnabled="{Binding CanSpindle}"
                     Command="{Binding SpindleStopCommand}">
                 <Button.Style>
                     <Style TargetType="Button" BasedOn="{StaticResource BaseBtnStyle}">
@@ -111,7 +122,9 @@
                 </Button.Style>
             </Button>
             <!-- [2026-03-10] FWD 按鈕：主軸正轉中(SpindleDirection=1)時藍色高亮 -->
+            <!-- [2026-03-16] 按鈕防呆 -->
             <Button Content="{DynamicResource Str.Btn.Fwd}" Height="40" FontSize="{DynamicResource FontSize.Body}" Margin="2"
+                    IsEnabled="{Binding CanSpindle}"
                     Command="{Binding SpindleFwdCommand}">
                 <Button.Style>
                     <Style TargetType="Button" BasedOn="{StaticResource BaseBtnStyle}">

@@ -88,8 +88,10 @@
                                     Command="{Binding DeleteToolCommand}" Width="100"/>
                             <Button Content="{DynamicResource Str.Btn.AddTool}" Style="{StaticResource ToolBtnStyle}"
                                     Command="{Binding AddToolCommand}" Width="120"/>
+                            <!-- [2026-03-16] 按鈕防呆 -->
                             <Button Content="{DynamicResource Str.Btn.SaveTable}" Style="{StaticResource ToolBtnStyle}"
-                                    Command="{Binding SaveTableCommand}" Width="130"/>
+                                    Command="{Binding SaveTableCommand}" Width="130"
+                                    IsEnabled="{Binding DataContext.CanEditOffset, RelativeSource={RelativeSource AncestorType=Window}}"/>
                             <Button Content="{DynamicResource Str.Btn.ReloadTable}" Style="{StaticResource ToolBtnStyle}"
                                     Command="{Binding ReloadTableCommand}" Width="150"/>
                         </StackPanel>
@@ -322,6 +324,7 @@
                         </Border>
 
                         <!-- [n] LOAD SPINDLE -->
+                        <!-- [2026-03-16] 按鈕防呆 -->
                         <Grid Margin="0,0,0,4">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="50"/>
@@ -335,12 +338,14 @@
                                          Padding="2"/>
                             </Border>
                             <Button Grid.Column="1" Content="{DynamicResource Str.Tool.LoadSpindle}" Style="{StaticResource PanelBtnStyle}"
-                                    Command="{Binding LoadSpindleCommand}"/>
+                                    Command="{Binding LoadSpindleCommand}"
+                                    IsEnabled="{Binding DataContext.CanAtc, RelativeSource={RelativeSource AncestorType=Window}}"/>
                         </Grid>
 
                         <!-- UNLOAD SPINDLE -->
                         <Button Content="{DynamicResource Str.Tool.UnloadSpindle}" Style="{StaticResource PanelBtnStyle}"
-                                Command="{Binding UnloadSpindleCommand}"/>
+                                Command="{Binding UnloadSpindleCommand}"
+                                IsEnabled="{Binding DataContext.CanAtc, RelativeSource={RelativeSource AncestorType=Window}}"/>
 
                         <!-- [n] M6 G43 -->
                         <Grid Margin="0,4,0,0">
@@ -356,18 +361,21 @@
                                          Padding="2"/>
                             </Border>
                             <Button Grid.Column="1" Content="M6 G43" Style="{StaticResource PanelBtnStyle}"
-                                    Command="{Binding M6G43Command}"/>
+                                    Command="{Binding M6G43Command}"
+                                    IsEnabled="{Binding DataContext.CanAtc, RelativeSource={RelativeSource AncestorType=Window}}"/>
                         </Grid>
 
                         <Separator Background="Transparent" Margin="0,8,0,8"/>
 
                         <!-- ELECTRONIC TOOL SETTER -->
                         <Button Content="{DynamicResource Str.Tool.ElectronicToolSetter}" Style="{StaticResource PanelBtnStyle}"
-                                Command="{Binding ElectronicToolSetterCommand}"/>
+                                Command="{Binding ElectronicToolSetterCommand}"
+                                IsEnabled="{Binding DataContext.CanAtc, RelativeSource={RelativeSource AncestorType=Window}}"/>
 
                         <!-- TOUCH OFF CURRENT TOOL -->
                         <Button Content="{DynamicResource Str.Tool.TouchOffCurrentTool}" Style="{StaticResource PanelBtnStyle}"
-                                Command="{Binding TouchOffCurrentToolCommand}"/>
+                                Command="{Binding TouchOffCurrentToolCommand}"
+                                IsEnabled="{Binding DataContext.CanAtc, RelativeSource={RelativeSource AncestorType=Window}}"/>
                     </StackPanel>
                 </Grid>
             </DockPanel>

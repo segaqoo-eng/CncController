@@ -96,6 +96,13 @@ error_lock = threading.Lock()
 # [2026-02-25] in-memory WCS offset cache
 _wcs_cache = {}
 
+# [2026-03-13] 狀態快取：背景 Thread 持續更新，API 直接讀取
+_status_cache_lock = threading.Lock()
+_status_cache_fast = {}   # 高頻快取（20ms）：座標/進給/主軸/狀態
+_status_cache_slow = {}   # 低頻快取（1s）：Servo IO / IO Status / 主軸 Encoder
+_status_cache_fast_ts = 0.0  # 高頻快取最後更新時間（time.time()）
+STATUS_CACHE_STALE_SEC = 2.0  # 快取超過此秒數視為過期（NML 斷線）
+
 def ensure_cnc_connections():
     global cnc_cmd, cnc_stat
     if linuxcnc is None: return False

@@ -37,7 +37,8 @@
                 <!-- [2026-03-04] 關鍵操作色彩分層：綠=啟動、紅=停止、橙=暫停 -->
                 <!-- KEEP: status — CYCLE START 綠色(AUTO+RUNNING) -->
                 <!-- [2026-03-13] 只有 AUTO 模式下 RUNNING 才變綠（避免 MDI 指令閃綠） -->
-                <Button Content="{DynamicResource Str.Btn.CycleStart}" Command="{Binding CycleStartCommand}">
+                <!-- [2026-03-16] 按鈕防呆 -->
+                <Button Content="{DynamicResource Str.Btn.CycleStart}" Command="{Binding CycleStartCommand}" IsEnabled="{Binding CanCycleStart}">
                     <Button.Style>
                         <Style TargetType="Button" BasedOn="{StaticResource CycleBtnStyle}">
                             <Style.Triggers>
@@ -64,7 +65,8 @@
                     </Button.Style>
                 </Button>
                 <!-- KEEP: status — STOP IsPressed 紅色 -->
-                <Button Content="{DynamicResource Str.Btn.Stop}" Command="{Binding StopCommand}">
+                <!-- [2026-03-16] 按鈕防呆 -->
+                <Button Content="{DynamicResource Str.Btn.Stop}" Command="{Binding StopCommand}" IsEnabled="{Binding CanStop}">
                     <Button.Style>
                         <Style TargetType="Button" BasedOn="{StaticResource CycleBtnStyle}">
                             <Style.Triggers>
@@ -82,9 +84,11 @@
                         </Style>
                     </Button.Style>
                 </Button>
-                <Button Content="{DynamicResource Str.Btn.ReloadPgm}" Command="{Binding ReloadCommand}" Style="{StaticResource CycleBtnStyle}"/>
+                <!-- [2026-03-16] 按鈕防呆 -->
+                <Button Content="{DynamicResource Str.Btn.ReloadPgm}" Command="{Binding ReloadCommand}" Style="{StaticResource CycleBtnStyle}" IsEnabled="{Binding CanUpload}"/>
                 <!-- KEEP: status — FEED HOLD 橘色(PAUSED) -->
-                <Button Content="{DynamicResource Str.Btn.FeedHold}" Command="{Binding FeedHoldCommand}">
+                <!-- [2026-03-16] 按鈕防呆 -->
+                <Button Content="{DynamicResource Str.Btn.FeedHold}" Command="{Binding FeedHoldCommand}" IsEnabled="{Binding CanFeedHold}">
                     <Button.Style>
                         <Style TargetType="Button" BasedOn="{StaticResource CycleBtnStyle}">
                             <Style.Triggers>
@@ -105,9 +109,11 @@
                     </Button.Style>
                 </Button>
                 <!-- [2026-03-05] GO TO HOME → CLEAR PGM，對齊 PB 版 D_1 -->
-                <Button Content="{DynamicResource Str.Btn.ClearPgm}" Command="{Binding ClearProgramCommand}" Style="{StaticResource CycleBtnStyle}"/>
+                <!-- [2026-03-16] 按鈕防呆 -->
+                <Button Content="{DynamicResource Str.Btn.ClearPgm}" Command="{Binding ClearProgramCommand}" Style="{StaticResource CycleBtnStyle}" IsEnabled="{Binding CanUpload}"/>
                 <!-- [2026-02-24] SINGLE BLOCK 綁定 ToggleSingleBlockCommand，IsSingleBlock=true 時背景變藍 -->
-                <Button Content="{DynamicResource Str.Btn.SingleBlock}" Command="{Binding ToggleSingleBlockCommand}">
+                <!-- [2026-03-16] 按鈕防呆 -->
+                <Button Content="{DynamicResource Str.Btn.SingleBlock}" Command="{Binding ToggleSingleBlockCommand}" IsEnabled="{Binding CanMdi}">
                     <Button.Style>
                         <Style TargetType="Button" BasedOn="{StaticResource CycleBtnStyle}">
                             <Style.Triggers>
@@ -119,7 +125,8 @@
                         </Style>
                     </Button.Style>
                 </Button>
-                <Button Content="{DynamicResource Str.Btn.Flood}" Command="{Binding ToggleFloodCommand}">
+                <!-- [2026-03-16] 按鈕防呆 -->
+                <Button Content="{DynamicResource Str.Btn.Flood}" Command="{Binding ToggleFloodCommand}" IsEnabled="{Binding CanMdi}">
                     <Button.Style>
                         <Style TargetType="Button" BasedOn="{StaticResource CycleBtnStyle}">
                             <Style.Triggers>
@@ -133,7 +140,8 @@
                     </Button.Style>
                 </Button>
                 <!-- [2026-03-04] BLOCK DELETE 綁定 ToggleBlockDeleteCommand，IsBlockDelete=true 時背景變藍 -->
-                <Button Content="{DynamicResource Str.Btn.BlockDelete}" Command="{Binding ToggleBlockDeleteCommand}">
+                <!-- [2026-03-16] 按鈕防呆 -->
+                <Button Content="{DynamicResource Str.Btn.BlockDelete}" Command="{Binding ToggleBlockDeleteCommand}" IsEnabled="{Binding CanMdi}">
                     <Button.Style>
                         <Style TargetType="Button" BasedOn="{StaticResource CycleBtnStyle}">
                             <Style.Triggers>
@@ -146,7 +154,8 @@
                     </Button.Style>
                 </Button>
                 <!-- [2026-02-23] 新增 MIST 按鈕連結 ToggleMistCommand，IsMistOn=true 時背景變藍 -->
-                <Button Content="{DynamicResource Str.Btn.Mist}" Command="{Binding ToggleMistCommand}">
+                <!-- [2026-03-16] 按鈕防呆 -->
+                <Button Content="{DynamicResource Str.Btn.Mist}" Command="{Binding ToggleMistCommand}" IsEnabled="{Binding CanMdi}">
                     <Button.Style>
                         <Style TargetType="Button" BasedOn="{StaticResource CycleBtnStyle}">
                             <Style.Triggers>
@@ -159,7 +168,8 @@
                     </Button.Style>
                 </Button>
                 <!-- [2026-03-04] M01 BREAK 綁定 ToggleOptionalStopCommand，IsOptionalStop=true 時背景變藍 -->
-                <Button Content="{DynamicResource Str.Btn.M01Break}" Command="{Binding ToggleOptionalStopCommand}">
+                <!-- [2026-03-16] 按鈕防呆 -->
+                <Button Content="{DynamicResource Str.Btn.M01Break}" Command="{Binding ToggleOptionalStopCommand}" IsEnabled="{Binding CanMdi}">
                     <Button.Style>
                         <Style TargetType="Button" BasedOn="{StaticResource CycleBtnStyle}">
                             <Style.Triggers>

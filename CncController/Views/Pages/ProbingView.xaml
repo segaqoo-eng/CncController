@@ -29,10 +29,13 @@
         </Style>
 
         <!-- [2026-03-04] 九宮格探測按鈕（淺色底 + Canvas 繪圖，保留獨立 Template） -->
+        <!-- [2026-03-16] ToolTip 延長顯示 30 秒，讓使用者有足夠時間閱讀操作提示 -->
         <Style x:Key="ProbeGridBtnStyle" TargetType="Button">
             <Setter Property="Margin" Value="4"/>
             <Setter Property="Padding" Value="2"/>
             <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="ToolTipService.ShowDuration" Value="30000"/>
+            <Setter Property="ToolTipService.InitialShowDelay" Value="300"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
@@ -80,6 +83,10 @@
             </Setter>
             <Style.Triggers>
                 <DataTrigger Binding="{Binding IsProbing}" Value="True">
+                    <Setter Property="IsEnabled" Value="False"/>
+                </DataTrigger>
+                <!-- [2026-03-16] 按鈕防呆：機台狀態不允許時禁用探測 -->
+                <DataTrigger Binding="{Binding DataContext.CanProbe, RelativeSource={RelativeSource AncestorType=Window}}" Value="False">
                     <Setter Property="IsEnabled" Value="False"/>
                 </DataTrigger>
             </Style.Triggers>
@@ -557,7 +564,7 @@
 
                         <!-- NW：外角左上（→↓）工件在右下 -->
                         <Button Command="{Binding ProbeNWCommand}" Style="{StaticResource ProbeGridBtnStyle}"
-                                ToolTip="Outside Corner NW (X+, Y-)">
+                                ToolTip="【外角 NW】探測工件左上角&#10;━━━━━━━━━━━━━━━━━━━━━━━━━━&#10;▶ 作法：將探測棒移到工件左上角外側&#10;  → 先往 X+ 探測西邊，再往 Y- 探測北邊&#10;  → 取得角落 (X, Y) 座標&#10;&#10;▶ 結果：X- PROBE / Y- PROBE / Z- PROBE&#10;&#10;▶ 必設參數（左側面板）：&#10;  • Probe Tool # — 探測棒刀號&#10;  • Fast Probe F — 探測速率 (越慢越準)&#10;  • XY Max Dist — 最大搜尋距離&#10;  • Z Clearance + Extra Depth — Z 下降量&#10;&#10;⚠ 注意：確保探測棒在工件外側，&#10;   且 XY Max Dist 大於探測棒到工件的距離">
                             <Canvas Width="110" Height="110">
                                 <Rectangle Canvas.Left="40" Canvas.Top="40" Width="70" Height="70" Fill="#BBBBBB"/>
                                 <Ellipse Canvas.Left="8" Canvas.Top="8" Width="16" Height="16" Fill="#8B5CF6"/>
@@ -573,7 +580,7 @@
 
                         <!-- N：北側邊緣（↓）工件在下方 -->
                         <Button Command="{Binding ProbeNCommand}" Style="{StaticResource ProbeGridBtnStyle}"
-                                ToolTip="Edge N (Y-)">
+                                ToolTip="【北邊 N】探測工件上表面邊緣&#10;━━━━━━━━━━━━━━━━━━━━━━━━━━&#10;▶ 作法：將探測棒移到工件上方&#10;  → 往 Y- 方向移動，碰到工件北邊&#10;  → 取得 Y 座標&#10;&#10;▶ 結果：Y- PROBE / Z- PROBE&#10;&#10;▶ 必設參數：&#10;  • Probe Tool # — 探測棒刀號&#10;  • Fast Probe F — 探測速率&#10;  • XY Max Dist — 最大搜尋距離&#10;  • Z Clearance + Extra Depth — Z 下降量&#10;&#10;⚠ 注意：探測棒必須在工件北側上方，&#10;   且距離工件 &lt; XY Max Dist">
                             <Canvas Width="110" Height="110">
                                 <Rectangle Canvas.Left="0" Canvas.Top="55" Width="110" Height="55" Fill="#BBBBBB"/>
                                 <Ellipse Canvas.Left="47" Canvas.Top="12" Width="16" Height="16" Fill="#8B5CF6"/>
@@ -585,7 +592,7 @@
 
                         <!-- NE：外角右上（←↓）工件在左下 -->
                         <Button Command="{Binding ProbeNECommand}" Style="{StaticResource ProbeGridBtnStyle}"
-                                ToolTip="Outside Corner NE (X-, Y-)">
+                                ToolTip="【外角 NE】探測工件右上角&#10;━━━━━━━━━━━━━━━━━━━━━━━━━━&#10;▶ 作法：將探測棒移到工件右上角外側&#10;  → 先往 X- 探測東邊，再往 Y- 探測北邊&#10;  → 取得角落 (X, Y) 座標&#10;&#10;▶ 結果：X- PROBE / Y- PROBE / Z- PROBE&#10;&#10;▶ 必設參數：&#10;  • Probe Tool # / Fast Probe F&#10;  • XY Max Dist / Z Clearance / Extra Depth&#10;&#10;⚠ 注意：確保探測棒在工件外側">
                             <Canvas Width="110" Height="110">
                                 <Rectangle Canvas.Left="0" Canvas.Top="40" Width="70" Height="70" Fill="#BBBBBB"/>
                                 <Ellipse Canvas.Left="86" Canvas.Top="8" Width="16" Height="16" Fill="#8B5CF6"/>
@@ -601,7 +608,7 @@
 
                         <!-- W：西側邊緣（→）工件在右側 -->
                         <Button Command="{Binding ProbeWCommand}" Style="{StaticResource ProbeGridBtnStyle}"
-                                ToolTip="Edge W (X+)">
+                                ToolTip="【西邊 W】探測工件左側邊緣&#10;━━━━━━━━━━━━━━━━━━━━━━━━━━&#10;▶ 作法：將探測棒移到工件左側&#10;  → 往 X+ 方向移動，碰到工件西邊&#10;  → 取得 X 座標&#10;&#10;▶ 結果：X- PROBE / Z- PROBE&#10;&#10;▶ 必設參數：&#10;  • Probe Tool # — 探測棒刀號&#10;  • Fast Probe F — 探測速率&#10;  • XY Max Dist — 最大搜尋距離&#10;  • Z Clearance + Extra Depth — Z 下降量&#10;&#10;⚠ 注意：探測棒必須在工件左側，&#10;   且距離工件 &lt; XY Max Dist">
                             <Canvas Width="110" Height="110">
                                 <Rectangle Canvas.Left="55" Canvas.Top="0" Width="55" Height="110" Fill="#BBBBBB"/>
                                 <Ellipse Canvas.Left="12" Canvas.Top="47" Width="16" Height="16" Fill="#8B5CF6"/>
@@ -613,7 +620,7 @@
 
                         <!-- Center：4 邊中心探測（⊕）-->
                         <Button Command="{Binding ProbeCenterCommand}" Style="{StaticResource ProbeGridBtnStyle}"
-                                ToolTip="Center (4-edge probe)">
+                                ToolTip="【中心 CENTER】四邊探測取中心點&#10;━━━━━━━━━━━━━━━━━━━━━━━━━━&#10;▶ 作法：將探測棒移到工件正上方（大約中心）&#10;  → 自動探 4 方向（W→E→S→N）&#10;  → 計算中心 = (X++X-)/2, (Y++Y-)/2&#10;  → 計算寬度 = |X+-X-|, |Y+-Y-|&#10;&#10;▶ 結果：X CENTER / Y CENTER&#10;        X WIDTH / Y WIDTH / Z- PROBE&#10;&#10;▶ 必設參數：&#10;  • Probe Tool # / Fast Probe F&#10;  • XY Max Dist — 從中心到邊的最大距離&#10;  • Z Clearance + Extra Depth&#10;&#10;⚠ 注意：探測棒必須在工件上方中心附近，&#10;   XY Max Dist 要大於工件半寬&#10;   （否則探測棒到不了邊緣→失敗）">
                             <Canvas Width="110" Height="110">
                                 <Rectangle Canvas.Left="15" Canvas.Top="15" Width="80" Height="80"
                                            Fill="Transparent" Stroke="#BBBBBB" StrokeThickness="2"/>
@@ -634,7 +641,7 @@
 
                         <!-- E：東側邊緣（←）工件在左側 -->
                         <Button Command="{Binding ProbeECommand}" Style="{StaticResource ProbeGridBtnStyle}"
-                                ToolTip="Edge E (X-)">
+                                ToolTip="【東邊 E】探測工件右側邊緣&#10;━━━━━━━━━━━━━━━━━━━━━━━━━━&#10;▶ 作法：將探測棒移到工件右側&#10;  → 往 X- 方向移動，碰到工件東邊&#10;  → 取得 X 座標&#10;&#10;▶ 結果：X- PROBE / Z- PROBE&#10;&#10;▶ 必設參數：&#10;  • Probe Tool # / Fast Probe F&#10;  • XY Max Dist / Z Clearance / Extra Depth&#10;&#10;⚠ 注意：探測棒必須在工件右側">
                             <Canvas Width="110" Height="110">
                                 <Rectangle Canvas.Left="0" Canvas.Top="0" Width="55" Height="110" Fill="#BBBBBB"/>
                                 <Ellipse Canvas.Left="82" Canvas.Top="47" Width="16" Height="16" Fill="#8B5CF6"/>
@@ -646,7 +653,7 @@
 
                         <!-- SW：外角左下（→↑）工件在右上 -->
                         <Button Command="{Binding ProbeSWCommand}" Style="{StaticResource ProbeGridBtnStyle}"
-                                ToolTip="Outside Corner SW (X+, Y+)">
+                                ToolTip="【外角 SW】探測工件左下角&#10;━━━━━━━━━━━━━━━━━━━━━━━━━━&#10;▶ 作法：將探測棒移到工件左下角外側&#10;  → 先往 X+ 探測西邊，再往 Y+ 探測南邊&#10;  → 取得角落 (X, Y) 座標&#10;&#10;▶ 結果：X- PROBE / Y- PROBE / Z- PROBE&#10;&#10;▶ 必設參數：&#10;  • Probe Tool # / Fast Probe F&#10;  • XY Max Dist / Z Clearance / Extra Depth&#10;&#10;⚠ 注意：確保探測棒在工件外側">
                             <Canvas Width="110" Height="110">
                                 <Rectangle Canvas.Left="40" Canvas.Top="0" Width="70" Height="70" Fill="#BBBBBB"/>
                                 <Ellipse Canvas.Left="8" Canvas.Top="86" Width="16" Height="16" Fill="#8B5CF6"/>
@@ -662,7 +669,7 @@
 
                         <!-- S：南側邊緣（↑）工件在上方 -->
                         <Button Command="{Binding ProbeSCommand}" Style="{StaticResource ProbeGridBtnStyle}"
-                                ToolTip="Edge S (Y+)">
+                                ToolTip="【南邊 S】探測工件下表面邊緣&#10;━━━━━━━━━━━━━━━━━━━━━━━━━━&#10;▶ 作法：將探測棒移到工件下方&#10;  → 往 Y+ 方向移動，碰到工件南邊&#10;  → 取得 Y 座標&#10;&#10;▶ 結果：Y- PROBE / Z- PROBE&#10;&#10;▶ 必設參數：&#10;  • Probe Tool # / Fast Probe F&#10;  • XY Max Dist / Z Clearance / Extra Depth&#10;&#10;⚠ 注意：探測棒必須在工件南側">
                             <Canvas Width="110" Height="110">
                                 <Rectangle Canvas.Left="0" Canvas.Top="0" Width="110" Height="55" Fill="#BBBBBB"/>
                                 <Ellipse Canvas.Left="47" Canvas.Top="82" Width="16" Height="16" Fill="#8B5CF6"/>
@@ -674,7 +681,7 @@
 
                         <!-- SE：外角右下（←↑）工件在左上 -->
                         <Button Command="{Binding ProbeSECommand}" Style="{StaticResource ProbeGridBtnStyle}"
-                                ToolTip="Outside Corner SE (X-, Y+)">
+                                ToolTip="【外角 SE】探測工件右下角&#10;━━━━━━━━━━━━━━━━━━━━━━━━━━&#10;▶ 作法：將探測棒移到工件右下角外側&#10;  → 先往 X- 探測東邊，再往 Y+ 探測南邊&#10;  → 取得角落 (X, Y) 座標&#10;&#10;▶ 結果：X- PROBE / Y- PROBE / Z- PROBE&#10;&#10;▶ 必設參數：&#10;  • Probe Tool # / Fast Probe F&#10;  • XY Max Dist / Z Clearance / Extra Depth&#10;&#10;⚠ 注意：確保探測棒在工件外側">
                             <Canvas Width="110" Height="110">
                                 <Rectangle Canvas.Left="0" Canvas.Top="0" Width="70" Height="70" Fill="#BBBBBB"/>
                                 <Ellipse Canvas.Left="86" Canvas.Top="86" Width="16" Height="16" Fill="#8B5CF6"/>
@@ -711,7 +718,7 @@
 
                         <!-- Inside NW：內角左上 — 牆壁在左+上，口袋在右下，探針在右下區域向←↑探 -->
                         <Button Command="{Binding ProbeInsideNWCommand}" Style="{StaticResource ProbeGridBtnStyle}"
-                                ToolTip="Inside Corner NW (X-, Y+)">
+                                ToolTip="【內角 NW】探測腔體左上角內壁&#10;━━━━━━━━━━━━━━━━━━━━━━━━━━&#10;▶ 作法：將探測棒移到腔體內部（靠近左上角）&#10;  → 先往 X- 探測西壁，再往 Y+ 探測北壁&#10;  → 取得內角 (X, Y) 座標&#10;&#10;▶ 結果：X- PROBE / Y- PROBE / Z- PROBE&#10;&#10;▶ 必設參數：&#10;  • Probe Tool # / Fast Probe F&#10;  • XY Max Dist — 到壁面的最大距離&#10;  • Z Clearance + Extra Depth&#10;&#10;⚠ 注意：探測棒必須在腔體「裡面」，&#10;   不可在腔體外面（否則會撞到外壁）">
                             <Canvas Width="110" Height="110">
                                 <Rectangle Canvas.Left="0" Canvas.Top="0" Width="40" Height="110" Fill="#BBBBBB"/>
                                 <Rectangle Canvas.Left="0" Canvas.Top="0" Width="110" Height="40" Fill="#BBBBBB"/>
@@ -728,7 +735,7 @@
 
                         <!-- Inside N：內側北壁 — 牆壁在上，口袋在下，探針向↑探 -->
                         <Button Command="{Binding ProbeInsideNCommand}" Style="{StaticResource ProbeGridBtnStyle}"
-                                ToolTip="Inside Edge N (toward Y+ wall)">
+                                ToolTip="【內壁 N】探測腔體北壁（上壁）&#10;━━━━━━━━━━━━━━━━━━━━━━━━━━&#10;▶ 作法：探測棒在腔體內部&#10;  → 往 Y+ 方向移動，碰到北壁&#10;  → 取得 Y 座標&#10;&#10;▶ 結果：Y- PROBE / Z- PROBE&#10;&#10;▶ 必設參數：&#10;  • Probe Tool # / Fast Probe F&#10;  • XY Max Dist — 到壁面的最大距離&#10;  • Z Clearance + Extra Depth&#10;&#10;⚠ 注意：探測棒必須在腔體內部">
                             <Canvas Width="110" Height="110">
                                 <Rectangle Canvas.Left="0" Canvas.Top="0" Width="110" Height="40" Fill="#BBBBBB"/>
                                 <Ellipse Canvas.Left="47" Canvas.Top="72" Width="16" Height="16" Fill="#8B5CF6"/>
@@ -740,7 +747,7 @@
 
                         <!-- Inside NE：內角右上 — 牆壁在右+上，口袋在左下 -->
                         <Button Command="{Binding ProbeInsideNECommand}" Style="{StaticResource ProbeGridBtnStyle}"
-                                ToolTip="Inside Corner NE (X+, Y+)">
+                                ToolTip="【內角 NE】探測腔體右上角內壁&#10;━━━━━━━━━━━━━━━━━━━━━━━━━━&#10;▶ 作法：探測棒在腔體內部（靠近右上角）&#10;  → 先往 X+ 探測東壁，再往 Y+ 探測北壁&#10;&#10;▶ 結果：X- PROBE / Y- PROBE / Z- PROBE&#10;&#10;▶ 必設參數：&#10;  • Probe Tool # / Fast Probe F&#10;  • XY Max Dist / Z Clearance / Extra Depth&#10;&#10;⚠ 注意：探測棒必須在腔體「裡面」">
                             <Canvas Width="110" Height="110">
                                 <Rectangle Canvas.Left="70" Canvas.Top="0" Width="40" Height="110" Fill="#BBBBBB"/>
                                 <Rectangle Canvas.Left="0" Canvas.Top="0" Width="110" Height="40" Fill="#BBBBBB"/>
@@ -757,7 +764,7 @@
 
                         <!-- Inside W：內側西壁 — 牆壁在左，口袋在右，探針向←探 -->
                         <Button Command="{Binding ProbeInsideWCommand}" Style="{StaticResource ProbeGridBtnStyle}"
-                                ToolTip="Inside Edge W (toward X- wall)">
+                                ToolTip="【內壁 W】探測腔體西壁（左壁）&#10;━━━━━━━━━━━━━━━━━━━━━━━━━━&#10;▶ 作法：探測棒在腔體內部&#10;  → 往 X- 方向移動，碰到西壁&#10;  → 取得 X 座標&#10;&#10;▶ 結果：X- PROBE / Z- PROBE&#10;&#10;▶ 必設參數：&#10;  • Probe Tool # / Fast Probe F&#10;  • XY Max Dist / Z Clearance / Extra Depth&#10;&#10;⚠ 注意：探測棒必須在腔體內部">
                             <Canvas Width="110" Height="110">
                                 <Rectangle Canvas.Left="0" Canvas.Top="0" Width="40" Height="110" Fill="#BBBBBB"/>
                                 <Ellipse Canvas.Left="72" Canvas.Top="47" Width="16" Height="16" Fill="#8B5CF6"/>
@@ -769,7 +776,7 @@
 
                         <!-- Inside Center：口袋中心（⊕）4 壁探測 -->
                         <Button Command="{Binding ProbeInsideCenterCommand}" Style="{StaticResource ProbeGridBtnStyle}"
-                                ToolTip="Inside Center (4-wall probe)">
+                                ToolTip="【內部中心】四壁探測取腔體中心&#10;━━━━━━━━━━━━━━━━━━━━━━━━━━&#10;▶ 作法：將探測棒移到腔體內部中心附近&#10;  → 自動探 4 壁（W→E→S→N）&#10;  → 計算中心 = (東壁+西壁)/2, (南壁+北壁)/2&#10;  → 計算寬度 = |東壁-西壁|, |南壁-北壁|&#10;&#10;▶ 結果：X CENTER / Y CENTER&#10;        X WIDTH / Y WIDTH / Z- PROBE&#10;&#10;▶ 必設參數：&#10;  • Probe Tool # / Fast Probe F&#10;  • XY Max Dist — 從中心到壁面的最大距離&#10;  • Z Clearance + Extra Depth&#10;&#10;⚠ 注意：探測棒要在腔體中心附近，&#10;   XY Max Dist 要大於腔體半寬">
                             <Canvas Width="110" Height="110">
                                 <Rectangle Canvas.Left="5" Canvas.Top="5" Width="100" Height="100"
                                            Fill="Transparent" Stroke="#BBBBBB" StrokeThickness="3"/>
@@ -790,7 +797,7 @@
 
                         <!-- Inside E：內側東壁 — 牆壁在右，口袋在左，探針向→探 -->
                         <Button Command="{Binding ProbeInsideECommand}" Style="{StaticResource ProbeGridBtnStyle}"
-                                ToolTip="Inside Edge E (toward X+ wall)">
+                                ToolTip="【內壁 E】探測腔體東壁（右壁）&#10;━━━━━━━━━━━━━━━━━━━━━━━━━━&#10;▶ 作法：探測棒在腔體內部&#10;  → 往 X+ 方向移動，碰到東壁&#10;&#10;▶ 結果：X- PROBE / Z- PROBE&#10;&#10;▶ 必設參數：&#10;  • Probe Tool # / Fast Probe F&#10;  • XY Max Dist / Z Clearance / Extra Depth&#10;&#10;⚠ 注意：探測棒必須在腔體內部">
                             <Canvas Width="110" Height="110">
                                 <Rectangle Canvas.Left="70" Canvas.Top="0" Width="40" Height="110" Fill="#BBBBBB"/>
                                 <Ellipse Canvas.Left="22" Canvas.Top="47" Width="16" Height="16" Fill="#8B5CF6"/>
@@ -802,7 +809,7 @@
 
                         <!-- Inside SW：內角左下 — 牆壁在左+下，口袋在右上 -->
                         <Button Command="{Binding ProbeInsideSWCommand}" Style="{StaticResource ProbeGridBtnStyle}"
-                                ToolTip="Inside Corner SW (X-, Y-)">
+                                ToolTip="【內角 SW】探測腔體左下角內壁&#10;━━━━━━━━━━━━━━━━━━━━━━━━━━&#10;▶ 作法：探測棒在腔體內部（靠近左下角）&#10;  → 先往 X- 探測西壁，再往 Y- 探測南壁&#10;&#10;▶ 結果：X- PROBE / Y- PROBE / Z- PROBE&#10;&#10;▶ 必設參數：&#10;  • Probe Tool # / Fast Probe F&#10;  • XY Max Dist / Z Clearance / Extra Depth&#10;&#10;⚠ 注意：探測棒必須在腔體「裡面」">
                             <Canvas Width="110" Height="110">
                                 <Rectangle Canvas.Left="0" Canvas.Top="0" Width="40" Height="110" Fill="#BBBBBB"/>
                                 <Rectangle Canvas.Left="0" Canvas.Top="70" Width="110" Height="40" Fill="#BBBBBB"/>
@@ -819,7 +826,7 @@
 
                         <!-- Inside S：內側南壁 — 牆壁在下，口袋在上，探針向↓探 -->
                         <Button Command="{Binding ProbeInsideSCommand}" Style="{StaticResource ProbeGridBtnStyle}"
-                                ToolTip="Inside Edge S (toward Y- wall)">
+                                ToolTip="【內壁 S】探測腔體南壁（下壁）&#10;━━━━━━━━━━━━━━━━━━━━━━━━━━&#10;▶ 作法：探測棒在腔體內部&#10;  → 往 Y- 方向移動，碰到南壁&#10;&#10;▶ 結果：Y- PROBE / Z- PROBE&#10;&#10;▶ 必設參數：&#10;  • Probe Tool # / Fast Probe F&#10;  • XY Max Dist / Z Clearance / Extra Depth&#10;&#10;⚠ 注意：探測棒必須在腔體內部">
                             <Canvas Width="110" Height="110">
                                 <Rectangle Canvas.Left="0" Canvas.Top="70" Width="110" Height="40" Fill="#BBBBBB"/>
                                 <Ellipse Canvas.Left="47" Canvas.Top="22" Width="16" Height="16" Fill="#8B5CF6"/>
@@ -831,7 +838,7 @@
 
                         <!-- Inside SE：內角右下 — 牆壁在右+下，口袋在左上 -->
                         <Button Command="{Binding ProbeInsideSECommand}" Style="{StaticResource ProbeGridBtnStyle}"
-                                ToolTip="Inside Corner SE (X+, Y-)">
+                                ToolTip="【內角 SE】探測腔體右下角內壁&#10;━━━━━━━━━━━━━━━━━━━━━━━━━━&#10;▶ 作法：探測棒在腔體內部（靠近右下角）&#10;  → 先往 X+ 探測東壁，再往 Y- 探測南壁&#10;&#10;▶ 結果：X- PROBE / Y- PROBE / Z- PROBE&#10;&#10;▶ 必設參數：&#10;  • Probe Tool # / Fast Probe F&#10;  • XY Max Dist / Z Clearance / Extra Depth&#10;&#10;⚠ 注意：探測棒必須在腔體「裡面」">
                             <Canvas Width="110" Height="110">
                                 <Rectangle Canvas.Left="70" Canvas.Top="0" Width="40" Height="110" Fill="#BBBBBB"/>
                                 <Rectangle Canvas.Left="0" Canvas.Top="70" Width="110" Height="40" Fill="#BBBBBB"/>
@@ -872,7 +879,7 @@
 
                         <!-- Boss X：僅探 X 兩側 -->
                         <Button Command="{Binding ProbeBossXCommand}" Style="{StaticResource ProbeGridBtnStyle}"
-                                ToolTip="Boss X — probe X+/X- sides from outside">
+                                ToolTip="【Boss X】凸台 X 兩側探測&#10;━━━━━━━━━━━━━━━━━━━━━━━━━━&#10;▶ 作法：將探測棒移到凸台正上方中心&#10;  → 自動往 X+ 外移 (DIAM/2+安全距離)&#10;  → 下降 Z → 往 X- 探測 → 取得 X+ 側座標&#10;  → 回到原位 → 反方向重複 → 取得 X- 側座標&#10;  → 計算中心 / 寬度&#10;&#10;▶ 結果：X CENTER / X WIDTH / Z- PROBE&#10;&#10;▶ 必設參數：&#10;  • 通用：Probe Tool # / Fast Probe F&#10;  • 通用：XY Max Dist / Z Clearance / Extra Depth&#10;  • ★ DIAM — 凸台的大約直徑（非常重要！）&#10;    決定探測棒往外移多遠，設太小會撞到凸台&#10;&#10;⚠ 注意：DIAM 必須 ≥ 凸台實際直徑，&#10;   否則探測棒還在凸台上方就下降→撞刀！">
                             <Canvas Width="120" Height="110">
                                 <Rectangle Canvas.Left="30" Canvas.Top="15" Width="60" Height="80" Fill="#BBBBBB"/>
                                 <!-- 綠色十字 -->
@@ -895,7 +902,7 @@
 
                         <!-- Boss Y：僅探 Y 兩側 -->
                         <Button Command="{Binding ProbeBossYCommand}" Style="{StaticResource ProbeGridBtnStyle}"
-                                ToolTip="Boss Y — probe Y+/Y- sides from outside">
+                                ToolTip="【Boss Y】凸台 Y 兩側探測&#10;━━━━━━━━━━━━━━━━━━━━━━━━━━&#10;▶ 作法：探測棒在凸台正上方中心&#10;  → 往 Y+/Y- 各外移一次 → 探測兩側&#10;  → 計算 Y 中心 / Y 寬度&#10;&#10;▶ 結果：Y CENTER / Y WIDTH / Z- PROBE&#10;&#10;▶ 必設參數：&#10;  • 通用參數 + ★ DIAM（凸台大約直徑）&#10;&#10;⚠ 注意：DIAM 必須 ≥ 凸台實際尺寸">
                             <Canvas Width="120" Height="110">
                                 <Rectangle Canvas.Left="30" Canvas.Top="15" Width="60" Height="80" Fill="#BBBBBB"/>
                                 <!-- 綠色十字 -->
@@ -918,7 +925,7 @@
 
                         <!-- Boss XY：探 4 面 -->
                         <Button Command="{Binding ProbeBossXyCommand}" Style="{StaticResource ProbeGridBtnStyle}"
-                                ToolTip="Boss XY — probe all 4 sides from outside">
+                                ToolTip="【Boss XY】凸台四面完整探測&#10;━━━━━━━━━━━━━━━━━━━━━━━━━━&#10;▶ 作法：探測棒在凸台正上方中心&#10;  → 依序往 X+/X-/Y+/Y- 外移並探測&#10;  → 取得四側座標 → 計算中心 + 寬度&#10;&#10;▶ 結果：X CENTER / Y CENTER&#10;        X WIDTH / Y WIDTH / Z- PROBE / DIAM&#10;&#10;▶ 必設參數：&#10;  • 通用參數 + ★ DIAM（凸台大約直徑）&#10;  • X offset / Y offset — 如不在正中心&#10;&#10;⚠ 注意：DIAM 必須 ≥ 凸台實際直徑！&#10;   探測棒起始位置要在凸台正上方">
                             <Canvas Width="120" Height="110">
                                 <Rectangle Canvas.Left="30" Canvas.Top="15" Width="60" Height="80" Fill="#BBBBBB"/>
                                 <!-- 綠色十字 -->
@@ -951,7 +958,7 @@
 
                         <!-- Pocket X：僅探 X 兩壁 -->
                         <Button Command="{Binding ProbePocketXCommand}" Style="{StaticResource ProbeGridBtnStyle}"
-                                ToolTip="Pocket X — probe X+/X- walls from inside">
+                                ToolTip="【Pocket X】凹穴 X 兩壁探測&#10;━━━━━━━━━━━━━━━━━━━━━━━━━━&#10;▶ 作法：將探測棒移到凹穴內部中心&#10;  → 往 X+ 探測東壁 → 回到原位&#10;  → 往 X- 探測西壁 → 回到原位&#10;  → 計算 X 中心 / X 寬度&#10;&#10;▶ 結果：X CENTER / X WIDTH / Z- PROBE&#10;&#10;▶ 必設參數：&#10;  • Probe Tool # / Fast Probe F&#10;  • XY Max Dist — 從中心到壁面的最大距離&#10;  • Z Clearance + Extra Depth&#10;&#10;⚠ 注意：探測棒必須在凹穴「裡面」，&#10;   XY Max Dist 要大於凹穴半寬">
                             <Canvas Width="120" Height="110">
                                 <Rectangle Canvas.Left="20" Canvas.Top="10" Width="80" Height="90"
                                            Fill="Transparent" Stroke="#BBBBBB" StrokeThickness="7"/>
@@ -975,7 +982,7 @@
 
                         <!-- Pocket Y：僅探 Y 兩壁 -->
                         <Button Command="{Binding ProbePocketYCommand}" Style="{StaticResource ProbeGridBtnStyle}"
-                                ToolTip="Pocket Y — probe Y+/Y- walls from inside">
+                                ToolTip="【Pocket Y】凹穴 Y 兩壁探測&#10;━━━━━━━━━━━━━━━━━━━━━━━━━━&#10;▶ 作法：探測棒在凹穴內部中心&#10;  → 往 Y+/Y- 各探測一壁&#10;  → 計算 Y 中心 / Y 寬度&#10;&#10;▶ 結果：Y CENTER / Y WIDTH / Z- PROBE&#10;&#10;▶ 必設參數：&#10;  • 通用參數（Probe Tool #、Fast Probe F 等）&#10;  • XY Max Dist 要大於凹穴半寬&#10;&#10;⚠ 注意：探測棒必須在凹穴「裡面」">
                             <Canvas Width="120" Height="110">
                                 <Rectangle Canvas.Left="20" Canvas.Top="10" Width="80" Height="90"
                                            Fill="Transparent" Stroke="#BBBBBB" StrokeThickness="7"/>
@@ -999,7 +1006,7 @@
 
                         <!-- Pocket XY：探 4 壁 -->
                         <Button Command="{Binding ProbePocketXyCommand}" Style="{StaticResource ProbeGridBtnStyle}"
-                                ToolTip="Pocket XY — probe all 4 walls from inside">
+                                ToolTip="【Pocket XY】凹穴四壁完整探測&#10;━━━━━━━━━━━━━━━━━━━━━━━━━━&#10;▶ 作法：探測棒在凹穴內部中心&#10;  → 依序探 4 壁（東→西→南→北）&#10;  → 計算中心 + 寬度&#10;&#10;▶ 結果：X CENTER / Y CENTER&#10;        X WIDTH / Y WIDTH / Z- PROBE&#10;&#10;▶ 必設參數：&#10;  • 通用參數&#10;  • XY Max Dist 要大於凹穴半寬&#10;  • X offset / Y offset — 如不在正中心&#10;&#10;⚠ 注意：探測棒起始位置要在凹穴中心附近">
                             <Canvas Width="120" Height="110">
                                 <Rectangle Canvas.Left="20" Canvas.Top="10" Width="80" Height="90"
                                            Fill="Transparent" Stroke="#BBBBBB" StrokeThickness="7"/>
@@ -1095,7 +1102,7 @@
                     <UniformGrid Rows="2" Columns="3">
                         <!-- Top Row: Ridge（從外向內探） -->
                         <Button Command="{Binding ProbeRidgeXCommand}" Style="{StaticResource ProbeGridBtnStyle}"
-                                ToolTip="Ridge X — probe X sides from outside">
+                                ToolTip="【Ridge X】凸條 X 兩側探測&#10;━━━━━━━━━━━━━━━━━━━━━━━━━━&#10;▶ 作法：探測棒在凸條正上方&#10;  → 往 X+ 外移 → 下降 → 往 X- 探測回來&#10;  → 回到原位 → 反方向重複&#10;  → 計算 X 中心 / X 寬度&#10;&#10;▶ 結果：X CENTER / X WIDTH / Z- PROBE&#10;&#10;▶ 必設參數：&#10;  • 通用參數&#10;  • ★ HINT X / Y — 特徵中心偏移&#10;&#10;⚠ 注意：同 Boss，從外面探入">
                             <Canvas Width="120" Height="110">
                                 <Rectangle Canvas.Left="45" Canvas.Top="10" Width="30" Height="90" Fill="#BBBBBB"/>
                                 <Ellipse Canvas.Left="14" Canvas.Top="48" Width="12" Height="12" Fill="#8B5CF6"/>
@@ -1111,7 +1118,7 @@
                             </Canvas>
                         </Button>
                         <Button Command="{Binding ProbeRidgeYCommand}" Style="{StaticResource ProbeGridBtnStyle}"
-                                ToolTip="Ridge Y — probe Y sides from outside">
+                                ToolTip="【Ridge Y】凸條 Y 兩側探測&#10;━━━━━━━━━━━━━━━━━━━━━━━━━━&#10;▶ 作法：同 Ridge X，但探 Y 方向兩側&#10;&#10;▶ 結果：Y CENTER / Y WIDTH / Z- PROBE&#10;&#10;▶ 必設參數：通用參數 + HINT X/Y&#10;&#10;⚠ 注意：同 Boss，從外面探入">
                             <Canvas Width="120" Height="110">
                                 <Rectangle Canvas.Left="15" Canvas.Top="35" Width="90" Height="30" Fill="#BBBBBB"/>
                                 <Ellipse Canvas.Left="54" Canvas.Top="8" Width="12" Height="12" Fill="#8B5CF6"/>
@@ -1127,7 +1134,7 @@
                             </Canvas>
                         </Button>
                         <Button Command="{Binding ProbeRidgeXyCommand}" Style="{StaticResource ProbeGridBtnStyle}"
-                                ToolTip="Ridge XY — probe all 4 sides from outside">
+                                ToolTip="【Ridge XY】凸條四面完整探測&#10;━━━━━━━━━━━━━━━━━━━━━━━━━━&#10;▶ 作法：同 Boss XY，四面探測取中心+寬度&#10;&#10;▶ 結果：X/Y CENTER / X/Y WIDTH / Z- PROBE&#10;&#10;▶ 必設參數：通用參數 + HINT X/Y&#10;&#10;⚠ 注意：同 Boss XY，從外面探入">
                             <Canvas Width="120" Height="110">
                                 <Rectangle Canvas.Left="35" Canvas.Top="20" Width="50" Height="70" Fill="#BBBBBB"/>
                                 <Ellipse Canvas.Left="8" Canvas.Top="48" Width="12" Height="12" Fill="#8B5CF6"/>
@@ -1150,7 +1157,7 @@
                         </Button>
                         <!-- Bottom Row: Valley（從內向外探） -->
                         <Button Command="{Binding ProbeValleyXCommand}" Style="{StaticResource ProbeGridBtnStyle}"
-                                ToolTip="Valley X — probe X walls from inside">
+                                ToolTip="【Valley X】凹槽 X 兩壁探測&#10;━━━━━━━━━━━━━━━━━━━━━━━━━━&#10;▶ 作法：探測棒在凹槽內部&#10;  → 往 X+/X- 各探一壁&#10;  → 計算 X 中心 / X 寬度&#10;&#10;▶ 結果：X CENTER / X WIDTH / Z- PROBE&#10;&#10;▶ 必設參數：&#10;  • 通用參數&#10;  • ★ HINT X/Y — 特徵中心偏移&#10;&#10;⚠ 注意：探測棒必須在凹槽「裡面」">
                             <Canvas Width="120" Height="110">
                                 <Rectangle Canvas.Left="30" Canvas.Top="5" Width="60" Height="95"
                                            Fill="Transparent" Stroke="#BBBBBB" StrokeThickness="7"/>
@@ -1164,7 +1171,7 @@
                             </Canvas>
                         </Button>
                         <Button Command="{Binding ProbeValleyYCommand}" Style="{StaticResource ProbeGridBtnStyle}"
-                                ToolTip="Valley Y — probe Y walls from inside">
+                                ToolTip="【Valley Y】凹槽 Y 兩壁探測&#10;━━━━━━━━━━━━━━━━━━━━━━━━━━&#10;▶ 作法：同 Valley X，但探 Y 方向兩壁&#10;&#10;▶ 結果：Y CENTER / Y WIDTH / Z- PROBE&#10;&#10;▶ 必設參數：通用參數 + HINT X/Y&#10;&#10;⚠ 注意：探測棒必須在凹槽「裡面」">
                             <Canvas Width="120" Height="110">
                                 <Rectangle Canvas.Left="15" Canvas.Top="20" Width="90" Height="65"
                                            Fill="Transparent" Stroke="#BBBBBB" StrokeThickness="7"/>
@@ -1178,7 +1185,7 @@
                             </Canvas>
                         </Button>
                         <Button Command="{Binding ProbeValleyXyCommand}" Style="{StaticResource ProbeGridBtnStyle}"
-                                ToolTip="Valley XY — probe all 4 walls from inside">
+                                ToolTip="【Valley XY】凹槽四壁完整探測&#10;━━━━━━━━━━━━━━━━━━━━━━━━━━&#10;▶ 作法：同 Pocket XY，四壁探測取中心+寬度&#10;&#10;▶ 結果：X/Y CENTER / X/Y WIDTH / Z- PROBE&#10;&#10;▶ 必設參數：通用參數 + HINT X/Y&#10;&#10;⚠ 注意：探測棒起始位置要在凹槽中心附近">
                             <Canvas Width="120" Height="110">
                                 <Rectangle Canvas.Left="20" Canvas.Top="10" Width="80" Height="85"
                                            Fill="Transparent" Stroke="#BBBBBB" StrokeThickness="7"/>
@@ -1240,7 +1247,7 @@
                     <UniformGrid Rows="3" Columns="3">
                         <!-- Row 0: NW / N / NE — 探測北面（頂邊），箭頭向下 -->
                         <Button Command="{Binding ProbeAngleNWCommand}" Style="{StaticResource ProbeGridBtnStyle}"
-                                ToolTip="Edge Angle NW (top edge, left start)">
+                                ToolTip="【角度 NW】北邊左起量角度&#10;━━━━━━━━━━━━━━━━━━━━━━━━━━&#10;▶ 作法：探測棒在工件北邊（上邊）上方偏左&#10;  → 第1次：往 Y- 碰到北邊（取得第1點）&#10;  → 回到原位 → 往 X+ 偏移 EDGE WIDTH&#10;  → 第2次：往 Y- 碰到北邊（取得第2點）&#10;  → 用兩點座標差計算角度 atan2(ΔY, ΔX)&#10;&#10;▶ 結果：EDGE ∠（角度）/ DIAM（邊寬）&#10;&#10;▶ 必設參數：&#10;  • 通用參數&#10;  • ★ EDGE WIDTH — 兩點間距 (越大越準)&#10;    如果設 0，預設 = 3 × XY Clearance&#10;&#10;⚠ 注意：探測棒在邊的「左側」開始，&#10;   確保兩個探測點都能碰到工件">
                             <Canvas Width="120" Height="110">
                                 <Rectangle Canvas.Left="10" Canvas.Top="45" Width="100" Height="50" Fill="#BBBBBB"
                                            RenderTransformOrigin="0.5,0.5">
@@ -1253,7 +1260,7 @@
                             </Canvas>
                         </Button>
                         <Button Command="{Binding ProbeAngleNCommand}" Style="{StaticResource ProbeGridBtnStyle}"
-                                ToolTip="Edge Angle N (top edge, centered)">
+                                ToolTip="【角度 N】北邊中央量角度&#10;━━━━━━━━━━━━━━━━━━━━━━━━━━&#10;▶ 作法：探測棒在工件北邊中央上方&#10;  → 第1次：往 Y- 碰北邊&#10;  → 往 X 偏移 EDGE WIDTH → 第2次碰北邊&#10;  → 計算角度&#10;&#10;▶ 結果：EDGE ∠ / DIAM&#10;&#10;▶ 必設參數：&#10;  • 通用參數 + ★ EDGE WIDTH&#10;&#10;⚠ 注意：兩個探測點都要在工件範圍內，&#10;   EDGE WIDTH 不可大於工件寬度">
                             <Canvas Width="120" Height="110">
                                 <Rectangle Canvas.Left="10" Canvas.Top="45" Width="100" Height="50" Fill="#BBBBBB"
                                            RenderTransformOrigin="0.5,0.5">
@@ -1270,7 +1277,7 @@
                             </Canvas>
                         </Button>
                         <Button Command="{Binding ProbeAngleNECommand}" Style="{StaticResource ProbeGridBtnStyle}"
-                                ToolTip="Edge Angle NE (top edge, right start)">
+                                ToolTip="【角度 NE】北邊右起量角度&#10;━━━━━━━━━━━━━━━━━━━━━━━━━━&#10;▶ 作法：探測棒在工件北邊上方偏右&#10;  → 同 NW 但偏移方向為 X-&#10;&#10;▶ 結果：EDGE ∠ / DIAM&#10;&#10;▶ 必設參數：通用參數 + ★ EDGE WIDTH&#10;&#10;⚠ 注意：兩個探測點都要在工件範圍內">
                             <Canvas Width="120" Height="110">
                                 <Rectangle Canvas.Left="10" Canvas.Top="45" Width="100" Height="50" Fill="#BBBBBB"
                                            RenderTransformOrigin="0.5,0.5">
@@ -1285,7 +1292,7 @@
 
                         <!-- Row 1: W / CENTER / E — 探測左右面 -->
                         <Button Command="{Binding ProbeAngleWCommand}" Style="{StaticResource ProbeGridBtnStyle}"
-                                ToolTip="Edge Angle W (left edge)">
+                                ToolTip="【角度 W】西邊（左邊）量角度&#10;━━━━━━━━━━━━━━━━━━━━━━━━━━&#10;▶ 作法：探測棒在工件左側&#10;  → 第1次：往 X+ 碰到西邊&#10;  → 沿 Y 偏移 EDGE WIDTH → 第2次碰西邊&#10;  → 計算角度&#10;&#10;▶ 結果：EDGE ∠ / DIAM&#10;&#10;▶ 必設參數：通用參數 + ★ EDGE WIDTH&#10;&#10;⚠ 注意：兩個探測點都要在工件高度範圍內">
                             <Canvas Width="120" Height="110">
                                 <Rectangle Canvas.Left="50" Canvas.Top="5" Width="55" Height="100" Fill="#BBBBBB"
                                            RenderTransformOrigin="0.5,0.5">
@@ -1302,7 +1309,7 @@
                             </Canvas>
                         </Button>
                         <Button Command="{Binding ProbeAngleCenterCommand}" Style="{StaticResource ProbeGridBtnStyle}"
-                                ToolTip="Edge Angle Center (4-edge reference)">
+                                ToolTip="【角度 CENTER】四邊參考基準&#10;━━━━━━━━━━━━━━━━━━━━━━━━━━&#10;▶ 作法：等同 Center 四邊探測&#10;  → 探四壁取中心，角度設為 0°&#10;  → 用於建立角度參考基準&#10;&#10;▶ 結果：X/Y CENTER / X/Y WIDTH&#10;        EDGE ∠ = 0°&#10;&#10;▶ 必設參數：通用參數&#10;&#10;⚠ 注意：探測棒要在工件中心附近">
                             <Canvas Width="120" Height="110">
                                 <Rectangle Canvas.Left="20" Canvas.Top="15" Width="80" Height="80" Fill="#BBBBBB"/>
                                 <Ellipse Canvas.Left="50" Canvas.Top="42" Width="20" Height="20" Fill="#8B5CF6" Opacity="0.7"/>
@@ -1321,7 +1328,7 @@
                             </Canvas>
                         </Button>
                         <Button Command="{Binding ProbeAngleECommand}" Style="{StaticResource ProbeGridBtnStyle}"
-                                ToolTip="Edge Angle E (right edge)">
+                                ToolTip="【角度 E】東邊（右邊）量角度&#10;━━━━━━━━━━━━━━━━━━━━━━━━━━&#10;▶ 作法：探測棒在工件右側&#10;  → 第1次：往 X- 碰到東邊&#10;  → 沿 Y 偏移 EDGE WIDTH → 第2次碰東邊&#10;  → 計算角度&#10;&#10;▶ 結果：EDGE ∠ / DIAM&#10;&#10;▶ 必設參數：通用參數 + ★ EDGE WIDTH&#10;&#10;⚠ 注意：兩個探測點都要在工件高度範圍內">
                             <Canvas Width="120" Height="110">
                                 <Rectangle Canvas.Left="15" Canvas.Top="5" Width="55" Height="100" Fill="#BBBBBB"
                                            RenderTransformOrigin="0.5,0.5">
@@ -1340,7 +1347,7 @@
 
                         <!-- Row 2: SW / S / SE — 探測南面（底邊），箭頭向上 -->
                         <Button Command="{Binding ProbeAngleSWCommand}" Style="{StaticResource ProbeGridBtnStyle}"
-                                ToolTip="Edge Angle SW (bottom edge, left start)">
+                                ToolTip="【角度 SW】南邊左起量角度&#10;━━━━━━━━━━━━━━━━━━━━━━━━━━&#10;▶ 作法：探測棒在工件南邊（下邊）下方偏左&#10;  → 第1次：往 Y+ 碰到南邊&#10;  → 往 X+ 偏移 EDGE WIDTH → 第2次碰南邊&#10;  → 計算角度&#10;&#10;▶ 結果：EDGE ∠ / DIAM&#10;&#10;▶ 必設參數：通用參數 + ★ EDGE WIDTH&#10;&#10;⚠ 注意：兩個探測點都要在工件範圍內">
                             <Canvas Width="120" Height="110">
                                 <Rectangle Canvas.Left="10" Canvas.Top="5" Width="100" Height="50" Fill="#BBBBBB"
                                            RenderTransformOrigin="0.5,0.5">
@@ -1353,7 +1360,7 @@
                             </Canvas>
                         </Button>
                         <Button Command="{Binding ProbeAngleSCommand}" Style="{StaticResource ProbeGridBtnStyle}"
-                                ToolTip="Edge Angle S (bottom edge, centered)">
+                                ToolTip="【角度 S】南邊中央量角度&#10;━━━━━━━━━━━━━━━━━━━━━━━━━━&#10;▶ 作法：探測棒在工件南邊中央下方&#10;  → 同 N 但探測方向為 Y+&#10;&#10;▶ 結果：EDGE ∠ / DIAM&#10;&#10;▶ 必設參數：通用參數 + ★ EDGE WIDTH&#10;&#10;⚠ 注意：兩個探測點都要在工件範圍內">
                             <Canvas Width="120" Height="110">
                                 <Rectangle Canvas.Left="10" Canvas.Top="5" Width="100" Height="50" Fill="#BBBBBB"
                                            RenderTransformOrigin="0.5,0.5">
@@ -1370,7 +1377,7 @@
                             </Canvas>
                         </Button>
                         <Button Command="{Binding ProbeAngleSECommand}" Style="{StaticResource ProbeGridBtnStyle}"
-                                ToolTip="Edge Angle SE (bottom edge, right start)">
+                                ToolTip="【角度 SE】南邊右起量角度&#10;━━━━━━━━━━━━━━━━━━━━━━━━━━&#10;▶ 作法：探測棒在工件南邊下方偏右&#10;  → 同 SW 但偏移方向為 X-&#10;&#10;▶ 結果：EDGE ∠ / DIAM&#10;&#10;▶ 必設參數：通用參數 + ★ EDGE WIDTH&#10;&#10;⚠ 注意：兩個探測點都要在工件範圍內">
                             <Canvas Width="120" Height="110">
                                 <Rectangle Canvas.Left="10" Canvas.Top="5" Width="100" Height="50" Fill="#BBBBBB"
                                            RenderTransformOrigin="0.5,0.5">
@@ -1771,8 +1778,10 @@
                             <!-- ====== 左欄 ====== -->
                             <StackPanel Grid.Column="0">
                                 <!-- PROBE SPINDLE NOSE ZERO -->
+                                <!-- [2026-03-16] 按鈕防呆 -->
                                 <Button Content="{DynamicResource Str.Probe.ProbeSpindleZero}" Style="{StaticResource ProbeBtnStyle}"
                                         Command="{Binding TsProbeSpindleNoseZeroCommand}"
+                                        IsEnabled="{Binding DataContext.CanProbe, RelativeSource={RelativeSource AncestorType=Window}}"
                                         HorizontalAlignment="Stretch" Padding="8,8" Margin="0,2" FontSize="{DynamicResource FontSize.Medium}"/>
 
                                 <!-- X / Y / Z -->
@@ -1795,8 +1804,10 @@
                                 </Grid>
 
                                 <!-- SET TOOL TOUCH OFF POS -->
+                                <!-- [2026-03-16] 按鈕防呆 -->
                                 <Button Content="{DynamicResource Str.Probe.SetToolSetterPos}" Style="{StaticResource ProbeBtnStyle}"
                                         Command="{Binding TsSetToolTouchOffPosCommand}"
+                                        IsEnabled="{Binding DataContext.CanProbe, RelativeSource={RelativeSource AncestorType=Window}}"
                                         HorizontalAlignment="Stretch" Padding="8,8" Margin="0,4" FontSize="{DynamicResource FontSize.Medium}"/>
 
                                 <!-- TOOL DIAM PROBE -->
@@ -1912,9 +1923,11 @@
                                 <TextBlock Grid.Row="9" Grid.Column="0" Text="{DynamicResource Str.Probe.CustomParam2}" Style="{StaticResource ParamLbl}" Foreground="#333" HorizontalAlignment="Right" Margin="0,2,8,2"/>
                                 <TextBox Grid.Row="9" Grid.Column="1" Style="{StaticResource ParamTxt}" Text="{Binding TsUserParam2, StringFormat='{}{0:F4}', UpdateSourceTrigger=PropertyChanged}"/>
                                 <!-- UPDATE 按鈕放右欄底部 -->
+                                <!-- [2026-03-16] 按鈕防呆 -->
                                 <Button Grid.Row="10" Grid.Column="0" Grid.ColumnSpan="2"
                                         Content="{DynamicResource Str.Probe.UpdateToolSetterParams}" Style="{StaticResource ProbeBtnStyle}"
                                         Command="{Binding TsUpdateParametersCommand}"
+                                        IsEnabled="{Binding DataContext.CanProbe, RelativeSource={RelativeSource AncestorType=Window}}"
                                         HorizontalAlignment="Stretch" Padding="6,6" Margin="0,8,0,0" FontSize="{DynamicResource FontSize.Body}"
                                         VerticalAlignment="Bottom"/>
                             </Grid>
@@ -2014,8 +2027,10 @@
                             <KeyBinding Key="Return" Command="{Binding SendMdiCommand}"/>
                         </TextBox.InputBindings>
                     </TextBox>
+                    <!-- [2026-03-16] 按鈕防呆 -->
                     <Button Grid.Column="2" Content="{DynamicResource Str.Btn.Send}" Style="{StaticResource ProbeBtnStyle}"
-                            Command="{Binding SendMdiCommand}"/>
+                            Command="{Binding SendMdiCommand}"
+                            IsEnabled="{Binding DataContext.CanMdi, RelativeSource={RelativeSource AncestorType=Window}}"/>
                 </Grid>
             </Border>
         </Grid>

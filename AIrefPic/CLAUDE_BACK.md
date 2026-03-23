@@ -13,7 +13,7 @@ See @memory.md for current bugs, progress, and decisions.
 |---|---|---|
 | 前端 | WPF (.NET 10) + CommunityToolkit.Mvvm 8.4.0 + HelixToolkit.Wpf 3.1.2 | Windows 觸控工控機 |
 | 後端 | Python 3 Flask + LinuxCNC NML IPC | Ubuntu RT Linux（192.168.0.137:5000） |
-| 通訊 | HTTP REST（50ms 輪詢 + 背景快取） | LAN |
+| 通訊 | HTTP REST（500ms 輪詢） | LAN |
 | 驅動 | EtherCAT + CiA 402 伺服 | LinuxCNC HAL |
 
 **核心技術棧：** CiA 402 伺服協議、EtherCAT 拓樸、LinuxCNC HAL/INI/XML、WPF MVVM Source Generator、Python Flask
@@ -53,9 +53,8 @@ CncController/                      ← WPF 前端專案根
 │   ├── OperationalModels.cs        ← MachiningStats / MaintenanceItem / ResumeState / BackupInfo / AlarmStatItem
 │   └── WarmupModels.cs             ← WarmupStep / SpindleWarmupConfig / WarmupStepData
 ├── Services/                       ← 手動 Singleton（Instance 屬性，非 DI）
-│   ├── MachineControlService.cs    ← ~1171 行，HTTP 通訊（70+ 公開方法，5 個長駐 HttpClient）
-│   ├── ConfigurationService.cs     ← ~1310 行，INI/HAL/XML/PostGUI 生成（委託 ATC NGC 至下方）
-│   ├── AtcNgcGeneratorService.cs   ← ~895 行，ATC NGC 巨集生成（static class）<!-- [2026-03-13] 從 ConfigurationService 拆出 -->
+│   ├── MachineControlService.cs    ← ~1165 行，HTTP 通訊（70+ 公開方法，5 個長駐 HttpClient）
+│   ├── ConfigurationService.cs     ← ~830 行，INI/HAL/XML/PostGUI/NGC 生成
 │   ├── AlarmService.cs             ← 集中日誌 ≤500 筆 + 跑馬燈 + 每日 log 檔
 │   ├── AppSettings.cs              ← appsettings.json（ServerUrl/Language/Theme）
 │   ├── AuthService.cs              ← 4 級角色權限 + SHA-256 密碼
@@ -66,7 +65,7 @@ CncController/                      ← WPF 前端專案根
 │   ├── MainViewModel.cs            ← [2026-03-12] 已拆分為 8 個 partial class：
 │   │   ├── MainViewModel.cs            ← Core（屬性/建構子/硬體驗證）~210 行
 │   │   ├── MainViewModel.Navigation.cs ← 頁面導航 Navigate()
-│   │   ├── MainViewModel.Polling.cs    ← 50ms 輪詢 + 分頻（StatusTimer/PollErrors/UpdateMachineData/Header）
+│   │   ├── MainViewModel.Polling.cs    ← 500ms 輪詢（StatusTimer/PollErrors/UpdateMachineData/Header）
 │   │   ├── MainViewModel.Jog.cs        ← JOG 手動移動 + 主軸正反轉
 │   │   ├── MainViewModel.Safety.cs     ← 電源/急停/重連/全機停止
 │   │   ├── MainViewModel.CycleControl.cs ← 加工循環/冷卻/Override
@@ -112,9 +111,9 @@ CncController/                      ← WPF 前端專案根
 │   │   ├── CarouselControl.xaml    ← ATC 轉盤視覺化
 │   │   ├── SpindleToolControl.xaml ← ATC 主軸刀具顯示
 │   │   └── ToolDisplayControl.xaml ← ATC 刀具圖示
-│   ├── Pages/                      ← 主要頁面（14 個）<!-- [2026-03-13] 補 SpindleSettingsView + 修正計數 -->
+│   ├── Pages/                      ← 主要頁面（12 個）
 │   │   ├── MonitorView.xaml        ← G-Code 編輯器 + 3D HelixViewport3D
-│   │   ├── SettingsView.xaml       ← ~881 行，設定 13 子 Tab（RadioButton + StringEqualConverter）
+│   │   ├── SettingsView.xaml       ← ~805 行，設定 TabControl（SCAN/MAPPING/AXIS/IO/IN MAP/OUT MAP/SPINDLE/ATC/MACRO VAR/BACKUP/MAINTENANCE）
 │   │   ├── HistoryView.xaml        ← LOG/STATS 雙分頁
 │   │   ├── OffsetsView.xaml        ← G54-G59 表格 + 右欄即時座標
 │   │   ├── ToolTableView.xaml      ← 刀具表 + TOOL LIFE 雙 Tab
@@ -122,15 +121,14 @@ CncController/                      ← WPF 前端專案根
 │   │   ├── ProbingView.xaml        ← 探測 8 分頁（Outside/Inside/Boss/Ridge/Angle/Calibrate/Help/ToolSetter）
 │   │   ├── FileManagerView.xaml    ← 程式檔案列表
 │   │   ├── MacroVariablesView.xaml ← 巨集變數二欄 DataGrid
-│   │   ├── SpindleSettingsView.xaml ← 主軸設定（EtherCAT + 剛性攻牙 + M19）
-│   │   └── Atc*SettingsView.xaml   ← ATC 設定三分頁（Basic/Axis/IO）
+│   │   └── Atc*SettingsView.xaml   ← ATC 設定三分頁
 │   └── Windows/
 │       ├── LoginWindow.xaml        ← 登入對話框
 │       └── SpindleWarmupWindow.xaml ← 暖機 Modal
 ├── Resources/
 │   ├── Languages/
-│   │   ├── Lang.zh-TW.xaml         ← ~391 個 i18n key（繁中）<!-- [2026-03-13] 更新 key 數 -->
-│   │   └── Lang.en-US.xaml         ← ~391 個 i18n key（英文）
+│   │   ├── Lang.zh-TW.xaml         ← ~389 個 i18n key（繁中）
+│   │   └── Lang.en-US.xaml         ← ~389 個 i18n key（英文）
 │   └── Themes/
 │       ├── Theme.Dark.xaml          ← 全域 Style（BaseBtnStyle/BaseRadioBtnStyle/NavBtnStyle/...）+ 55+ Brush token
 │       ├── Theme.Industrial.xaml    ← 湖水綠主題
@@ -155,45 +153,36 @@ Server/                             ← Python 後端（Blueprint 架構，2026-
 
 SGCAM_PB/                           ← 參考用 ProbotBuild 原始碼（唯讀）
 AIrefPic/                           ← UI 參考圖片（使用者提到參考圖必查此處）
-Help/                               ← 探測 HELP 分頁圖片（7 張 Image(1)~(7).png）<!-- [2026-03-13] 新增目錄 -->
-docs/                               ← 設計文件（SOFT_PLC_ATC_PLAN.md）
-logs/                               ← 執行日誌（cnc-yyyy-MM-dd.log）
 ```
 
 ---
 
 ## 3. Key Classes & Locations
 
-### ViewModels（22 個）<!-- [2026-03-13] 更新行數 -->
+### ViewModels（22 個）
 
 | ViewModel | 檔案 | 行數 | DataContext 綁定 |
 |-----------|------|------|-----------------|
-| MainViewModel | ViewModels/MainViewModel*.cs | ~1279(8檔) | MainView.xaml（根 VM，8 個 partial class） |
-| SettingsViewModel | ViewModels/SettingsViewModel.cs | ~828 | SettingsView.xaml（聚合 11 子 VM） |
-| ProbingViewModel | ViewModels/ProbingViewModel.cs | ~795 | ProbingView.xaml（58 個 RelayCommand） |
-| AtcViewModel | ViewModels/AtcViewModel.cs | ~570 | AtcView.xaml（34 個 RelayCommand） |
-| MonitorViewModel | ViewModels/MonitorViewModel.cs | ~418 | MonitorView.xaml |
-| OffsetsViewModel | ViewModels/OffsetsViewModel.cs | ~306 | OffsetsView.xaml |
-| ToolTableViewModel | ViewModels/ToolTableViewModel.cs | ~280 | ToolTableView.xaml |
-| MacroVariablesViewModel | ViewModels/MacroVariablesViewModel.cs | ~206 | MacroVariablesView.xaml |
-| IoMonitorViewModel | ViewModels/IoMonitorViewModel.cs | ~191 | SettingsView IO MONITOR Tab |
-| BackupViewModel | ViewModels/BackupViewModel.cs | ~180 | SettingsView BACKUP Tab |
-| FileManagerViewModel | ViewModels/FileManagerViewModel.cs | ~172 | FileManagerView.xaml |
-| SpindleWarmupViewModel | ViewModels/SpindleWarmupViewModel.cs | ~170 | SpindleWarmupWindow.xaml |
-| MaintenanceViewModel | ViewModels/MaintenanceViewModel.cs | ~101 | SettingsView MAINTENANCE Tab |
-| HistoryViewModel | ViewModels/HistoryViewModel.cs | ~104 | HistoryView.xaml |
-| AtcIoSettingsViewModel | ViewModels/AtcIoSettingsViewModel.cs | ~138 | AtcIoSettingsView.xaml |
-| AtcBasicSettingsViewModel | ViewModels/AtcBasicSettingsViewModel.cs | ~115 | AtcBasicSettingsView.xaml |
-| AtcAxisSettingsViewModel | ViewModels/AtcAxisSettingsViewModel.cs | ~77 | AtcAxisSettingsView.xaml |
-| SpindleSettingsViewModel | ViewModels/SpindleSettingsViewModel.cs | ~58 | SpindleSettingsView.xaml |
+| MainViewModel | ViewModels/MainViewModel.cs | ~1330 | MainView.xaml（根 VM） |
+| MonitorViewModel | ViewModels/MonitorViewModel.cs | ~420 | MonitorView.xaml |
+| ProbingViewModel | ViewModels/ProbingViewModel.cs | ~650 | ProbingView.xaml |
+| SettingsViewModel | ViewModels/SettingsViewModel.cs | — | SettingsView.xaml（聚合 6+ 子 VM） |
+| HistoryViewModel | ViewModels/HistoryViewModel.cs | ~112 | HistoryView.xaml |
+| OffsetsViewModel | ViewModels/OffsetsViewModel.cs | — | OffsetsView.xaml |
+| ToolTableViewModel | ViewModels/ToolTableViewModel.cs | — | ToolTableView.xaml |
+| AtcViewModel | ViewModels/AtcViewModel.cs | — | AtcView.xaml |
+| MaintenanceViewModel | ViewModels/MaintenanceViewModel.cs | ~102 | SettingsView MAINTENANCE Tab |
+| BackupViewModel | ViewModels/BackupViewModel.cs | — | SettingsView BACKUP Tab |
+| MacroVariablesViewModel | ViewModels/MacroVariablesViewModel.cs | — | MacroVariablesView.xaml |
+| FileManagerViewModel | ViewModels/FileManagerViewModel.cs | — | FileManagerView.xaml |
+| SpindleWarmupViewModel | ViewModels/SpindleWarmupViewModel.cs | — | SpindleWarmupWindow.xaml |
 
-### Services（8 個，手動 Singleton）<!-- [2026-03-13] 更新 ConfigurationService 說明 -->
+### Services（8 個，手動 Singleton）
 
 | Service | 說明 | HttpClient Timeout |
 |---------|------|--------------------|
-| MachineControlService | HTTP 通訊（70+ 方法，~1171 行） | polling 3s / estop 2s / upload 20s / atc 60s / probe 120s |
-| ConfigurationService | INI/HAL/XML/PostGUI 生成（~1310 行） | config 10s / upload 20s |
-| AtcNgcGeneratorService | ATC NGC 巨集生成（~895 行，static） | — |
+| MachineControlService | HTTP 通訊（70+ 方法） | polling 3s / estop 2s / upload 20s / atc 60s / probe 120s |
+| ConfigurationService | INI/HAL/XML/PostGUI/NGC 生成 | config 10s / upload 20s |
 | AlarmService | 集中日誌 ≤500 筆 + 跑馬燈 + 每日 log | — |
 | AppSettings | appsettings.json（ServerUrl/Language/Theme） | — |
 | AuthService | 4 級角色權限 + SHA-256 | — |
@@ -226,7 +215,7 @@ logs/                               ← 執行日誌（cnc-yyyy-MM-dd.log）
 |------|------|------|
 | `server.py` | ~211 | Flask app 建立 + NML 初始化 + 背景執行緒啟動 + app.run |
 | `shared.py` | ~275 | 全域 NML（cnc_cmd/cnc_stat）+ 快取 + 路徑常數 + helpers + 工具函式 |
-| `routes/status.py` | ~384 | /v2/status + errors + offsets（背景快取架構：高頻 20ms + 低頻 1s） |
+| `routes/status.py` | ~384 | /v2/status + errors + offsets（狀態輪詢核心） |
 | `routes/machine.py` | ~213 | machine/* + motion/jog + mdi + override/*（機台控制） |
 | `routes/program.py` | ~306 | program/* + upload（程式管理 + 檔案上傳） |
 | `routes/tool.py` | ~298 | tool/* + tool_life thread（刀具表 + 壽命追蹤） |
@@ -237,17 +226,16 @@ logs/                               ← 執行日誌（cnc-yyyy-MM-dd.log）
 
 **shared.py 共用內容：**
 - 全域 NML：`cnc_cmd` / `cnc_stat`
-- 共用快取：`cached_errors` / `error_lock` / `_wcs_cache` / `_status_cache_fast` / `_status_cache_slow` / `_status_cache_lock`
+- 共用快取：`cached_errors` / `error_lock` / `_wcs_cache`
 - 路徑常數：`USER_HOME` / `BASE_DIR` / `CONFIG_DIR` / `NC_FILES_DIR` / `LINUXCNC_INI_PATH`
 - helpers：`success_response` / `error_response` / `app_log` / `ensure_cnc_connections`
 - 工具函式：`_ini_value` / `_read_hal_pin` / `_read_hal_pins_batch` / `_read_var_params` / `_update_wcs_cache_from_g10`
 
-**背景 daemon threads（7 個）：**<!-- [2026-03-13] 5→7，新增快取 Thread -->
+**背景 daemon threads（5 個）：**
 | 執行緒 | 所在檔案 | 說明 |
 |--------|---------|------|
-| _status_fast_loop | routes/status.py | **高頻快取（20ms）**：cnc_stat.poll()→座標/狀態/Override |
-| _status_slow_loop | routes/status.py | **低頻快取（1s）**：halcmd subprocess→ServoIO/IOStatus/Encoder |
 | error_sniffer_loop | server.py | 監聽 LinuxCNC 錯誤 |
+| read_servo_raw_data | server.py | 讀取 EtherCAT Servo IO |
 | _machining_stats_tracker | routes/stats.py | 加工時間統計（1s 輪詢 RUNNING） |
 | _maintenance_tracker | routes/stats.py | 維護運轉時數（5s 輪詢） |
 | _resume_state_tracker | routes/stats.py | 斷電續切存檔（5s） |
@@ -269,7 +257,7 @@ logs/                               ← 執行日誌（cnc-yyyy-MM-dd.log）
 │    ├─ ProbingVM（27 種探測 + Tool Setter）                │
 │    ├─ MacroVariablesVM（#變數讀寫）                       │
 │    ├─ FileManagerVM（程式檔案）                           │
-│    └─ SettingsVM → 聚合 11 子 VM：                        │<!-- [2026-03-13] 6+→11 -->
+│    └─ SettingsVM → 聚合子 VM：                           │
 │         HardwareDiscovery / AxisMapping / AxisParameter  │
 │         IoMonitor / MachineConfig / SpindleSettings      │
 │         AtcBasic/Axis/IoSettings / MacroVariables        │
@@ -286,27 +274,20 @@ logs/                               ← 執行日誌（cnc-yyyy-MM-dd.log）
                        ▼
 ┌─────────────────────────────────────────────────────────┐
 │  Flask 後端（LinuxCNC 機台）— Blueprint 架構               │
-│  shared.py（共用）+ 8 個 route 模組（61 API routes）      │<!-- [2026-03-13] 53→61 -->
+│  shared.py（共用）+ 8 個 route 模組（53 API routes）      │
 │  5 背景 daemon threads + 9 個 JSON 持久化檔案             │
 │  LinuxCNC NML 進程間通訊                                  │
 └─────────────────────────────────────────────────────────┘
 ```
 
-**核心資料流（50ms 輪詢 + 背景快取）：**
+**核心資料流（500ms 輪詢）：**
 ```
-後端背景 Thread（持續跑，不等前端呼叫）
-  ├─ Thread 1（20ms）：cnc_stat.poll() → _status_cache_fast（座標/狀態/Override）
-  └─ Thread 2（1s）：subprocess halcmd → _status_cache_slow（ServoIO/Encoder/IOStatus）
-
-DispatcherTimer (50ms)
+DispatcherTimer (500ms)
   → MachineControlService.GetStatusAsync()
-  → GET /v2/status → 後端直接回傳快取（<1ms）
+  → GET /v2/status
   → MainViewModel.UpdateMachineData(MachineStatusData)
   → MachineStatus : ObservableObject（~200 屬性）
   → UI Binding 自動刷新
-
-低頻分頻（每 20 tick ≈ 1s）
-  → PollErrors() + PollMachiningStats()
 ```
 
 **設定部署流程：**
@@ -323,7 +304,7 @@ DispatcherTimer (50ms)
 
 ---
 
-## 5. 後端 API 端點（61 路由）<!-- [2026-03-13] 53→61，補 ATC 路由 -->
+## 5. 後端 API 端點（53 路由）
 
 ### 核心控制
 
@@ -359,24 +340,7 @@ DispatcherTimer (50ms)
 | POST | `/v2/tool/life/reset` | 壽命歸零 |
 | POST | `/v2/probe/run` | 探測循環（9 種類型） |
 | POST | `/v2/hal/setp` | HAL 訊號設定 |
-
-### ATC 刀庫（routes/atc.py，13 路由）<!-- [2026-03-13] 新增完整 ATC 路由 -->
-
-| 方法 | 路由 | 功能 |
-|------|------|------|
-| GET | `/v2/atc/status` | ATC 感測器狀態（Carousel/Drawbar/IO） |
-| POST | `/v2/atc/rotate` | 手動旋轉到指定刀位（MDI M10 P{n}） |
-| POST | `/v2/atc/fwd` | 刀盤正轉（M11） |
-| POST | `/v2/atc/rev` | 刀盤反轉（M12） |
-| POST | `/v2/atc/clamp` | 夾刀（M25） |
-| POST | `/v2/atc/unclamp` | 鬆刀（M24） |
-| POST | `/v2/atc/extend` | 伸出刀盤（extendatc） |
-| POST | `/v2/atc/retract` | 收回刀盤（retractatc） |
-| POST | `/v2/atc/ref` | 刀庫歸零（M13） |
-| POST | `/v2/atc/head_up` | Z 上升到淨空高度 |
-| POST | `/v2/atc/head_down` | Z 下降到換刀高度 |
-| POST | `/v2/atc/orient` | 主軸定向（M19） |
-| POST | `/v2/atc/slot` | 設定刀位對應表（寫 #4001~#4024） |
+| GET | `/v2/atc/status` | ATC 感測器狀態 |
 
 ### 巨集變數
 
@@ -424,11 +388,11 @@ DispatcherTimer (50ms)
 
 | 檔案 | 行數 | 風險原因 |
 |------|------|---------|
-| **ConfigurationService.cs + AtcNgcGeneratorService.cs** | ~1310+895 | INI/HAL/XML/NGC/ATC 巨集生成，寫錯 = 機台無法啟動或撞刀 |<!-- [2026-03-13] 拆分為兩個檔案 -->
-| **Server/ (Blueprint)** | ~2990(全) | shared.py + 8 route 模組，shared.py 共用狀態影響全部路由 |
-| **MainViewModel.*.cs** | ~1279(8檔) | 根 VM（partial class），500ms 輪詢 + JOG + 電源/急停，觸及面最廣 |
-| **MachineControlService.cs** | ~1171 | 70+ 公開方法 + 5 個長駐 HttpClient，API 變更必須前後端同步 |
-| **ProbingViewModel.cs** | ~795 | 58 個探測命令，參數傳遞鏈長（VM → Service → 後端 → G38.2） |
+| **Server/ (Blueprint)** | ~2990(全) | 已拆分為 shared.py + 8 個 route 模組，修改時需注意 shared.py 共用狀態 |
+| **MainViewModel.*.cs** | ~1330(8檔) | 根 VM（partial class），500ms 輪詢 + JOG + 電源/急停，觸及面最廣 |
+| **MachineControlService.cs** | ~1165 | 70+ 公開方法 + 5 個長駐 HttpClient，API 變更必須前後端同步 |
+| **ConfigurationService.cs** | ~830 | INI/HAL/XML/NGC 生成，寫錯 = 機台無法啟動 |
+| **ProbingViewModel.cs** | ~650 | 27+ 探測命令，參數傳遞鏈長（VM → Service → 後端 → G38.2） |
 
 ### 高風險操作
 

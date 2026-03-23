@@ -71,7 +71,8 @@
 
         <StackPanel Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Center">
 
-            <Button Content="Z+" Style="{StaticResource JogArrowBtn}" Margin="0,0,10,0">
+            <!-- [2026-03-16] 按鈕防呆 -->
+            <Button Content="Z+" Style="{StaticResource JogArrowBtn}" Margin="0,0,10,0" IsEnabled="{Binding CanJog}">
                 <i:Interaction.Triggers>
                     <i:EventTrigger EventName="PreviewMouseDown">
                         <i:InvokeCommandAction Command="{Binding JogStartCommand}" CommandParameter="2,1.0"/>
@@ -85,7 +86,8 @@
                 </i:Interaction.Triggers>
             </Button>
 
-            <Button Content="Z-" Style="{StaticResource JogArrowBtn}">
+            <!-- [2026-03-16] 按鈕防呆 -->
+            <Button Content="Z-" Style="{StaticResource JogArrowBtn}" IsEnabled="{Binding CanJog}">
                 <i:Interaction.Triggers>
                     <i:EventTrigger EventName="PreviewMouseDown">
                         <i:InvokeCommandAction Command="{Binding JogStartCommand}" CommandParameter="2,-1.0"/>
@@ -112,7 +114,8 @@
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
 
-            <Button Grid.Row="0" Grid.Column="1" Content="Y+" Style="{StaticResource JogArrowBtn}">
+            <!-- [2026-03-16] 按鈕防呆 -->
+            <Button Grid.Row="0" Grid.Column="1" Content="Y+" Style="{StaticResource JogArrowBtn}" IsEnabled="{Binding CanJog}">
                 <i:Interaction.Triggers>
                     <i:EventTrigger EventName="PreviewMouseDown">
                         <i:InvokeCommandAction Command="{Binding JogStartCommand}" CommandParameter="1,1.0"/>
@@ -126,7 +129,8 @@
                 </i:Interaction.Triggers>
             </Button>
 
-            <Button Grid.Row="1" Grid.Column="0" Content="X-" Style="{StaticResource JogArrowBtn}">
+            <!-- [2026-03-16] 按鈕防呆 -->
+            <Button Grid.Row="1" Grid.Column="0" Content="X-" Style="{StaticResource JogArrowBtn}" IsEnabled="{Binding CanJog}">
                 <i:Interaction.Triggers>
                     <i:EventTrigger EventName="PreviewMouseDown">
                         <i:InvokeCommandAction Command="{Binding JogStartCommand}" CommandParameter="0,-1.0"/>
@@ -147,7 +151,8 @@
                            HorizontalAlignment="Center" VerticalAlignment="Center"/>
             </Border>
 
-            <Button Grid.Row="1" Grid.Column="2" Content="X+" Style="{StaticResource JogArrowBtn}">
+            <!-- [2026-03-16] 按鈕防呆 -->
+            <Button Grid.Row="1" Grid.Column="2" Content="X+" Style="{StaticResource JogArrowBtn}" IsEnabled="{Binding CanJog}">
                 <i:Interaction.Triggers>
                     <i:EventTrigger EventName="PreviewMouseDown">
                         <i:InvokeCommandAction Command="{Binding JogStartCommand}" CommandParameter="0,1.0"/>
@@ -161,7 +166,8 @@
                 </i:Interaction.Triggers>
             </Button>
 
-            <Button Grid.Row="2" Grid.Column="1" Content="Y-" Style="{StaticResource JogArrowBtn}">
+            <!-- [2026-03-16] 按鈕防呆 -->
+            <Button Grid.Row="2" Grid.Column="1" Content="Y-" Style="{StaticResource JogArrowBtn}" IsEnabled="{Binding CanJog}">
                 <i:Interaction.Triggers>
                     <i:EventTrigger EventName="PreviewMouseDown">
                         <i:InvokeCommandAction Command="{Binding JogStartCommand}" CommandParameter="1,-1.0"/>
@@ -181,7 +187,8 @@
             <!-- A 軸 JOG (axis=3) -->
             <StackPanel Orientation="Horizontal" Margin="0,0,8,0"
                         Visibility="{Binding IsAxisAEnabled, Converter={StaticResource BoolToVis}}">
-                <Button Content="A-" Style="{StaticResource JogRotaryBtn}">
+                <!-- [2026-03-16] 按鈕防呆 -->
+                <Button Content="A-" Style="{StaticResource JogRotaryBtn}" IsEnabled="{Binding CanJog}">
                     <i:Interaction.Triggers>
                         <i:EventTrigger EventName="PreviewMouseDown">
                             <i:InvokeCommandAction Command="{Binding JogStartCommand}" CommandParameter="3,-1.0"/>
@@ -194,7 +201,8 @@
                         </i:EventTrigger>
                     </i:Interaction.Triggers>
                 </Button>
-                <Button Content="A+" Style="{StaticResource JogRotaryBtn}">
+                <!-- [2026-03-16] 按鈕防呆 -->
+                <Button Content="A+" Style="{StaticResource JogRotaryBtn}" IsEnabled="{Binding CanJog}">
                     <i:Interaction.Triggers>
                         <i:EventTrigger EventName="PreviewMouseDown">
                             <i:InvokeCommandAction Command="{Binding JogStartCommand}" CommandParameter="3,1.0"/>
@@ -212,7 +220,8 @@
             <!-- B 軸 JOG (axis=4) -->
             <StackPanel Orientation="Horizontal" Margin="0,0,8,0"
                         Visibility="{Binding IsAxisBEnabled, Converter={StaticResource BoolToVis}}">
-                <Button Content="B-" Style="{StaticResource JogRotaryBtn}">
+                <!-- [2026-03-16] 按鈕防呆 -->
+                <Button Content="B-" Style="{StaticResource JogRotaryBtn}" IsEnabled="{Binding CanJog}">
                     <i:Interaction.Triggers>
                         <i:EventTrigger EventName="PreviewMouseDown">
                             <i:InvokeCommandAction Command="{Binding JogStartCommand}" CommandParameter="4,-1.0"/>
@@ -225,7 +234,8 @@
                         </i:EventTrigger>
                     </i:Interaction.Triggers>
                 </Button>
-                <Button Content="B+" Style="{StaticResource JogRotaryBtn}">
+                <!-- [2026-03-16] 按鈕防呆 -->
+                <Button Content="B+" Style="{StaticResource JogRotaryBtn}" IsEnabled="{Binding CanJog}">
                     <i:Interaction.Triggers>
                         <i:EventTrigger EventName="PreviewMouseDown">
                             <i:InvokeCommandAction Command="{Binding JogStartCommand}" CommandParameter="4,1.0"/>
@@ -243,7 +253,8 @@
             <!-- C 軸 JOG (axis=5) -->
             <StackPanel Orientation="Horizontal"
                         Visibility="{Binding IsAxisCEnabled, Converter={StaticResource BoolToVis}}">
-                <Button Content="C-" Style="{StaticResource JogRotaryBtn}">
+                <!-- [2026-03-16] 按鈕防呆 -->
+                <Button Content="C-" Style="{StaticResource JogRotaryBtn}" IsEnabled="{Binding CanJog}">
                     <i:Interaction.Triggers>
                         <i:EventTrigger EventName="PreviewMouseDown">
                             <i:InvokeCommandAction Command="{Binding JogStartCommand}" CommandParameter="5,-1.0"/>
@@ -256,7 +267,8 @@
                         </i:EventTrigger>
                     </i:Interaction.Triggers>
                 </Button>
-                <Button Content="C+" Style="{StaticResource JogRotaryBtn}">
+                <!-- [2026-03-16] 按鈕防呆 -->
+                <Button Content="C+" Style="{StaticResource JogRotaryBtn}" IsEnabled="{Binding CanJog}">
                     <i:Interaction.Triggers>
                         <i:EventTrigger EventName="PreviewMouseDown">
                             <i:InvokeCommandAction Command="{Binding JogStartCommand}" CommandParameter="5,1.0"/>
@@ -275,7 +287,8 @@
         <!-- [2026-03-11] MAN/AUTO/MDI 模式切換按鈕：靠底部 + 10px 留白 + 平均欄寬 -->
         <UniformGrid Grid.Row="6" Rows="1" Columns="3" HorizontalAlignment="Stretch" Margin="5,0,5,10">
             <!-- [2026-03-13] MAN/AUTO/MDI 選取色改用 StatusOn 藍（區分頁籤青綠） -->
-            <Button Content="MAN" Command="{Binding SetModeCommand}" CommandParameter="MANUAL">
+            <!-- [2026-03-16] 按鈕防呆 -->
+            <Button Content="MAN" Command="{Binding SetModeCommand}" CommandParameter="MANUAL" IsEnabled="{Binding CanMdi}">
                 <Button.Style>
                     <Style TargetType="Button" BasedOn="{StaticResource JogRotaryBtn}">
                         <Setter Property="Height" Value="36"/>
@@ -289,7 +302,8 @@
                     </Style>
                 </Button.Style>
             </Button>
-            <Button Content="AUTO" Command="{Binding SetModeCommand}" CommandParameter="AUTO">
+            <!-- [2026-03-16] 按鈕防呆 -->
+            <Button Content="AUTO" Command="{Binding SetModeCommand}" CommandParameter="AUTO" IsEnabled="{Binding CanMdi}">
                 <Button.Style>
                     <Style TargetType="Button" BasedOn="{StaticResource JogRotaryBtn}">
                         <Setter Property="Height" Value="36"/>
@@ -303,7 +317,8 @@
                     </Style>
                 </Button.Style>
             </Button>
-            <Button Content="MDI" Command="{Binding SetModeCommand}" CommandParameter="MDI">
+            <!-- [2026-03-16] 按鈕防呆 -->
+            <Button Content="MDI" Command="{Binding SetModeCommand}" CommandParameter="MDI" IsEnabled="{Binding CanMdi}">
                 <Button.Style>
                     <Style TargetType="Button" BasedOn="{StaticResource JogRotaryBtn}">
                         <Setter Property="Height" Value="36"/>

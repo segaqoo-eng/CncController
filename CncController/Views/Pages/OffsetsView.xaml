@@ -62,13 +62,18 @@
                     <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Margin="0,8,0,0"
                                 HorizontalAlignment="Left">
                         <!-- [2026-03-11] 按鈕加寬配合 FontSize.Large -->
+                        <!-- [2026-03-16] 按鈕防呆 -->
                         <Button Content="{DynamicResource Str.Btn.ClearSelected}" Style="{StaticResource OffsetBtnStyle}"
-                                Command="{Binding ClearSelectedCommand}" Width="160"/>
+                                Command="{Binding ClearSelectedCommand}" Width="160"
+                                IsEnabled="{Binding DataContext.CanEditOffset, RelativeSource={RelativeSource AncestorType=Window}}"/>
                         <Button Content="{DynamicResource Str.Btn.ClearAll}" Style="{StaticResource OffsetBtnStyle}"
-                                Command="{Binding ClearAllCommand}" Width="110"/>
+                                Command="{Binding ClearAllCommand}" Width="110"
+                                IsEnabled="{Binding DataContext.CanEditOffset, RelativeSource={RelativeSource AncestorType=Window}}"/>
                         <!-- [2026-03-11] 移除 inline 色彩，統一深灰 -->
+                        <!-- [2026-03-16] 按鈕防呆 -->
                         <Button Content="{DynamicResource Str.Btn.SaveTable}" Style="{StaticResource OffsetBtnStyle}"
-                                Command="{Binding SaveTableCommand}" Width="120"/>
+                                Command="{Binding SaveTableCommand}" Width="120"
+                                IsEnabled="{Binding DataContext.CanEditOffset, RelativeSource={RelativeSource AncestorType=Window}}"/>
                         <Button Content="{DynamicResource Str.Btn.ReloadTable}" Style="{StaticResource OffsetBtnStyle}"
                                 Command="{Binding ReloadTableCommand}" Width="140"/>
                     </StackPanel>
@@ -299,8 +304,10 @@
                         <TextBlock Grid.Row="0" Grid.Column="6" Text="{DynamicResource Str.Offset.ToolOffset}" Foreground="{DynamicResource Brush.Text.Dim}" FontSize="{DynamicResource FontSize.Large}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
 
                         <!-- ===== X 行 ===== -->
+                        <!-- [2026-03-16] 按鈕防呆 -->
                         <Button Grid.Row="1" Grid.Column="0" Content="{DynamicResource Str.Btn.Zero}" Style="{StaticResource ZeroBtnStyle}"
-                                Command="{Binding SetToZeroAxisCommand}" CommandParameter="X"/>
+                                Command="{Binding SetToZeroAxisCommand}" CommandParameter="X"
+                                IsEnabled="{Binding DataContext.CanEditOffset, RelativeSource={RelativeSource AncestorType=Window}}"/>
                         <Border Grid.Row="1" Grid.Column="1" Background="{DynamicResource Brush.Input.Background}" Margin="1" CornerRadius="2">
                             <TextBlock Text="X" Foreground="{DynamicResource Brush.Text.Primary}" FontWeight="Bold" FontSize="{DynamicResource FontSize.XLarge}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
@@ -326,8 +333,10 @@
                         </Border>
 
                         <!-- ===== Y 行 ===== -->
+                        <!-- [2026-03-16] 按鈕防呆 -->
                         <Button Grid.Row="2" Grid.Column="0" Content="{DynamicResource Str.Btn.Zero}" Style="{StaticResource ZeroBtnStyle}"
-                                Command="{Binding SetToZeroAxisCommand}" CommandParameter="Y"/>
+                                Command="{Binding SetToZeroAxisCommand}" CommandParameter="Y"
+                                IsEnabled="{Binding DataContext.CanEditOffset, RelativeSource={RelativeSource AncestorType=Window}}"/>
                         <Border Grid.Row="2" Grid.Column="1" Background="{DynamicResource Brush.Input.Background}" Margin="1" CornerRadius="2">
                             <TextBlock Text="Y" Foreground="{DynamicResource Brush.Text.Primary}" FontWeight="Bold" FontSize="{DynamicResource FontSize.XLarge}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
@@ -353,8 +362,10 @@
                         </Border>
 
                         <!-- ===== Z 行 ===== -->
+                        <!-- [2026-03-16] 按鈕防呆 -->
                         <Button Grid.Row="3" Grid.Column="0" Content="{DynamicResource Str.Btn.Zero}" Style="{StaticResource ZeroBtnStyle}"
-                                Command="{Binding SetToZeroAxisCommand}" CommandParameter="Z"/>
+                                Command="{Binding SetToZeroAxisCommand}" CommandParameter="Z"
+                                IsEnabled="{Binding DataContext.CanEditOffset, RelativeSource={RelativeSource AncestorType=Window}}"/>
                         <Border Grid.Row="3" Grid.Column="1" Background="{DynamicResource Brush.Input.Background}" Margin="1" CornerRadius="2">
                             <TextBlock Text="Z" Foreground="{DynamicResource Brush.Text.Primary}" FontWeight="Bold" FontSize="{DynamicResource FontSize.XLarge}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
@@ -380,8 +391,10 @@
                         </Border>
 
                         <!-- ===== A 行（依 IsAxisAEnabled 動態顯示） ===== -->
+                        <!-- [2026-03-16] 按鈕防呆 -->
                         <Button Grid.Row="4" Grid.Column="0" Content="{DynamicResource Str.Btn.Zero}" Style="{StaticResource ZeroBtnStyle}" Height="50"
                                 Command="{Binding SetToZeroAxisCommand}" CommandParameter="A"
+                                IsEnabled="{Binding DataContext.CanEditOffset, RelativeSource={RelativeSource AncestorType=Window}}"
                                 Visibility="{Binding IsAxisAEnabled, Converter={StaticResource BoolToVis}}"/>
                         <Border Grid.Row="4" Grid.Column="1" Background="{DynamicResource Brush.Input.Background}" Margin="1" CornerRadius="2" Height="50"
                                 Visibility="{Binding IsAxisAEnabled, Converter={StaticResource BoolToVis}}">
@@ -414,8 +427,10 @@
                         </Border>
 
                         <!-- ===== B 行（依 IsAxisBEnabled 動態顯示） ===== -->
+                        <!-- [2026-03-16] 按鈕防呆 -->
                         <Button Grid.Row="5" Grid.Column="0" Content="{DynamicResource Str.Btn.Zero}" Style="{StaticResource ZeroBtnStyle}" Height="50"
                                 Command="{Binding SetToZeroAxisCommand}" CommandParameter="B"
+                                IsEnabled="{Binding DataContext.CanEditOffset, RelativeSource={RelativeSource AncestorType=Window}}"
                                 Visibility="{Binding IsAxisBEnabled, Converter={StaticResource BoolToVis}}"/>
                         <Border Grid.Row="5" Grid.Column="1" Background="{DynamicResource Brush.Input.Background}" Margin="1" CornerRadius="2" Height="50"
                                 Visibility="{Binding IsAxisBEnabled, Converter={StaticResource BoolToVis}}">
@@ -448,8 +463,10 @@
                         </Border>
 
                         <!-- ===== C 行（依 IsAxisCEnabled 動態顯示） ===== -->
+                        <!-- [2026-03-16] 按鈕防呆 -->
                         <Button Grid.Row="6" Grid.Column="0" Content="{DynamicResource Str.Btn.Zero}" Style="{StaticResource ZeroBtnStyle}" Height="50"
                                 Command="{Binding SetToZeroAxisCommand}" CommandParameter="C"
+                                IsEnabled="{Binding DataContext.CanEditOffset, RelativeSource={RelativeSource AncestorType=Window}}"
                                 Visibility="{Binding IsAxisCEnabled, Converter={StaticResource BoolToVis}}"/>
                         <Border Grid.Row="6" Grid.Column="1" Background="{DynamicResource Brush.Input.Background}" Margin="1" CornerRadius="2" Height="50"
                                 Visibility="{Binding IsAxisCEnabled, Converter={StaticResource BoolToVis}}">

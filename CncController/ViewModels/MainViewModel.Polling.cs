@@ -7,7 +7,8 @@ using CncController.Models;
 
 namespace CncController.ViewModels
 {
-    // [2026-03-12] 從 MainViewModel.cs 拆分：狀態輪詢（500ms Timer）
+    // [2026-03-12] 從 MainViewModel.cs 拆分：狀態輪詢
+    // [2026-03-13] 重構：Timer 50ms + 分頻計數器（Errors/Stats 每 20 次 tick ≈ 1s）
     public partial class MainViewModel
     {
         // 跑馬燈與連線狀態控制變數
@@ -15,12 +16,18 @@ namespace CncController.ViewModels
         private int _marqueeIndex = 0;
         private MachineControlService.ConnectionState _connectionState = MachineControlService.ConnectionState.Disconnected;
 
+        // [2026-03-13] 分頻計數器：低頻任務每 N 次 tick 才執行
+        private int _pollTickCount = 0;
+        private const int SlowPollInterval = 20; // 每 20 tick（≈1s）執行 Errors/Stats
+
         private async void StatusTimer_Tick(object? sender, EventArgs e)
         {
             _timer.Stop();
             try
             {
-                // 1. 輪詢機台狀態
+                _pollTickCount++;
+
+                // 1. 每次 tick：輪詢機台狀態（後端已快取，<1ms 回應）
                 var data = await PollMachineStatus();
 
                 // 2. 傳給 SettingsVM 的 IO 監控
@@ -38,12 +45,21 @@ namespace CncController.ViewModels
                     _cycleTimer.Stop();
                 }
 
-                // [2026-03-12] 定期拉取加工統計
-                if (IsConnected) await PollMachiningStats();
+                // [2026-03-13] 低頻任務：每 20 tick（≈1s）才執行
+                if (_pollTickCount >= SlowPollInterval)
+                {
+                    _pollTickCount = 0;
 
-                // 3. 抓錯誤
-                if (IsConnected)
-                    await PollErrors();
+                    // [2026-03-12] 定期拉取加工統計
+                    if (IsConnected) await PollMachiningStats();
+
+                    // 抓錯誤
+                    if (IsConnected)
+                        await PollErrors();
+                }
+
+                // [2026-03-16] 更新按鈕防呆狀態（每 tick 都要跑，確保即時反應）
+                UpdateCanExecuteStates();
 
                 // 4. 更新頂部狀態
                 UpdateHeaderStatus();

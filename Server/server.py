@@ -206,6 +206,11 @@ if __name__ == '__main__':
     print(f"[INIT] INI Path:   {LINUXCNC_INI_PATH}")
     print("[INIT] Server starting...", flush=True)
     start_linuxcnc_process()
+
+    # [2026-03-13] LinuxCNC 啟動後才啟動狀態快取背景 Thread
+    from routes.status import start_status_cache_threads
+    start_status_cache_threads()
+
     port = SETTINGS['PORT']
     print(f"[START] Server running on port {port}")
     app.run(host='0.0.0.0', port=port, debug=False, use_reloader=False, threaded=True)

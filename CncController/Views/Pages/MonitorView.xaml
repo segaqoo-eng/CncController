@@ -37,8 +37,10 @@
                                VerticalAlignment="Center" HorizontalAlignment="Left"/>
 
                     <!-- ===== 編輯模式按鈕（IsEditMode=True 時顯示） ===== -->
+                    <!-- [2026-03-16] 按鈕防呆 -->
                     <!-- 儲存上傳 -->
                     <Button DockPanel.Dock="Right" Content="{DynamicResource Str.Monitor.Save}" Command="{Binding SaveAndUploadCommand}"
+                            IsEnabled="{Binding DataContext.CanUpload, RelativeSource={RelativeSource AncestorType=Window}}"
                             Style="{StaticResource BaseBtnStyle}" Padding="16,6" Margin="4,4"
                             FontSize="{DynamicResource FontSize.Large}" Height="42" MinWidth="80"
                             VerticalAlignment="Center"
@@ -229,8 +231,10 @@
                         <KeyBinding Key="Return" Command="{Binding SendMdiCommand}"/>
                     </ComboBox.InputBindings>
                 </ComboBox>
+                <!-- [2026-03-16] 按鈕防呆 -->
                 <Button Grid.Column="1" Content="{DynamicResource Str.Btn.Send}" Margin="2,0,0,0"
                         Command="{Binding SendMdiCommand}"
+                        IsEnabled="{Binding DataContext.CanMdi, RelativeSource={RelativeSource AncestorType=Window}}"
                         Style="{StaticResource BaseBtnStyle}" Foreground="White" FontWeight="Bold"
                         FontSize="{DynamicResource FontSize.Large}"/>
             </Grid>

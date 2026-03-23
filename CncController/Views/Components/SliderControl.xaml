@@ -60,14 +60,18 @@
                 <ColumnDefinition Width="70"/>
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
+            <!-- [2026-03-16] 按鈕防呆 -->
             <Slider Grid.Column="0" Style="{StaticResource OverrideSliderStyle}"
+                    IsEnabled="{Binding DataContext.CanOverride, RelativeSource={RelativeSource AncestorType=Window}}"
                     Value="{Binding VelocityOverride, Mode=TwoWay}" TickFrequency="10"/>
             <Border Grid.Column="1" Background="{DynamicResource Brush.Input.Background}" Margin="3,0" CornerRadius="2">
                 <TextBlock Text="{Binding VelocityOverride, StringFormat={}{0:F0}%}"
                            Foreground="{DynamicResource Brush.Text.Primary}" FontWeight="Bold" FontSize="{DynamicResource FontSize.Large}"
                            VerticalAlignment="Center" HorizontalAlignment="Center"/>
             </Border>
+            <!-- [2026-03-16] 按鈕防呆 -->
             <Button Grid.Column="2" Content="V 100%" Style="{StaticResource ResetBtnStyle}"
+                    IsEnabled="{Binding DataContext.CanOverride, RelativeSource={RelativeSource AncestorType=Window}}"
                     Command="{Binding ResetVelocityOverrideCommand}"/>
         </Grid>
 
@@ -78,14 +82,18 @@
                 <ColumnDefinition Width="70"/>
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
+            <!-- [2026-03-16] 按鈕防呆 -->
             <Slider Grid.Column="0" Style="{StaticResource OverrideSliderStyle}"
+                    IsEnabled="{Binding DataContext.CanOverride, RelativeSource={RelativeSource AncestorType=Window}}"
                     Value="{Binding Status.FeedOverride, Mode=TwoWay}" TickFrequency="10"/>
             <Border Grid.Column="1" Background="{DynamicResource Brush.Input.Background}" Margin="3,0" CornerRadius="2">
                 <TextBlock Text="{Binding Status.FeedOverride, StringFormat={}{0:F0}%}"
                            Foreground="{DynamicResource Brush.Text.Primary}" FontWeight="Bold" FontSize="{DynamicResource FontSize.Large}"
                            VerticalAlignment="Center" HorizontalAlignment="Center"/>
             </Border>
+            <!-- [2026-03-16] 按鈕防呆 -->
             <Button Grid.Column="2" Content="F 100%" Style="{StaticResource ResetBtnStyle}"
+                    IsEnabled="{Binding DataContext.CanOverride, RelativeSource={RelativeSource AncestorType=Window}}"
                     Command="{Binding ResetFeedOverrideCommand}"/>
         </Grid>
 
@@ -96,14 +104,18 @@
                 <ColumnDefinition Width="70"/>
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
+            <!-- [2026-03-16] 按鈕防呆 -->
             <Slider Grid.Column="0" Style="{StaticResource OverrideSliderStyle}"
+                    IsEnabled="{Binding DataContext.CanOverride, RelativeSource={RelativeSource AncestorType=Window}}"
                     Value="{Binding Status.SpindleOverride, Mode=TwoWay}" TickFrequency="10"/>
             <Border Grid.Column="1" Background="{DynamicResource Brush.Input.Background}" Margin="3,0" CornerRadius="2">
                 <TextBlock Text="{Binding Status.SpindleOverride, StringFormat={}{0:F0}%}"
                            Foreground="{DynamicResource Brush.Text.Primary}" FontWeight="Bold" FontSize="{DynamicResource FontSize.Large}"
                            VerticalAlignment="Center" HorizontalAlignment="Center"/>
             </Border>
+            <!-- [2026-03-16] 按鈕防呆 -->
             <Button Grid.Column="2" Content="S 100%" Style="{StaticResource ResetBtnStyle}"
+                    IsEnabled="{Binding DataContext.CanOverride, RelativeSource={RelativeSource AncestorType=Window}}"
                     Command="{Binding ResetSpindleOverrideCommand}"/>
         </Grid>
 
@@ -114,14 +126,18 @@
                 <ColumnDefinition Width="70"/>
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
+            <!-- [2026-03-16] 按鈕防呆 -->
             <Slider Grid.Column="0" Style="{StaticResource OverrideSliderStyle}"
+                    IsEnabled="{Binding DataContext.CanOverride, RelativeSource={RelativeSource AncestorType=Window}}"
                     Value="{Binding RapidOverride, Mode=TwoWay}" TickFrequency="10"/>
             <Border Grid.Column="1" Background="{DynamicResource Brush.Input.Background}" Margin="3,0" CornerRadius="2">
                 <TextBlock Text="{Binding RapidOverride, StringFormat={}{0:F0}%}"
                            Foreground="{DynamicResource Brush.Text.Primary}" FontWeight="Bold" FontSize="{DynamicResource FontSize.Large}"
                            VerticalAlignment="Center" HorizontalAlignment="Center"/>
             </Border>
+            <!-- [2026-03-16] 按鈕防呆 -->
             <Button Grid.Column="2" Content="R 100%" Style="{StaticResource ResetBtnStyle}"
+                    IsEnabled="{Binding DataContext.CanOverride, RelativeSource={RelativeSource AncestorType=Window}}"
                     Command="{Binding ResetRapidOverrideCommand}"/>
         </Grid>
     </Grid>

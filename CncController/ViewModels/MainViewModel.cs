@@ -80,6 +80,62 @@ namespace CncController.ViewModels
         [ObservableProperty] private bool _isAxisBEnabled;
         [ObservableProperty] private bool _isAxisCEnabled;
 
+        // ==============================================================================
+        // [2026-03-16] 按鈕防呆：集中式 CanXxx 屬性
+        // 由 UpdateCanExecuteStates() 每 50ms 輪詢更新，XAML 用 IsEnabled 綁定
+        // ==============================================================================
+        [ObservableProperty] private bool _canJog;           // JOG X±/Y±/Z±/A±/B±/C±
+        [ObservableProperty] private bool _canHome;          // REF ALL / REF 單軸
+        [ObservableProperty] private bool _canCycleStart;    // CYCLE START
+        [ObservableProperty] private bool _canFeedHold;      // FEED HOLD
+        [ObservableProperty] private bool _canStop;          // STOP（abort）
+        [ObservableProperty] private bool _canMdi;           // MDI SEND（所有頁面）
+        [ObservableProperty] private bool _canProbe;         // 探測 39 按鈕
+        [ObservableProperty] private bool _canAtc;           // ATC 所有操作按鈕
+        [ObservableProperty] private bool _canSpindle;       // 主軸 FWD/REV/STOP
+        [ObservableProperty] private bool _canEditOffset;    // Offset SAVE/CLEAR/SET TO ZERO
+        [ObservableProperty] private bool _canUpload;        // 程式上傳
+        [ObservableProperty] private bool _canDeploy;        // 設定 UPDATE/RESTART（Engineer↑）
+        [ObservableProperty] private bool _canBackup;        // 備份/還原（Admin↑）
+        [ObservableProperty] private bool _canOverride;      // Feed/Spindle Override Slider
+
+        /// <summary>
+        /// [2026-03-16] 集中計算所有 CanXxx 狀態，由 Polling 每 50ms 呼叫。
+        /// 任何狀態不對 → 對應按鈕自動灰掉，使用者不會按到無反應的按鈕。
+        /// </summary>
+        private void UpdateCanExecuteStates()
+        {
+            bool connected = IsConnected;
+            bool power = IsPower;
+            bool estop = IsEstop;
+            bool running = Status.InterpState == "RUNNING" || Status.InterpState == "READING" || Status.InterpState == "WAITING";
+            bool paused = Status.InterpState == "PAUSED";
+            bool homed = Status.IsAllHomed;
+            bool probing = ProbingVM.IsProbing;
+            bool atcBusy = AtcVM.IsAtcBusy;
+            bool busy = probing || atcBusy;
+            bool hasProgram = Status.File != null && Status.File != "No File Loaded";
+            var role = CurrentUser?.Role ?? UserRole.Operator;
+
+            // --- 操作類（所有角色）---
+            CanJog        = connected && power && !estop && !running && !paused && !busy;
+            CanHome       = connected && power && !estop && !running && !paused && !busy;
+            CanCycleStart = connected && power && !estop && !busy && homed && (hasProgram || paused);
+            CanFeedHold   = connected && running;
+            CanStop       = connected && (running || paused);
+            CanMdi        = connected && power && !estop && !running && !paused && !busy;
+            CanSpindle    = connected && power && !estop && !running && !busy;
+            CanProbe      = connected && power && !estop && !running && !paused && !atcBusy && homed;
+            CanAtc        = connected && power && !estop && !running && !paused && !probing && homed;
+            CanEditOffset = connected && power && !estop && !running && !paused && !busy;
+            CanUpload     = connected && !running && !paused;
+            CanOverride   = connected;
+
+            // --- 設定/部署類（需要權限）---
+            CanDeploy     = connected && !running && !paused && !busy && role >= UserRole.Engineer;
+            CanBackup     = connected && !running && !paused && !busy && role >= UserRole.Admin;
+        }
+
         private readonly DispatcherTimer _timer;
         private readonly DispatcherTimer _cycleTimer;
         private DateTime _cycleStartTime;
@@ -144,7 +200,8 @@ namespace CncController.ViewModels
 
             AlarmService.Instance.AddLog("LOGIN", "System Started");
 
-            _timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(100) };
+            // [2026-03-13] 50ms 輪詢（後端已快取，API 回應 <1ms）
+            _timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(50) };
             _timer.Tick += StatusTimer_Tick;
             _timer.Start();
 
